@@ -1,0 +1,64 @@
+{
+    "plugin_name": "assetManager",
+    "version": "1.1.0",
+    "maya_version": "2025.3",
+    "python_version": "3.9+",
+    "author": "Mike Stumbo",
+    "description": "Enhanced asset management with tagging, collections, and dependency tracking",
+    "release_date": "2025-03-15",
+    "requirements": [
+        "Maya 2025.3+",
+        "Python 3.9+",
+        "PySide6",
+        "Shiboken6"
+    ],
+    "supported_formats": [
+        ".ma (Maya ASCII)",
+        ".mb (Maya Binary)",
+        ".obj (Wavefront OBJ)",
+        ".fbx (Autodesk FBX)"
+    ],
+    "features": [
+        "Asset Tagging System",
+        "Asset Collections/Sets",
+        "Dependency Tracking",
+        "Batch Operations",
+        "Asset Versioning",
+        "Enhanced Context Menus",
+        "Advanced Filtering",
+        "Management Dialogs",
+        "Project Management",
+        "Asset Library",
+        "Import/Export Support",
+        "Search & Filter",
+        "Maya Integration"
+    ],
+    "new_features": [
+        "Asset Tagging System: Custom labels for improved organization",
+        "Asset Collections: Group related assets into collections",
+        "Dependency Tracking: Track asset relationships and dependencies",
+        "Batch Operations: Import/export multiple assets at once",
+        "Asset Versioning: Track and manage asset versions",
+        "Enhanced Context Menus: Right-click asset management",
+        "Advanced Filtering: Filter by tags, collections, and more",
+        "Management Dialogs: Dedicated windows for collections and dependencies"
+    ],
+    "changelog": [
+        {
+            "version": "1.1.0",
+            "date": "2025-03-15",
+            "changes": [
+                "Added asset tagging system with custom labels",
+                "Implemented asset collections and sets functionality",
+                "Added dependency tracking and viewer system",
+                "Implemented batch import/export operations",
+                "Added asset versioning with notes and history",
+                "Enhanced context menus with right-click operations",
+                "Added advanced filtering by tags and collections",
+                "Created dedicated management dialogs",
+                "Improved UI layout with left panel for organization",
+                "Enhanced data persistence and configuration"
+            ]
+        }
+    ]
+}

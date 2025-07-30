@@ -1,0 +1,75 @@
+{
+    "plugin_name": "assetManager",
+    "version": "1.1.1",
+    "maya_version": "2025.3",
+    "python_version": "3.9+",
+    "author": "Mike Stumbo",
+    "description": "Enhanced asset management with visual organization and color-coding",
+    "release_date": "2025-05-15",
+    "requirements": [
+        "Maya 2025.3+",
+        "Python 3.9+",
+        "PySide6",
+        "Shiboken6"
+    ],
+    "supported_formats": [
+        ".ma (Maya ASCII)",
+        ".mb (Maya Binary)",
+        ".obj (Wavefront OBJ)",
+        ".fbx (Autodesk FBX)"
+    ],
+    "features": [
+        "Asset Type Color-Coding System",
+        "Visual Collection Indicators",
+        "Enhanced Context Menus",
+        "Color Legend Panel",
+        "Update Checking System",
+        "Asset Tagging System",
+        "Asset Collections/Sets",
+        "Dependency Tracking",
+        "Batch Operations",
+        "Asset Versioning",
+        "Advanced Filtering",
+        "Project Management",
+        "Asset Library",
+        "Import/Export Support"
+    ],
+    "new_features": [
+        "Asset Type Color-Coding: Visual organization with 11 predefined color types",
+        "Collection Visibility: See which collections each asset belongs to",
+        "Enhanced Context Menus: Quick asset type assignment and management",
+        "Color Legend: Reference panel showing all asset types and colors",
+        "Check for Updates: Automated update checking from Help menu"
+    ],
+    "asset_types": [
+        "Character (Red)",
+        "Prop (Teal)",
+        "Environment (Blue)",
+        "Vehicle (Green)",
+        "Weapon (Yellow)",
+        "Texture (Plum)",
+        "Material (Mint)",
+        "Animation (Light Yellow)",
+        "Lighting (Light Purple)",
+        "Camera (Light Blue)",
+        "Effect (Orange)"
+    ],
+    "changelog": [
+        {
+            "version": "1.1.1",
+            "date": "2025-05-15",
+            "changes": [
+                "Added asset type color-coding system with 11 predefined types",
+                "Implemented visual color legend panel for asset type reference",
+                "Enhanced context menus with asset type assignment options",
+                "Added visual collection indicators in asset library",
+                "Implemented automatic update checking system",
+                "Enhanced UI layout with improved left panel organization",
+                "Added color-coded asset list items for visual identification",
+                "Improved menu system with Help menu and update checker",
+                "Enhanced asset type management with clear type options",
+                "Added comprehensive about dialog with feature summary"
+            ]
+        }
+    ]
+}

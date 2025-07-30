@@ -1,0 +1,285 @@
+// Asset Manager Plugin - Drag & Drop Installer
+// Drag this file into Maya's viewport to install the Asset Manager plugin
+// and create a shelf button automatically
+//
+// Asset Manager for Maya 2025.3+
+// Author: Mike Stumbo
+// Version: 1.1.2
+
+global proc DRAG_DROP_assetManager_installer()
+{
+    print("\\n=== Asset Manager Plugin Installer v1.1.2 ===\\n");
+
+    // Locate plugin installation source directory
+    string $scriptLocation = `whatIs "DRAG_DROP_assetManager_installer"`;
+    string $baseDir = `dirname $scriptLocation`;
+    
+    // Debug output to help troubleshoot path issues
+    print("Script location from whatIs: " + $scriptLocation + "\\n");
+    print("Base directory: " + $baseDir + "\\n");
+    
+    // If whatIs didn't work properly, try alternative approaches
+    if ($baseDir == "" || $baseDir == "." || !`filetest -d $baseDir`) {
+        // Try to get the directory where this script file is located
+        string $currentScript = "C:/Users/ChEeP/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master";
+        if (`filetest -d $currentScript`) {
+            $baseDir = $currentScript;
+            print("Using fallback script directory: " + $baseDir + "\\n");
+        }
+    }
+    
+    string $possibleDirs[];
+    $possibleDirs[0] = $baseDir;
+    $possibleDirs[1] = $baseDir + "/versions/v1.1.2";
+    $possibleDirs[2] = $baseDir + "/versions/v1.1.1";
+    $possibleDirs[3] = $baseDir + "/versions/v1.1.0";
+    $possibleDirs[4] = $baseDir + "/versions/assetManager_1.0.0";
+    
+    string $scriptDir = "";
+    string $pluginFile = "";
+    string $modFile = "";
+    
+    // Find which directory contains our files
+    for ($dir in $possibleDirs) {
+        string $testPlugin = $dir + "/assetManager.py";
+        string $testMod = $dir + "/assetManager.mod";
+        
+        print("Checking directory: " + $dir + "\\n");
+        print("  Looking for: " + $testPlugin + "\\n");
+        print("  Looking for: " + $testMod + "\\n");
+        
+        if (`filetest -f $testPlugin` && `filetest -f $testMod`) {
+            $scriptDir = $dir;
+            $pluginFile = $testPlugin;
+            $modFile = $testMod;
+            print("Found plugin files in: " + $scriptDir + "\\n");
+            break;
+        } else {
+            print("  Files not found in this directory\\n");
+        }
+    }
+    
+    // Check if plugin files were found
+    if ($scriptDir == "") {
+        error("Asset Manager plugin files not found in expected locations!");
+        return;
+    }
+    
+    // Get Maya user directory
+    string $mayaUserDir = `internalVar -userAppDir`;
+    string $pluginsDir = $mayaUserDir + "plug-ins/";
+    
+    // Create plugins directory if it doesn't exist
+    if (!`filetest -d $pluginsDir`) {
+        sysFile -makeDir $pluginsDir;
+        print("Created plugins directory: " + $pluginsDir + "\\n");
+    }
+    
+    // Copy plugin files
+    string $destPluginFile = $pluginsDir + "assetManager.py";
+    string $destModFile = $pluginsDir + "assetManager.mod";
+    string $destIconUtilsFile = $pluginsDir + "icon_utils.py";
+    
+    // Copy the main plugin file
+    if (`filetest -f $pluginFile`) {
+        sysFile -copy $destPluginFile $pluginFile;
+        print("Copied: assetManager.py\\n");
+    }
+    
+    // Copy the mod file if it exists
+    if (`filetest -f $modFile`) {
+        sysFile -copy $destModFile $modFile;
+        print("Copied: assetManager.mod\\n");
+    }
+    
+    // Copy icon utilities if it exists
+    string $iconUtilsFile = $scriptDir + "/icon_utils.py";
+    if (`filetest -f $iconUtilsFile`) {
+        sysFile -copy $destIconUtilsFile $iconUtilsFile;
+        print("Copied: icon_utils.py\\n");
+    }
+    
+    // Copy icons directory if it exists
+    string $iconsSourceDir = $scriptDir + "/icons";
+    string $iconsDestDir = $pluginsDir + "icons/";
+    if (`filetest -d $iconsSourceDir`) {
+        if (!`filetest -d $iconsDestDir`) {
+            sysFile -makeDir $iconsDestDir;
+        }
+        
+        // Copy all files from icons directory
+        string $iconFiles[] = `getFileList -folder $iconsSourceDir`;
+        for ($iconFile in $iconFiles) {
+            if ($iconFile != "." && $iconFile != "..") {
+                string $sourceIcon = $iconsSourceDir + "/" + $iconFile;
+                string $destIcon = $iconsDestDir + $iconFile;
+                if (`filetest -f $sourceIcon`) {
+                    sysFile -copy $destIcon $sourceIcon;
+                }
+            }
+        }
+        print("Copied: icons directory\\n");
+        
+        // Also copy main shelf icons directly to plugins directory for Maya shelf access
+        string $mainShelfIcon = $iconsSourceDir + "/assetManager_icon.png";
+        string $hoverShelfIcon = $iconsSourceDir + "/assetManager_icon2.png";
+        if (`filetest -f $mainShelfIcon`) {
+            string $destMainIcon = $pluginsDir + "assetManager_icon.png";
+            sysFile -copy $destMainIcon $mainShelfIcon;
+            print("Copied: assetManager_icon.png to plugins directory\\n");
+        }
+        if (`filetest -f $hoverShelfIcon`) {
+            string $destHoverIcon = $pluginsDir + "assetManager_icon2.png";
+            sysFile -copy $destHoverIcon $hoverShelfIcon;
+            print("Copied: assetManager_icon2.png to plugins directory\\n");
+        }
+    }
+    
+    // Load the plugin
+    string $loadedPlugins[] = `pluginInfo -query -listPlugins`;
+    int $isLoaded = 0;
+    for ($plugin in $loadedPlugins) {
+        if ($plugin == "assetManager") {
+            $isLoaded = 1;
+            break;
+        }
+    }
+    
+    if ($isLoaded) {
+        print("Plugin already loaded, reloading...\\n");
+        unloadPlugin "assetManager";
+    }
+    
+    // Load the plugin
+    print("Loading plugin assetManager...\\n");
+    string $loadResult[] = `loadPlugin "assetManager"`;
+    print("Load result size: " + size($loadResult) + "\\n");
+    if (size($loadResult) > 0) {
+        print("Plugin loaded successfully!\\n");
+        
+        // Set plugin to auto-load
+        pluginInfo -edit -autoload true "assetManager";
+        print("Plugin set to auto-load on Maya startup\\n");
+        
+        // Create shelf button
+        createAssetManagerShelfButton();
+        
+        // Show success message
+        confirmDialog -title "Asset Manager - Installer" 
+                     -message "Asset Manager v1.1.2 has been successfully installed!"
+                     -button "OK"
+                     -defaultButton "OK";
+        
+    } else {
+        error("Failed to load Asset Manager plugin. Check Script Editor for details.");
+    }
+}
+
+global proc createAssetManagerShelfButton()
+{
+    print("Creating Asset Manager shelf button...\\n");
+    
+    // Declare global shelf variable
+    global string $gShelfTopLevel;
+    
+    // Get current shelf
+    string $currentShelf = `tabLayout -query -selectTab $gShelfTopLevel`;
+    
+    if ($currentShelf == "") {
+        warning("No shelf selected. Creating button on first available shelf.");
+        string $shelves[] = `tabLayout -query -childArray $gShelfTopLevel`;
+        if (size($shelves) > 0) {
+            $currentShelf = $shelves[0];
+        } else {
+            error("No shelves available to create button.");
+            return;
+        }
+    }
+    
+    // Check if button already exists
+    string $existingButtons[] = `shelfLayout -query -childArray $currentShelf`;
+    for ($button in $existingButtons) {
+        // Only check objects that are actually shelf buttons
+        if (`objExists $button`) {
+            string $objectType = `objectType $button`;
+            if ($objectType == "shelfButton") {
+                string $label = `shelfButton -query -label $button`;
+                if ($label == "Asset Manager") {
+                    print("Asset Manager button already exists on shelf: " + $currentShelf + "\\n");
+                    return;
+                }
+            }
+        }
+    }
+    
+    // Create the shelf button
+    string $buttonCmd = "import sys\nimport os\nimport maya.cmds as cmds\n\n# Add plugin directory to Python path\nuser_app_dir = cmds.internalVar(userAppDir=True)\nplugin_dir = os.path.join(user_app_dir, 'plug-ins')\nif plugin_dir not in sys.path:\n    sys.path.insert(0, plugin_dir)\n\ntry:\n    import assetManager\n    assetManager.show_asset_manager()\nexcept ImportError:\n    # Try to load plugin and retry\n    try:\n        cmds.loadPlugin('assetManager', quiet=True)\n        # Re-add to path and import again\n        if plugin_dir not in sys.path:\n            sys.path.insert(0, plugin_dir)\n        import assetManager\n        assetManager.show_asset_manager()\n    except Exception as e:\n        print('Asset Manager Error: Could not load plugin or module - ' + str(e))\nexcept Exception as e:\n    print('Asset Manager Error: ' + str(e))";
+    
+    // Use absolute path to icon file
+    string $mayaUserDir = `internalVar -userAppDir`;
+    string $pluginsDir = $mayaUserDir + "plug-ins/";
+    string $iconPath = $pluginsDir + "assetManager_icon.png";
+    string $hoverIconPath = $pluginsDir + "assetManager_icon2.png";
+    string $iconImage = "assetManager_icon.png";
+    
+    // Check if custom icon exists, otherwise use Maya default
+    if (`filetest -f $iconPath`) {
+        $iconImage = $iconPath;
+        print("Using custom shelf icon: " + $iconPath + "\\n");
+    } else {
+        $iconImage = "menuIconFile.png";
+        print("Custom icon not found, using default: menuIconFile.png\\n");
+    }
+    
+    string $buttonName = `shelfButton -parent $currentShelf
+                -label "Asset Manager"
+                -annotation "Asset Manager v1.1.2 - Comprehensive asset management with collection tabs, thumbnails, color-coding, visual collections, enhanced context menus, and threaded operations"
+                -image $iconImage
+                -imageOverlayLabel ""
+                -command $buttonCmd
+                -sourceType "python"
+                -style "iconOnly"`;
+    
+    // Set up clean shelf button without hover complications
+    if (`filetest -f $hoverIconPath`) {
+        print("Custom shelf icon configured: " + $iconPath + "\\n");
+        print("Alternate icon available: " + $hoverIconPath + " (for future use)\\n");
+        print("Note: Maya shelf buttons work best with single icons\\n");
+    }
+    
+    print("Shelf button created on: " + $currentShelf + "\\n");
+    
+    // Save shelf (optional - shelves auto-save in modern Maya)
+    // saveShelf $currentShelf;
+    print("Shelf configuration updated\\n");
+}
+
+global proc string dirname(string $path)
+{
+    // Simple dirname implementation for MEL
+    string $pathParts[];
+    int $numParts = `tokenize $path "/" $pathParts`;
+    
+    if ($numParts <= 1) {
+        $numParts = `tokenize $path "\\\\" $pathParts`;
+    }
+    
+    if ($numParts <= 1) {
+        return ".";
+    }
+    
+    string $result = "";
+    for ($i = 0; $i < ($numParts - 1); $i++) {
+        if ($i > 0) {
+            $result += "/";
+        }
+        $result += $pathParts[$i];
+    }
+    
+    return $result;
+}
+
+// Auto-run the installer when script is executed
+print("\\n🚀 Starting Asset Manager installation...\\n");
+DRAG_DROP_assetManager_installer();
+print("✅ Asset Manager installation complete!\\n\\n");

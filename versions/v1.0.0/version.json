@@ -1,0 +1,43 @@
+{
+    "plugin_name": "assetManager",
+    "version": "1.0.0",
+    "maya_version": "2025.3",
+    "python_version": "3.9+",
+    "author": "Mike Stumbo",
+    "description": "A comprehensive asset management system for Maya 2025.3 - Initial Release",
+    "release_date": "2025-01-15",
+    "requirements": [
+        "Maya 2025.3+",
+        "Python 3.9+",
+        "PySide6",
+        "Shiboken6"
+    ],
+    "supported_formats": [
+        ".ma (Maya ASCII)",
+        ".mb (Maya Binary)",
+        ".obj (Wavefront OBJ)",
+        ".fbx (Autodesk FBX)"
+    ],
+    "features": [
+        "Project Management",
+        "Asset Library",
+        "Import/Export Support",
+        "Search & Filter",
+        "Custom Icons",
+        "Maya Integration",
+        "Modern UI"
+    ],
+    "installation": {
+        "method": "drag_and_drop",
+        "file": "DRAG&DROP.mel",
+        "alternatives": [
+            "install.bat (Windows)",
+            "install.sh (Unix/Linux)",
+            "python setup.py install"
+        ]
+    },
+    "configuration": {
+        "path": "%USERPROFILE%/Documents/maya/assetManager/config.json",
+        "auto_create": true
+    }
+}
