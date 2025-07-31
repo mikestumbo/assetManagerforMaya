@@ -138,7 +138,28 @@ A comprehensive asset management system for Maya 2025.3+ with enhanced organizat
 - **Threaded Operations**: Background loading for improved performance
 - **Enhanced UI**: Professional tabbed interface with visual asset display
 
-## 🚀 Installation
+## � Downloads & Previous Versions
+
+### Current Version (v1.1.2)
+
+Download the latest version directly from this repository or from [GitHub Releases](../../releases).
+
+### Previous Versions
+
+All previous versions are available as GitHub Releases with complete archives and release notes:
+
+- **[v1.1.1](../../releases/tag/v1.1.1)** - Visual Organization (May 22, 2025)
+- **[v1.1.0](../../releases/tag/v1.1.0)** - Enhanced Organization (March 10, 2025)  
+- **[v1.0.0](../../releases/tag/v1.0.0)** - Initial Release (January 15, 2025)
+
+Each release includes:
+
+- Complete plugin archive (.zip)
+- Detailed release notes
+- Installation instructions
+- Compatibility information
+
+## �🚀 Installation
 
 ### Quick Install (Drag & Drop)
 
@@ -252,12 +273,12 @@ assetManagerforMaya-master/
 ├── dev/                         # Development and testing files
 │   ├── test_customization.py    # Customization feature tests
 │   └── test_thumbnails.py       # Thumbnail system tests
-├── versions/                    # Version archive
-│   ├── README.md                # Version archive documentation
-│   ├── v1.0.0/                  # Version 1.0.0 archive
-│   ├── v1.1.0/                  # Version 1.1.0 archive
-│   ├── v1.1.1/                  # Version 1.1.1 archive
-│   └── v1.1.2/                  # Version 1.1.2 archive (current)
+├── releases/                    # Release archives and notes
+│   ├── assetManager-v1.0.0.zip  # Version 1.0.0 release archive
+│   ├── assetManager-v1.1.0.zip  # Version 1.1.0 release archive
+│   ├── assetManager-v1.1.1.zip  # Version 1.1.1 release archive
+│   ├── assetManager-v1.1.2.zip  # Version 1.1.2 release archive
+│   └── *.md                     # Release notes for each version
 └── icons/                       # Professional icons package
     ├── assetManager_icon.png    # Shelf button icon
     ├── assetManager_icon2.png   # Window/UI icon
