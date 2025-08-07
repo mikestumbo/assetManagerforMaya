@@ -2,7 +2,7 @@
 
 ## Status
 ✅ **Git tag v1.1.3 has been created locally**  
-⏳ **Git tag needs to be pushed to GitHub**  
+⚠️ **Git tag push requires authentication - see Alternative Methods below**  
 ⏳ **GitHub release needs to be created manually**
 
 ## Automated Steps Completed
@@ -13,17 +13,34 @@
 ## Manual Steps Required
 
 ### Step 1: Push the Git Tag
+
+**Option A: Command Line (requires authentication)**
 The git tag `v1.1.3` has been created locally but needs to be pushed to GitHub:
 ```bash
 git push origin v1.1.3
 ```
 
-### Step 2: Create GitHub Release
-Once the tag is pushed, create the GitHub release:
+**Option B: GitHub Web Interface**
+If command line authentication fails:
+1. Navigate to: https://github.com/mikestumbo/assetManagerforMaya/tags
+2. Click "Create a new tag" or use the existing local tag when creating the release
+3. The release creation process can create the tag automatically if it doesn't exist
 
+### Step 2: Create GitHub Release
+
+#### Option A: Using Existing Tag (if successfully pushed)
 1. Navigate to: https://github.com/mikestumbo/assetManagerforMaya/releases
 2. Click "Create a new release"
-3. Configure the release:
+3. Select existing tag `v1.1.3` from dropdown
+
+#### Option B: Create Tag During Release (if tag push failed)
+1. Navigate to: https://github.com/mikestumbo/assetManagerforMaya/releases
+2. Click "Create a new release"  
+3. Type `v1.1.3` in the "Choose a tag" field
+4. Select target: `copilot/fix-da2f6a2a-0c14-4c33-bbbb-159d95b921ec`
+5. GitHub will create the tag automatically when you publish the release
+
+Configure the release:
 
 #### Release Configuration
 - **Tag**: `v1.1.3` (should be available after pushing)
