@@ -14,7 +14,8 @@ The thumbnail duplication was caused by **multiple UI components generating thum
 4. **No Cache Checking**: Each UI component triggered generation without checking if thumbnail already existed
 
 ### Code Flow Analysis
-```
+
+```text
 Asset "test.ma" appears in:
 ├── Main Asset List → _set_asset_item_icon() → _get_thumbnail_icon() → _generate_thumbnail_safe() ✅ FIRST THUMBNAIL
 ├── Collection Tab "Props" → _set_asset_item_icon() → _get_thumbnail_icon() → _generate_thumbnail_safe() ❌ DUPLICATE THUMBNAIL  
@@ -26,6 +27,7 @@ Asset "test.ma" appears in:
 ### 🎯 **1. Duplicate Generation Prevention**
 
 **Before:**
+
 ```python
 def _generate_thumbnail_safe(self, file_path, size=None):
     cache_key = f"{file_path}_64x64"
@@ -40,6 +42,7 @@ def _generate_thumbnail_safe(self, file_path, size=None):
 ```
 
 **After:**
+
 ```python  
 def _generate_thumbnail_safe(self, file_path, size=None):
     abs_path = os.path.abspath(file_path)  # Consistent absolute paths
@@ -73,6 +76,7 @@ def _generate_thumbnail_safe(self, file_path, size=None):
 ```
 
 **Key Improvements:**
+
 - ✅ **Absolute path consistency**: Prevents cache misses due to relative vs absolute paths
 - ✅ **Race condition prevention**: `_generating_thumbnails` set prevents simultaneous generation
 - ✅ **Generation tracking**: Detailed logging shows when thumbnails are actually generated vs cached
@@ -81,6 +85,7 @@ def _generate_thumbnail_safe(self, file_path, size=None):
 ### 🎯 **2. Background Queue Deduplication**
 
 **Before:**
+
 ```python
 def _queue_thumbnail_generation(self, file_paths, callback=None):
     for file_path in file_paths:
@@ -89,6 +94,7 @@ def _queue_thumbnail_generation(self, file_paths, callback=None):
 ```
 
 **After:**
+
 ```python
 def _queue_thumbnail_generation(self, file_paths, callback=None):
     queued_count = 0
@@ -109,6 +115,7 @@ def _queue_thumbnail_generation(self, file_paths, callback=None):
 ```
 
 **Key Improvements:**
+
 - ✅ **Triple deduplication**: Cache ✓ Queue ✓ Currently generating ✓
 - ✅ **Queue efficiency**: Only new thumbnails added to background queue
 - ✅ **Memory optimization**: Prevents queue bloat from duplicate requests
@@ -116,11 +123,13 @@ def _queue_thumbnail_generation(self, file_paths, callback=None):
 ### 🎯 **3. Proper Resource Management**
 
 **Added to `__init__`:**
+
 ```python
 self._generating_thumbnails = set()  # Track thumbnails currently being generated
 ```
 
 **Enhanced `cleanup()`:**
+
 ```python
 # Clear generating thumbnails set to prevent stuck states
 if hasattr(self, '_generating_thumbnails'):
@@ -131,53 +140,65 @@ if hasattr(self, '_generating_thumbnails'):
 ## Technical Architecture
 
 ### **Single Source of Truth Pattern**
+
 - **One Cache**: `_thumbnail_cache` contains exactly one thumbnail per unique file path
 - **One Generator**: `_generate_thumbnail_safe()` is the only method that creates thumbnails
 - **One Key Format**: `{absolute_path}_64x64` ensures consistent cache keys
 
 ### **Deduplication Strategy**
+
 1. **Cache Hit**: Return existing thumbnail immediately
 2. **Generation Check**: Prevent multiple simultaneous generations  
 3. **Queue Check**: Don't queue items already cached/generating
 4. **Absolute Paths**: Consistent file path resolution
 
 ### **Memory Efficiency**
+
 - **Before Fix**: N assets × M UI contexts = N×M thumbnails (massive duplication)
 - **After Fix**: N assets = N thumbnails (optimal memory usage)
 
 ## Validation & Testing
 
 ### **Maya Integration Test**
+
 Use `maya_thumbnail_duplication_test.py` to verify:
 
 #### **Test 1: Cache Hit Prevention**
-```
+
+```text
 ✅ First call: test_asset_0.ma - Generated and cached
 ✅ Second call: test_asset_0.ma - Cache hit (no generation)
 ```
 
 #### **Test 2: Background Queue Deduplication**
-```
+
+```text
 ✅ First queue size: 4 thumbnails
 ✅ Second queue size: 0 (all already cached/queued)
 ✅ Third queue size: 0 (deduplication working)
 ```
 
 #### **Test 3: UI Duplication Prevention**
-```
+
+```text
 ✅ Main asset list requests: test_asset_0.ma - Generated
 ✅ Collection tab requests: test_asset_0.ma - Cache hit
 ✅ Cache status: SINGLE entry per asset
 ```
 
 #### **Test 4: Race Condition Prevention**
-```
+
+```text
 ✅ Rapid successive calls handled correctly
 ✅ No duplicate generation during race conditions
 ```
 
 #### **Expected Results**
-```
+
+```text
+✅ All tests passed successfully
+
+```text
 📊 DUPLICATION FIX VALIDATION RESULTS:
    Queue deduplication: ✅ PASS
    Memory efficiency: ✅ PASS  
@@ -188,13 +209,15 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 
 ## Performance Benefits
 
-### **Before Fix:**
+### **Performance Issues (Before Fix):**
+
 - ❌ **2-3 thumbnails per asset**: Main list + Collection tabs + Background queue
 - ❌ **Memory waste**: 200-300% more memory usage than needed
 - ❌ **CPU overhead**: Unnecessary thumbnail generation for same assets
 - ❌ **UI responsiveness**: Multiple generation calls blocking UI
 
-### **After Fix:**
+### **Performance Improvements (After Fix):**
+
 - ✅ **1 thumbnail per asset**: Exactly one cached thumbnail per unique file
 - ✅ **Memory efficient**: Optimal memory usage with no duplication
 - ✅ **CPU optimized**: Generate once, use everywhere
@@ -202,12 +225,14 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 
 ## User Experience Impact
 
-### **Before Fix:**
+### **User Experience Issues (Before Fix):**
+
 - ❌ Users experienced slower loading when switching between collection tabs
 - ❌ Memory usage grew unnecessarily with large asset libraries
 - ❌ Background processing wasted resources on duplicate work
 
-### **After Fix:**
+### **User Experience Improvements (After Fix):**
+
 - ✅ **Instant tab switching**: Collection tabs show thumbnails immediately (cache hits)
 - ✅ **Reduced memory footprint**: Optimal memory usage even with large libraries
 - ✅ **Efficient processing**: Background queue only processes new thumbnails
@@ -216,6 +241,7 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 ## Code Quality Improvements
 
 ### **Clean Code Principles Applied:**
+
 - ✅ **Single Responsibility**: `_generate_thumbnail_safe()` has one job - generate if needed
 - ✅ **DRY (Don't Repeat Yourself)**: One thumbnail generation method, cached results
 - ✅ **Resource Management**: Proper cleanup of generating markers in `finally` blocks
@@ -223,6 +249,7 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 - ✅ **Logging**: Clear feedback about cache hits vs generation for debugging
 
 ### **SOLID Principles:**
+
 - ✅ **Single Responsibility**: Each method has one clear caching/generation purpose
 - ✅ **Open/Closed**: Easy to extend caching logic without modifying core generation
 - ✅ **Dependency Inversion**: UI components depend on abstract thumbnail interface
@@ -232,10 +259,12 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 ✅ **COMPLETED** - Thumbnail duplication fix fully implemented and validated
 
 ### **Files Modified:**
+
 - `assetManager.py`: Core deduplication and caching fixes
 - `maya_thumbnail_duplication_test.py`: Comprehensive validation test
 
 ### **Changes Applied:**
+
 1. ✅ **Duplicate generation prevention** with race condition handling
 2. ✅ **Background queue deduplication** with triple-checking
 3. ✅ **Absolute path consistency** for reliable caching
@@ -245,6 +274,7 @@ Use `maya_thumbnail_duplication_test.py` to verify:
 ## Debug Information
 
 ### **Console Output Examples:**
+
 ```bash
 # Successful deduplication:
 Generated and cached thumbnail for test_asset_0.ma
@@ -255,6 +285,7 @@ Cache size limit reached, removed: old_asset.ma_64x64
 ```
 
 ### **Memory Usage Monitoring:**
+
 - Monitor cache size: `len(asset_manager._thumbnail_cache)`
 - Check generating set: `len(asset_manager._generating_thumbnails)`
 - Queue status: `len(asset_manager._thumbnail_generation_queue)`
