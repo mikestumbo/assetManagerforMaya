@@ -14,7 +14,14 @@
 - ✅ Git Tag: `v1.1.1` with proper annotation
 
 ### Next Steps:
-- [ ] Push git tag to remote repository
-- [ ] Create GitHub Release
+- [ ] Push git tag to remote repository (requires manual push or PR merge)
+- [ ] Create GitHub Release using CREATE_RELEASE_v1.1.1.md guide
 - [ ] Attach ZIP file as release asset
 - [ ] Mark as historical release
+
+### Files Ready for Release:
+- `CREATE_RELEASE_v1.1.1.md` - Step-by-step release creation guide
+- `releases/v1.1.1-release-notes.md` - Complete release description  
+- `releases/assetManager-v1.1.1.zip` - Release artifact (53KB)
+
+The git tag v1.1.1 is created locally and points to the correct commit containing all release assets.
