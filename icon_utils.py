@@ -1,6 +1,10 @@
 """
-Icon utilities for Asset Manager Plugin
+Icon utilities for Asset Manager Plugin v1.1.3
 Provides helper functions for loading and managing icons in the UI
+
+Version: 1.1.3
+Author: Mike Stumbo
+Maya Version: 2025.3+
 """
 
 import os

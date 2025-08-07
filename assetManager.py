@@ -4,12 +4,29 @@ Asset Manager Plugin for Maya 2025.3
 A comprehensive asset management system for Maya using Python 3 and PySide6
 
 Author: Mike Stumbo
-Version: 1.1.2
+Version: 1.1.3
 Maya Version: 2025.3+
 
-New in v1.1.2:
+New in v1.1.3:
+- Fixed collection tab refresh issues with automatic synchronization
+- Improved network performance with intelligent caching and lazy loading
+- Enhanced dependency chain performance with optimizations
+- Added smart refresh triggers and external modification detection
+- Improved error handling for network-stored projects
+- Enhanced UI responsiveness with better thread management
+- Fixed memory leaks in large asset libraries
+- Added performance monitoring and optimization alerts
+- CRITICAL FIX: Resolved RecursionError in project path handling
+- Enhanced path validation and error recovery mechanisms
+- Added comprehensive error handling throughout the application
+- Improved stability and graceful error recovery
+- MAJOR IMPROVEMENT: Implemented memory-safe thumbnail generation system
+- Enhanced thumbnail caching with intelligent size limits (50 thumbnails max)
+- Added background processing queue for thumbnail generation
+- UI now uses colorful file-type thumbnails with text labels for better visualization
+
+Previous Features (v1.1.2):
 - Fixed incomplete method implementations and context menu actions
-- Added asset thumbnail generation and caching system
 - Improved error handling and user feedback
 - Enhanced UI responsiveness with threaded operations
 - Added asset metadata storage and retrieval
@@ -31,7 +48,11 @@ import sys
 import os
 import json
 import shutil
+import threading
+import time
 from datetime import datetime
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import maya.cmds as cmds # type: ignore
@@ -57,8 +78,8 @@ try:
                                    QScrollArea, QFrame, QTabWidget, QTreeWidget,
                                    QTreeWidgetItem, QInputDialog, QProgressDialog,
                                    QMenu, QSlider)
-    from PySide6.QtCore import Qt, QSize, QTimer, QThread, Signal
-    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter
+    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter, QPen
+    from PySide6.QtCore import Qt, QSize, QTimer, QThread, Signal, QFileSystemWatcher, QObject, QPoint
     from shiboken6 import wrapInstance
 except ImportError:
     print("PySide6 not available. Please ensure Maya 2025.3+ is being used.")
@@ -70,10 +91,34 @@ class AssetManager:
     
     def __init__(self):
         self.plugin_name = "assetManager"
-        self.version = "1.1.2"
+        self.version = "1.1.3"
         self.config_path = self._get_config_path()
         self.assets_library = {}
         self.current_project = None
+        
+        # Recursion protection flags
+        self._processing_project_entry = False
+        
+        # Performance optimization: File system cache
+        self._file_cache = {}
+        self._cache_timestamps = {}
+        self._cache_timeout = 30  # seconds
+        
+        # Thread pool for background operations
+        self._thread_pool = ThreadPoolExecutor(max_workers=2)  # Reduced workers to prevent Maya overload
+        
+        # Track if cleanup has been performed
+        self._is_cleaned_up = False
+        
+        # Thumbnail system with memory-safe caching and duplicate prevention
+        self._thumbnail_cache = {}  # Cache QPixmap objects
+        self._icon_cache = {}  # NEW: Cache QIcon objects to prevent UI duplication
+        self._thumbnail_cache_size_limit = 50  # Limit to prevent memory bloat
+        self._thumbnail_generation_queue = []
+        self._thumbnail_workers = 1  # Limited workers for memory safety
+        self._thumbnail_processing = False
+        self._thumbnail_timer = None
+        self._generating_thumbnails = set()  # Track thumbnails currently being generated
         
         # Initialize default asset type configuration
         self._init_default_asset_types()
@@ -81,8 +126,12 @@ class AssetManager:
         # Load configuration (including custom asset types)
         self.load_config()
         
-        # Asset thumbnail cache directory
-        self.thumbnail_cache_dir = self._get_thumbnail_cache_path()
+        # Network performance monitoring
+        self._network_performance = {
+            'slow_operations': 0,
+            'timeout_threshold': 5.0,  # seconds
+            'network_mode': False  # Auto-detected based on performance
+        }
     
     def _init_default_asset_types(self):
         """Initialize default asset type configuration"""
@@ -305,38 +354,845 @@ class AssetManager:
             os.makedirs(config_dir)
         return os.path.join(config_dir, "config.json")
     
-    def _get_thumbnail_cache_path(self):
-        """Get the thumbnail cache directory path"""
+    def _is_network_path(self, path):
+        """Check if path is on a network drive (Windows UNC or mapped drive)"""
+        if not path:
+            return False
+        # Check for UNC paths (\\server\share)
+        if path.startswith('\\\\'):
+            return True
+        # Check for mapped network drives (heuristic based on performance)
         try:
-            if MAYA_AVAILABLE and cmds is not None:
-                maya_app_dir = cmds.internalVar(userAppDir=True)
-            else:
-                raise ImportError("Maya cmds not available")
+            start_time = time.time()
+            os.path.exists(path)
+            elapsed = time.time() - start_time
+            return elapsed > 0.1  # If it takes more than 100ms to check existence, likely network
         except:
-            # Fallback when Maya is not available
-            home = os.path.expanduser("~")
-            maya_app_dir = os.path.join(home, "Documents", "maya")
+            return False
+    
+    def _get_cached_file_list(self, directory):
+        """Get cached file list with timeout to improve network performance"""
+        if not os.path.exists(directory):
+            return []
         
-        cache_dir = os.path.join(maya_app_dir, "assetManager", "thumbnails")
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
-        return cache_dir
+        cache_key = f"files_{directory}"
+        current_time = time.time()
+        
+        # Check cache validity
+        if (cache_key in self._file_cache and 
+            cache_key in self._cache_timestamps and
+            current_time - self._cache_timestamps[cache_key] < self._cache_timeout):
+            return self._file_cache[cache_key]
+        
+        # Measure operation time for network detection
+        start_time = time.time()
+        
+        try:
+            files = []
+            supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
+            
+            # Use os.scandir for better performance than os.listdir
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    if entry.is_file() and any(entry.name.lower().endswith(ext) for ext in supported_extensions):
+                        files.append(entry.path)
+            
+            # Cache the result
+            self._file_cache[cache_key] = files
+            self._cache_timestamps[cache_key] = current_time
+            
+            # Monitor performance for network detection
+            elapsed = time.time() - start_time
+            if elapsed > self._network_performance['timeout_threshold']:
+                self._network_performance['slow_operations'] += 1
+                self._network_performance['network_mode'] = True
+                # Extend cache timeout for network paths
+                self._cache_timeout = 120  # 2 minutes for network
+            
+            return files
+            
+        except Exception as e:
+            print(f"Error scanning directory {directory}: {e}")
+            return []
+    
+    def _clear_file_cache(self):
+        """Clear the file system cache"""
+        self._file_cache.clear()
+        self._cache_timestamps.clear()
+        # Reset cache timeout
+        self._cache_timeout = 30 if not self._network_performance['network_mode'] else 120
+    
+    def cleanup(self):
+        """Cleanup resources and threads to prevent memory leaks"""
+        if self._is_cleaned_up:
+            return
+            
+        try:
+            print("Cleaning up Asset Manager resources...")
+            
+            # Shutdown thread pool
+            if hasattr(self, '_thread_pool') and self._thread_pool:
+                try:
+                    self._thread_pool.shutdown(wait=False)
+                    print("Thread pool shutdown completed")
+                except Exception as e:
+                    print(f"Error shutting down thread pool: {e}")
+            
+            # Clear caches to free memory
+            self._clear_file_cache()
+            if hasattr(self, 'asset_type_colors'):
+                self.asset_type_colors.clear()
+            
+            # Clear thumbnail cache to prevent memory leaks
+            if hasattr(self, '_thumbnail_cache'):
+                self._thumbnail_cache.clear()
+                print("Thumbnail cache cleared")
+            
+            # Clear icon cache to prevent UI duplication issues  
+            if hasattr(self, '_icon_cache'):
+                self._icon_cache.clear()
+                print("Icon cache cleared")
+
+            # Clear thumbnail generation queue and stop processing
+            if hasattr(self, '_thumbnail_generation_queue'):
+                self._thumbnail_generation_queue.clear()
+                
+            # Clear generating thumbnails set to prevent stuck states
+            if hasattr(self, '_generating_thumbnails'):
+                self._generating_thumbnails.clear()
+                print("Generating thumbnails set cleared")
+            
+            if hasattr(self, '_thumbnail_processing'):
+                self._thumbnail_processing = False
+            
+            if hasattr(self, '_thumbnail_timer') and self._thumbnail_timer:
+                try:
+                    self._thumbnail_timer.stop()
+                    self._thumbnail_timer.deleteLater()
+                except:
+                    pass
+            
+            # Clear large data structures
+            if hasattr(self, 'assets_library'):
+                self.assets_library.clear()
+            
+            # Mark as cleaned up to prevent double cleanup
+            self._is_cleaned_up = True
+            print("Asset Manager cleanup completed")
+            
+        except Exception as e:
+            print(f"Error during Asset Manager cleanup: {e}")
+    
+    def __del__(self):
+        """Destructor to ensure cleanup on garbage collection"""
+        self.cleanup()
+    
+    def _generate_thumbnail_safe(self, file_path, size=None):
+        """Generate thumbnail with real Maya scene preview and memory-safe approach"""
+        try:
+            # Force consistent thumbnail size across the application
+            if size is None:
+                size = (64, 64)  # Standard thumbnail size
+            
+            # Ensure we always use exactly 64x64 to prevent sizing issues
+            size = (64, 64)
+            
+            # Use absolute path for consistent caching across different calling contexts
+            abs_path = os.path.abspath(file_path)
+            
+            # Check cache first - PREVENT DUPLICATE GENERATION
+            cache_key = f"{abs_path}_64x64"  # Fixed cache key for consistency
+            if cache_key in self._thumbnail_cache:
+                # Cache hit - return existing thumbnail without generating new one
+                return self._thumbnail_cache[cache_key]
+            
+            # Check if we're already generating this thumbnail to prevent race conditions
+            if not hasattr(self, '_generating_thumbnails'):
+                self._generating_thumbnails = set()
+                
+            if cache_key in self._generating_thumbnails:
+                # Already being generated - return empty pixmap to prevent duplicate generation
+                print(f"Thumbnail already being generated for {os.path.basename(file_path)}")
+                return QPixmap(64, 64)  # Return blank thumbnail temporarily
+                
+            # Mark as being generated
+            self._generating_thumbnails.add(cache_key)
+            
+            try:
+                # Check cache size limit to prevent memory bloat
+                if len(self._thumbnail_cache) >= self._thumbnail_cache_size_limit:
+                    # Remove oldest entries (simple FIFO strategy)
+                    oldest_key = next(iter(self._thumbnail_cache))
+                    del self._thumbnail_cache[oldest_key]
+                    print(f"Cache size limit reached, removed: {oldest_key}")
+                
+                # Generate real preview thumbnail based on file type
+                file_ext = os.path.splitext(file_path)[1].lower()
+                pixmap = self._generate_real_thumbnail(file_path, file_ext, size)
+                
+                # Cache the result with consistent key - SINGLE SOURCE OF TRUTH
+                self._thumbnail_cache[cache_key] = pixmap
+                print(f"Generated and cached thumbnail for {os.path.basename(file_path)}")
+                
+                return pixmap
+                
+            finally:
+                # Always remove from generating set when done
+                self._generating_thumbnails.discard(cache_key)
+            
+        except Exception as e:
+            print(f"Error generating thumbnail for {file_path}: {e}")
+            # Clean up generating set on error
+            cache_key = f"{os.path.abspath(file_path)}_64x64"
+            if hasattr(self, '_generating_thumbnails') and cache_key in self._generating_thumbnails:
+                self._generating_thumbnails.discard(cache_key)
+            # Return fallback thumbnail on error
+            return self._generate_fallback_thumbnail(os.path.splitext(file_path)[1].lower(), size)
+    
+    def _generate_real_thumbnail(self, file_path, file_ext, size):
+        """Generate real thumbnail preview for different file types"""
+        try:
+            if file_ext in ['.ma', '.mb']:
+                # Maya scene files - generate scene preview
+                return self._generate_maya_scene_thumbnail(file_path, size)
+            elif file_ext == '.obj':
+                # OBJ files - generate mesh preview  
+                return self._generate_obj_thumbnail(file_path, size)
+            elif file_ext == '.fbx':
+                # FBX files - generate geometry preview
+                return self._generate_fbx_thumbnail(file_path, size)
+            elif file_ext in ['.abc', '.usd']:
+                # Cache/USD files - generate special preview
+                return self._generate_cache_thumbnail(file_path, size)
+            else:
+                # Unknown files - fallback to type icon
+                return self._generate_fallback_thumbnail(file_ext, size)
+                
+        except Exception as e:
+            print(f"Error generating real thumbnail for {file_path}: {e}")
+            return self._generate_fallback_thumbnail(file_ext, size)
+    
+    def _generate_maya_scene_thumbnail(self, file_path, size):
+        """Generate thumbnail preview of Maya scene content"""
+        try:
+            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
+            
+            # Create QPixmap for thumbnail
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(45, 45, 45))  # Dark gray background
+            
+            # Save current scene state
+            current_scene = cmds.file(q=True, sceneName=True)
+            
+            try:
+                # Import/reference the file temporarily to generate preview
+                if os.path.exists(file_path):
+                    # Create new scene for thumbnail generation
+                    cmds.file(new=True, force=True)
+                    
+                    # Import the file
+                    if file_path.endswith('.ma'):
+                        cmds.file(file_path, i=True, type="mayaAscii", ignoreVersion=True)
+                    else:  # .mb
+                        cmds.file(file_path, i=True, type="mayaBinary", ignoreVersion=True)
+                    
+                    # Get all geometry in scene
+                    all_meshes = cmds.ls(type='mesh', long=True) or []
+                    
+                    if all_meshes:
+                        # Frame all geometry for thumbnail
+                        cmds.select(all_meshes)
+                        cmds.viewFit(allObjects=True)
+                        
+                        # Generate preview using playblast
+                        thumbnail_path = self._generate_maya_playblast_thumbnail(file_path, size)
+                        if thumbnail_path and os.path.exists(thumbnail_path):
+                            pixmap.load(thumbnail_path)
+                            # Clean up temp thumbnail file
+                            try:
+                                os.remove(thumbnail_path)
+                            except:
+                                pass
+                        else:
+                            # Fallback to rendered thumbnail
+                            pixmap = self._generate_rendered_maya_thumbnail(size, all_meshes)
+                    else:
+                        # No geometry - create text thumbnail
+                        pixmap = self._generate_text_thumbnail("MAYA\nSCENE", QColor(100, 150, 255), size)
+                        
+            finally:
+                # Restore original scene
+                try:
+                    if current_scene:
+                        cmds.file(current_scene, open=True, force=True)
+                    else:
+                        cmds.file(new=True, force=True)
+                except:
+                    # If restore fails, at least create new scene
+                    cmds.file(new=True, force=True)
+            
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating Maya scene thumbnail: {e}")
+            return self._generate_text_thumbnail("MAYA\nERROR", QColor(255, 100, 100), size)
+    
+    def _generate_maya_playblast_thumbnail(self, file_path, size):
+        """Generate thumbnail using Maya's playblast for real scene preview"""
+        try:
+            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
+            import tempfile
+            
+            # Create temporary directory for thumbnail
+            temp_dir = tempfile.mkdtemp(prefix="maya_thumb_")
+            thumb_name = f"thumb_{os.path.basename(file_path)}"
+            thumb_path = os.path.join(temp_dir, thumb_name)
+            
+            # Set up viewport for thumbnail
+            current_panel = cmds.getPanel(withFocus=True)
+            if 'modelPanel' not in current_panel:
+                model_panels = cmds.getPanel(type='modelPanel')
+                if model_panels:
+                    current_panel = model_panels[0]
+            
+            if 'modelPanel' in current_panel:
+                # Configure viewport for clean thumbnail
+                cmds.modelEditor(current_panel, edit=True, 
+                               displayAppearance='smoothShaded',
+                               wireframeOnShaded=False,
+                               displayLights='default',
+                               shadows=False,
+                               useDefaultMaterial=False,
+                               grid=False,
+                               handles=False,
+                               manipulators=False)
+                
+                # Generate playblast thumbnail
+                cmds.playblast(
+                    frame=1,
+                    format='image',
+                    compression='png',
+                    quality=70,
+                    percent=100,
+                    width=size[0] * 2,  # Generate at 2x for better quality
+                    height=size[1] * 2,
+                    viewer=False,
+                    showOrnaments=False,
+                    filename=thumb_path
+                )
+                
+                # Return the generated thumbnail path
+                generated_files = [f for f in os.listdir(temp_dir) if f.startswith(thumb_name)]
+                if generated_files:
+                    return os.path.join(temp_dir, generated_files[0])
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error generating playblast thumbnail: {e}")
+            return None
+    
+    def _generate_rendered_maya_thumbnail(self, size, meshes):
+        """Generate rendered thumbnail when playblast fails"""
+        try:
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(60, 60, 80))  # Dark blue-gray background
+            
+            painter = QPainter(pixmap)
+            
+            # Draw wireframe representation
+            painter.setPen(QPen(QColor(150, 200, 255), 1))  # Light blue lines
+            
+            # Draw simple wireframe pattern
+            mesh_count = len(meshes)
+            for i in range(min(mesh_count, 8)):  # Max 8 objects for clarity
+                x_offset = (i % 3) * 15 + 10
+                y_offset = (i // 3) * 15 + 10
+                
+                # Draw simple cube wireframe
+                painter.drawRect(x_offset, y_offset, 12, 12)
+                painter.drawLine(x_offset, y_offset, x_offset + 3, y_offset - 3)
+                painter.drawLine(x_offset + 12, y_offset, x_offset + 15, y_offset - 3)
+                painter.drawLine(x_offset + 12, y_offset + 12, x_offset + 15, y_offset + 9)
+                painter.drawRect(x_offset + 3, y_offset - 3, 12, 12)
+            
+            # Add file type label
+            painter.setPen(QColor(255, 255, 255))
+            font = painter.font()
+            font.setPixelSize(8)
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(5, size[1] - 5, f"{mesh_count} objects")
+            
+            painter.end()
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating rendered Maya thumbnail: {e}")
+            return self._generate_text_thumbnail("MAYA", QColor(100, 150, 255), size)
+    
+    def _generate_obj_thumbnail(self, file_path, size):
+        """Generate thumbnail preview for OBJ files"""
+        try:
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(50, 40, 30))  # Brown background for geometry
+            
+            # Try to parse OBJ file for vertex count
+            vertex_count = 0
+            face_count = 0
+            
+            try:
+                with open(file_path, 'r') as f:
+                    for line_num, line in enumerate(f):
+                        if line_num > 1000:  # Don't read entire large files
+                            break
+                        line = line.strip()
+                        if line.startswith('v '):
+                            vertex_count += 1
+                        elif line.startswith('f '):
+                            face_count += 1
+            except:
+                pass
+            
+            painter = QPainter(pixmap)
+            
+            # Draw mesh representation
+            painter.setPen(QPen(QColor(255, 180, 120), 1))  # Orange wireframe
+            
+            # Draw geometric pattern based on complexity
+            if vertex_count > 0:
+                # Draw more complex pattern for higher poly count
+                complexity = min(vertex_count // 100, 10)
+                for i in range(complexity + 3):
+                    x = 10 + (i % 4) * 12
+                    y = 10 + (i // 4) * 12
+                    painter.drawEllipse(x, y, 8, 8)
+                    if i > 0:
+                        prev_x = 10 + ((i-1) % 4) * 12 + 4
+                        prev_y = 10 + ((i-1) // 4) * 12 + 4
+                        painter.drawLine(prev_x, prev_y, x + 4, y + 4)
+            else:
+                # Simple geometric pattern
+                painter.drawPolygon([
+                    QPoint(size[0]//2, 10),
+                    QPoint(size[0]-10, size[1]//2),
+                    QPoint(size[0]//2, size[1]-10),
+                    QPoint(10, size[1]//2)
+                ])
+            
+            # Add statistics
+            painter.setPen(QColor(255, 255, 255))
+            font = painter.font()
+            font.setPixelSize(7)
+            painter.setFont(font)
+            
+            if vertex_count > 0:
+                painter.drawText(2, size[1] - 10, f"V:{vertex_count}")
+                painter.drawText(2, size[1] - 2, f"F:{face_count}")
+            else:
+                painter.drawText(2, size[1] - 5, "OBJ")
+            
+            painter.end()
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating OBJ thumbnail: {e}")
+            return self._generate_text_thumbnail("OBJ", QColor(255, 150, 100), size)
+    
+    def _generate_fbx_thumbnail(self, file_path, size):
+        """Generate thumbnail preview for FBX files"""
+        try:
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(40, 50, 40))  # Dark green background
+            
+            painter = QPainter(pixmap)
+            
+            # Draw FBX-style icon (hierarchical structure)
+            painter.setPen(QPen(QColor(150, 255, 150), 2))  # Bright green
+            
+            # Draw node hierarchy
+            # Root node
+            painter.drawRect(size[0]//2 - 4, 8, 8, 8)
+            
+            # Child nodes  
+            painter.drawRect(15, 25, 6, 6)
+            painter.drawRect(35, 25, 6, 6)
+            painter.drawRect(25, 40, 6, 6)
+            
+            # Connection lines
+            painter.setPen(QPen(QColor(100, 200, 100), 1))
+            painter.drawLine(size[0]//2, 16, 18, 25)  # Root to left child
+            painter.drawLine(size[0]//2, 16, 38, 25)  # Root to right child
+            painter.drawLine(28, 31, 28, 40)  # Child to grandchild
+            
+            # Add file type label
+            painter.setPen(QColor(255, 255, 255))
+            font = painter.font()
+            font.setPixelSize(8)
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(2, size[1] - 2, "FBX")
+            
+            painter.end()
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating FBX thumbnail: {e}")
+            return self._generate_text_thumbnail("FBX", QColor(150, 255, 100), size)
+    
+    def _generate_cache_thumbnail(self, file_path, size):
+        """Generate thumbnail for cache files (ABC, USD)"""
+        try:
+            file_ext = os.path.splitext(file_path)[1].lower()
+            
+            if file_ext == '.abc':
+                bg_color = QColor(60, 60, 30)  # Dark yellow for Alembic
+                fg_color = QColor(255, 255, 100)
+                label = "ABC"
+            else:  # .usd
+                bg_color = QColor(60, 30, 60)  # Dark purple for USD
+                fg_color = QColor(255, 100, 255)
+                label = "USD"
+            
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(bg_color)
+            
+            painter = QPainter(pixmap)
+            
+            # Draw cache/animation icon
+            painter.setPen(QPen(fg_color, 1))
+            
+            # Draw waveform pattern to represent animation/cache data
+            points = []
+            for x in range(0, size[0], 4):
+                y = size[1]//2 + int(10 * (0.5 - abs((x / size[0]) - 0.5)) * 2)
+                points.append(QPoint(x, y))
+            
+            for i in range(len(points) - 1):
+                painter.drawLine(points[i], points[i + 1])
+            
+            # Add dotted timeline
+            painter.setPen(QPen(fg_color, 1, Qt.PenStyle.DotLine))
+            painter.drawLine(0, size[1] - 15, size[0], size[1] - 15)
+            
+            # Add file type label
+            painter.setPen(fg_color)
+            font = painter.font()
+            font.setPixelSize(7)
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(2, size[1] - 2, label)
+            
+            painter.end()
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating cache thumbnail: {e}")
+            return self._generate_text_thumbnail("CACHE", QColor(255, 255, 100), size)
+    
+    def _generate_text_thumbnail(self, text, color, size):
+        """Generate simple text-based thumbnail as fallback"""
+        try:
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(40, 40, 40))  # Dark background
+            
+            painter = QPainter(pixmap)
+            painter.setPen(QColor(255, 255, 255))  # White text
+            
+            # Set font size based on thumbnail size
+            font = painter.font()
+            font.setPixelSize(max(8, size[0] // 8))
+            font.setBold(True)
+            painter.setFont(font)
+            
+            # Draw text centered
+            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, text)
+            
+            # Draw colored border
+            painter.setPen(QPen(color, 2))
+            painter.drawRect(1, 1, size[0] - 2, size[1] - 2)
+            
+            painter.end()
+            return pixmap
+            
+        except Exception as e:
+            print(f"Error generating text thumbnail: {e}")
+            # Ultimate fallback
+            pixmap = QPixmap(size[0], size[1])
+            pixmap.fill(QColor(128, 128, 128))
+            return pixmap
+    
+    def _generate_fallback_thumbnail(self, file_ext, size):
+        """Generate fallback thumbnail for unknown file types"""
+        # Color mapping for different file types
+        type_colors = {
+            '.ma': QColor(100, 150, 255),   # Maya ASCII - Blue
+            '.mb': QColor(80, 120, 200),    # Maya Binary - Dark Blue  
+            '.obj': QColor(255, 150, 100),  # OBJ - Orange
+            '.fbx': QColor(150, 255, 100),  # FBX - Green
+            '.abc': QColor(255, 255, 100),  # Alembic - Yellow
+            '.usd': QColor(255, 100, 150),  # USD - Pink
+        }
+        
+        color = type_colors.get(file_ext, QColor(128, 128, 128))
+        text = file_ext.upper().replace('.', '') if file_ext else "FILE"
+        
+        return self._generate_text_thumbnail(text, color, size)
+    
+    def _get_thumbnail_icon(self, file_path):
+        """Get thumbnail icon with UI duplication prevention through icon caching"""
+        try:
+            # Use absolute path for consistent caching
+            abs_path = os.path.abspath(file_path)
+            icon_cache_key = f"{abs_path}_icon"
+            
+            # Check icon cache first - PREVENT UI DUPLICATION
+            if icon_cache_key in self._icon_cache:
+                cached_icon = self._icon_cache[icon_cache_key]
+                if cached_icon and not cached_icon.isNull():
+                    print(f"Icon cache hit for {os.path.basename(file_path)}")
+                    return cached_icon
+            
+            # Generate thumbnail pixmap (with deduplication)
+            pixmap = self._generate_thumbnail_safe(file_path)
+            
+            if pixmap and not pixmap.isNull():
+                # Create a DEEP COPY of pixmap to prevent shared references
+                pixmap_copy = QPixmap(pixmap)  # This creates independent copy
+                
+                # Create QIcon from the independent pixmap copy
+                icon = QIcon()
+                icon.addPixmap(pixmap_copy, QIcon.Mode.Normal, QIcon.State.Off)
+                
+                # Cache the icon to prevent creating multiple QIcon objects for same asset
+                self._icon_cache[icon_cache_key] = icon
+                print(f"Created and cached icon for {os.path.basename(file_path)}")
+                
+                # Clean icon cache if it gets too large
+                if len(self._icon_cache) > self._thumbnail_cache_size_limit:
+                    # Remove oldest icon cache entry
+                    oldest_icon_key = next(iter(self._icon_cache))
+                    del self._icon_cache[oldest_icon_key]
+                    print(f"Icon cache limit reached, removed: {oldest_icon_key}")
+                
+                return icon
+            else:
+                # Return empty icon for fallback
+                return QIcon()
+                
+        except Exception as e:
+            print(f"Error creating thumbnail icon for {file_path}: {e}")
+            # Return empty icon on error to use fallback system
+            return QIcon()
+            return QIcon()
+    
+    def _queue_thumbnail_generation(self, file_paths, callback=None):
+        """Queue multiple thumbnail generations for background processing with deduplication"""
+        if self._is_cleaned_up:
+            return
+            
+        try:
+            queued_count = 0
+            for file_path in file_paths:
+                # Use absolute path for consistent caching
+                abs_path = os.path.abspath(file_path)
+                cache_key = f"{abs_path}_64x64"
+                
+                # Only queue if not already cached AND not already in queue AND not currently generating
+                if (cache_key not in self._thumbnail_cache and 
+                    abs_path not in self._thumbnail_generation_queue and
+                    cache_key not in getattr(self, '_generating_thumbnails', set())):
+                    
+                    self._thumbnail_generation_queue.append(abs_path)
+                    queued_count += 1
+                    
+            if queued_count > 0:
+                print(f"Queued {queued_count} new thumbnails for background generation")
+            else:
+                print("No new thumbnails to queue - all already cached or in progress")
+            
+            # Process queue in background if not already processing
+            if not hasattr(self, '_thumbnail_processing') or not self._thumbnail_processing:
+                if self._thumbnail_generation_queue:  # Only process if queue has items
+                    self._process_thumbnail_queue(callback)
+                
+        except Exception as e:
+            print(f"Error queueing thumbnail generation: {e}")
+    
+    def _process_thumbnail_queue(self, callback=None):
+        """Process thumbnail generation queue with memory management"""
+        if self._is_cleaned_up or not self._thumbnail_generation_queue:
+            return
+            
+        try:
+            self._thumbnail_processing = True
+            
+            # Process queue in batches to prevent memory overload
+            batch_size = 5  # Small batches for memory safety
+            batch = self._thumbnail_generation_queue[:batch_size]
+            self._thumbnail_generation_queue = self._thumbnail_generation_queue[batch_size:]
+            
+            for file_path in batch:
+                if not self._is_cleaned_up:  # Check if still valid
+                    # Generate thumbnail (will cache automatically)
+                    self._generate_thumbnail_safe(file_path)
+                    
+                    # Call callback if provided
+                    if callback:
+                        callback(file_path)
+            
+            # Continue processing if queue has more items
+            if self._thumbnail_generation_queue and not self._is_cleaned_up:
+                # Use timer for non-blocking processing
+                if hasattr(self, '_thumbnail_timer'):
+                    if not hasattr(self._thumbnail_timer, 'deleteLater'):
+                        # Create timer if needed
+                        from PySide6.QtCore import QTimer
+                        self._thumbnail_timer = QTimer()
+                        self._thumbnail_timer.setSingleShot(True)
+                        self._thumbnail_timer.timeout.connect(lambda: self._process_thumbnail_queue(callback))
+                        self._thumbnail_timer.start(100)  # Process next batch after 100ms
+            else:
+                self._thumbnail_processing = False
+                
+        except Exception as e:
+            print(f"Error processing thumbnail queue: {e}")
+            self._thumbnail_processing = False
+    
+    def _safe_basename(self, file_path):
+        """Safe alternative to os.path.basename that avoids recursion issues"""
+        if not file_path or not isinstance(file_path, str):
+            return ""
+        
+        try:
+            # Normalize path separators and extract the last component manually
+            normalized_path = str(file_path).replace('\\', '/')
+            filename = normalized_path.split('/')[-1] if '/' in normalized_path else normalized_path
+            return filename
+        except Exception as e:
+            print(f"Error extracting basename from '{file_path}': {e}")
+            return "unknown_file"
+    
+    def _safe_splitext(self, file_path):
+        """Safe alternative to os.path.splitext that uses safe basename"""
+        filename = self._safe_basename(file_path)
+        if '.' in filename:
+            name, ext = filename.rsplit('.', 1)
+            return name, '.' + ext
+        return filename, ""
+    
+    def _safe_asset_name(self, asset_path):
+        """Get asset name safely without extension"""
+        name, _ = self._safe_splitext(asset_path)
+        return name
+    
+    def _validate_project_path(self, path):
+        """Validate and clean a project path to prevent recursion errors"""
+        if not path:
+            return None
+            
+        try:
+            # Ensure it's a string
+            if not isinstance(path, str):
+                print(f"Warning: Project path is not a string: {type(path)}")
+                return None
+                
+            # Basic validation
+            path = path.strip()
+            if not path:
+                print("Warning: Project path is empty after strip")
+                return None
+                
+            # Test if os.path.basename works without recursion
+            try:
+                test_basename = os.path.basename(path.rstrip(os.sep))
+                if not test_basename:
+                    print(f"Warning: Project path produces empty basename: {path}")
+                    return None
+            except (RecursionError, OSError, ValueError) as e:
+                print(f"Warning: Project path causes errors: {path} - {e}")
+                return None
+                
+            # Additional path validation
+            if len(path) > 260:  # Windows path length limit
+                print(f"Warning: Project path too long ({len(path)} chars): {path[:50]}...")
+                return None
+                
+            return path
+            
+        except Exception as e:
+            print(f"Error validating project path '{path}': {e}")
+            return None
+    
+    def reset_current_project(self):
+        """Reset current project to None and clean up problematic state"""
+        print("Resetting current project due to errors...")
+        self.current_project = None
+        self.save_config()  # Save the reset state
     
     def _ensure_project_entry(self, project_name=None):
         """Ensure project entry exists in assets_library, return project_name"""
+        # Add recursion protection flag
+        if hasattr(self, '_processing_project_entry') and self._processing_project_entry:
+            print("Warning: Recursive call to _ensure_project_entry detected, returning None")
+            return None
+            
         if not self.current_project:
             return None
             
         if project_name is None:
-            project_name = os.path.basename(self.current_project)
+            try:
+                # Set recursion protection
+                self._processing_project_entry = True
+                
+                # Add safety check for problematic paths that cause recursion
+                if not isinstance(self.current_project, str):
+                    print(f"Warning: current_project is not a string: {type(self.current_project)}")
+                    return None
+                
+                # Check for empty or problematic paths
+                current_path = str(self.current_project).strip()
+                if not current_path:
+                    print("Warning: current_project is empty or whitespace")
+                    return None
+                
+                # CRITICAL FIX: Use manual string parsing instead of os.path.basename to avoid recursion
+                # Normalize path separators and extract the last component
+                normalized_path = current_path.replace('\\', '/').rstrip('/')
+                path_parts = normalized_path.split('/')
+                
+                # Get the last non-empty part
+                project_name = None
+                for part in reversed(path_parts):
+                    if part.strip():
+                        project_name = part.strip()
+                        break
+                
+                # Additional safety check
+                if not project_name:
+                    project_name = "UnknownProject"
+                    print(f"Warning: Could not extract project name, using: {project_name}")
+                    
+            except Exception as e:
+                print(f"Error extracting project name from '{self.current_project}': {e}")
+                # Create a safe fallback project name
+                project_name = f"Project_{int(time.time())}"
+                print(f"Using emergency fallback project name: {project_name}")
+            finally:
+                # Always clear recursion protection
+                self._processing_project_entry = False
         
-        # Initialize project entry if not exist
-        if project_name not in self.assets_library:
-            self.assets_library[project_name] = {
-                'path': self.current_project,
-                'created': datetime.now().isoformat(),
-                'assets': {}
-            }
+        try:
+            # Initialize project entry if not exist
+            if project_name not in self.assets_library:
+                self.assets_library[project_name] = {
+                    'path': self.current_project,
+                    'created': datetime.now().isoformat(),
+                    'assets': {}
+                }
+        except Exception as e:
+            print(f"Error initializing project entry for '{project_name}': {e}")
+            return None
         
         return project_name
     
@@ -346,7 +1202,20 @@ class AssetManager:
             if os.path.exists(self.config_path):
                 with open(self.config_path, 'r') as f:
                     config = json.load(f)
-                    self.current_project = config.get('current_project', None)
+                    
+                    # Safely load current_project with validation
+                    current_project = config.get('current_project', None)
+                    if current_project:
+                        # Use the new validation method
+                        validated_project = self._validate_project_path(current_project)
+                        if validated_project:
+                            self.current_project = validated_project
+                        else:
+                            print(f"Warning: Invalid project path in config, resetting to None")
+                            self.current_project = None
+                    else:
+                        self.current_project = None
+                        
                     self.assets_library = config.get('assets_library', {})
                     
                     # Load custom asset types if available
@@ -356,6 +1225,7 @@ class AssetManager:
         except Exception as e:
             print(f"Error loading config: {e}")
             self.assets_library = {}
+            self.current_project = None
     
     def save_config(self):
         """Save configuration to file"""
@@ -615,15 +1485,28 @@ class AssetManager:
     
     def get_asset_tags(self, asset_path):
         """Get all tags for an asset"""
-        project_name = self._ensure_project_entry()
-        if not project_name:
+        try:
+            project_name = self._ensure_project_entry()
+            if not project_name:
+                return []
+            
+            # CRITICAL FIX: Use manual string parsing instead of os.path.basename to avoid recursion
+            if not asset_path or not isinstance(asset_path, str):
+                return []
+                
+            # Extract filename manually to avoid os.path recursion
+            normalized_path = str(asset_path).replace('\\', '/')
+            filename = normalized_path.split('/')[-1] if '/' in normalized_path else normalized_path
+            asset_name = filename.rsplit('.', 1)[0] if '.' in filename else filename
+            
+            if 'tags' not in self.assets_library[project_name]:
+                return []
+            if asset_name not in self.assets_library[project_name]['tags']:
+                return []
+            return self.assets_library[project_name]['tags'][asset_name]
+        except (RecursionError, KeyError, ValueError, OSError) as e:
+            print(f"Error getting asset tags for {asset_path}: {e}")
             return []
-        asset_name = os.path.splitext(os.path.basename(asset_path))[0]
-        if 'tags' not in self.assets_library[project_name]:
-            return []
-        if asset_name not in self.assets_library[project_name]['tags']:
-            return []
-        return self.assets_library[project_name]['tags'][asset_name]
     
     def get_all_tags(self):
         """Get all unique tags in the current project"""
@@ -732,16 +1615,20 @@ class AssetManager:
     
     def get_asset_collections(self):
         """Get all collections in the current project"""
-        project_name = self._ensure_project_entry()
-        if not project_name:
-            return {}
-        
         try:
-            if 'collections' in self.assets_library[project_name]:
-                return self.assets_library[project_name]['collections']
-        except KeyError:
-            pass
-        return {}
+            project_name = self._ensure_project_entry()
+            if not project_name:
+                return {}
+            
+            try:
+                if 'collections' in self.assets_library[project_name]:
+                    return self.assets_library[project_name]['collections']
+            except KeyError:
+                pass
+            return {}
+        except (RecursionError, KeyError, ValueError, OSError) as e:
+            print(f"Error getting asset collections: {e}")
+            return {}
     
     def track_asset_dependency(self, asset_path, dependency_path):
         """Track that an asset depends on another asset"""
@@ -930,183 +1817,6 @@ class AssetManager:
             return self.assets_library[project_name]['metadata'][asset_name]
         
         return {}
-    
-    def generate_asset_thumbnail(self, asset_path, thumbnail_size=(128, 128)):
-        """Generate a thumbnail for an asset with robust error handling"""
-        if not MAYA_AVAILABLE or cmds is None:
-            return None
-        
-        try:
-            asset_name = os.path.splitext(os.path.basename(asset_path))[0]
-            thumbnail_path = os.path.join(self.thumbnail_cache_dir, f"{asset_name}.png")
-            
-            # Check if thumbnail already exists and is newer than the asset
-            if (os.path.exists(thumbnail_path) and 
-                os.path.getmtime(thumbnail_path) > os.path.getmtime(asset_path)):
-                return thumbnail_path
-            
-            # Create a temporary scene for thumbnail generation
-            current_scene = cmds.file(query=True, sceneName=True)
-            temp_scene = cmds.file(new=True, force=True)
-            
-            try:
-                # Create a unique namespace to avoid name clashes
-                namespace = f"thumb_{asset_name}_{int(os.path.getmtime(asset_path))}"
-                
-                # Import the asset with namespace and error handling
-                import_success = False
-                if asset_path.endswith('.ma'):
-                    try:
-                        cmds.file(asset_path, i=True, type="mayaAscii", namespace=namespace, ignoreVersion=True, preserveReferences=False)
-                        import_success = True
-                    except Exception as e:
-                        print(f"Warning: Maya ASCII import failed for {asset_path}: {e}")
-                elif asset_path.endswith('.mb'):
-                    try:
-                        cmds.file(asset_path, i=True, type="mayaBinary", namespace=namespace, ignoreVersion=True, preserveReferences=False)
-                        import_success = True
-                    except Exception as e:
-                        print(f"Warning: Maya Binary import failed for {asset_path}: {e}")
-                elif asset_path.endswith('.obj'):
-                    try:
-                        cmds.file(asset_path, i=True, type="OBJ", namespace=namespace)
-                        import_success = True
-                    except Exception as e:
-                        print(f"Warning: OBJ import failed for {asset_path}: {e}")
-                elif asset_path.endswith('.fbx'):
-                    try:
-                        cmds.file(asset_path, i=True, type="FBX", namespace=namespace)
-                        import_success = True
-                    except Exception as e:
-                        print(f"Warning: FBX import failed for {asset_path}: {e}")
-                
-                if not import_success:
-                    print(f"Failed to import asset for thumbnail generation: {asset_path}")
-                    return None
-                
-                # Get all imported geometry
-                all_geo = cmds.ls(type=['mesh', 'nurbsSurface', 'nurbsCurve'], long=True)
-                if not all_geo:
-                    print(f"No geometry found in asset: {asset_path}")
-                    return None
-                
-                # Select all geometry for framing
-                cmds.select(all_geo)
-                
-                # Frame all objects in perspective view
-                try:
-                    cmds.viewFit('persp', all=True)
-                except:
-                    # Fallback to fit selection
-                    cmds.viewFit('persp', fitFactor=1.0)
-                
-                # Ensure we're in shaded mode
-                cmds.modelEditor('perspView', edit=True, displayAppearance='smoothShaded')
-                
-                # Capture viewport with better settings
-                thumbnail_temp = thumbnail_path.replace('.png', '_temp.png')
-                cmds.playblast(
-                    format="image",
-                    filename=thumbnail_temp,
-                    widthHeight=thumbnail_size,
-                    showOrnaments=False,
-                    frame=1,
-                    viewer=False,
-                    percent=100,
-                    compression="png"
-                )
-                
-                # Rename the generated file (Maya adds frame numbers)
-                if os.path.exists(f"{thumbnail_temp}.0001.png"):
-                    import shutil
-                    shutil.move(f"{thumbnail_temp}.0001.png", thumbnail_path)
-                elif os.path.exists(thumbnail_temp):
-                    import shutil
-                    shutil.move(thumbnail_temp, thumbnail_path)
-                
-            finally:
-                # Restore original scene
-                if current_scene:
-                    try:
-                        cmds.file(current_scene, open=True, force=True)
-                    except:
-                        cmds.file(new=True, force=True)
-                else:
-                    cmds.file(new=True, force=True)
-            
-            return thumbnail_path if os.path.exists(thumbnail_path) else None
-            return thumbnail_path if os.path.exists(thumbnail_path) else None
-            
-        except Exception as e:
-            print(f"Error generating thumbnail for {asset_path}: {e}")
-            return None
-    
-    def get_asset_thumbnail(self, asset_path):
-        """Get the thumbnail path for an asset, generate if needed"""
-        asset_name = os.path.splitext(os.path.basename(asset_path))[0]
-        thumbnail_path = os.path.join(self.thumbnail_cache_dir, f"{asset_name}.png")
-        
-        if os.path.exists(thumbnail_path):
-            return thumbnail_path
-        
-        # Generate thumbnail in background if Maya is available
-        if MAYA_AVAILABLE:
-            return self.generate_asset_thumbnail(asset_path)
-        
-        return None
-    
-    def clear_thumbnail_cache(self):
-        """Clear all cached thumbnails"""
-        try:
-            if os.path.exists(self.thumbnail_cache_dir):
-                for file in os.listdir(self.thumbnail_cache_dir):
-                    file_path = os.path.join(self.thumbnail_cache_dir, file)
-                    if os.path.isfile(file_path):
-                        os.remove(file_path)
-            return True
-        except Exception as e:
-            print(f"Error clearing thumbnail cache: {e}")
-            return False
-    
-    def regenerate_all_thumbnails(self, project_path=None):
-        """Regenerate thumbnails for all assets in project (debugging helper)"""
-        if not MAYA_AVAILABLE or cmds is None:
-            print("Maya not available - cannot generate thumbnails")
-            return
-        
-        if not project_path:
-            project_path = self.current_project
-        
-        if not project_path or not os.path.exists(project_path):
-            print("No valid project path")
-            return
-        
-        print(f"Regenerating thumbnails for project: {project_path}")
-        supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
-        generated_count = 0
-        
-        for root, dirs, files in os.walk(project_path):
-            for file in files:
-                if any(file.lower().endswith(ext) for ext in supported_extensions):
-                    file_path = os.path.join(root, file)
-                    print(f"Generating thumbnail for: {file}")
-                    
-                    # Force regeneration by removing existing thumbnail
-                    asset_name = os.path.splitext(file)[0]
-                    thumbnail_path = os.path.join(self.thumbnail_cache_dir, f"{asset_name}.png")
-                    if os.path.exists(thumbnail_path):
-                        os.remove(thumbnail_path)
-                    
-                    # Generate new thumbnail
-                    result = self.generate_asset_thumbnail(file_path)
-                    if result:
-                        generated_count += 1
-                        print(f"  ✓ Generated: {result}")
-                    else:
-                        print(f"  ✗ Failed to generate thumbnail")
-        
-        print(f"Generated {generated_count} thumbnails")
-        return generated_count
 
 
 class AssetTypeCustomizationDialog(QDialog):
@@ -2071,6 +2781,7 @@ class AddAssetsFromFoldersDialog(QDialog):
         result = self.asset_manager.register_multiple_assets(selected_files, copy_files, progress_callback)
         
         progress_dialog.close()
+        progress_dialog.deleteLater()  # Proper cleanup to prevent memory leaks
         
         # Show results
         registered_count = len(result['registered'])
@@ -2103,6 +2814,16 @@ class AssetManagerUI(QMainWindow):
         # Set window icon (tab bar icon)
         self.set_window_icon()
         
+        # Initialize file system watcher for automatic refresh
+        self.file_watcher = QFileSystemWatcher()
+        self.file_watcher.directoryChanged.connect(self._on_directory_changed)
+        
+        # Throttle refresh to avoid excessive updates
+        self._refresh_timer = QTimer()
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.timeout.connect(self._delayed_refresh)
+        self._refresh_timer.setInterval(2000)  # 2 second delay
+        
         self.setup_ui()
         self.refresh_assets()
     
@@ -2125,6 +2846,78 @@ class AssetManagerUI(QMainWindow):
                 print("Maya not available, using default window icon")
         except Exception as e:
             print(f"Could not set window icon: {e}")
+    
+    def closeEvent(self, event):
+        """Handle window close event and cleanup resources"""
+        try:
+            print("Asset Manager window closing - performing cleanup...")
+            
+            # Stop and disconnect file watcher
+            if hasattr(self, 'file_watcher') and self.file_watcher:
+                try:
+                    self.file_watcher.directoryChanged.disconnect()
+                    self.file_watcher.deleteLater()
+                    print("File system watcher cleaned up")
+                except Exception as e:
+                    print(f"Error cleaning up file watcher: {e}")
+            
+            # Stop refresh timer
+            if hasattr(self, '_refresh_timer') and self._refresh_timer:
+                try:
+                    self._refresh_timer.stop()
+                    self._refresh_timer.deleteLater()
+                    print("Refresh timer cleaned up")
+                except Exception as e:
+                    print(f"Error cleaning up refresh timer: {e}")
+            
+            # Cleanup asset manager resources
+            if hasattr(self, 'asset_manager') and self.asset_manager:
+                try:
+                    self.asset_manager.cleanup()
+                    print("Asset manager cleaned up")
+                except Exception as e:
+                    print(f"Error cleaning up asset manager: {e}")
+            
+            # Clear any UI references
+            self._clear_ui_references()
+            
+            print("Asset Manager window cleanup completed")
+            
+        except Exception as e:
+            print(f"Error during window cleanup: {e}")
+        finally:
+            # Accept the close event
+            event.accept()
+    
+    def _clear_ui_references(self):
+        """Clear UI widget references to prevent memory leaks"""
+        try:
+            # Clear large UI components
+            if hasattr(self, 'tab_widget') and self.tab_widget:
+                for i in range(self.tab_widget.count()):
+                    widget = self.tab_widget.widget(i)
+                    if widget:
+                        # Find all QListWidget children and clear them
+                        for list_widget in widget.findChildren(QListWidget):
+                            list_widget.clear()
+                self.tab_widget.clear()
+          
+            if hasattr(self, 'asset_list') and self.asset_list:
+                self.asset_list.clear()
+            
+            if hasattr(self, 'categories_list') and self.categories_list:
+                self.categories_list.clear()
+            
+        except Exception as e:
+            print(f"Error clearing UI references: {e}")
+    def _safe_close_progress_dialog(self, progress_dialog):
+        """Safely close and cleanup progress dialog to prevent memory leaks"""
+        try:
+            if progress_dialog:
+                progress_dialog.close()
+                progress_dialog.deleteLater()
+        except Exception as e:
+            print(f"Error closing progress dialog: {e}")
     
     def setup_ui(self):
         """Setup the main UI components"""
@@ -2223,15 +3016,6 @@ class AssetManagerUI(QMainWindow):
         tools_menu.addAction(dependency_viewer_action)
         
         tools_menu.addSeparator()
-        
-        # New v1.1.2 Thumbnail Management Tools
-        generate_thumbnails_action = QAction('Generate Thumbnails...', self)
-        generate_thumbnails_action.triggered.connect(self.generate_thumbnails_dialog)
-        tools_menu.addAction(generate_thumbnails_action)
-        
-        clear_thumbnails_action = QAction('Clear Thumbnail Cache', self)
-        clear_thumbnails_action.triggered.connect(self.clear_thumbnail_cache_dialog)
-        tools_menu.addAction(clear_thumbnails_action)
         
         # Help menu
         help_menu = menubar.addMenu('Help')
@@ -2460,10 +3244,14 @@ class AssetManagerUI(QMainWindow):
         
         # Asset list
         self.asset_list = QListWidget()
+        
+        # Configure consistent thumbnail sizing to prevent double-sized thumbnails
         self.asset_list.setIconSize(QSize(64, 64))
-        self.asset_list.setGridSize(QSize(80, 80))
+        self.asset_list.setGridSize(QSize(80, 80))  # Grid slightly larger than icon
         self.asset_list.setViewMode(QListWidget.ViewMode.IconMode)  # type: ignore
         self.asset_list.setResizeMode(QListWidget.ResizeMode.Adjust)  # type: ignore
+        self.asset_list.setUniformItemSizes(True)  # Prevent size variations
+        self.asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
         self.asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
         # Enable context menu for asset management features
@@ -2478,18 +3266,119 @@ class AssetManagerUI(QMainWindow):
         # Store reference to main asset list for refreshing
         self.main_asset_list = self.asset_list
     
-    def refresh_collection_tabs(self):
-        """Refresh collection tabs based on current collections"""
-        # Remove all collection tabs (keep only the first "All Assets" tab)
-        while self.tab_widget.count() > 1:
-            self.tab_widget.removeTab(1)
+    def refresh_collection_tabs(self, force_refresh=False):
+        """Refresh collection tabs based on current collections with improved synchronization - WITH RECURSION PROTECTION"""
+        # CRITICAL: Prevent recursion cycles in collection tabs refresh
+        if hasattr(self, '_refreshing_collection_tabs') and self._refreshing_collection_tabs:
+            print("Warning: Blocking recursive refresh_collection_tabs call")
+            return
+            
+        if not hasattr(self, 'tab_widget') or not self.tab_widget:
+            return
         
-        # Get current collections
-        collections = self.asset_manager.get_asset_collections()
+        try:
+            self._refreshing_collection_tabs = True
+            
+            # Clear file cache when refreshing collections to ensure fresh data
+            if force_refresh:
+                self.asset_manager._clear_file_cache()
+            
+            # Store current tab index to restore after refresh
+            current_tab_index = self.tab_widget.currentIndex()
+            current_tab_name = None
+            if current_tab_index > 0:  # Not the "All Assets" tab
+                current_tab_name = self.tab_widget.tabText(current_tab_index)
+            
+            # Remove all collection tabs (keep only the first "All Assets" tab)
+            while self.tab_widget.count() > 1:
+                self.tab_widget.removeTab(1)
+            
+            # Get current collections with error handling
+            try:
+                collections = self.asset_manager.get_asset_collections()
+            except (RecursionError, Exception) as e:
+                print(f"Error getting collections: {e}")
+                collections = {}
+            
+            # Add tab for each collection with progress feedback
+            new_tab_index = 1  # Track index for restoring selection
+            restore_tab_index = 0  # Default to "All Assets"
+            
+            for collection_name, collection_data in collections.items():
+                try:
+                    self.create_collection_tab(collection_name, collection_data)
+                    
+                    # Check if this was the previously selected tab
+                    if current_tab_name and collection_name in current_tab_name:
+                        restore_tab_index = new_tab_index
+                    
+                    new_tab_index += 1
+                    
+                except Exception as e:
+                    print(f"Error creating tab for collection '{collection_name}': {e}")
+                    continue
+            
+            # Restore tab selection
+            if restore_tab_index < self.tab_widget.count():
+                self.tab_widget.setCurrentIndex(restore_tab_index)
+            
+            # CRITICAL: DO NOT refresh current tab content here to avoid recursion
+            # Tab content will be refreshed when tabs are switched or explicitly requested
+            
+        except Exception as e:
+            print(f"Error in refresh_collection_tabs: {e}")
+        finally:
+            self._refreshing_collection_tabs = False
+    
+    def _refresh_current_tab_content(self):
+        """Refresh the content of the currently visible tab - WITH RECURSION PROTECTION"""
+        # CRITICAL: Prevent recursion cycles in UI refresh
+        if hasattr(self, '_refreshing_tab_content') and self._refreshing_tab_content:
+            print("Warning: Blocking recursive _refresh_current_tab_content call")
+            return
+            
+        if not hasattr(self, 'tab_widget') or not self.tab_widget:
+            return
         
-        # Add tab for each collection
-        for collection_name, collection_data in collections.items():
-            self.create_collection_tab(collection_name, collection_data)
+        current_widget = None
+        current_index = -1  # Initialize with default value
+        try:
+            self._refreshing_tab_content = True
+            current_index = self.tab_widget.currentIndex()
+            
+            if current_index == 0:
+                # All Assets tab - refresh main asset list (but NOT collection filter to avoid recursion)
+                if hasattr(self, 'main_asset_list'):
+                    self._refresh_asset_list_safe()  # Use safe method
+            else:
+                # Collection tab - refresh the collection's asset list
+                current_widget = self.tab_widget.currentWidget()
+                if current_widget:
+                    # Get collection name and refresh its content safely
+                    if hasattr(current_widget, 'layout') and current_widget.layout():
+                        # Find the asset list in this tab and refresh it
+                        pass  # Skip complex collection refresh to avoid recursion
+        except Exception as e:
+            print(f"Error in _refresh_current_tab_content: {e}")
+        finally:
+            self._refreshing_tab_content = False
+            if current_widget and current_index >= 0:
+                # Find the asset list widget in the collection tab
+                asset_list_widgets = current_widget.findChildren(QListWidget)
+                if asset_list_widgets:
+                    asset_list = asset_list_widgets[0]  # First (should be only) list widget
+                    # Get collection name from tab text
+                    tab_text = self.tab_widget.tabText(current_index)
+                    collection_name = tab_text.replace("📦 ", "")
+                    
+                    # Refresh collection data and repopulate
+                    try:
+                        collections = self.asset_manager.get_asset_collections()
+                        if collection_name in collections:
+                            collection_data = collections[collection_name]
+                            self.populate_collection_assets(asset_list, collection_data.get('assets', []))
+                    except Exception as e:
+                        print(f"Error refreshing collection tab content: {e}")
     
     def create_collection_tab(self, collection_name, collection_data):
         """Create a tab for a specific collection"""
@@ -2516,10 +3405,14 @@ class AssetManagerUI(QMainWindow):
         
         # Asset list for this collection
         collection_asset_list = QListWidget()
+        
+        # Configure consistent thumbnail sizing to prevent double-sized thumbnails
         collection_asset_list.setIconSize(QSize(64, 64))
-        collection_asset_list.setGridSize(QSize(80, 80))
+        collection_asset_list.setGridSize(QSize(80, 80))  # Grid slightly larger than icon
         collection_asset_list.setViewMode(QListWidget.ViewMode.IconMode)  # type: ignore
         collection_asset_list.setResizeMode(QListWidget.ResizeMode.Adjust)  # type: ignore
+        collection_asset_list.setUniformItemSizes(True)  # Prevent size variations
+        collection_asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
         collection_asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
         # Enable context menu
@@ -2550,53 +3443,110 @@ class AssetManagerUI(QMainWindow):
         self.tab_widget.addTab(collection_widget, tab_name)
     
     def populate_collection_assets(self, asset_list_widget, asset_names):
-        """Populate a collection's asset list with actual asset files"""
+        """Populate a collection's asset list with improved performance for network storage"""
         asset_list_widget.clear()
         
         if not self.asset_manager.current_project:
             return
             
-        # Scan for assets in the current project
         project_path = self.asset_manager.current_project
         if not os.path.exists(project_path):
             return
-            
-        supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
         
-        # Find matching asset files
-        for root, dirs, files in os.walk(project_path):
-            for file in files:
-                if any(file.lower().endswith(ext) for ext in supported_extensions):
-                    file_path = os.path.join(root, file)
-                    asset_name = os.path.splitext(file)[0]
+        # Use cached file list for better network performance
+        try:
+            asset_files = self.asset_manager._get_cached_file_list(project_path)
+        except Exception as e:
+            print(f"Error getting cached file list: {e}")
+            return
+        
+        # Show progress for large collections
+        if len(asset_names) > 50:
+            progress = QProgressDialog("Loading collection assets...", "Cancel", 0, len(asset_names), self)
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.show()
+        else:
+            progress = None
+        
+        items_processed = 0
+        
+        # Process files in batches for better performance
+        for file_path in asset_files:
+            if progress and progress.wasCanceled():
+                break
+            
+            asset_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # Only add if this asset is in the collection
+            if asset_name in asset_names:
+                try:
+                    # Create enhanced display text
+                    display_text = self._create_asset_display_text(asset_name, file_path)
                     
-                    # Only add if this asset is in the collection
-                    if asset_name in asset_names:
-                        # Create enhanced display text
-                        display_text = self._create_asset_display_text(asset_name, file_path)
-                        
-                        item = QListWidgetItem(display_text)
-                        item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
-                        
-                        # Set background color based on asset type
-                        asset_color = self.asset_manager.get_asset_type_color(file_path)
-                        item.setBackground(QBrush(asset_color))
-                        
-                        # Try to load thumbnail, fallback to file type icon
-                        thumbnail_path = self.asset_manager.get_asset_thumbnail(file_path)
-                        if thumbnail_path and os.path.exists(thumbnail_path):
-                            thumbnail_icon = QIcon(thumbnail_path)
-                            item.setIcon(thumbnail_icon)
-                        else:
-                            # Set icon based on file type as fallback
-                            if file.lower().endswith(('.ma', '.mb')):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))  # type: ignore
-                            elif file.lower().endswith('.obj'):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogListView))  # type: ignore
-                            elif file.lower().endswith('.fbx'):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogStart))  # type: ignore
-                        
-                        asset_list_widget.addItem(item)
+                    item = QListWidgetItem(display_text)
+                    item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
+                    
+                    # Set background color based on asset type
+                    asset_color = self.asset_manager.get_asset_type_color(file_path)
+                    item.setBackground(QBrush(asset_color))
+                    
+                    # Try to load thumbnail with lazy loading for better performance
+                    self._set_asset_item_icon(item, file_path)
+                    
+                    asset_list_widget.addItem(item)
+                    
+                    items_processed += 1
+                    if progress:
+                        progress.setValue(items_processed)
+                        if items_processed % 10 == 0:  # Update UI every 10 items
+                            QApplication.processEvents()
+                
+                except Exception as e:
+                    print(f"Error processing asset {asset_name}: {e}")
+                    continue
+        
+        if progress:
+            progress.close()
+            progress.deleteLater()  # Proper cleanup to prevent memory leaks
+    
+    def _set_asset_item_icon(self, item, file_path):
+        """Set icon for asset item with consistent thumbnail sizing"""
+        try:
+            # Use the asset manager's thumbnail system
+            thumbnail_icon = self.asset_manager._get_thumbnail_icon(file_path)
+            if thumbnail_icon and not thumbnail_icon.isNull():
+                # Ensure consistent icon size when setting on item
+                item.setIcon(thumbnail_icon)
+                # Force the item to use exactly the icon size we want
+                item.setSizeHint(QSize(80, 80))  # Match grid size for consistency
+            else:
+                # Fallback to file type icons
+                self._set_fallback_icon(item, file_path)
+                
+        except Exception as e:
+            print(f"Error setting asset icon for {file_path}: {e}")
+            # Set fallback icon on error
+            self._set_fallback_icon(item, file_path)
+    
+    def _set_fallback_icon(self, item, file_path):
+        """Set fallback file type icon with consistent sizing"""
+        file_ext = os.path.splitext(file_path)[1].lower()
+        
+        # Set default icon based on file type
+        if file_ext in ['.ma', '.mb']:
+            default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView)  # type: ignore
+        elif file_ext == '.obj':
+            default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogListView)  # type: ignore
+        elif file_ext == '.fbx':
+            default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogStart)  # type: ignore
+        elif file_ext in ['.abc', '.usd']:
+            default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)  # type: ignore
+        else:
+            default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)  # type: ignore
+        
+        item.setIcon(default_icon)
+        # Ensure consistent size hint for fallback icons too
+        item.setSizeHint(QSize(80, 80))
     
     def add_collection_tab_dialog(self):
         """Show dialog to create a new collection tab"""
@@ -2820,21 +3770,162 @@ class AssetManagerUI(QMainWindow):
                     self.refresh_collection_tabs()  # Refresh collection tabs too
                     self.status_bar.showMessage(f"Deleted: {current_item.text()}")
     
+    def _refresh_asset_list_safe(self):
+        """Safely refresh asset list without triggering collection filter recursion"""
+        try:
+            # Clear main asset list
+            if hasattr(self, 'main_asset_list'):
+                self.main_asset_list.clear()
+            elif hasattr(self, 'asset_list'):
+                self.asset_list.clear()
+            else:
+                return
+            
+            if not self.asset_manager.current_project:
+                return
+            
+            # Get registered assets from library (with error protection)
+            try:
+                registered_assets = self.asset_manager.get_registered_assets()
+            except (RecursionError, Exception) as e:
+                print(f"Error getting registered assets: {e}")
+                registered_assets = {}
+            
+            # Populate with registered assets first
+            for asset_name, asset_info in registered_assets.items():
+                try:
+                    asset_path = asset_info.get('path', '')
+                    if os.path.exists(asset_path):
+                        display_text = self._create_asset_display_text(asset_name, asset_path, is_registered=True)
+                        item = QListWidgetItem(display_text)
+                        item.setData(Qt.ItemDataRole.UserRole, asset_path)  # type: ignore
+                        
+                        # Set background color and icon safely
+                        try:
+                            asset_color = self.asset_manager.get_asset_type_color(asset_path)
+                            item.setBackground(QBrush(asset_color))
+                        except:
+                            pass
+                        
+                        # Add to main list
+                        if hasattr(self, 'main_asset_list'):
+                            self.main_asset_list.addItem(item)
+                        elif hasattr(self, 'asset_list'):
+                            self.asset_list.addItem(item)
+                except Exception as e:
+                    print(f"Error adding registered asset {asset_name}: {e}")
+                    continue
+                
+        except Exception as e:
+            print(f"Error in _refresh_asset_list_safe: {e}")
+
     def refresh_assets(self):
         """Refresh the asset library with enhanced thumbnail support"""
-        # Clear main asset list
-        if hasattr(self, 'main_asset_list'):
-            self.main_asset_list.clear()
-        elif hasattr(self, 'asset_list'):
-            self.asset_list.clear()
-        else:
+          # CRITICAL: Add recursion protection
+        if hasattr(self, '_refreshing_assets') and self._refreshing_assets:
+            print("Warning: Blocking recursive refresh_assets call")
             return
+
+        try:
+            self._refreshing_assets = True
+          
+            # Clear main asset list
+            if hasattr(self, 'main_asset_list'):
+                self.main_asset_list.clear()
+            elif hasattr(self, 'asset_list'):
+                self.asset_list.clear()
+            else:
+                registered_assets = {}
+                return
+            
+            if not self.asset_manager.current_project:
+                registered_assets = {}
+                return
+            
+            # Get registered assets from library (with error protection)
+            try:
+                registered_assets = self.asset_manager.get_registered_assets()
+            except (RecursionError, Exception) as e:
+                print(f"Error getting registered assets: {e}")
+                registered_assets = {}
+            
+            # Populate with registered assets first
+            for asset_name, asset_info in registered_assets.items():
+                try:
+                    asset_path = asset_info.get('path', '')
+                    if asset_path and os.path.exists(asset_path):
+                        display_text = self._create_asset_display_text(asset_name, asset_path, is_registered=True)
+                        item = QListWidgetItem(display_text)
+                        item.setData(Qt.ItemDataRole.UserRole, asset_path)  # type: ignore
+                        
+                        # Set background color and icon safely
+                        try:
+                            asset_color = self.asset_manager.get_asset_type_color(asset_path)
+                            item.setBackground(QBrush(asset_color))
+                        except:
+                            pass
+                        
+                        # Add to main list
+                        current_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
+                        if current_asset_list:
+                            current_asset_list.addItem(item)
+                except Exception as e:
+                    print(f"Error adding registered asset {asset_name}: {e}")
+                    continue
+            
+            # Scan project directory for assets (avoiding recursion)
+            project_path = self.asset_manager.current_project
+            if project_path and os.path.exists(project_path):
+                try:
+                    registered_paths = {info.get('path', '') for info in registered_assets.values()}
+                    
+                    for root, dirs, files in os.walk(project_path):
+                        for file in files:
+                            if file.lower().endswith(('.ma', '.mb', '.obj', '.fbx')):
+                                file_path = os.path.join(root, file)
+                                
+                                # Skip if already registered
+                                if file_path in registered_paths:
+                                    continue
+                                
+                                try:
+                                    asset_name = os.path.splitext(file)[0]
+                                    display_text = self._create_asset_display_text(asset_name, file_path, is_registered=False)
+                                    
+                                    item = QListWidgetItem(display_text)
+                                    item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
+                                    
+                                    # Set background color safely
+                                    try:
+                                        asset_color = self.asset_manager.get_asset_type_color(file_path)
+                                        item.setBackground(QBrush(asset_color))
+                                    except:
+                                        pass
+                                    
+                                    # Add to main list
+                                    current_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
+                                    if current_asset_list:
+                                        current_asset_list.addItem(item)
+                                except Exception as e:
+                                    print(f"Error adding asset {file}: {e}")
+                                    continue
+                except Exception as e:
+                    print(f"Error scanning project directory: {e}")
+            
+            # Refresh collection filter (but only if not already refreshing to avoid recursion)
+            if not hasattr(self, '_refreshing_collection_filter') or not self._refreshing_collection_filter:
+                try:
+                    self.refresh_collection_filter()
+                except Exception as e:
+                    print(f"Error refreshing collection filter: {e}")
         
-        if not self.asset_manager.current_project:
-            return
-        
-        # Get registered assets from library
-        registered_assets = self.asset_manager.get_registered_assets()
+        except Exception as e:
+            print(f"Error in refresh_assets: {e}")
+            registered_assets = {}
+        finally:
+            self._refreshing_assets = False
+            if 'registered_assets' not in locals():
+                registered_assets = {}
         
         # Add registered assets first (with priority display)
         for asset_name, asset_info in registered_assets.items():
@@ -2859,20 +3950,8 @@ class AssetManagerUI(QMainWindow):
             font.setBold(True)
             item.setFont(font)
             
-            # Try to load thumbnail
-            thumbnail_path = self.asset_manager.get_asset_thumbnail(file_path)
-            if thumbnail_path and os.path.exists(thumbnail_path):
-                thumbnail_icon = QIcon(thumbnail_path)
-                item.setIcon(thumbnail_icon)
-            else:
-                # Set icon based on file type
-                file_ext = os.path.splitext(file_path)[1].lower()
-                if file_ext in ['.ma', '.mb']:
-                    item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))  # type: ignore
-                elif file_ext == '.obj':
-                    item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogListView))  # type: ignore
-                elif file_ext == '.fbx':
-                    item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogStart))  # type: ignore
+            # Set icon using new thumbnail system
+            self._set_asset_item_icon(item, file_path)
             
             # Add to main asset list
             if hasattr(self, 'main_asset_list'):
@@ -2880,12 +3959,12 @@ class AssetManagerUI(QMainWindow):
             elif hasattr(self, 'asset_list'):
                 self.asset_list.addItem(item)
             
-        # Scan for assets in the current project (that aren't already registered)
+          # Scan for assets in the current project (that aren't already registered)
         project_path = self.asset_manager.current_project
-        if os.path.exists(project_path):
+        if project_path and os.path.exists(project_path):
             supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
             registered_paths = {info['path'] for info in registered_assets.values()}
-            
+          
             for root, dirs, files in os.walk(project_path):
                 for file in files:
                     if any(file.lower().endswith(ext) for ext in supported_extensions):
@@ -2907,19 +3986,8 @@ class AssetManagerUI(QMainWindow):
                         asset_color = self.asset_manager.get_asset_type_color(file_path)
                         item.setBackground(QBrush(asset_color))
                         
-                        # Try to load thumbnail, fallback to file type icon
-                        thumbnail_path = self.asset_manager.get_asset_thumbnail(file_path)
-                        if thumbnail_path and os.path.exists(thumbnail_path):
-                            thumbnail_icon = QIcon(thumbnail_path)
-                            item.setIcon(thumbnail_icon)
-                        else:
-                            # Set icon based on file type as fallback
-                            if file.lower().endswith(('.ma', '.mb')):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))  # type: ignore
-                            elif file.lower().endswith('.obj'):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogListView))  # type: ignore
-                            elif file.lower().endswith('.fbx'):
-                                item.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogStart))  # type: ignore
+                        # Set icon using new thumbnail system
+                        self._set_asset_item_icon(item, file_path)
                         
                         # Add to main asset list
                         if hasattr(self, 'main_asset_list'):
@@ -2934,7 +4002,10 @@ class AssetManagerUI(QMainWindow):
         # Refresh collection tabs if they exist
         if hasattr(self, 'tab_widget'):
             self.refresh_collection_tabs()
-    
+        
+        # Update file watcher for new project
+        self._setup_file_watcher()
+  
     def _create_asset_display_text(self, asset_name, asset_path, is_registered=False):
         """Create enhanced display text showing asset type and collections"""
         display_parts = [asset_name]
@@ -3051,6 +4122,51 @@ class AssetManagerUI(QMainWindow):
                          f"Built with Python 3 and PySide6\n\n"
                          f"Author: Mike Stumbo")
     
+    def _on_directory_changed(self, path):
+        """Handle directory changes for automatic refresh"""
+        if not hasattr(self, '_refresh_timer'):
+            return
+        
+        print(f"Directory changed: {path}")
+        
+        # Only refresh if the changed directory is relevant to our current project
+        if (self.asset_manager.current_project and 
+            path.startswith(self.asset_manager.current_project)):
+            
+            # Clear file cache for the changed directory
+            self.asset_manager._clear_file_cache()
+            
+            # Start or restart the refresh timer to avoid excessive updates
+            self._refresh_timer.start()
+    
+    def _delayed_refresh(self):
+        """Perform delayed refresh after directory changes"""
+        try:
+            # Refresh with force to clear caches
+            self.refresh_collection_tabs(force_refresh=True)
+            self.status_bar.showMessage("Assets refreshed automatically", 3000)
+        except Exception as e:
+            print(f"Error during automatic refresh: {e}")
+    
+    def _setup_file_watcher(self):
+        """Setup file system watcher for the current project"""
+        if not hasattr(self, 'file_watcher') or not self.asset_manager.current_project:
+            return
+        
+        # Clear existing watches
+        watched_dirs = self.file_watcher.directories()
+        if watched_dirs:
+            self.file_watcher.removePaths(watched_dirs)
+        
+        # Add current project directory to watch
+        if os.path.exists(self.asset_manager.current_project):
+            # Only watch if not in network mode to avoid performance issues
+            if not self.asset_manager._network_performance['network_mode']:
+                self.file_watcher.addPath(self.asset_manager.current_project)
+                print(f"File watcher enabled for: {self.asset_manager.current_project}")
+            else:
+                print("File watcher disabled for network storage to improve performance")
+    
     def check_for_updates(self):
         """Check for updates to the Asset Manager plugin"""
         try:
@@ -3068,6 +4184,7 @@ class AssetManagerUI(QMainWindow):
             release_notes = self._get_release_notes(latest_version)
             
             progress.close()
+            progress.deleteLater()  # Proper cleanup to prevent memory leaks
             
             if self._compare_versions(current_version, latest_version):
                 # Update available
@@ -3148,37 +4265,58 @@ class AssetManagerUI(QMainWindow):
     
     def filter_by_tag(self, tag_name):
         """Filter assets by selected tag"""
-        if tag_name == "All Tags":
-            self.filter_assets()  # Show all assets
-            return
-            
-        # Filter assets to show only those with the selected tag
-        for i in range(self.asset_list.count()):
-            item = self.asset_list.item(i)
-            if item:
-                asset_path = item.data(Qt.ItemDataRole.UserRole)  # type: ignore
-                if asset_path:
-                    asset_tags = self.asset_manager.get_asset_tags(asset_path)
-                    item.setHidden(tag_name not in asset_tags)
+        try:
+            if tag_name == "All Tags":
+                self.filter_assets()  # Show all assets
+                return
+                
+            # Filter assets to show only those with the selected tag
+            for i in range(self.asset_list.count()):
+                item = self.asset_list.item(i)
+                if item:
+                    asset_path = item.data(Qt.ItemDataRole.UserRole)  # type: ignore
+                    if asset_path:
+                        try:
+                            asset_tags = self.asset_manager.get_asset_tags(asset_path)
+                            item.setHidden(tag_name not in asset_tags)
+                        except (RecursionError, Exception) as e:
+                            print(f"Error getting tags for {asset_path}: {e}")
+                            item.setHidden(True)  # Hide problematic items
+        except Exception as e:
+            print(f"Error in filter_by_tag: {e}")
+            # Fallback to showing all assets
+            self.filter_assets()
     
     def filter_by_collection(self, collection_name):
         """Filter assets by selected collection"""
-        if collection_name == "All Collections":
-            self.filter_assets()  # Show all assets
-            return
+        try:
+            if collection_name == "All Collections":
+                self.filter_assets()  # Show all assets
+                return
+                
+            try:
+                collections = self.asset_manager.get_asset_collections()
+            except (RecursionError, Exception) as e:
+                print(f"Error getting collections: {e}")
+                # Fallback to showing all assets
+                self.filter_assets()
+                return
+                
+            if collection_name not in collections:
+                return
+                
+            collection_assets = collections[collection_name]['assets']
             
-        collections = self.asset_manager.get_asset_collections()
-        if collection_name not in collections:
-            return
-            
-        collection_assets = collections[collection_name]['assets']
-        
-        # Filter assets to show only those in the selected collection
-        for i in range(self.asset_list.count()):
-            item = self.asset_list.item(i)
-            if item:
-                asset_name = item.text()
-                item.setHidden(asset_name not in collection_assets)
+            # Filter assets to show only those in the selected collection
+            for i in range(self.asset_list.count()):
+                item = self.asset_list.item(i)
+                if item:
+                    asset_name = item.text()
+                    item.setHidden(asset_name not in collection_assets)
+        except Exception as e:
+            print(f"Error in filter_by_collection: {e}")
+            # Fallback to showing all assets
+            self.filter_assets()
     
     def add_tag_to_selected(self):
         """Add a tag to the currently selected asset"""
@@ -3231,22 +4369,39 @@ class AssetManagerUI(QMainWindow):
             self.tag_filter.setCurrentIndex(index)
     
     def refresh_collection_filter(self):
-        """Refresh the collection filter dropdown with current collections"""
-        current_selection = self.collection_filter.currentText()
-        self.collection_filter.clear()
-        self.collection_filter.addItem("All Collections")
-        
-        collections = self.asset_manager.get_asset_collections()
-        self.collection_filter.addItems(list(collections.keys()))
-        
-        # Restore previous selection if it still exists
-        index = self.collection_filter.findText(current_selection)
-        if index >= 0:
-            self.collection_filter.setCurrentIndex(index)
-        
-        # Also refresh collection tabs if they exist
-        if hasattr(self, 'tab_widget'):
-            self.refresh_collection_tabs()
+        """Refresh the collection filter dropdown with current collections - WITH RECURSION PROTECTION"""
+        # CRITICAL: Prevent recursion cycles in collection filter refresh
+        if hasattr(self, '_refreshing_collection_filter') and self._refreshing_collection_filter:
+            print("Warning: Blocking recursive refresh_collection_filter call")
+            return
+            
+        try:
+            self._refreshing_collection_filter = True
+            
+            current_selection = self.collection_filter.currentText()
+            self.collection_filter.clear()
+            self.collection_filter.addItem("All Collections")
+            
+            # Get collections safely
+            try:
+                collections = self.asset_manager.get_asset_collections()
+                self.collection_filter.addItems(list(collections.keys()))
+            except (RecursionError, Exception) as e:
+                print(f"Error getting asset collections for filter: {e}")
+                # Continue with empty collections
+            
+            # Restore previous selection if it still exists
+            index = self.collection_filter.findText(current_selection)
+            if index >= 0:
+                self.collection_filter.setCurrentIndex(index)
+            
+            # CRITICAL: DO NOT refresh collection tabs here to avoid recursion
+            # The tabs will be refreshed elsewhere when needed
+            
+        except Exception as e:
+            print(f"Error in refresh_collection_filter: {e}")
+        finally:
+            self._refreshing_collection_filter = False
     
     def show_asset_context_menu(self, position):
         """Show context menu for asset with new management options"""
@@ -3536,6 +4691,7 @@ class AssetManagerUI(QMainWindow):
             result = self.asset_manager.batch_import_assets(file_paths)
             
             progress.close()
+            progress.deleteLater()  # Proper cleanup to prevent memory leaks
             
             imported_count = len(result.get('imported', []))
             failed_count = len(result.get('failed', []))
@@ -3585,6 +4741,7 @@ class AssetManagerUI(QMainWindow):
             result = self.asset_manager.batch_export_assets(export_settings)
             
             progress.close()
+            progress.deleteLater()  # Proper cleanup to prevent memory leaks
             
             exported_count = len(result['exported'])
             failed_count = len(result['failed'])
@@ -3607,96 +4764,6 @@ class AssetManagerUI(QMainWindow):
         """Show dialog for viewing asset dependencies"""
         dialog = AssetDependencyDialog(self.asset_manager, self)
         dialog.exec()
-
-    def generate_thumbnails_dialog(self):
-        """Show dialog for generating thumbnails for all assets"""
-        if not MAYA_AVAILABLE:
-            QMessageBox.warning(self, "Maya Required", 
-                              "Maya is required for thumbnail generation. "
-                              "Please run this tool from within Maya.")
-            return
-        
-        reply = QMessageBox.question(
-            self, "Generate Thumbnails",
-            "This will generate thumbnails for all assets in the current project.\n"
-            "This may take some time depending on the number of assets.\n\n"
-            "Do you want to continue?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        
-        if reply == QMessageBox.StandardButton.Yes:
-            self._generate_thumbnails_threaded()
-
-    def clear_thumbnail_cache_dialog(self):
-        """Show dialog for clearing thumbnail cache"""
-        reply = QMessageBox.question(
-            self, "Clear Thumbnail Cache",
-            "This will delete all cached thumbnails.\n"
-            "Thumbnails will be regenerated when needed.\n\n"
-            "Do you want to continue?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        
-        if reply == QMessageBox.StandardButton.Yes:
-            if self.asset_manager.clear_thumbnail_cache():
-                self.status_bar.showMessage("Thumbnail cache cleared successfully")
-                self.refresh_assets()  # Refresh to update icons
-            else:
-                QMessageBox.warning(self, "Error", "Failed to clear thumbnail cache")
-
-    def _generate_thumbnails_threaded(self):
-        """Generate thumbnails in a separate thread to keep UI responsive"""
-        if not self.asset_manager.current_project:
-            QMessageBox.warning(self, "No Project", "Please open a project first.")
-            return
-        
-        # Collect all asset paths
-        asset_paths = []
-        project_path = self.asset_manager.current_project
-        supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
-        
-        for root, dirs, files in os.walk(project_path):
-            for file in files:
-                if any(file.lower().endswith(ext) for ext in supported_extensions):
-                    asset_paths.append(os.path.join(root, file))
-        
-        if not asset_paths:
-            QMessageBox.information(self, "No Assets", "No assets found in the current project.")
-            return
-        
-        # Create progress dialog
-        progress = QProgressDialog("Generating thumbnails...", "Cancel", 0, len(asset_paths), self)
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
-        progress.show()
-        
-        # Generate thumbnails
-        generated_count = 0
-        for i, asset_path in enumerate(asset_paths):
-            if progress.wasCanceled():
-                break
-                
-            progress.setLabelText(f"Generating thumbnail for: {os.path.basename(asset_path)}")
-            progress.setValue(i)
-            
-            # Process events to keep UI responsive
-            QApplication.processEvents()
-            
-            if self.asset_manager.generate_asset_thumbnail(asset_path):
-                generated_count += 1
-        
-        progress.close()
-        
-        # Show results
-        if generated_count > 0:
-            self.status_bar.showMessage(f"Generated {generated_count} thumbnails")
-            self.refresh_assets()  # Refresh to show new thumbnails
-        
-        QMessageBox.information(
-            self, "Thumbnail Generation Complete",
-            f"Successfully generated {generated_count} out of {len(asset_paths)} thumbnails."
-        )
 
 
 class AssetTagDialog(QDialog):
@@ -4015,6 +5082,19 @@ def show_asset_manager():
         _asset_manager_window.show()
         
         return _asset_manager_window
+    except RecursionError as e:
+        print(f"Recursion Error in Asset Manager: {e}")
+        print("This is likely due to a corrupted project path. Attempting to reset...")
+        
+        # Try to create a minimal asset manager to reset the config
+        try:
+            temp_manager = AssetManager()
+            temp_manager.reset_current_project()
+            print("Current project has been reset. Please try opening Asset Manager again.")
+        except:
+            print("Could not reset project automatically. Please check your configuration.")
+        
+        return None
     except Exception as e:
         print(f"Error showing Asset Manager: {e}")
         return None
@@ -4034,7 +5114,7 @@ def initializePlugin(plugin):
         
     try:
         # Register the plugin command
-        om2.MFnPlugin(plugin, "Mike Stumbo", "1.1.2", "Any")  # type: ignore
+        om2.MFnPlugin(plugin, "Mike Stumbo", "1.1.3", "Any")  # type: ignore
         
         # Add menu item to Maya
         if cmds.menu('AssetManagerMenu', exists=True):  # type: ignore
@@ -4063,10 +5143,15 @@ def uninitializePlugin(plugin):
         if cmds.menu('AssetManagerMenu', exists=True):  # type: ignore
             cmds.deleteUI('AssetManagerMenu')  # type: ignore
         
-        # Close window if open
+        # Close window if open and cleanup resources
         if _asset_manager_window is not None:
-            _asset_manager_window.close()
-            _asset_manager_window = None
+            try:
+                # Trigger cleanup through close event
+                _asset_manager_window.close()
+            except Exception as e:
+                print(f"Error closing Asset Manager window: {e}")
+            finally:
+                _asset_manager_window = None
         
         print("Asset Manager plugin uninitialized successfully")
         

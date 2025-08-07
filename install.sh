@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Asset Manager for Maya 2025.3 - Installation Script"
-echo "================================================="
+echo "Asset Manager for Maya 2025.3 v1.1.3 - Installation Script"
+echo "========================================================="
 echo
 
 # Check if Python is available
