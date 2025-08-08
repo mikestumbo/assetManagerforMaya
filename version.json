@@ -1,6 +1,6 @@
 {
     "plugin_name": "assetManager",
-    "version": "1.1.3",
+    "version": "1.1.4",
     "maya_version": "2025.3",
     "python_version": "3.9+",
     "author": "Mike Stumbo",
@@ -38,6 +38,19 @@
         "Check for updates system"
     ],
     "changelog": {
+        "1.1.4": {
+            "date": "2025-08-07",
+            "changes": [
+                "Improved default UI sizing - optimized window dimensions for better visibility",
+                "Added UI preferences system for persistent window geometry",
+                "Window size and position memory - UI remembers user's preferred size",
+                "Improved splitter sizing for better content distribution",
+                "Added 'Reset Window Size' option in Tools menu",
+                "Enhanced UI layout management following Clean Code principles",
+                "Better visual defaults for all window components",
+                "Preparation for version 1.2.0 features"
+            ]
+        },
         "1.1.2": {
             "date": "2025-07-29",
             "changes": [

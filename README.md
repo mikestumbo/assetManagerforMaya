@@ -1,8 +1,53 @@
-# Asset Manager for Maya v1.1.3
+# Asset Manager for Maya v1.1.4
 
-A comprehensive asset management system for Maya 2025.3+ with enhanced organization and workflow features.
+A comprehensive asset management system for Maya 2025.3+ with improved UI sizing, win## 📊 Version History
 
-## 🆕 What's New in v1.1.3
+## v1.1.3 Features
+
+- **Automatic Refresh**: Collection tabs now automatically refresh when collections are modified externally
+- **Smart Caching**: Intelligent file system caching reduces network latency
+- **State Preservation**: Tab selection and view state preserved during refreshes
+- **Error Recovery**: Robust error handling prevents crashes during collection updates
+- **Optimized Thumbnails**: Background processing with queue management for better performance
+- **Network Optimization**: Intelligent detection of network storage with adaptive caching
+- **Memory Management**: Fixed memory leaks in large asset libraries
+- **Dependency Chain Optimization**: Efficient traversal and cached results for better performance
+
+### v1.1.2 - Collection Tabs & Thumbnailsd enhanced user experience
+
+## 🆕 What's New in v1.1.4
+
+### 🎨 UI Improvements & User Experience
+
+#### **Enhanced Default Window Sizing**
+
+- **Optimal Dimensions**: New default window size (1000x700) provides better visibility of all UI components
+- **Better Layout**: Improved splitter ratios ensure balanced space distribution between panels
+- **Visual Optimization**: All UI elements now fit properly within the default window size
+- **Professional Appearance**: Enhanced visual defaults for a more polished user experience
+
+#### **Window Geometry Memory System**
+
+- **Size Persistence**: Window remembers your preferred size between Maya sessions
+- **Position Memory**: Window position is saved and restored automatically
+- **User Preferences**: Individual window geometry preferences stored per user
+- **Seamless Experience**: No more resizing the window every time you open Asset Manager
+
+#### **UI Preferences Management**
+
+- **Persistent Settings**: Window geometry settings survive Maya restarts
+- **User-Specific**: Each user maintains their own UI preferences
+- **Configuration Storage**: Preferences integrated into the main configuration system
+- **Clean Architecture**: Following Clean Code principles for maintainable UI management
+
+#### **Reset Window Functionality**
+
+- **Easy Reset**: New "Reset Window Size" option in Tools menu
+- **Optimal Defaults**: Quickly return to the new optimized default sizing
+- **User Control**: Full control over window size preferences with easy reset option
+- **Flexible Workflow**: Switch between custom sizing and optimal defaults as needed
+
+### 🔄 Previous Updates (v1.1.3)
 
 ### 🔧 Performance & Reliability Fixes
 
@@ -35,7 +80,9 @@ A comprehensive asset management system for Maya 2025.3+ with enhanced organizat
 - **Background Processing**: Complex dependency chains processed without UI blocking
 - **Memory Optimization**: Reduced memory footprint for large dependency trees
 
-### 🔄 Previous Updates (v1.1.2)
+### � Previous Updates
+
+#### v1.1.2 Features
 
 ### 🎨 User Customization System
 
@@ -84,9 +131,20 @@ A comprehensive asset management system for Maya 2025.3+ with enhanced organizat
 - **Enhanced Caching**: Better memory management for large asset libraries
 - **Responsive UI**: Non-blocking operations for better user experience
 
-## 🔄 Previous Updates
+## 📅 Previously Updated Versions
 
-### v1.1.1 Features
+### v1.1.3 Features (2023-08-30)
+
+- **Automatic Refresh**: Collection tabs now automatically refresh when collections are modified externally
+- **Smart Caching**: Intelligent file system caching reduces network latency
+- **State Preservation**: Tab selection and view state preserved during refreshes
+- **Error Recovery**: Robust error handling prevents crashes during collection updates
+- **Optimized Thumbnails**: Background processing with queue management for better performance
+- **Network Optimization**: Intelligent detection of network storage with adaptive caching
+- **Memory Management**: Fixed memory leaks in large asset libraries
+- **Dependency Chain Optimization**: Efficient traversal and cached results for better performance
+
+### v1.1.2 Features (2023-07-15)
 
 - **Asset Type Color-Coding**: Visual organization with 11 predefined color types
 - **Collection Visibility**: See which collections each asset belongs to
@@ -171,9 +229,9 @@ A comprehensive asset management system for Maya 2025.3+ with enhanced organizat
 - **Threaded Operations**: Background loading for improved performance
 - **Enhanced UI**: Professional tabbed interface with visual asset display
 
-## � Downloads & Previous Versions
+## 📦 Downloads & Previous Versions
 
-### Current Version (v1.1.3)
+### Current Version (v1.1.4)
 
 Download the latest version directly from this repository or from [GitHub Releases](../../releases).
 
@@ -181,6 +239,7 @@ Download the latest version directly from this repository or from [GitHub Releas
 
 All previous versions are available as GitHub Releases with complete archives and release notes:
 
+- **[v1.1.3](../../releases/tag/v1.1.3)** - Performance & Reliability (August 7, 2025)
 - **[v1.1.2](../../releases/tag/v1.1.2)** - Collection Tabs & Thumbnails (July 29, 2025)
 - **[v1.1.1](../../releases/tag/v1.1.1)** - Visual Organization (May 22, 2025)
 - **[v1.1.0](../../releases/tag/v1.1.0)** - Enhanced Organization (March 10, 2025)  
@@ -359,23 +418,33 @@ Configuration includes:
 
 ## 🔄 Migration from Previous Versions
 
-v1.1.3 is fully backward compatible with all previous versions (v1.0.0, v1.1.0, v1.1.1, v1.1.2):
+v1.1.4 is fully backward compatible with all previous versions (v1.0.0, v1.1.0, v1.1.1, v1.1.2, v1.1.3):
 
 - Existing projects load without modification
 - All previous features remain unchanged and enhanced
-- New features are performance improvements, not replacements
-- Configuration automatically upgrades with new optimization settings
-- Enhanced collection tabs with automatic refresh capabilities
-- Improved thumbnail system maintains existing cache compatibility
+- New UI improvements provide better default experience
+- Window geometry preferences are automatically initialized
+- Configuration automatically upgrades with new UI preference settings
+- Enhanced window sizing maintains existing functionality while improving defaults
 
-## 🐛 Known Issues (Fixed in v1.1.3)
+## 🐛 Known Issues (All Major Issues Resolved in v1.1.4)
 
 ### ✅ Resolved Issues
 
+- ~~UI window size too small by default~~ **FIXED** - New optimal 1000x700 default sizing with better visibility
+- ~~Window size not remembered between sessions~~ **FIXED** - Complete window geometry memory system implemented
+- ~~Poor space distribution between UI panels~~ **IMPROVED** - Enhanced splitter ratios for balanced layout
 - ~~Collection tabs may require refresh when collections are modified externally~~ **FIXED** - Now automatically refreshes with smart synchronization
 - ~~Large asset libraries may experience slower thumbnail generation~~ **IMPROVED** - Background processing with queue management
 - ~~Network-stored projects may have slower tab switching~~ **OPTIMIZED** - Intelligent caching and network detection
 - ~~Complex dependency chains may impact performance~~ **ENHANCED** - Optimized algorithms with background processing
+
+### 🎨 UI/UX Improvements in v1.1.4
+
+- **Better Default Experience**: New users get optimal window sizing immediately
+- **Persistent Preferences**: Advanced users can customize and remember their preferred layout
+- **Professional Appearance**: Enhanced visual defaults provide more polished experience
+- **Flexible Workflow**: Easy reset functionality for switching between custom and optimal sizing
 
 ### 🚀 Performance Improvements
 
@@ -407,4 +476,4 @@ v1.1.3 is fully backward compatible with all previous versions (v1.0.0, v1.1.0, 
 
 ---
 
-**Asset Manager v1.1.3** - Professional asset management with optimized performance and reliability for Maya artists and studios.
+**Asset Manager v1.1.4** - Professional asset management with improved UI sizing, window memory, and enhanced user experience for Maya artists and studios.

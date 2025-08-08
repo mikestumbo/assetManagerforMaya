@@ -8,6 +8,11 @@ Version: 1.1.3
 Maya Version: 2025.3+
 
 New in v1.1.3:
+- ENHANCED UI SIZING: Improved default window size calculations for better content fit
+- WINDOW MEMORY: UI now remembers and restores user's preferred window size
+- Better minimum size constraints to ensure all UI elements are accessible
+- Optimized splitter ratios for improved asset display (280:650 instead of 250:550)
+- Added Tools menu option to reset window to optimal size
 - Fixed collection tab refresh issues with automatic synchronization
 - Improved network performance with intelligent caching and lazy loading
 - Enhanced dependency chain performance with optimizations
@@ -91,7 +96,7 @@ class AssetManager:
     
     def __init__(self):
         self.plugin_name = "assetManager"
-        self.version = "1.1.3"
+        self.version = "1.1.4"
         self.config_path = self._get_config_path()
         self.assets_library = {}
         self.current_project = None
@@ -123,7 +128,10 @@ class AssetManager:
         # Initialize default asset type configuration
         self._init_default_asset_types()
         
-        # Load configuration (including custom asset types)
+        # Initialize UI preferences
+        self.ui_preferences = {}
+        
+        # Load configuration (including custom asset types and UI preferences)
         self.load_config()
         
         # Network performance monitoring
@@ -1222,6 +1230,9 @@ class AssetManager:
                     if 'asset_types' in config:
                         self.asset_types = config['asset_types']
                         self._update_color_cache()
+                    
+                    # Load UI preferences if available
+                    self.ui_preferences = config.get('ui_preferences', {})
         except Exception as e:
             print(f"Error loading config: {e}")
             self.assets_library = {}
@@ -1234,12 +1245,26 @@ class AssetManager:
                 'current_project': self.current_project,
                 'assets_library': self.assets_library,
                 'asset_types': self.asset_types,
-                'version': self.version
+                'version': self.version,
+                'ui_preferences': getattr(self, 'ui_preferences', {})
             }
             with open(self.config_path, 'w') as f:
                 json.dump(config, f, indent=4)
         except Exception as e:
             print(f"Error saving config: {e}")
+    
+    def get_ui_preference(self, key, default_value=None):
+        """Get a UI preference value"""
+        if not hasattr(self, 'ui_preferences'):
+            self.ui_preferences = {}
+        return self.ui_preferences.get(key, default_value)
+    
+    def set_ui_preference(self, key, value):
+        """Set a UI preference value"""
+        if not hasattr(self, 'ui_preferences'):
+            self.ui_preferences = {}
+        self.ui_preferences[key] = value
+        self.save_config()
     
     def create_project(self, project_name, project_path):
         """Create a new asset project"""
@@ -2805,14 +2830,15 @@ class AssetManagerUI(QMainWindow):
         super(AssetManagerUI, self).__init__(parent)
         self.asset_manager = AssetManager()
         self.setWindowTitle(f"Asset Manager v{self.asset_manager.version}")
-        self.setGeometry(100, 100, 800, 600)
-        self.setMinimumSize(600, 400)
         
         # Set window flags for Maya integration
         self.setWindowFlags(Qt.WindowType.Window)  # type: ignore
         
         # Set window icon (tab bar icon)
         self.set_window_icon()
+        
+        # Configure window geometry (size and position)
+        self._configure_window_geometry()
         
         # Initialize file system watcher for automatic refresh
         self.file_watcher = QFileSystemWatcher()
@@ -2826,6 +2852,101 @@ class AssetManagerUI(QMainWindow):
         
         self.setup_ui()
         self.refresh_assets()
+    
+    def _configure_window_geometry(self):
+        """Configure window size and position with improved defaults and user preferences"""
+        # Load saved geometry if available
+        saved_geometry = self._load_window_geometry()
+        
+        if saved_geometry:
+            # Restore saved geometry
+            self.setGeometry(saved_geometry['x'], saved_geometry['y'], 
+                           saved_geometry['width'], saved_geometry['height'])
+        else:
+            # Calculate optimal default size and set position
+            optimal_size = self._calculate_optimal_window_size()
+            self.setGeometry(100, 100, optimal_size['width'], optimal_size['height'])
+        
+        # Always set minimum size to ensure UI elements fit
+        min_size = self._calculate_minimum_window_size()
+        self.setMinimumSize(min_size['width'], min_size['height'])
+    
+    def _calculate_optimal_window_size(self):
+        """Calculate optimal default window size based on UI requirements"""
+        # Base calculations on typical UI element requirements
+        left_panel_width = 280  # Increased from 250 for better content fit
+        right_panel_width = 650  # Increased from 550 for better asset display
+        total_width = left_panel_width + right_panel_width + 30  # +30 for splitter margin
+        
+        # Calculate height based on typical UI component needs
+        menu_bar_height = 30
+        toolbar_height = 40
+        status_bar_height = 25
+        content_padding = 20
+        optimal_content_height = 700  # Increased for better asset display
+        
+        total_height = (menu_bar_height + toolbar_height + status_bar_height + 
+                       content_padding + optimal_content_height)
+        
+        return {
+            'width': min(total_width, 1200),  # Cap at reasonable maximum
+            'height': min(total_height, 900)   # Cap at reasonable maximum
+        }
+    
+    def _calculate_minimum_window_size(self):
+        """Calculate minimum window size to ensure all UI elements are accessible"""
+        # Minimum dimensions to keep UI functional
+        min_left_panel = 200
+        min_right_panel = 400
+        min_width = min_left_panel + min_right_panel + 30
+        
+        min_height = 500  # Increased from 400 for better usability
+        
+        return {'width': min_width, 'height': min_height}
+    
+    def _load_window_geometry(self):
+        """Load saved window geometry from user preferences"""
+        try:
+            geometry = self.asset_manager.get_ui_preference('window_geometry')
+            if geometry and isinstance(geometry, dict):
+                # Validate geometry values
+                required_keys = ['x', 'y', 'width', 'height']
+                if all(key in geometry and isinstance(geometry[key], int) 
+                       for key in required_keys):
+                    # Ensure dimensions are reasonable
+                    min_size = self._calculate_minimum_window_size()
+                    if (geometry['width'] >= min_size['width'] and 
+                        geometry['height'] >= min_size['height']):
+                        return geometry
+            return None
+        except Exception as e:
+            print(f"Error loading window geometry: {e}")
+            return None
+    
+    def _save_window_geometry(self):
+        """Save current window geometry to user preferences"""
+        try:
+            geometry = self.geometry()
+            geometry_data = {
+                'x': geometry.x(),
+                'y': geometry.y(),
+                'width': geometry.width(),
+                'height': geometry.height()
+            }
+            self.asset_manager.set_ui_preference('window_geometry', geometry_data)
+        except Exception as e:
+            print(f"Error saving window geometry: {e}")
+    
+    def reset_window_to_optimal_size(self):
+        """Reset window to optimal calculated size - useful for troubleshooting"""
+        try:
+            optimal_size = self._calculate_optimal_window_size()
+            self.resize(optimal_size['width'], optimal_size['height'])
+            # Clear saved geometry to prevent restoration of old size
+            self.asset_manager.set_ui_preference('window_geometry', None)
+            print(f"Window reset to optimal size: {optimal_size['width']}x{optimal_size['height']}")
+        except Exception as e:
+            print(f"Error resetting window size: {e}")
     
     def set_window_icon(self):
         """Set the window icon (appears in tab bar and title bar)"""
@@ -2851,6 +2972,9 @@ class AssetManagerUI(QMainWindow):
         """Handle window close event and cleanup resources"""
         try:
             print("Asset Manager window closing - performing cleanup...")
+            
+            # Save window geometry before closing
+            self._save_window_geometry()
             
             # Stop and disconnect file watcher
             if hasattr(self, 'file_watcher') and self.file_watcher:
@@ -2945,8 +3069,8 @@ class AssetManagerUI(QMainWindow):
         right_panel = self.create_right_panel()
         content_splitter.addWidget(right_panel)
         
-        # Set splitter proportions
-        content_splitter.setSizes([250, 550])
+        # Set splitter proportions - improved ratios for better content display
+        content_splitter.setSizes([280, 650])  # Increased from [250, 550]
         
         # Status bar
         self.create_status_bar()
@@ -2993,6 +3117,11 @@ class AssetManagerUI(QMainWindow):
         customize_types_action = QAction('Customize Asset Types...', self)
         customize_types_action.triggered.connect(self.show_asset_type_customization)
         tools_menu.addAction(customize_types_action)
+        
+        # Window management
+        reset_window_action = QAction('Reset Window Size', self)
+        reset_window_action.triggered.connect(self.reset_window_to_optimal_size)
+        tools_menu.addAction(reset_window_action)
         
         tools_menu.addSeparator()
         

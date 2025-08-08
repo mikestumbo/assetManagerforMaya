@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """
-Safe Asset Manager Launcher for Maya
+Safe Asset Manager Launcher for Maya v1.1.4
 This script safely launches the Asset Manager with recursion error protection
+and UI improvements including window memory and better sizing defaults.
+
+Version: 1.1.4
+Author: Mike Stumbo  
+Maya Version: 2025.3+
 """
 
 import sys
@@ -28,11 +33,11 @@ def safe_launch_asset_manager():
             # Try to import and show Asset Manager
             import assetManager
             
-            print("Launching Asset Manager with recursion error fixes...")
+            print("Launching Asset Manager v1.1.4 with UI improvements...")
             window = assetManager.show_asset_manager()
             
             if window is not None:
-                print("✓ Asset Manager launched successfully!")
+                print("✓ Asset Manager v1.1.4 launched successfully!")
                 return window
             else:
                 print("✗ Asset Manager failed to launch (but no exception thrown)")
@@ -48,11 +53,11 @@ def safe_launch_asset_manager():
                     sys.path.insert(0, plugin_dir)
                 import assetManager
                 
-                print("Launching Asset Manager after loading plugin...")
+                print("Launching Asset Manager v1.1.4 after loading plugin...")
                 window = assetManager.show_asset_manager()
                 
                 if window is not None:
-                    print("✓ Asset Manager launched successfully after loading plugin!")
+                    print("✓ Asset Manager v1.1.4 launched successfully after loading plugin!")
                     return window
                 else:
                     print("✗ Asset Manager failed to launch after loading plugin")
@@ -82,11 +87,11 @@ def safe_launch_asset_manager():
 
 if __name__ == "__main__":
     # This will only work when run from within Maya
-    print("Safe Asset Manager Launcher")
+    print("Safe Asset Manager Launcher v1.1.4")
     print("Run this script from within Maya's script editor")
     
     result = safe_launch_asset_manager()
     if result:
-        print("Launch successful!")
+        print("Launch successful! Enjoy the improved UI with window memory and better sizing!")
     else:
         print("Launch failed - check error messages above")
