@@ -5,6 +5,56 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2025-08-07
+
+### Added in v1.1.4
+
+#### UI Improvements & Enhanced User Experience
+
+- **Enhanced Default Window Sizing**: New optimal window dimensions (1000x700) provide better visibility of all UI components
+  - Professional appearance with all UI elements fitting properly within default window
+  - Improved splitter ratios (300:700) ensure balanced space distribution between panels
+  - No more manual resizing needed for new users - immediately usable interface
+
+- **Window Geometry Memory System**: Complete window size and position persistence
+  - Window automatically remembers preferred dimensions between Maya sessions
+  - Position memory saves and restores exact window location
+  - User-specific settings - each user maintains individual UI preferences
+  - Seamless experience without repetitive window adjustments
+
+- **UI Preferences Management**: Robust settings architecture following Clean Code principles
+  - Persistent storage integrated into main configuration system
+  - New `get_ui_preference()` and `set_ui_preference()` API methods
+  - Future-ready extensible system for additional UI preferences
+  - Reliable storage that survives Maya crashes, updates, and system restarts
+
+- **Reset Window Functionality**: Ultimate user control over workspace preferences
+  - New "Reset Window Size" option in Tools menu for instant optimization
+  - Quick return to carefully designed default sizing with one click
+  - Flexible workflow supporting both custom sizing and optimal defaults
+  - Full user empowerment over workspace preferences
+
+### Changed in v1.1.4
+
+- **Improved Default Experience**: New users get optimal interface sizing from first launch
+- **Enhanced Code Architecture**: Applied Single Responsibility Principle with separate geometry management methods
+- **Better Resource Management**: Window geometry preferences use minimal memory footprint
+- **Professional Workflow**: Studio-quality interface suitable for client demonstrations
+
+### Fixed in v1.1.4
+
+- **Default Window Too Small**: Resolved issue where default window size was insufficient for comfortable use
+- **Window Size Not Remembered**: Fixed window dimensions and position not persisting between Maya sessions
+- **Poor Space Distribution**: Improved panel space allocation for better content visibility
+- **No Easy Reset Option**: Added convenient way to return to optimal default sizing
+
+### Technical Details v1.1.4
+
+- **Clean Code Implementation**: Following SOLID principles with separate `_save_window_geometry()` and `_restore_window_geometry()` methods
+- **DRY Principle**: Eliminated duplicate window sizing logic throughout codebase
+- **Maintainable Architecture**: Clear method names and structured approach ready for future UI enhancements
+- **Full Backward Compatibility**: Seamless upgrade from all previous versions without data loss
+
 ## [1.1.3] - 2025-08-07
 
 ### Added in v1.1.3
