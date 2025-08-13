@@ -2799,13 +2799,95 @@ class AssetPreviewWidget(QWidget):
             
         layout.addWidget(self.preview_widget, 1)
         
-        # Preview controls (cleaned up)
+        # Preview controls (cleaned up with zoom controls)
         controls_layout = QHBoxLayout()
+        
+        # Zoom controls
+        zoom_layout = QHBoxLayout()
+        
+        # Zoom out button
+        self.zoom_out_btn = QPushButton("🔍-")
+        self.zoom_out_btn.setMaximumSize(30, 25)
+        self.zoom_out_btn.setToolTip("Zoom Out (Shift + Mouse Wheel)")
+        self.zoom_out_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #404040;
+                border: 1px solid #666;
+                border-radius: 3px;
+                color: white;
+                font-weight: bold;
+                font-size: 10px;
+            }
+            QPushButton:hover {
+                background-color: #505050;
+            }
+            QPushButton:pressed {
+                background-color: #353535;
+            }
+        """)
+        self.zoom_out_btn.clicked.connect(lambda: self._zoom_by_factor(0.8))
+        
+        # Zoom level label
+        self.zoom_label = QLabel("100%")
+        self.zoom_label.setStyleSheet("color: #888888; font-size: 10px; font-weight: bold;")
+        self.zoom_label.setMinimumWidth(40)
+        self.zoom_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        # Zoom in button
+        self.zoom_in_btn = QPushButton("🔍+")
+        self.zoom_in_btn.setMaximumSize(30, 25)
+        self.zoom_in_btn.setToolTip("Zoom In (Mouse Wheel)")
+        self.zoom_in_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #404040;
+                border: 1px solid #666;
+                border-radius: 3px;
+                color: white;
+                font-weight: bold;
+                font-size: 10px;
+            }
+            QPushButton:hover {
+                background-color: #505050;
+            }
+            QPushButton:pressed {
+                background-color: #353535;
+            }
+        """)
+        self.zoom_in_btn.clicked.connect(lambda: self._zoom_by_factor(1.25))
+        
+        # Zoom reset button
+        self.zoom_reset_btn = QPushButton("1:1")
+        self.zoom_reset_btn.setMaximumSize(30, 25)
+        self.zoom_reset_btn.setToolTip("Reset Zoom (Double-click)")
+        self.zoom_reset_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #404040;
+                border: 1px solid #666;
+                border-radius: 3px;
+                color: white;
+                font-weight: bold;
+                font-size: 9px;
+            }
+            QPushButton:hover {
+                background-color: #505050;
+            }
+            QPushButton:pressed {
+                background-color: #353535;
+            }
+        """)
+        self.zoom_reset_btn.clicked.connect(self._reset_zoom)
+        
+        zoom_layout.addWidget(self.zoom_out_btn)
+        zoom_layout.addWidget(self.zoom_label)
+        zoom_layout.addWidget(self.zoom_in_btn)
+        zoom_layout.addWidget(self.zoom_reset_btn)
         
         # Replace old 3D loading text with asset status
         self.preview_status = QLabel("Ready")
         self.preview_status.setStyleSheet("color: #888888; font-size: 11px;")
         
+        controls_layout.addLayout(zoom_layout)
+        controls_layout.addStretch()
         controls_layout.addWidget(self.preview_status)
         controls_layout.addStretch()
         
@@ -2815,6 +2897,10 @@ class AssetPreviewWidget(QWidget):
         self._rotation_x = 0
         self._rotation_y = 0
         self._zoom_level = 1.0
+        self._min_zoom = 0.1
+        self._max_zoom = 5.0
+        self._original_pixmap = None  # Store original image for zoom operations
+        self._info_original_pixmap = None  # Store original info label pixmap
         
         return preview_frame
     
@@ -3053,10 +3139,11 @@ class AssetPreviewWidget(QWidget):
         """)
         self.preview_label.setMinimumSize(350, 250)
         
-        # Add mouse tracking for simulated orbit controls
+        # Add mouse tracking for simulated orbit controls and zoom
         self.preview_label.mousePressEvent = self.preview_mouse_press
         self.preview_label.mouseMoveEvent = self.preview_mouse_move
         self.preview_label.wheelEvent = self.preview_wheel
+        self.preview_label.mouseDoubleClickEvent = self.preview_double_click
         
         return self.preview_label
     
@@ -3071,14 +3158,46 @@ class AssetPreviewWidget(QWidget):
             print(f"Warning: No preview label available for text: {text[:50]}...")
     
     def _set_preview_pixmap(self, pixmap):
-        """Set preview pixmap in the appropriate preview widget - Clean Code helper method"""
-        # Professional info display shows file icons instead of pixmaps
-        if hasattr(self, 'preview_info_label') and self.preview_info_label:
-            self.preview_info_label.setPixmap(pixmap)
-        elif hasattr(self, 'preview_label') and self.preview_label:
-            self.preview_label.setPixmap(pixmap)
+        """Set preview pixmap in the appropriate preview widget - Clean Code helper method with zoom support"""
+        # Store original pixmap for zoom operations
+        if pixmap and not pixmap.isNull():
+            # Professional info display shows file icons instead of pixmaps
+            if hasattr(self, 'preview_info_label') and self.preview_info_label:
+                self._info_original_pixmap = pixmap.copy()  # Store original for zooming
+                # Apply current zoom level if not default
+                if hasattr(self, '_zoom_level') and self._zoom_level != 1.0:
+                    zoomed_pixmap = self._apply_zoom_to_pixmap(pixmap, self._zoom_level)
+                    self.preview_info_label.setPixmap(zoomed_pixmap)
+                else:
+                    self.preview_info_label.setPixmap(pixmap)
+                    
+            elif hasattr(self, 'preview_label') and self.preview_label:
+                self._original_pixmap = pixmap.copy()  # Store original for zooming
+                # Apply current zoom level if not default
+                if hasattr(self, '_zoom_level') and self._zoom_level != 1.0:
+                    zoomed_pixmap = self._apply_zoom_to_pixmap(pixmap, self._zoom_level)
+                    self.preview_label.setPixmap(zoomed_pixmap)
+                else:
+                    self.preview_label.setPixmap(pixmap)
+            else:
+                print("Warning: No preview label available for pixmap")
         else:
-            print("Warning: No preview label available for pixmap")
+            print("Warning: Invalid pixmap provided")
+    
+    def _apply_zoom_to_pixmap(self, pixmap, zoom_level):
+        """Apply zoom level to a pixmap and return the result"""
+        if not pixmap or pixmap.isNull():
+            return pixmap
+            
+        original_size = pixmap.size()
+        new_width = int(original_size.width() * zoom_level)
+        new_height = int(original_size.height() * zoom_level)
+        
+        return pixmap.scaled(
+            new_width, new_height,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
     
     def _simulate_orbit_view(self):
         """Simulate orbit view by generating a new playblast from different angle"""
@@ -4304,14 +4423,113 @@ Please check the asset file and try again
         self.preview_status.setText(f"Rotation: X={self.camera_position['rotation_x']:.0f}° Y={self.camera_position['rotation_y']:.0f}°")
     
     def preview_wheel(self, event):
-        """Handle mouse wheel in preview area (zoom controls)"""
-        # Update camera distance (simulation)
+        """Handle mouse wheel in preview area (zoom controls with visual feedback)"""
+        if not hasattr(self, '_zoom_level'):
+            self._zoom_level = 1.0
+            
+        # Calculate zoom delta
         delta = event.angleDelta().y() / 120.0
-        self.camera_position['distance'] *= (0.9 if delta > 0 else 1.1)
-        self.camera_position['distance'] = max(0.5, min(50.0, self.camera_position['distance']))
+        zoom_factor = 1.1 if delta > 0 else 0.9
         
-        # Update orbit info
-        self.preview_status.setText(f"Distance: {self.camera_position['distance']:.1f} units")
+        # Update zoom level with constraints
+        new_zoom = self._zoom_level * zoom_factor
+        self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
+        
+        # Apply visual zoom to current preview
+        self._apply_zoom_to_preview()
+        
+        # Update zoom controls
+        self._update_zoom_label()
+        
+        # Update status with zoom percentage
+        zoom_percent = int(self._zoom_level * 100)
+        self.preview_status.setText(f"Zoom: {zoom_percent}% (Mouse wheel to zoom, drag to pan)")
+    
+    def _apply_zoom_to_preview(self):
+        """Apply current zoom level to the preview display"""
+        try:
+            # Handle different preview widget types
+            if hasattr(self, 'preview_label') and self.preview_label:
+                # Get current pixmap
+                current_pixmap = self.preview_label.pixmap()
+                if current_pixmap and not current_pixmap.isNull():
+                    # Use stored original if available, otherwise use current as original
+                    if not self._original_pixmap:
+                        self._original_pixmap = current_pixmap.copy()
+                    
+                    # Calculate new size based on zoom
+                    original_size = self._original_pixmap.size()
+                    new_width = int(original_size.width() * self._zoom_level)
+                    new_height = int(original_size.height() * self._zoom_level)
+                    
+                    # Scale the original pixmap to new zoom size
+                    zoomed_pixmap = self._original_pixmap.scaled(
+                        new_width, new_height,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation
+                    )
+                    
+                    # Apply zoomed pixmap
+                    self.preview_label.setPixmap(zoomed_pixmap)
+                    
+            elif hasattr(self, 'preview_info_label') and self.preview_info_label:
+                # For info display widgets, apply zoom to any pixmap content
+                self._apply_zoom_to_info_label()
+                
+        except Exception as e:
+            print(f"Error applying zoom: {e}")
+    
+    def _apply_zoom_to_info_label(self):
+        """Apply zoom to info label preview (for professional asset display)"""
+        try:
+            if hasattr(self, '_info_original_pixmap') and self._info_original_pixmap:
+                original = self._info_original_pixmap
+                if original and not original.isNull():
+                    # Calculate zoomed size
+                    new_size = original.size() * self._zoom_level
+                    zoomed = original.scaled(
+                        new_size,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation
+                    )
+                    if hasattr(self, 'preview_info_label') and self.preview_info_label:
+                        self.preview_info_label.setPixmap(zoomed)
+        except Exception as e:
+            print(f"Error applying zoom to info label: {e}")
+    
+    def _zoom_by_factor(self, factor):
+        """Zoom by a specific factor"""
+        if not hasattr(self, '_zoom_level'):
+            self._zoom_level = 1.0
+            
+        new_zoom = self._zoom_level * factor
+        self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
+        
+        self._apply_zoom_to_preview()
+        self._update_zoom_label()
+    
+    def _reset_zoom(self):
+        """Reset zoom to 100%"""
+        self._zoom_level = 1.0
+        self._apply_zoom_to_preview()
+        self._update_zoom_label()
+        self.preview_status.setText("Zoom reset to 100%")
+    
+    def _update_zoom_label(self):
+        """Update the zoom percentage label"""
+        if hasattr(self, 'zoom_label'):
+            zoom_percent = int(self._zoom_level * 100)
+            self.zoom_label.setText(f"{zoom_percent}%")
+    
+    def preview_double_click(self, event):
+        """Handle double-click events for zoom reset"""
+        try:
+            # Reset zoom on double-click
+            if hasattr(self, '_zoom_level') and hasattr(self, '_original_pixmap'):
+                self._reset_zoom()
+                event.accept()
+        except Exception as e:
+            print(f"Preview double-click error: {e}")
     
     # Event handlers
     def closeEvent(self, event):
