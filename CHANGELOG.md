@@ -5,6 +5,93 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-08-11
+
+### Added in v1.2.0
+
+#### 🖼️ Resizable Thumbnails - New Feature
+
+- **Dynamic Thumbnail Sizing**: Slider control to adjust thumbnail size from 32px to 128px
+  - Real-time thumbnail updates as you drag the slider
+  - Live size label showing current pixel dimensions
+  - Size preference saved automatically between sessions
+  - Universal application across all asset tabs and collections
+
+- **Smart Thumbnail System**: Enhanced thumbnail generation and caching
+  - Dynamic cache keys for different thumbnail sizes  
+  - Automatic cache clearing when size changes
+  - Memory-efficient thumbnail regeneration
+  - Consistent sizing across main library and collection tabs
+
+#### 🎬 Independent 3D Preview System - Major Enhancement
+
+- **Dedicated Camera System**: Each preview panel gets its own independent camera
+  - True isolation - preview changes don't affect main Maya viewport
+  - Independent orbit, zoom, and frame controls
+  - Professional asset browsing without workspace disruption
+  - Automatic camera cleanup and resource management
+
+- **Enhanced MEL Integration**: Complete rewrite of 3D preview system
+  - Independent camera creation with optimal positioning (5,3,5) and viewing angle
+  - Direct transform manipulation for smooth orbit and zoom
+  - Proper resource cleanup with automatic camera deletion
+  - Error handling with graceful degradation
+
+#### 🔍 Enhanced Preview & Visualization
+
+- **Comprehensive Asset Preview Widget**: Revolutionary 3D asset visualization system
+  - Real-time 3D preview of selected assets with independent camera controls
+  - Interactive metadata display panel showing comprehensive asset information
+  - Support for Maya files (.ma/.mb), OBJ, FBX, and cache files (.abc/.usd)
+  - Quality settings (Low/Medium/High) for performance optimization
+
+- **Advanced Metadata Extraction System**: Deep asset analysis capabilities
+  - Automatic extraction of geometry data (vertex count, face count, polygons)
+  - Material and texture information detection
+  - Animation frame analysis and timeline information
+  - File system metadata (size, modification date, type)
+  - Intelligent preview quality suggestions based on asset complexity
+
+- **Integrated UI Layout**: Seamless preview integration with existing interface
+  - Horizontal splitter design with 60% asset list, 40% preview panel
+  - Collapsible preview panel with toggle button in toolbar
+  - User preference persistence - remembers preview panel visibility
+
+#### 🔧 Technical Improvements & Bug Fixes
+
+- **Clean Code Architecture**: Complete codebase refactoring following Clean Code principles
+  - Single Responsibility Principle applied to all classes and methods
+  - DRY (Don't Repeat Yourself) implementation eliminating code duplication
+  - Descriptive method names and comprehensive error handling
+  - Modular design for enhanced maintainability and extensibility
+
+### Changed in v1.2.0
+
+#### 🎨 UI/UX Enhancements
+
+- **Enhanced Thumbnail Controls**: New resize slider with live size feedback
+- **Toolbar Layout Updates**: Added thumbnail size controls and preview toggles
+- **Improved Asset Selection**: All asset lists now trigger preview and thumbnail updates
+- **User Preferences Extended**: Thumbnail size and preview visibility preferences saved
+
+#### 🔧 Technical Architecture
+
+- **MEL System Redesign**: Complete rewrite of 3D preview for camera independence
+- **Cache Management**: Dynamic thumbnail caching with size-based keys
+- **Resource Management**: Automatic camera cleanup and memory optimization
+- **Error Handling**: Graceful degradation for preview and thumbnail operations
+
+### Fixed in v1.2.0
+
+#### 🐛 Critical Bug Fixes
+
+- **3D Preview Independence**: Fixed shared camera issue that affected main Maya viewport
+- **Thumbnail Memory Usage**: Optimized thumbnail generation and caching system
+- **MEL Camera Conflicts**: Eliminated camera naming conflicts and resource leaks
+- **UI Responsiveness**: Improved performance during thumbnail resizing operations
+
+---
+
 ## [1.1.4] - 2025-08-07
 
 ### Added in v1.1.4

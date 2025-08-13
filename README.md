@@ -1,23 +1,30 @@
-# Asset Manager for Maya v1.1.4
+# Asset Manager for Maya v1.2.0
 
-A comprehensive asset management system for Maya 2025.3+ with improved UI sizing, win## 📊 Version History
+A comprehensive asset management system for Maya 2025.3+ with independent 3D preview, resizable thumbnails, and advanced asset visualization capabilities.
 
-## v1.1.3 Features
+## 🆕 What's New in v1.2.0
 
-- **Automatic Refresh**: Collection tabs now automatically refresh when collections are modified externally
-- **Smart Caching**: Intelligent file system caching reduces network latency
-- **State Preservation**: Tab selection and view state preserved during refreshes
-- **Error Recovery**: Robust error handling prevents crashes during collection updates
-- **Optimized Thumbnails**: Background processing with queue management for better performance
-- **Network Optimization**: Intelligent detection of network storage with adaptive caching
-- **Memory Management**: Fixed memory leaks in large asset libraries
-- **Dependency Chain Optimization**: Efficient traversal and cached results for better performance
+### 🖼️ **Resizable Thumbnails** - New Feature
 
-### v1.1.2 - Collection Tabs & Thumbnailsd enhanced user experience
+- **Dynamic Size Control**: Slider to adjust thumbnail size from 32px to 128px in real-time
+- **Persistent Preferences**: Thumbnail size saved between sessions  
+- **Universal Application**: Consistent sizing across all asset tabs and collections
+- **Smart Caching**: Intelligent cache management for different thumbnail sizes
 
-## 🆕 What's New in v1.1.4
+### � **Independent 3D Preview System** - Major Enhancement
 
-### 🎨 UI Improvements & User Experience
+- **Dedicated Cameras**: Each preview panel gets its own independent camera
+- **True Isolation**: Preview changes don't affect the main Maya viewport
+- **Independent Controls**: Orbit, zoom, and frame assets without disturbing main scene
+- **Professional Workflow**: Browse assets while maintaining your current workspace
+
+### 🔍 **Enhanced Preview & Visualization**
+
+- **Advanced 3D Asset Preview**: Revolutionary asset visualization with independent camera controls  
+- **Metadata Extraction**: Deep analysis of Maya, OBJ, FBX, and cache files
+- **Integrated UI Layout**: Seamless preview panel with optimized split ratios
+- **Quality Settings**: Performance optimization with Low/Medium/High quality modes
+- **Asset Comparison**: Side-by-side comparison capabilities for asset analysis
 
 #### **Enhanced Default Window Sizing**
 
@@ -231,7 +238,7 @@ A comprehensive asset management system for Maya 2025.3+ with improved UI sizing
 
 ## 📦 Downloads & Previous Versions
 
-### Current Version (v1.1.4)
+### Current Version (v1.2.0)
 
 Download the latest version directly from this repository or from [GitHub Releases](../../releases).
 
@@ -239,6 +246,7 @@ Download the latest version directly from this repository or from [GitHub Releas
 
 All previous versions are available as GitHub Releases with complete archives and release notes:
 
+- **[v1.1.4](../../releases/tag/v1.1.4)** - UI Improvements & Window Memory (August 7, 2025)
 - **[v1.1.3](../../releases/tag/v1.1.3)** - Performance & Reliability (August 7, 2025)
 - **[v1.1.2](../../releases/tag/v1.1.2)** - Collection Tabs & Thumbnails (July 29, 2025)
 - **[v1.1.1](../../releases/tag/v1.1.1)** - Visual Organization (May 22, 2025)
@@ -345,14 +353,14 @@ See `docs/MAYA_INSTALLATION_TROUBLESHOOTING.md` for detailed troubleshooting ste
 
 ```txt
 assetManagerforMaya-master/
-├── assetManager.py              # Main plugin with v1.1.2 features
+├── assetManager.py              # Main plugin with v1.2.0 Preview & Visualization features
 ├── assetManager.mod             # Plugin descriptor
 ├── icon_utils.py                # Icon management utilities
 ├── DRAG&DROP.mel                # Primary installer
 ├── README.md                    # This documentation
 ├── LICENSE                      # MIT License
 ├── CHANGELOG.md                 # Version history and changes
-├── version.json                 # Version 1.1.2 information
+├── version.json                 # Version 1.2.0 information
 ├── setup.py                     # Python setup script
 ├── install.bat                  # Windows installer
 ├── install.sh                   # Unix/Linux installer

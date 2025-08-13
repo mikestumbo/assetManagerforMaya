@@ -1,6 +1,6 @@
 """
-Asset Manager Setup Script v1.1.4
-Installs the Asset Manager plugin for Maya 2025.3+ with UI Improvements and Window Memory
+Asset Manager Setup Script v1.2.0
+Installs the Asset Manager plugin for Maya 2025.3+ with Preview & Visualization System and Advanced Asset Metadata
 """
 
 import os
@@ -58,14 +58,14 @@ def install_plugin():
             shutil.copytree(icons_source, icons_dest)
             print("Installed: icons directory")
         
-        print(f"\nAsset Manager v1.1.4 plugin installed successfully!")
+        print(f"\nAsset Manager v1.2.0 plugin installed successfully!")
         print(f"Location: {plugins_dir}")
-        print("\nNew in v1.1.4:")
-        print("• Improved UI Sizing - Better default window dimensions for optimal visibility")
-        print("• Window Memory - UI remembers and restores your preferred window size and position") 
-        print("• Enhanced Layout - Better splitter ratios and visual defaults")
-        print("• UI Preferences - Persistent storage for window geometry settings")
-        print("• Reset Window Function - Easy way to return to optimal default sizing")
+        print("\nNew in v1.2.0:")
+        print("• Preview & Visualization System - Revolutionary 3D asset preview with orbital controls")
+        print("• Advanced Metadata Extraction - Deep analysis of Maya, OBJ, FBX, and cache files") 
+        print("• Quality Settings - Performance optimization with Low/Medium/High quality modes")
+        print("• Integrated UI Layout - Seamless preview panel with collapsible design")
+        print("• Asset Comparison Framework - Side-by-side comparison capabilities")
         print("\nTo activate the plugin in Maya:")
         print("1. Open Maya 2025.3+")
         print("2. Go to Windows > Settings/Preferences > Plug-in Manager")
@@ -98,7 +98,7 @@ def uninstall_plugin():
             shutil.rmtree(icons_dir)
             print("Removed: icons directory")
         
-        print("Asset Manager v1.1.4 plugin uninstalled successfully!")
+        print("Asset Manager v1.2.0 plugin uninstalled successfully!")
         
     except Exception as e:
         print(f"Error uninstalling plugin: {e}")
@@ -107,7 +107,7 @@ def uninstall_plugin():
     return True
 
 if __name__ == "__main__":
-    print("Asset Manager v1.1.4 Setup")
+    print("Asset Manager v1.2.0 Setup")
     print("=" * 50)
     
     if len(sys.argv) > 1 and sys.argv[1] == "uninstall":

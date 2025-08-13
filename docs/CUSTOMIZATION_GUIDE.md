@@ -2,7 +2,44 @@
 
 ## Overview
 
-The Asset Manager now includes a comprehensive user customization system that allows you to fully customize asset types, colors, priorities, and behaviors. This guide explains how to use these powerful new features.
+The Asset Manager includes comprehensive customization features that allow you to personalize your workflow with custom asset types, colors, priorities, and behaviors. Version 1.2.0 adds powerful new visual customization options including resizable thumbnails and independent 3D preview controls.
+
+## 🖼️ Customizing Your Visual Experience
+
+### Adjusting Thumbnail Sizes
+
+You can customize thumbnail sizes to match your preferred workflow:
+
+**How to Resize Thumbnails:**
+
+1. Look for the size slider below the Import/Delete buttons in the asset library
+2. Drag the slider left for smaller thumbnails (32px) or right for larger ones (128px)
+3. The size label shows your current setting in real-time
+4. Your preference is automatically saved for next time
+
+**When to Use Different Sizes:**
+
+- **Small (32-48px)**: When you want to see many assets at once in a compact view
+- **Medium (64px)**: Default size that balances detail and screen space
+- **Large (96-128px)**: When you need to see fine details in asset thumbnails
+
+### Using the 3D Preview System
+
+The Asset Manager includes an independent 3D preview that won't interfere with your main work:
+
+**How to Use 3D Preview:**
+
+1. Select any 3D asset (.ma, .mb, .obj, .fbx) in your library
+2. The preview panel shows a real-time 3D view of your asset  
+3. Use mouse controls to orbit, zoom, and examine the asset
+4. Your main Maya viewport remains completely unchanged
+
+**Preview Controls:**
+
+- **Orbit**: Click and drag to rotate around the asset
+- **Zoom**: Mouse wheel or drag to get closer/further from asset
+- **Frame**: Double-click to center and frame the asset optimally
+- **Independent View**: Each collection tab can have its own viewing angle
 
 ## 🎨 Asset Type Customization Features
 
@@ -237,18 +274,114 @@ Your custom asset types automatically work with:
 6. **Test Changes**: Use the preview to see how changes will look
 7. **Backup First**: Export your current config before importing new ones
 
-## 🔄 Updating from Previous Versions
+## 🔄 Getting Started After an Update
 
-If you're upgrading from a previous version:
+If you've recently updated your Asset Manager:
 
-1. Your existing asset assignments will be preserved
-2. Default colors and types will be updated to the new system
-3. Any custom modifications will need to be redone using the new interface
-4. Consider exporting your configuration after setting up your preferences
+### Exploring New Customization Options
+
+**Visual Customization**:
+
+- Try the new thumbnail size slider to find your preferred asset view size
+- Experiment with the independent 3D preview to browse assets without disrupting your workspace
+- Your preferences will be saved automatically for future sessions
+
+### Preserving Your Existing Setup
+
+**Your Current Configuration**:
+
+1. All your custom asset types remain exactly as you configured them
+2. Color assignments and priorities continue to work unchanged  
+3. Asset collections and organization are preserved
+4. No need to reconfigure your existing customizations
+
+### Taking Advantage of Improvements
+
+**Enhanced Workflow**:
+
+- Your thumbnail size preference is now remembered between sessions
+- 3D asset previews work independently from your main Maya scene
+- Better performance with improved caching and memory management
 
 ## 🆘 Troubleshooting
 
-### Common Issues
+### Visual Customization Issues
+
+**Q: Thumbnail size slider doesn't appear**
+A: Check that you're using Maya 2025.3+ with PySide6 support
+
+**Q: Thumbnails don't resize when I move the slider**
+A: Try refreshing the asset library or clearing the thumbnail cache
+
+**Q: 3D preview shows error messages**
+A: This may be due to renderer conflicts - see "3D Preview Issues" below
+
+### 3D Preview Issues
+
+**Q: Error "No object matches name: assetMgrPreview..."**
+A: The 3D preview panel was unexpectedly destroyed. Solutions:
+
+   1. Restart the Asset Manager to recreate the preview panel
+   2. Switch Maya's renderer to "Maya Software" temporarily
+   3. Check Maya Script Editor for additional error details
+
+**Q: Viewport errors with Arnold/RenderMan**
+A: Production renderers can conflict with preview panels:
+
+   1. Set Maya's viewport to "Maya Software" or "Viewport 2.0"
+   2. Avoid changing renderers while Asset Manager is open
+   3. Restart Asset Manager after renderer changes
+
+**Q: "updateModelPanelBar" syntax errors**
+A: This indicates panel name corruption with pipe characters (||||||||):
+
+   1. **Immediate Fix**: Run the 3D Preview Reset Tool:
+
+      ```mel
+      source "YOURPATH/3D_PREVIEW_RESET.mel";
+      ```
+
+   2. Close and reopen the Asset Manager
+   3. Restart Maya if corruption persists
+   4. Check for complex production scenes that may trigger the issue
+
+**Q: Arnold/RenderMan viewport errors like "Object '|||||||' not found"**
+A: Production renderers conflict with the 3D preview system:
+
+   1. **Apply Renderer Safety**: Load the renderer patch:
+
+      ```mel
+      source "YOURPATH/RENDERER_SAFE_PATCH.mel";
+      ```
+
+   2. Switch Maya's main renderer to "Maya Software" when using Asset Manager
+   3. Avoid previewing complex RenderMan scenes with many nodes
+   4. Consider using simplified proxy assets for preview
+
+**Q: "RuntimeError: Object not found" in mtoa/viewport.py**
+A: Arnold is trying to access corrupted preview panels:
+
+   1. Reset all 3D preview panels using the reset tool
+   2. Restart Asset Manager to create clean panels
+   3. Use "Maya Software" renderer for asset preview workflows
+   4. Keep Arnold scenes separate from asset management workflows
+
+**Q: Complex production scenes (like RenderMan rigs) cause errors**
+A: Large production files can overwhelm the preview system:
+
+   1. Use simplified proxy versions for Asset Manager library
+   2. Switch to "Maya Software" renderer before opening Asset Manager
+   3. Consider creating lightweight preview versions of complex assets
+   4. Use the renderer-safe 3D preview functions for production compatibility
+
+**Q: Preview camera controls not working**
+A: Check that the preview panel is properly initialized:
+
+   1. Verify you can see assets loading in the preview
+   2. Try right-clicking in the preview area for camera options
+   3. Restart Asset Manager if preview appears frozen
+
+### Asset Type Customization Issues
 
 **Q: My custom types don't appear in the context menu**
 A: Make sure you clicked "Apply" or "OK" to save changes
@@ -264,6 +397,23 @@ A: Default types are protected - you can modify them but not delete them
 
 **Q: Import failed with an error**
 A: Check that the JSON file is valid and from a compatible version
+
+### Performance Issues
+
+**Q: Asset Manager feels slow with large libraries**
+A: Try these optimization steps:
+
+   1. Use smaller thumbnail sizes (32-48px) for better performance
+   2. Limit the number of assets in your library folders
+   3. Close the 3D preview if not needed
+   4. Clear old thumbnail cache files periodically
+
+**Q: Maya becomes unresponsive during asset loading**
+A: Large production scenes can cause delays:
+
+   1. Use "Maya Software" renderer for faster loading
+   2. Avoid complex RenderMan/Arnold scenes in preview
+   3. Consider using proxy/simplified versions for thumbnails
 
 ## 📞 Support
 
