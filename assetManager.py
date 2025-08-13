@@ -3996,7 +3996,7 @@ Please check the asset file and try again
             return
         
         try:
-            import maya.cmds as cmds
+            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
             import tempfile
             import shutil
             
@@ -4122,7 +4122,7 @@ Please check the asset file and try again
     def _apply_viewport_settings(self):
         """Apply viewport settings for preview"""
         try:
-            import maya.cmds as cmds
+            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
             
             # Get active viewport
             active_panel = cmds.getPanel(withFocus=True)
@@ -4158,7 +4158,7 @@ Please check the asset file and try again
     def _perform_screenshot_capture(self, dialog):
         """Perform the actual screenshot capture"""
         try:
-            import maya.cmds as cmds
+            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
             import tempfile
             import shutil
             import os
@@ -4207,6 +4207,10 @@ Please check the asset file and try again
                 raise Exception("Screenshot file not created")
             
             actual_temp_path = os.path.join(temp_dir, actual_files[0])
+            
+            # Validate current asset path
+            if not self.current_asset_path:
+                raise Exception("No asset selected for screenshot")
             
             # Create thumbnail directory for this asset
             asset_dir = os.path.dirname(self.current_asset_path)
