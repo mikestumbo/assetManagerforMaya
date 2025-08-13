@@ -8,10 +8,10 @@ Version: 1.2.0
 Maya Version: 2025.3+
 
 New in v1.2.0:
-- PREVIEW & VISUALIZATION SYSTEM: Revolutionary 3D asset preview with metadata display
-- ADVANCED METADATA EXTRACTION: Deep asset analysis for Maya, OBJ, FBX, and cache files  
-- INTEGRATED UI LAYOUT: Seamless preview panel with collapsible design
-- QUALITY SETTINGS: Performance optimization with Low/Medium/High quality modes
+- PROFESSIONAL ASSET DISPLAY: Stable, crash-safe asset information system
+- ADVANCED METADATA EXTRACTION: Deep asset analysis for Maya, OBJ, FBX, and cache files
+- INTEGRATED UI LAYOUT: Seamless professional info panel with metadata display  
+- STABLE PERFORMANCE: Eliminated Maya viewport crashes with professional file icons
 - ASSET COMPARISON FRAMEWORK: Side-by-side comparison capabilities
 - Fixed collection tab refresh issues with automatic synchronization
 - Improved network performance with intelligent caching and lazy loading
@@ -28,7 +28,8 @@ New in v1.2.0:
 - MAJOR IMPROVEMENT: Implemented memory-safe thumbnail generation system
 - Enhanced thumbnail caching with intelligent size limits (50 thumbnails max)
 - Added background processing queue for thumbnail generation
-- UI now uses colorful file-type thumbnails with text labels for better visualization
+- UI now uses professional file icons with gradient backgrounds and type indicators for better visualization
+- Optimized icon sizing and grid layout for enhanced readability and professional appearance
 
 Previous Features (v1.1.2):
 - Fixed incomplete method implementations and context menu actions
@@ -68,8 +69,7 @@ class ThumbnailConstants:
     GENERATION_BATCH_SIZE = 5
     CACHE_TIMEOUT_LOCAL = 30  # seconds
     CACHE_TIMEOUT_NETWORK = 120  # seconds
-    PLAYBLAST_QUALITY = 70
-    PLAYBLAST_SCALE_FACTOR = 2
+    # REMOVED: Crash-prone playblast constants replaced with stable alternatives
 
 class ErrorMessages:
     """Centralized error messages - Single Source of Truth"""
@@ -264,8 +264,8 @@ try:
                                    QScrollArea, QFrame, QTabWidget, QTreeWidget,
                                    QTreeWidgetItem, QInputDialog, QProgressDialog,
                                    QMenu, QSlider)
-    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter, QPen
-    from PySide6.QtCore import Qt, QSize, QTimer, QThread, Signal, QFileSystemWatcher, QObject, QPoint
+    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter, QPen, QLinearGradient
+    from PySide6.QtCore import Qt, QSize, QTimer, QThread, Signal, QFileSystemWatcher, QObject, QPoint, QRect
     from shiboken6 import wrapInstance
 except ImportError:
     print("PySide6 not available. Please ensure Maya 2025.3+ is being used.")
@@ -560,7 +560,7 @@ class AssetManager:
             return False
     
     def _get_cached_file_list(self, directory):
-        """Get cached file list with timeout to improve network performance"""
+        """Get cached file list with background scanning for better performance"""
         if not os.path.exists(directory):
             return []
         
@@ -580,11 +580,57 @@ class AssetManager:
             files = []
             supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
             
-            # Use os.scandir for better performance than os.listdir
-            with os.scandir(directory) as entries:
-                for entry in entries:
-                    if entry.is_file() and any(entry.name.lower().endswith(ext) for ext in supported_extensions):
-                        files.append(entry.path)
+            # For large directories, use progressive scanning with thread pool
+            def scan_directory_chunk(root_path):
+                """Scan a single directory level"""
+                chunk_files = []
+                try:
+                    for file in os.listdir(root_path):
+                        file_path = os.path.join(root_path, file)
+                        if os.path.isfile(file_path):
+                            if any(file.lower().endswith(ext) for ext in supported_extensions):
+                                chunk_files.append(file_path)
+                        elif os.path.isdir(file_path):
+                            # Add subdirectory to scan queue
+                            for sub_file in os.listdir(file_path):
+                                sub_file_path = os.path.join(file_path, sub_file)
+                                if (os.path.isfile(sub_file_path) and 
+                                    any(sub_file.lower().endswith(ext) for ext in supported_extensions)):
+                                    chunk_files.append(sub_file_path)
+                except (OSError, PermissionError):
+                    pass
+                return chunk_files
+            
+            # Start with immediate files in root directory for faster initial response
+            try:
+                for file in os.listdir(directory):
+                    file_path = os.path.join(directory, file)
+                    if os.path.isfile(file_path):
+                        if any(file.lower().endswith(ext) for ext in supported_extensions):
+                            files.append(file_path)
+            except (OSError, PermissionError):
+                pass
+            
+            # Use ThreadPoolExecutor for subdirectory scanning
+            subdirs = []
+            try:
+                subdirs = [os.path.join(directory, d) for d in os.listdir(directory) 
+                          if os.path.isdir(os.path.join(directory, d))]
+            except (OSError, PermissionError):
+                pass
+            
+            if subdirs:
+                with ThreadPoolExecutor(max_workers=3) as executor:
+                    # Limit concurrent scanning to prevent overwhelming network drives
+                    future_to_dir = {executor.submit(scan_directory_chunk, subdir): subdir 
+                                   for subdir in subdirs[:10]}  # Limit to first 10 subdirs for performance
+                    
+                    for future in as_completed(future_to_dir):
+                        try:
+                            subdir_files = future.result(timeout=5)  # 5-second timeout per directory
+                            files.extend(subdir_files)
+                        except Exception:
+                            continue  # Skip problematic directories
             
             # Cache the result
             self._file_cache[cache_key] = files
@@ -677,9 +723,9 @@ class AssetManager:
         self.cleanup()
     
     def _generate_thumbnail_safe(self, file_path, size=None):
-        """Generate thumbnail with real Maya scene preview and memory-safe approach"""
+        """Generate professional file icon with gradient and type - CRASH-SAFE LIBRARY UI"""
         try:
-            # Use dynamic thumbnail size from UI preferences if no size specified
+            # Use default size if not provided
             if size is None:
                 thumbnail_size = self.get_ui_preference('thumbnail_size', 64)
                 size = (thumbnail_size, thumbnail_size)
@@ -687,58 +733,18 @@ class AssetManager:
             # Ensure tuple format
             if isinstance(size, int):
                 size = (size, size)
+                
+            # Use our professional file icon system instead of crash-prone thumbnails
+            professional_icon = self._generate_professional_file_icon(file_path, size)
+            if professional_icon and not professional_icon.isNull():
+                return professional_icon
             
-            # Use absolute path for consistent caching across different calling contexts
-            abs_path = os.path.abspath(file_path)
-            
-            # Dynamic cache key based on actual size used
-            cache_key = f"{abs_path}_{size[0]}x{size[1]}"
-            if cache_key in self._thumbnail_cache:
-                # Cache hit - return existing thumbnail without generating new one
-                return self._thumbnail_cache[cache_key]
-            
-            # Check if we're already generating this thumbnail to prevent race conditions
-            if not hasattr(self, '_generating_thumbnails'):
-                self._generating_thumbnails = set()
-                
-            if cache_key in self._generating_thumbnails:
-                # Already being generated - return empty pixmap to prevent duplicate generation
-                print(f"Thumbnail already being generated for {os.path.basename(file_path)}")
-                w, h = int(size[0] or 64), int(size[1] or 64)
-                return QPixmap(w, h)  # Return blank thumbnail temporarily
-                
-            # Mark as being generated
-            self._generating_thumbnails.add(cache_key)
-            
-            try:
-                # Check cache size limit to prevent memory bloat
-                if len(self._thumbnail_cache) >= self._thumbnail_cache_size_limit:
-                    # Remove oldest entries (simple FIFO strategy)
-                    oldest_key = next(iter(self._thumbnail_cache))
-                    del self._thumbnail_cache[oldest_key]
-                    print(f"Cache size limit reached, removed: {oldest_key}")
-                
-                # Generate real preview thumbnail based on file type
-                file_ext = os.path.splitext(file_path)[1].lower()
-                pixmap = self._generate_real_thumbnail(file_path, file_ext, size)
-                
-                # Cache the result with consistent key - SINGLE SOURCE OF TRUTH
-                self._thumbnail_cache[cache_key] = pixmap
-                print(f"Generated and cached thumbnail for {os.path.basename(file_path)}")
-                
-                return pixmap
-                
-            finally:
-                # Always remove from generating set when done
-                self._generating_thumbnails.discard(cache_key)
+            # Fallback to text-based thumbnail if professional icon fails
+            file_ext = os.path.splitext(file_path)[1].lower()
+            return self._generate_fallback_thumbnail(file_ext, size)
             
         except Exception as e:
-            print(f"Error generating thumbnail for {file_path}: {e}")
-            # Clean up generating set on error
-            cache_key = f"{os.path.abspath(file_path)}_64x64"
-            if hasattr(self, '_generating_thumbnails') and cache_key in self._generating_thumbnails:
-                self._generating_thumbnails.discard(cache_key)
-            # Return fallback thumbnail on error
+            print(f"Error generating professional thumbnail: {e}")
             return self._generate_fallback_thumbnail(os.path.splitext(file_path)[1].lower(), size)
     
     def _generate_real_thumbnail(self, file_path, file_ext, size):
@@ -1073,21 +1079,147 @@ class AssetManager:
             # Continue without suppression - not critical for functionality
     
     def _generate_geometry_thumbnail(self, file_path, size, meshes, cmds):
-        """Generate thumbnail from scene geometry - focused responsibility"""
+        """Generate professional file-type thumbnail - CRASH-SAFE ALTERNATIVE"""
         try:
-            self._frame_scene_geometry(meshes, cmds)
-            
-            # Try playblast first
-            playblast_thumbnail = self._generate_maya_playblast_thumbnail(file_path, size)
-            if playblast_thumbnail and os.path.exists(playblast_thumbnail):
-                return self._load_and_cleanup_thumbnail(playblast_thumbnail, size)
-            
-            # Fallback to rendered representation
-            return self._generate_rendered_maya_thumbnail(size, meshes)
+            # Professional stable thumbnail generation - no Maya viewport operations
+            return self._generate_professional_file_icon(file_path, size)
             
         except Exception as e:
-            print(f"Error generating geometry thumbnail: {e}")
+            print(f"Error generating professional thumbnail: {e}")
             return self._generate_text_thumbnail(ErrorMessages.MAYA_SCENE_FALLBACK, QColor(100, 150, 255), size)
+    
+    def _generate_professional_file_icon(self, file_path, size):
+        """Generate professional file-type icon with metadata - CUSTOM SCREENSHOT PRIORITY"""
+        
+        # FIRST: Check for custom screenshot thumbnail
+        custom_thumbnail = self._load_custom_screenshot(file_path, size)
+        if custom_thumbnail and not custom_thumbnail.isNull():
+            return custom_thumbnail
+        
+        # FALLBACK: Generate professional file type icon
+        file_ext = os.path.splitext(file_path)[1].lower()
+        file_name = os.path.basename(file_path)
+        
+        # Professional color scheme based on file type
+        color_scheme = {
+            '.ma': QColor(0, 150, 255),      # Maya Blue  
+            '.mb': QColor(0, 120, 200),      # Maya Dark Blue
+            '.obj': QColor(255, 140, 0),     # OBJ Orange
+            '.fbx': QColor(0, 200, 100),     # FBX Green
+            '.abc': QColor(200, 0, 150),     # Alembic Purple  
+            '.usd': QColor(255, 200, 0),     # USD Gold
+        }
+        
+        base_color = color_scheme.get(file_ext, QColor(150, 150, 150))
+        
+        # Create professional icon
+        pixmap = QPixmap(size[0], size[1])
+        pixmap.fill(Qt.GlobalColor.transparent)
+        
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        
+        # Calculate INNER rectangle for content with MORE margin to prevent cutoff
+        margin = 12  # Increased margin to prevent text cutoff
+        content_rect = QRect(margin, margin, size[0] - 2*margin, size[1] - 2*margin)
+        
+        # Professional gradient background with PROPER boundaries
+        gradient = QLinearGradient(0, 0, size[0], size[1])
+        gradient.setColorAt(0, base_color.lighter(140))
+        gradient.setColorAt(1, base_color.darker(120))
+        
+        painter.setBrush(QBrush(gradient))
+        painter.setPen(QPen(base_color.darker(150), 2))
+        # Draw rounded rect with proper margin
+        painter.drawRoundedRect(margin//2, margin//2, size[0]-margin, size[1]-margin, 6, 6)
+        
+        # IMPROVED: Text positioning with better spacing and smaller fonts to guarantee fit
+        painter.setPen(QPen(Qt.GlobalColor.white, 2))
+        
+        # File extension at TOP - CONSERVATIVE sizing to prevent cutoff
+        ext_text = file_ext.upper().replace('.', '') if file_ext else 'FILE'
+        type_font_size = max(8, min(size[0]//12, content_rect.height()//5))  # Much more conservative sizing
+        painter.setFont(QFont("Arial", type_font_size, QFont.Weight.Bold))
+        
+        ext_rect = QRect(content_rect.x(), content_rect.y(), 
+                        content_rect.width(), content_rect.height()//4)  # Smaller section
+        painter.drawText(ext_rect, Qt.AlignmentFlag.AlignCenter, ext_text)
+        
+        # File name in MIDDLE - CONSERVATIVE sizing to prevent cutoff
+        name_text = file_name if len(file_name) <= 12 else file_name[:9] + "..."  # Shorter text
+        name_font_size = max(6, min(size[0]//15, content_rect.height()//6))  # Much more conservative sizing
+        painter.setFont(QFont("Arial", name_font_size, QFont.Weight.Bold))
+        
+        name_rect = QRect(content_rect.x(), content_rect.y() + content_rect.height()//4,
+                         content_rect.width(), content_rect.height()//2)  # Larger section for text
+        painter.drawText(name_rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, name_text)
+        
+        # Status at BOTTOM - CONSERVATIVE sizing to prevent cutoff
+        status_font_size = max(6, min(size[0]//18, content_rect.height()//8))  # Much more conservative sizing
+        painter.setFont(QFont("Arial", status_font_size, QFont.Weight.Bold))
+        
+        status_rect = QRect(content_rect.x(), content_rect.y() + 3*content_rect.height()//4,
+                           content_rect.width(), content_rect.height()//4)  # Smaller section
+        painter.drawText(status_rect, Qt.AlignmentFlag.AlignCenter, "READY")
+        
+        painter.end()
+        return pixmap
+    
+    def _load_custom_screenshot(self, file_path, size):
+        """Load custom screenshot thumbnail if it exists"""
+        try:
+            # Get the asset directory and name
+            asset_dir = os.path.dirname(file_path)
+            asset_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # Look for custom screenshot in .thumbnails directory
+            thumbnail_dir = os.path.join(asset_dir, ".thumbnails")
+            
+            # Check for various screenshot formats
+            screenshot_extensions = ['png', 'jpg', 'jpeg', 'tiff', 'tga']
+            
+            for ext in screenshot_extensions:
+                screenshot_path = os.path.join(thumbnail_dir, f"{asset_name}_screenshot.{ext}")
+                if os.path.exists(screenshot_path):
+                    # Load and resize the custom screenshot
+                    original_pixmap = QPixmap(screenshot_path)
+                    if not original_pixmap.isNull():
+                        # Scale to requested size while maintaining aspect ratio
+                        scaled_pixmap = original_pixmap.scaled(
+                            size[0], size[1],
+                            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                            Qt.TransformationMode.SmoothTransformation
+                        )
+                        
+                        # Create final pixmap with exact size and center the scaled image
+                        final_pixmap = QPixmap(size[0], size[1])
+                        final_pixmap.fill(Qt.GlobalColor.black)  # Black background for screenshots
+                        
+                        painter = QPainter(final_pixmap)
+                        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+                        
+                        # Center the scaled image
+                        x = (size[0] - scaled_pixmap.width()) // 2
+                        y = (size[1] - scaled_pixmap.height()) // 2
+                        painter.drawPixmap(x, y, scaled_pixmap)
+                        
+                        # Add subtle screenshot indicator
+                        painter.setPen(QPen(QColor(255, 255, 255, 180), 2))
+                        painter.setFont(QFont("Arial", max(8, size[0]//24), QFont.Weight.Bold))
+                        indicator_rect = QRect(5, 5, size[0]-10, 20)
+                        painter.drawText(indicator_rect, Qt.AlignmentFlag.AlignLeft, "📸 CUSTOM")
+                        
+                        painter.end()
+                        
+                        print(f"✅ Loaded custom screenshot: {screenshot_path}")
+                        return final_pixmap
+            
+            # No custom screenshot found
+            return None
+            
+        except Exception as e:
+            print(f"Error loading custom screenshot for {file_path}: {e}")
+            return None
     
     def _frame_scene_geometry(self, meshes, cmds):
         """Frame geometry in viewport for thumbnail capture"""
@@ -1120,267 +1252,12 @@ class AssetManager:
         except Exception:
             pass  # Ignore cleanup errors
     
-    def _generate_maya_playblast_thumbnail(self, file_path, size):
-        """Generate thumbnail using Maya's playblast with enhanced production scene support"""
-        try:
-            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
-            
-            # Create temporary directory for thumbnail
-            temp_dir = tempfile.mkdtemp(prefix="maya_thumb_")
-            thumb_name = f"thumb_{os.path.basename(file_path)}"
-            thumb_path = os.path.join(temp_dir, thumb_name)
-            
-            # Get suitable viewport panel
-            viewport_panel = self._get_suitable_viewport_panel(cmds)
-            if not viewport_panel:
-                print("No suitable viewport found for playblast")
-                return None
-            
-            # Configure viewport for production scene compatibility
-            self._configure_production_viewport(cmds, viewport_panel)
-            
-            # Generate playblast with error handling
-            return self._execute_playblast_safely(cmds, thumb_path, size, viewport_panel)
-            
-        except Exception as e:
-            print(f"Error generating playblast thumbnail: {e}")
-            return None
-    
-    def _get_suitable_viewport_panel(self, cmds):
-        """Get suitable viewport panel for thumbnail generation - prioritize MEL 3D preview"""
-        try:
-            # First priority: Use MEL 3D preview panel if available
-            if hasattr(self, 'maya_panel_name') and self.maya_panel_name:
-                if cmds.modelPanel(self.maya_panel_name, exists=True):
-                    print(f"✓ Using MEL 3D Preview panel for thumbnail: {self.maya_panel_name}")
-                    return self.maya_panel_name
-                else:
-                    print(f"⚠ MEL 3D Preview panel no longer exists: {self.maya_panel_name}")
-                    self.maya_panel_name = None
-            
-            # Fallback: Try current panel first
-            current_panel = cmds.getPanel(withFocus=True)
-            if current_panel and 'modelPanel' in current_panel:
-                print(f"Using current focused panel: {current_panel}")
-                return current_panel
-            
-            # Last resort: Get any available model panel
-            model_panels = cmds.getPanel(type='modelPanel')
-            if model_panels:
-                print(f"Using first available model panel: {model_panels[0]}")
-                return model_panels[0]
-                
-            print("Warning: No model panel available for thumbnail")
-            return None
-            
-        except Exception as e:
-            print(f"Error getting viewport panel: {e}")
-            return None
-    
-    def _configure_production_viewport(self, cmds, panel):
-        """Configure viewport for clean thumbnails with production scene compatibility and renderer support"""
-        try:
-            # Special handling for MEL 3D preview panel
-            if hasattr(self, 'maya_panel_name') and panel == self.maya_panel_name:
-                print(f"✓ Configuring MEL 3D Preview panel: {panel}")
-                # Use MEL commands for better MEL panel compatibility
-                import maya.mel as mel # pyright: ignore[reportMissingImports]
-                
-                # Refresh the MEL preview and frame the current asset
-                try:
-                    mel.eval(f'assetManager_refresh3DPreview("{panel}")')
-                    mel.eval(f'assetManager_frameSelection("{panel}")')
-                    mel.eval(f'assetManager_enableTextures("{panel}", 1)')
-                except Exception as mel_error:
-                    print(f"MEL preview configuration warning: {mel_error}")
-                
-                # Also apply standard viewport configuration as fallback
-                return self._apply_basic_viewport_config(cmds, panel)
-            
-            # Auto-detect and configure best available renderer for standard panels
-            renderer_config = self._detect_and_configure_renderer(cmds, panel)
-            
-            # Apply renderer-specific viewport configuration
-            if renderer_config:
-                renderer_config.configure_maya_viewport(cmds, panel)
-                print(f"✓ Configured viewport for {renderer_config.name} renderer")
-            else:
-                # Fallback to basic viewport configuration
-                self._apply_basic_viewport_config(cmds, panel)
-                
-        except Exception as e:
-            print(f"Viewport configuration warning: {e}")
-            # Ultimate fallback to minimal safe configuration
-            try:
-                cmds.modelEditor(panel, edit=True, displayAppearance='smoothShaded')
-            except Exception:
-                pass
-    
-    def _detect_and_configure_renderer(self, cmds, panel):
-        """Detect and configure the best available renderer - Open/Closed Principle"""
-        renderer_priorities = ['renderman', 'arnold', 'maya_software']
-        
-        for renderer_name in renderer_priorities:
-            try:
-                if self._is_renderer_available(cmds, renderer_name):
-                    return RendererConfig.get_renderer_settings(renderer_name)
-            except Exception as e:
-                print(f"Renderer {renderer_name} detection error: {e}")
-                continue
-                
-        return None
-    
-    def _is_renderer_available(self, cmds, renderer_name):
-        """Check if specific renderer is available and loaded"""
-        renderer_plugins = {
-            'renderman': 'RenderMan_for_Maya.py',
-            'arnold': 'mtoa', 
-            'maya_software': None  # Always available
-        }
-        
-        if renderer_name == 'maya_software':
-            return True
-            
-        plugin_name = renderer_plugins.get(renderer_name)
-        if plugin_name:
-            try:
-                return cmds.pluginInfo(plugin_name, q=True, loaded=True)
-            except Exception:
-                return False
-                
-        return False
-    
-    def _apply_basic_viewport_config(self, cmds, panel):
-        """Apply basic viewport configuration when no specific renderer is available"""
-        basic_config = {
-            'displayAppearance': 'smoothShaded',
-            'wireframeOnShaded': False,
-            'displayLights': 'default',
-            'shadows': False,
-            'useDefaultMaterial': True,
-            'grid': False,
-            'handles': False,
-            'manipulators': False,
-            'cameras': False,
-            'deformers': False,
-            'dimensions': False,
-            'dynamicConstraints': False,
-            'fluids': False,
-            'hairSystems': False,
-            'hulls': False,
-            'ikHandles': False,
-            'joints': False,
-            'lights': False,
-            'locators': False,
-            'nCloths': False,
-            'nParticles': False,
-            'nRigids': False,
-            'planes': False,
-            'pivots': False,
-            'textures': True,
-            'strokes': False,
-            'subdivSurfaces': True,
-            'polymeshes': True,
-            'nurbsSurfaces': True,
-            'nurbsCurves': False,
-        }
-        
-        # Apply configuration with error handling
-        for attr, value in basic_config.items():
-            try:
-                cmds.modelEditor(panel, edit=True, **{attr: value})
-            except Exception as e:
-                print(f"Basic viewport config warning: {attr} - {e}")
-                continue
-    
-    def _execute_playblast_safely(self, cmds, thumb_path, size, panel):
-        """Execute playblast with comprehensive error handling for production scenes"""
-        # Playblast configuration optimized for production scenes
-        playblast_config = {
-            'frame': [1, 1],                    # Single frame
-            'format': 'image',
-            'compression': 'png',
-            'quality': ThumbnailConstants.PLAYBLAST_QUALITY,
-            'percent': 100,
-            'width': size[0] * ThumbnailConstants.PLAYBLAST_SCALE_FACTOR,
-            'height': size[1] * ThumbnailConstants.PLAYBLAST_SCALE_FACTOR,
-            'viewer': False,                    # No viewer popup
-            'showOrnaments': False,             # Clean image
-            'offScreen': True,                  # Render off-screen for stability
-            'filename': thumb_path
-        }
-        
-        try:
-            # Execute playblast
-            result = cmds.playblast(**playblast_config)
-            
-            # Find generated thumbnail file
-            temp_dir = os.path.dirname(thumb_path)
-            thumb_name = os.path.basename(thumb_path)
-            
-            if os.path.exists(temp_dir):
-                generated_files = [f for f in os.listdir(temp_dir) 
-                                 if f.startswith(thumb_name) and f.lower().endswith('.png')]
-                if generated_files:
-                    final_path = os.path.join(temp_dir, generated_files[0])
-                    print(f"Generated playblast thumbnail: {final_path}")
-                    return final_path
-            
-            print("Playblast completed but no output file found")
-            return None
-            
-        except Exception as e:
-            print(f"Playblast execution error: {e}")
-            # Common playblast issues in production scenes
-            if "offScreen" in str(e):
-                print("Retrying playblast without offScreen rendering...")
-                try:
-                    # Retry without offScreen for problematic setups
-                    playblast_config['offScreen'] = False
-                    result = cmds.playblast(**playblast_config)
-                    return thumb_path if os.path.exists(thumb_path) else None
-                except Exception as retry_error:
-                    print(f"Playblast retry failed: {retry_error}")
-            return None
+    # REMOVED: All Maya playblast methods replaced with crash-safe professional alternatives
     
     def _generate_rendered_maya_thumbnail(self, size, meshes):
-        """Generate rendered thumbnail when playblast fails"""
-        try:
-            pixmap = QPixmap(size[0], size[1])
-            pixmap.fill(QColor(60, 60, 80))  # Dark blue-gray background
-            
-            painter = QPainter(pixmap)
-            
-            # Draw wireframe representation
-            painter.setPen(QPen(QColor(150, 200, 255), 1))  # Light blue lines
-            
-            # Draw simple wireframe pattern
-            mesh_count = len(meshes)
-            for i in range(min(mesh_count, 8)):  # Max 8 objects for clarity
-                x_offset = (i % 3) * 15 + 10
-                y_offset = (i // 3) * 15 + 10
-                
-                # Draw simple cube wireframe
-                painter.drawRect(x_offset, y_offset, 12, 12)
-                painter.drawLine(x_offset, y_offset, x_offset + 3, y_offset - 3)
-                painter.drawLine(x_offset + 12, y_offset, x_offset + 15, y_offset - 3)
-                painter.drawLine(x_offset + 12, y_offset + 12, x_offset + 15, y_offset + 9)
-                painter.drawRect(x_offset + 3, y_offset - 3, 12, 12)
-            
-            # Add file type label
-            painter.setPen(QColor(255, 255, 255))
-            font = painter.font()
-            font.setPixelSize(8)
-            font.setBold(True)
-            painter.setFont(font)
-            painter.drawText(5, size[1] - 5, f"{mesh_count} objects")
-            
-            painter.end()
-            return pixmap
-            
-        except Exception as e:
-            print(f"Error generating rendered Maya thumbnail: {e}")
-            return self._generate_text_thumbnail("MAYA", QColor(100, 150, 255), size)
+        """Generate professional Maya scene icon - CRASH-SAFE ALTERNATIVE"""
+        # Professional Maya scene representation  
+        return self._generate_text_thumbnail("MAYA\nSCENE", QColor(0, 150, 255), size)
     
     def _generate_obj_thumbnail(self, file_path, size):
         """Generate thumbnail preview for OBJ files"""
@@ -2842,42 +2719,51 @@ class AssetPreviewWidget(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
         
-        # Preview header with controls
+        # Preview header with screenshot functionality
         header_layout = QHBoxLayout()
         
-        # Preview quality selector
-        quality_label = QLabel("Quality:")
-        self.quality_combo = QComboBox()
-        self.quality_combo.addItems(['Low', 'Medium', 'High'])
-        self.quality_combo.setCurrentText(self.preview_quality)
+        # Asset info display
+        self.asset_info_label = QLabel("Asset Preview")
+        self.asset_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.asset_info_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                padding: 8px;
+            }
+        """)
         
-        # Renderer selection
-        renderer_label = QLabel("Renderer:")
-        self.renderer_combo = QComboBox()
-        self.renderer_combo.addItems(['Auto-Detect', 'RenderMan', 'Arnold', 'Maya Software'])
-        self.renderer_combo.setCurrentText('Auto-Detect')
-        self._configure_preview_button(self.renderer_combo, min_width=100)
+        # Professional screenshot button
+        self.screenshot_btn = QPushButton("📸 Capture Screenshot")
+        self.screenshot_btn.setToolTip("Take high-resolution screenshot of current Maya viewport and set as asset thumbnail")
+        self.screenshot_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+            QPushButton:pressed {
+                background-color: #1565C0;
+            }
+            QPushButton:disabled {
+                background-color: #666666;
+                color: #999999;
+            }
+        """)
+        self.screenshot_btn.setEnabled(False)  # Enabled when asset is selected
         
-        # Camera controls
-        self.reset_camera_btn = QPushButton("Reset View")
-        self._configure_preview_button(self.reset_camera_btn, min_width=90)
-        
-        # Scene controls
-        self.clear_scene_btn = QPushButton("Clear Scene")
-        self._configure_preview_button(self.clear_scene_btn, min_width=90)
-        
-        # Thumbnail controls  
-        self.custom_thumbnail_btn = QPushButton("Get Thumbnail")
-        self._configure_preview_button(self.custom_thumbnail_btn, min_width=120)
-        
-        header_layout.addWidget(quality_label)
-        header_layout.addWidget(self.quality_combo)
-        header_layout.addWidget(renderer_label)
-        header_layout.addWidget(self.renderer_combo)
+        header_layout.addWidget(self.screenshot_btn)
         header_layout.addStretch()
-        header_layout.addWidget(self.reset_camera_btn)
-        header_layout.addWidget(self.clear_scene_btn)
-        header_layout.addWidget(self.custom_thumbnail_btn)
+        header_layout.addWidget(self.asset_info_label)
+        header_layout.addStretch()
         
         # Main preview area with splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -2919,13 +2805,14 @@ class AssetPreviewWidget(QWidget):
             
         layout.addWidget(self.preview_widget, 1)
         
-        # Preview controls
+        # Preview controls (cleaned up)
         controls_layout = QHBoxLayout()
         
-        self.orbit_info = QLabel("3D Preview • Loading...")
-        self.orbit_info.setStyleSheet("color: #888888; font-size: 11px;")
+        # Replace old 3D loading text with asset status
+        self.preview_status = QLabel("Ready")
+        self.preview_status.setStyleSheet("color: #888888; font-size: 11px;")
         
-        controls_layout.addWidget(self.orbit_info)
+        controls_layout.addWidget(self.preview_status)
         controls_layout.addStretch()
         
         layout.addLayout(controls_layout)
@@ -2938,66 +2825,46 @@ class AssetPreviewWidget(QWidget):
         return preview_frame
     
     def _create_maya_viewport_widget(self):
-        """Create clean screenshot-based 3D preview - eliminates Maya panel corruption issues"""
+        """Create professional asset preview widget - CLEAN PREVIEW ONLY"""
         try:
-            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
+            print("🎯 Initializing Professional Asset Preview Display")
             
-            print("🎯 Initializing Clean Screenshot-Based 3D Preview")
-            
-            # Create the preview widget
-            preview_widget = self._create_screenshot_preview_widget()
-            
-            # Store preview configuration
-            self.screenshot_preview = True
-            self.mel_preview = False  # We're not using MEL panels anymore
-            
-            print("✅ Clean Screenshot 3D Preview initialized successfully")
-            return preview_widget
-                
-        except Exception as e:
-            print(f"Error creating screenshot-based 3D preview: {e}")
-            import traceback
-            traceback.print_exc()
-            return self._create_fallback_preview_widget()
-    
-    def _create_screenshot_preview_widget(self):
-        """Create clean screenshot-based 3D preview widget using Maya's stable playblast"""
-        try:
-            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
-            
-            # Create preview widget
+            # Create a simple preview widget for asset thumbnails/previews
             preview_widget = QWidget()
             preview_widget.setMinimumSize(UIConstants.PREVIEW_MIN_WIDTH, UIConstants.PREVIEW_MIN_HEIGHT)
             
-            # Create layout
             layout = QVBoxLayout(preview_widget)
-            layout.setContentsMargins(5, 5, 5, 5)
+            layout.setContentsMargins(10, 10, 10, 10)
+            layout.setSpacing(10)
             
-            # Create preview label for screenshots
-            preview_label = QLabel("3D Preview Ready")
-            preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            preview_label.setStyleSheet("""
+            # Preview display area (for thumbnails, icons, etc.)
+            self.preview_info_label = QLabel("Select an asset to preview")
+            self.preview_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.preview_info_label.setStyleSheet("""
                 QLabel {
                     background-color: #2a2a2a;
                     border: 2px solid #555555;
                     border-radius: 4px;
                     color: #cccccc;
-                    font-size: 12px;
-                    padding: 10px;
-                    min-height: 200px;
+                    font-size: 14px;
+                    padding: 20px;
+                    min-height: 300px;
                 }
             """)
             
-            layout.addWidget(preview_label)
+            layout.addWidget(self.preview_info_label, 1)
             
-            # Store reference for updates
-            self.preview_screenshot_label = preview_label
+            # Store preview configuration 
+            self.professional_preview = True
+            self.mel_preview = False  # No more MEL panels
             
-            print("✅ Screenshot-based 3D preview widget created")
+            print("✅ Professional Asset Preview Display initialized successfully")
             return preview_widget
-            
+                
         except Exception as e:
-            print(f"Error creating screenshot preview widget: {e}")
+            print(f"Error creating professional info display: {e}")
+            import traceback
+            traceback.print_exc()
             return self._create_fallback_preview_widget()
     
     def _create_maya_viewport_method1(self):
@@ -3202,8 +3069,8 @@ class AssetPreviewWidget(QWidget):
     def _set_preview_text(self, text):
         """Set preview text in the appropriate preview widget - Clean Code helper method"""
         # Handle different preview widget types (Single Responsibility Principle)
-        if hasattr(self, 'preview_screenshot_label') and self.preview_screenshot_label:
-            self.preview_screenshot_label.setText(text)
+        if hasattr(self, 'preview_info_label') and self.preview_info_label:
+            self.preview_info_label.setText(text)
         elif hasattr(self, 'preview_label') and self.preview_label:
             self.preview_label.setText(text)
         else:
@@ -3211,9 +3078,9 @@ class AssetPreviewWidget(QWidget):
     
     def _set_preview_pixmap(self, pixmap):
         """Set preview pixmap in the appropriate preview widget - Clean Code helper method"""
-        # Handle different preview widget types (Single Responsibility Principle)  
-        if hasattr(self, 'preview_screenshot_label') and self.preview_screenshot_label:
-            self.preview_screenshot_label.setPixmap(pixmap)
+        # Professional info display shows file icons instead of pixmaps
+        if hasattr(self, 'preview_info_label') and self.preview_info_label:
+            self.preview_info_label.setPixmap(pixmap)
         elif hasattr(self, 'preview_label') and self.preview_label:
             self.preview_label.setPixmap(pixmap)
         else:
@@ -3400,13 +3267,12 @@ class AssetPreviewWidget(QWidget):
     
     def setup_connections(self):
         """Setup widget signal connections"""
-        self.quality_combo.currentTextChanged.connect(self.on_quality_changed)
-        self.renderer_combo.currentTextChanged.connect(self.on_renderer_changed)
-        self.reset_camera_btn.clicked.connect(self.reset_camera_view)
-        self.clear_scene_btn.clicked.connect(self.clear_3d_preview)
-        self.custom_thumbnail_btn.clicked.connect(self.set_custom_thumbnail)
+        # Professional asset comparison controls  
         self.compare_with_btn.clicked.connect(self.start_asset_comparison)
         self.close_comparison_btn.clicked.connect(self.close_asset_comparison)
+        
+        # Professional screenshot system
+        self.screenshot_btn.clicked.connect(self.capture_maya_screenshot)
     
     def preview_asset(self, asset_path):
         """Load and preview an asset"""
@@ -3416,6 +3282,15 @@ class AssetPreviewWidget(QWidget):
         
         self.current_asset_path = asset_path
         
+        # Update header info to show current asset
+        asset_name = os.path.basename(asset_path)
+        if hasattr(self, 'asset_info_label'):
+            self.asset_info_label.setText(f"Previewing: {asset_name}")
+        
+        # Enable screenshot button when asset is selected
+        if hasattr(self, 'screenshot_btn'):
+            self.screenshot_btn.setEnabled(True)
+        
         # Update 3D preview
         self.update_3d_preview(asset_path)
         
@@ -3423,10 +3298,7 @@ class AssetPreviewWidget(QWidget):
         metadata = self.asset_manager.extract_asset_metadata(asset_path)
         self.update_metadata_display(metadata)
         
-        # Update quality suggestion
-        suggested_quality = metadata.get('preview_quality_suggestion', 'Medium')
-        if self.quality_combo.currentText() != suggested_quality:
-            self.quality_combo.setCurrentText(suggested_quality)
+        # Professional asset information system - no quality suggestions needed
     
     def _detect_and_apply_renderman_materials(self, nodes):
         """Detect and configure RenderMan materials for proper 3D preview with production scene robustness"""
@@ -3572,17 +3444,17 @@ class AssetPreviewWidget(QWidget):
     def update_3d_preview(self, asset_path):
         """Update the 3D preview display with clean screenshot-based approach"""
         if not asset_path or not os.path.exists(asset_path):
-            if hasattr(self, 'preview_screenshot_label'):
-                self.preview_screenshot_label.setText("Asset not found")
+            if hasattr(self, 'preview_info_label'):
+                self.preview_info_label.setText("Asset not found")
             return
             
         self.current_asset_path = asset_path
         asset_name = os.path.basename(asset_path)
         file_ext = os.path.splitext(asset_path)[1].lower()
         
-        # Use screenshot-based preview for all 3D assets
-        if hasattr(self, 'screenshot_preview') and self.screenshot_preview:
-            self._generate_screenshot_preview(asset_path)
+        # Use professional asset info display - CRASH-SAFE ALTERNATIVE
+        if hasattr(self, 'professional_preview') and self.professional_preview:
+            self._show_professional_asset_info(asset_path)
             return
             
         # Fallback to old method if screenshot not available
@@ -3600,91 +3472,46 @@ class AssetPreviewWidget(QWidget):
             self._show_error_preview(asset_path, str(e))
 
     def _generate_screenshot_preview(self, asset_path):
-        """Generate clean screenshot preview using Maya's stable playblast functionality"""
+        """REMOVED: Replaced with crash-safe professional asset information display"""
+        # Redirect to professional info display
+        self._show_professional_asset_info(asset_path)
+    
+    def _show_professional_asset_info(self, asset_path):
+        """Show professional asset information - CRASH-SAFE ALTERNATIVE"""
         try:
-            if not MAYA_AVAILABLE:
-                if hasattr(self, 'preview_screenshot_label'):
-                    self.preview_screenshot_label.setText(f"Maya Required\n\n{os.path.basename(asset_path)}")
-                return
-            
-            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
-            import tempfile
-            
             asset_name = os.path.basename(asset_path)
             file_ext = os.path.splitext(asset_path)[1].lower()
             
-            # Update preview label with loading message
-            if hasattr(self, 'preview_screenshot_label'):
-                self.preview_screenshot_label.setText(f"Generating Preview...\n\n{asset_name}")
-            
-            # Load the asset into Maya
-            if file_ext in ['.ma', '.mb']:
-                # For Maya files, open them
-                print(f"🎬 Loading Maya scene for screenshot: {asset_name}")
-                nodes = cmds.file(asset_path, i=True, returnNewNodes=True)
-            elif file_ext == '.obj':
-                # Import OBJ file
-                print(f"🎬 Importing OBJ for screenshot: {asset_name}")
-                nodes = cmds.file(asset_path, i=True, type='OBJ', returnNewNodes=True)
-            elif file_ext == '.fbx':
-                # Import FBX file
-                print(f"🎬 Importing FBX for screenshot: {asset_name}")
-                nodes = cmds.file(asset_path, i=True, type='FBX', returnNewNodes=True)
-            else:
-                if hasattr(self, 'preview_screenshot_label'):
-                    self.preview_screenshot_label.setText(f"Unsupported Format\n\n{asset_name}")
-                return
-            
-            # Frame all objects for good view
-            if nodes:
-                cmds.select(nodes)
-                cmds.viewFit()  # Frame objects in view
-                cmds.select(clear=True)
-            
-            # Generate screenshot using playblast
-            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
-                screenshot_path = temp_file.name
-            
-            # Create high-quality screenshot
-            cmds.playblast(
-                filename=screenshot_path,
-                format='image',
-                compression='jpg',
-                quality=90,
-                widthHeight=[UIConstants.PREVIEW_FRAME_WIDTH, UIConstants.PREVIEW_FRAME_HEIGHT],
-                percent=100,
-                viewer=False,
-                showOrnaments=False,
-                frame=1,
-                clearCache=True
-            )
-            
-            # Load screenshot into preview label
-            if os.path.exists(screenshot_path):
-                screenshot_pixmap = QPixmap(screenshot_path)
-                if not screenshot_pixmap.isNull() and hasattr(self, 'preview_screenshot_label'):
-                    # Scale screenshot to fit label
-                    scaled_pixmap = screenshot_pixmap.scaled(
-                        UIConstants.PREVIEW_MIN_WIDTH, UIConstants.PREVIEW_MIN_HEIGHT, 
-                        Qt.AspectRatioMode.KeepAspectRatio, 
-                        Qt.TransformationMode.SmoothTransformation
-                    )
-                    self.preview_screenshot_label.setPixmap(scaled_pixmap)
-                    print(f"✅ Screenshot preview generated: {asset_name}")
-                
-                # Clean up temp file
-                try:
-                    os.unlink(screenshot_path)
-                except:
-                    pass
-            else:
-                if hasattr(self, 'preview_screenshot_label'):
-                    self.preview_screenshot_label.setText(f"Screenshot Failed\n\n{asset_name}")
+            # Show simplified preview with SQUARE icon to match library
+            if hasattr(self, 'preview_info_label'):
+                # Show large SQUARE professional file icon for preview (matches library style)
+                professional_icon = self.asset_manager._generate_professional_file_icon(asset_path, (250, 250))
+                if professional_icon:
+                    self.preview_info_label.setPixmap(professional_icon)
+                else:
+                    self.preview_info_label.setText(f"Preview Ready\n\n{asset_name}")
                     
+            # Show focused technical details (non-duplicate information)
+            if hasattr(self, 'preview_details_label'):
+                file_stats = os.stat(asset_path)
+                file_size = file_stats.st_size
+                modified_time = datetime.fromtimestamp(file_stats.st_mtime).strftime("%Y-%m-%d %H:%M")
+                
+                # Show only technical file details (not duplicating icon info)
+                if file_size > 1024*1024:
+                    size_str = f"{file_size/(1024*1024):.1f} MB"
+                elif file_size > 1024:
+                    size_str = f"{file_size/1024:.1f} KB" 
+                else:
+                    size_str = f"{file_size} bytes"
+                
+                # Asset details are now handled by the metadata widget
+                print(f"✅ Professional asset preview displayed: {asset_name}")
+                
         except Exception as e:
-            print(f"Error generating screenshot preview: {e}")
-            if hasattr(self, 'preview_screenshot_label'):
-                self.preview_screenshot_label.setText(f"Preview Error\n\n{os.path.basename(asset_path)}\n{str(e)}")
+            print(f"Error showing professional asset info: {e}")
+            if hasattr(self, 'preview_info_label'):
+                self.preview_info_label.setText(f"Preview Error\n\n{os.path.basename(asset_path)}")
     
     def _load_maya_scene_preview(self, asset_path):
         """Load Maya scene content in preview - Single Responsibility with import optimization"""
@@ -3742,7 +3569,7 @@ class AssetPreviewWidget(QWidget):
                 if scene_objects:
                     cmds.select(scene_objects)
                     cmds.viewFit(self.maya_panel_name)
-                    self.orbit_info.setText(f"RenderMan Scene • {len(scene_objects)} objects • Already Loaded")
+                    self.preview_status.setText(f"RenderMan Scene • {len(scene_objects)} objects • Already Loaded")
                     print(f"✓ Reframed existing content: {len(scene_objects)} objects")
                 return
             except Exception as e:
@@ -3753,10 +3580,10 @@ class AssetPreviewWidget(QWidget):
         elif hasattr(self, 'playblast_label'):
             # Refresh playblast preview
             self._refresh_playblast_preview()
-            self.orbit_info.setText("RenderMan Scene • Already Loaded")
+            self.preview_status.setText("RenderMan Scene • Already Loaded")
         else:
             # Update status for thumbnail preview
-            self.orbit_info.setText("RenderMan Scene • Already Loaded")
+            self.preview_status.setText("RenderMan Scene • Already Loaded")
     
     def _handle_maya_viewport_preview(self, asset_path, nodes):
         """Handle Maya viewport-based preview"""
@@ -3768,28 +3595,19 @@ class AssetPreviewWidget(QWidget):
                 cmds.select(nodes)
                 cmds.viewFit(self.maya_panel_name)
                 
-                # Configure viewport for current renderer
-                current_renderer = self.renderer_combo.currentText()
-                self._configure_viewport_for_renderer(current_renderer)
-                
-                # Detect and apply RenderMan materials if present
-                self._detect_and_apply_renderman_materials(nodes)
-                
-                # Refresh MEL-based 3D preview if available
-                if hasattr(self, 'mel_preview') and self.mel_preview:
-                    self.refresh_mel_preview()
+                # Professional asset system - 3D viewport configuration removed
                 
                 # Update info display
                 preview_type = "MEL 3D" if hasattr(self, 'mel_preview') and self.mel_preview else "Interactive 3D"
-                self.orbit_info.setText(f"RenderMan Scene • {len(nodes)} objects • {preview_type}")
+                self.preview_status.setText(f"RenderMan Scene • {len(nodes)} objects • {preview_type}")
                 
                 print(f"✓ Loaded RenderMan production scene with {len(nodes)} objects successfully")
             else:
-                self.orbit_info.setText("Maya Scene • No geometry found")
+                self.preview_status.setText("Maya Scene • No geometry found")
                 
         except Exception as e:
             print(f"Maya viewport preview error: {e}")
-            self.orbit_info.setText("RenderMan Production Scene • Loaded with warnings")
+            self.preview_status.setText("RenderMan Production Scene • Loaded with warnings")
     
     def _handle_playblast_preview(self, asset_path, nodes):
         """Handle playblast-based preview"""
@@ -3804,11 +3622,11 @@ class AssetPreviewWidget(QWidget):
                 # Refresh playblast preview
                 self._refresh_playblast_preview()
                 
-                self.orbit_info.setText(f"RenderMan Scene • {len(nodes)} objects • Real-time Preview")
+                self.preview_status.setText(f"RenderMan Scene • {len(nodes)} objects • Real-time Preview")
                 print(f"✓ Loaded scene for playblast preview with {len(nodes)} objects")
             else:
                 self.playblast_label.setText("3D Preview\n(No Geometry)")
-                self.orbit_info.setText("Maya Scene • No geometry found")
+                self.preview_status.setText("Maya Scene • No geometry found")
                 
         except Exception as e:
             print(f"Playblast preview error: {e}")
@@ -3825,7 +3643,7 @@ class AssetPreviewWidget(QWidget):
                 scaled_pixmap = preview_image.scaled(
                     300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self._set_preview_pixmap(scaled_pixmap)
-                self.orbit_info.setText(f"Maya Scene • {scene_info.get('meshes', 0)} meshes")
+                self.preview_status.setText(f"Maya Scene • {scene_info.get('meshes', 0)} meshes")
             else:
                 self._show_maya_scene_info(asset_path, scene_info)
                 
@@ -3836,10 +3654,10 @@ class AssetPreviewWidget(QWidget):
     def _handle_preview_error(self, asset_path, error_msg):
         """Handle preview error for all preview types"""
         if hasattr(self, 'maya_panel_name') and self.maya_panel_name:
-            self.orbit_info.setText("RenderMan Production Scene • Loaded with warnings")
+            self.preview_status.setText("RenderMan Production Scene • Loaded with warnings")
         elif hasattr(self, 'playblast_label') and self.playblast_label:
             self.playblast_label.setText("Preview Error")
-            self.orbit_info.setText("Production scene loaded with warnings")
+            self.preview_status.setText("Production scene loaded with warnings")
         else:
             self._show_error_preview(asset_path, error_msg)
 
@@ -3903,7 +3721,7 @@ class AssetPreviewWidget(QWidget):
                 scaled_pixmap = preview_image.scaled(
                     300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self._set_preview_pixmap(scaled_pixmap)
-                self.orbit_info.setText(f"OBJ Mesh • {obj_info.get('vertices', 0)} vertices • {obj_info.get('faces', 0)} faces")
+                self.preview_status.setText(f"OBJ Mesh • {obj_info.get('vertices', 0)} vertices • {obj_info.get('faces', 0)} faces")
             else:
                 self._show_obj_info(asset_path, obj_info)
                 
@@ -3941,7 +3759,7 @@ class AssetPreviewWidget(QWidget):
                 scaled_pixmap = preview_image.scaled(
                     300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self._set_preview_pixmap(scaled_pixmap)
-                self.orbit_info.setText("FBX Asset • Hierarchical data")
+                self.preview_status.setText("FBX Asset • Hierarchical data")
             else:
                 self._show_fbx_info(asset_path)
                 
@@ -4150,14 +3968,296 @@ Please check the asset file and try again
         """Clear the preview display"""
         self.current_asset_path = None
         
+        # Reset header info
+        if hasattr(self, 'asset_info_label'):
+            self.asset_info_label.setText("Asset Preview")
+        
+        # Disable screenshot button when no asset selected
+        if hasattr(self, 'screenshot_btn'):
+            self.screenshot_btn.setEnabled(False)
+        
         # Handle different preview widget types
-        if hasattr(self, 'preview_screenshot_label') and self.preview_screenshot_label:
-            self.preview_screenshot_label.setText("No Asset Selected\n\nSelect an asset to preview")
+        if hasattr(self, 'preview_info_label') and self.preview_info_label:
+            self.preview_info_label.setText("Select an asset to preview")
         elif hasattr(self, 'preview_label') and self.preview_label:
-            self.preview_label.setText("No Asset Selected\n\nSelect an asset to preview")
+            self.preview_label.setText("Select an asset to preview")
+            
+        # Reset status
+        if hasattr(self, 'preview_status'):
+            self.preview_status.setText("Ready")
             
         self.update_metadata_display({})
     
+    def capture_maya_screenshot(self):
+        """Capture high-resolution screenshot from Maya viewport and set as asset thumbnail"""
+        if not hasattr(self, 'current_asset_path') or not self.current_asset_path:
+            QMessageBox.information(self, "No Asset Selected", 
+                                  "Please select an asset first to capture a screenshot thumbnail.")
+            return
+        
+        try:
+            import maya.cmds as cmds
+            import tempfile
+            import shutil
+            
+            # Create screenshot options dialog
+            dialog = QDialog(self)
+            dialog.setWindowTitle("📸 Capture Maya Screenshot")
+            dialog.setModal(True)
+            dialog.resize(400, 350)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # Instructions
+            info_label = QLabel("📋 Instructions:\n"
+                               "1. Position your asset in Maya's viewport\n"
+                               "2. Choose screenshot resolution below\n"
+                               "3. Click 'Capture Screenshot' to save as thumbnail")
+            info_label.setWordWrap(True)
+            info_label.setStyleSheet("""
+                QLabel {
+                    background-color: #f0f8ff;
+                    border: 1px solid #4A90E2;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 5px;
+                    font-size: 11px;
+                }
+            """)
+            layout.addWidget(info_label)
+            
+            # Resolution options
+            res_group = QWidget()
+            res_layout = QVBoxLayout(res_group)
+            res_layout.addWidget(QLabel("Screenshot Resolution:"))
+            
+            self.res_combo = QComboBox()
+            resolution_options = [
+                ("Standard (256x256)", 256),
+                ("High Quality (512x512)", 512),
+                ("Ultra HD (1024x1024)", 1024),
+                ("Max Quality (2048x2048)", 2048)
+            ]
+            
+            for name, size in resolution_options:
+                self.res_combo.addItem(name, size)
+            
+            self.res_combo.setCurrentIndex(2)  # Default to Ultra HD
+            res_layout.addWidget(self.res_combo)
+            layout.addWidget(res_group)
+            
+            # Quality options
+            quality_group = QWidget()
+            quality_layout = QVBoxLayout(quality_group)
+            quality_layout.addWidget(QLabel("Image Quality:"))
+            
+            self.quality_combo = QComboBox()
+            self.quality_combo.addItem("High Quality (PNG)", "png")
+            self.quality_combo.addItem("Maximum Quality (TIFF)", "tiff")
+            quality_layout.addWidget(self.quality_combo)
+            layout.addWidget(quality_group)
+            
+            # Viewport options
+            viewport_group = QWidget()
+            viewport_layout = QVBoxLayout(viewport_group)
+            viewport_layout.addWidget(QLabel("Viewport Settings:"))
+            
+            self.smooth_shading = QCheckBox("Smooth Shading")
+            self.smooth_shading.setChecked(True)
+            self.wireframe_on_shaded = QCheckBox("Wireframe on Shaded")
+            self.wireframe_on_shaded.setChecked(False)
+            self.show_grid = QCheckBox("Show Grid")
+            self.show_grid.setChecked(False)
+            
+            viewport_layout.addWidget(self.smooth_shading)
+            viewport_layout.addWidget(self.wireframe_on_shaded)
+            viewport_layout.addWidget(self.show_grid)
+            layout.addWidget(viewport_group)
+            
+            # Buttons
+            button_layout = QHBoxLayout()
+            
+            preview_btn = QPushButton("🔍 Preview Settings")
+            preview_btn.setToolTip("Apply viewport settings to see preview")
+            preview_btn.clicked.connect(self._apply_viewport_settings)
+            
+            capture_btn = QPushButton("📸 Capture Screenshot")
+            capture_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #4CAF50;
+                    color: white;
+                    font-weight: bold;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                }
+                QPushButton:hover {
+                    background-color: #45a049;
+                }
+            """)
+            
+            cancel_btn = QPushButton("Cancel")
+            
+            button_layout.addWidget(preview_btn)
+            button_layout.addStretch()
+            button_layout.addWidget(capture_btn)
+            button_layout.addWidget(cancel_btn)
+            layout.addLayout(button_layout)
+            
+            # Button connections
+            def capture_screenshot():
+                self._perform_screenshot_capture(dialog)
+            
+            capture_btn.clicked.connect(capture_screenshot)
+            cancel_btn.clicked.connect(dialog.reject)
+            
+            # Show dialog
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                self._refresh_asset_thumbnail()
+                
+        except Exception as e:
+            QMessageBox.warning(self, "Screenshot Error", 
+                              f"Failed to capture screenshot: {str(e)}")
+            print(f"Screenshot error: {e}")
+    
+    def _apply_viewport_settings(self):
+        """Apply viewport settings for preview"""
+        try:
+            import maya.cmds as cmds
+            
+            # Get active viewport
+            active_panel = cmds.getPanel(withFocus=True)
+            if not cmds.getPanel(typeOf=active_panel) == 'modelPanel':
+                # Find a model panel if current panel isn't one
+                model_panels = cmds.getPanel(type='modelPanel')
+                if model_panels:
+                    active_panel = model_panels[0]
+                else:
+                    QMessageBox.warning(self, "No Viewport", "No Maya viewport found to apply settings.")
+                    return
+            
+            # Apply viewport settings
+            cmds.modelEditor(active_panel, edit=True,
+                           displayAppearance='smoothShaded' if self.smooth_shading.isChecked() else 'wireframe',
+                           wireframeOnShaded=self.wireframe_on_shaded.isChecked(),
+                           grid=self.show_grid.isChecked(),
+                           displayTextures=True,
+                           displayLights='default',
+                           shadows=False,
+                           useDefaultMaterial=False)
+            
+            # Force viewport refresh
+            cmds.refresh()
+            
+            QMessageBox.information(self, "Settings Applied", 
+                                  "Viewport settings applied successfully!\nYou can now see the preview in Maya.")
+            
+        except Exception as e:
+            QMessageBox.warning(self, "Settings Error", 
+                              f"Failed to apply viewport settings: {str(e)}")
+    
+    def _perform_screenshot_capture(self, dialog):
+        """Perform the actual screenshot capture"""
+        try:
+            import maya.cmds as cmds
+            import tempfile
+            import shutil
+            import os
+            
+            # Get settings from dialog
+            resolution = self.res_combo.currentData()
+            file_format = self.quality_combo.currentData()
+            
+            # Get active viewport
+            active_panel = cmds.getPanel(withFocus=True)
+            if not cmds.getPanel(typeOf=active_panel) == 'modelPanel':
+                model_panels = cmds.getPanel(type='modelPanel')
+                if model_panels:
+                    active_panel = model_panels[0]
+                else:
+                    QMessageBox.warning(self, "No Viewport", "No Maya viewport found for screenshot.")
+                    return
+            
+            # Create temporary file
+            temp_dir = tempfile.mkdtemp()
+            temp_filename = f"maya_screenshot_{int(time.time())}.{file_format}"
+            temp_path = os.path.join(temp_dir, temp_filename)
+            
+            # Apply final viewport settings
+            self._apply_viewport_settings()
+            
+            # Capture screenshot with high quality
+            result = cmds.playblast(
+                filename=temp_path,
+                format='image',
+                compression=file_format,
+                quality=100,
+                percent=100,
+                width=resolution,
+                height=resolution,
+                viewer=False,
+                showOrnaments=False,
+                offScreen=True,
+                frame=cmds.currentTime(query=True),
+                completeFilename=temp_path
+            )
+            
+            # Maya adds frame number to filename, find the actual file
+            actual_files = [f for f in os.listdir(temp_dir) if f.startswith("maya_screenshot_")]
+            if not actual_files:
+                raise Exception("Screenshot file not created")
+            
+            actual_temp_path = os.path.join(temp_dir, actual_files[0])
+            
+            # Create thumbnail directory for this asset
+            asset_dir = os.path.dirname(self.current_asset_path)
+            asset_name = os.path.splitext(os.path.basename(self.current_asset_path))[0]
+            thumbnail_dir = os.path.join(asset_dir, ".thumbnails")
+            os.makedirs(thumbnail_dir, exist_ok=True)
+            
+            # Save screenshot as asset thumbnail
+            thumbnail_path = os.path.join(thumbnail_dir, f"{asset_name}_screenshot.{file_format}")
+            shutil.move(actual_temp_path, thumbnail_path)
+            
+            # Cleanup temp directory
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            
+            # Update thumbnail cache entry
+            if hasattr(self.asset_manager, '_thumbnail_cache'):
+                cache_key = f"thumb_{self.current_asset_path}"
+                if cache_key in self.asset_manager._thumbnail_cache:
+                    del self.asset_manager._thumbnail_cache[cache_key]
+            
+            # Show success message
+            QMessageBox.information(dialog, "Screenshot Captured! 📸", 
+                                  f"High-resolution screenshot saved successfully!\n\n"
+                                  f"Resolution: {resolution}x{resolution}\n"
+                                  f"Location: {thumbnail_path}\n\n"
+                                  f"The asset thumbnail will be updated automatically.")
+            
+            dialog.accept()
+            
+            print(f"✅ Screenshot captured: {thumbnail_path} ({resolution}x{resolution})")
+            
+        except Exception as e:
+            QMessageBox.warning(dialog, "Capture Failed", 
+                              f"Failed to capture screenshot:\n{str(e)}")
+            print(f"Screenshot capture error: {e}")
+    
+    def _refresh_asset_thumbnail(self):
+        """Refresh the asset thumbnail in the library after screenshot"""
+        try:
+            # Trigger library refresh to show new thumbnail
+            if hasattr(self, 'asset_manager') and hasattr(self.asset_manager, 'refresh_assets'):
+                # Small delay to ensure file is written
+                QTimer.singleShot(1000, self.asset_manager.refresh_assets)
+                
+            # Update preview display
+            if self.current_asset_path:
+                self.preview_asset(self.current_asset_path)
+                
+        except Exception as e:
+            print(f"Error refreshing thumbnail: {e}")
+
     # Mouse interaction handlers for 3D preview
     def preview_mouse_press(self, event):
         """Handle mouse press in preview area"""
@@ -4181,7 +4281,7 @@ Please check the asset file and try again
         self.last_mouse_pos = event.position()
         
         # Update orbit info
-        self.orbit_info.setText(f"Rotation: X={self.camera_position['rotation_x']:.0f}° Y={self.camera_position['rotation_y']:.0f}°")
+        self.preview_status.setText(f"Rotation: X={self.camera_position['rotation_x']:.0f}° Y={self.camera_position['rotation_y']:.0f}°")
     
     def preview_wheel(self, event):
         """Handle mouse wheel in preview area (zoom controls)"""
@@ -4191,15 +4291,9 @@ Please check the asset file and try again
         self.camera_position['distance'] = max(0.5, min(50.0, self.camera_position['distance']))
         
         # Update orbit info
-        self.orbit_info.setText(f"Distance: {self.camera_position['distance']:.1f} units")
+        self.preview_status.setText(f"Distance: {self.camera_position['distance']:.1f} units")
     
     # Event handlers
-    def on_quality_changed(self, quality):
-        """Handle preview quality change"""
-        self.preview_quality = quality
-        if self.current_asset_path:
-            self.update_3d_preview(self.current_asset_path)
-    
     def closeEvent(self, event):
         """Clean up resources when widget is closed"""
         try:
@@ -4328,7 +4422,7 @@ Please check the asset file and try again
                     pass
             
             # Update info display
-            self.orbit_info.setText("3D Preview • Scene cleared")
+            self.preview_status.setText("Preview cleared")
             print("✓ 3D preview scene cleared successfully")
             
         except Exception as e:
@@ -4337,75 +4431,14 @@ Please check the asset file and try again
             if hasattr(self, '_last_loaded_scene'):
                 delattr(self, '_last_loaded_scene')
 
-    def on_renderer_changed(self, renderer):
-        """Handle renderer selection change - Extensibility principle"""
-        print(f"Renderer changed to: {renderer}")
-        # Update preview with new renderer settings
-        if self.current_asset_path:
-            self.update_3d_preview(self.current_asset_path)
-    
     def reset_camera_view(self):
         """Reset camera to default position"""
         self.camera_position = {'distance': 5.0, 'rotation_x': -30, 'rotation_y': 45}
-        self.orbit_info.setText("Camera reset to default position")
+        self.preview_status.setText("Camera view reset")
         
         # Update preview if asset is loaded
         if self.current_asset_path:
             self.update_3d_preview(self.current_asset_path)
-    
-    def set_custom_thumbnail(self):
-        """Set custom thumbnail from current MEL 3D preview panel"""
-        if not self.current_asset_path:
-            QMessageBox.warning(self, "No Asset", "Please select an asset first.")
-            return
-        
-        reply = QMessageBox.question(
-            self,
-            "Custom Thumbnail",
-            "Generate a custom thumbnail from the current 3D preview?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        
-        if reply == QMessageBox.StandardButton.Yes:
-            try:
-                print("🎯 Generating custom thumbnail from 3D preview...")
-                
-                # Clear the cache for this asset to force regeneration
-                abs_path = os.path.abspath(self.current_asset_path)
-                cache_key = f"{abs_path}_64x64"
-                if cache_key in self.asset_manager._thumbnail_cache:
-                    del self.asset_manager._thumbnail_cache[cache_key]
-                    print("✓ Cleared existing thumbnail cache")
-                
-                # Generate new thumbnail with larger size for better quality
-                preview_image = self.asset_manager._generate_thumbnail_safe(self.current_asset_path, size=(300, 300))
-                
-                if preview_image and not preview_image.isNull():
-                    # Update the preview label with the new thumbnail
-                    scaled_pixmap = preview_image.scaled(
-                        300, 300,
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation
-                    )
-                    self._set_preview_pixmap(scaled_pixmap)
-                    print("✅ Updated 3D preview with new thumbnail")
-                    
-                    # Also update the 64x64 cache for UI consistency
-                    small_thumbnail = preview_image.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-                    small_cache_key = f"{abs_path}_64x64"
-                    self.asset_manager._thumbnail_cache[small_cache_key] = small_thumbnail
-                    
-                    QMessageBox.information(self, "Thumbnail Generated", 
-                                          f"✅ Custom thumbnail successfully generated for:\n{os.path.basename(self.current_asset_path)}")
-                else:
-                    QMessageBox.warning(self, "Thumbnail Error", 
-                                      "Failed to generate thumbnail. Please ensure the asset is loaded in the 3D preview.")
-                    
-            except Exception as e:
-                print(f"❌ Error generating custom thumbnail: {e}")
-                QMessageBox.critical(self, "Thumbnail Error", 
-                                   f"Error generating thumbnail:\n{str(e)}")
-    
     
     def start_asset_comparison(self):
         """Start asset comparison mode"""
@@ -6050,8 +6083,10 @@ class AssetManagerUI(QMainWindow):
             self.toggle_preview_panel(True)
     
     def _get_current_thumbnail_size(self):
-        """Get current thumbnail size from preferences - Single Responsibility Principle"""
-        return int(self.asset_manager.get_ui_preference('thumbnail_size', 64) or 64)
+        """Get current thumbnail size from preferences - FORCE MINIMUM SIZE FOR READABLE TEXT"""
+        # FORCE minimum 128px for readable text in professional icons
+        user_size = int(self.asset_manager.get_ui_preference('thumbnail_size', 128) or 128)
+        return max(128, user_size)  # Never smaller than 128px for text readability
     
     def _on_thumbnail_size_changed(self, size):
         """Handle thumbnail size change - Clean Code: descriptive naming and single purpose"""
@@ -6072,17 +6107,19 @@ class AssetManagerUI(QMainWindow):
             print(f"Error changing thumbnail size: {e}")
     
     def _apply_thumbnail_size_to_lists(self, size):
-        """Apply thumbnail size to all asset list widgets - DRY Principle"""
+        """Apply thumbnail size to all asset list widgets - Professional Icon Optimization"""
         try:
-            grid_size = size + 16  # Grid slightly larger than icon for padding
+            # Improved grid sizing for larger professional file icons with better text readability
+            grid_size = size + 32  # More padding for larger professional icon text and gradients
+            icon_size = min(size, 128)  # Increased cap for better text readability
             
-            # Update main asset list
+            # Update main asset list with improved professional icon sizing
             if hasattr(self, 'asset_list') and self.asset_list:
-                self.asset_list.setIconSize(QSize(size, size))
+                self.asset_list.setIconSize(QSize(icon_size, icon_size))
                 self.asset_list.setGridSize(QSize(grid_size, grid_size))
             
             if hasattr(self, 'main_asset_list') and self.main_asset_list:
-                self.main_asset_list.setIconSize(QSize(size, size))
+                self.main_asset_list.setIconSize(QSize(icon_size, icon_size))
                 self.main_asset_list.setGridSize(QSize(grid_size, grid_size))
             
             # Update collection tabs
@@ -6093,7 +6130,7 @@ class AssetManagerUI(QMainWindow):
                         # Find QListWidget in tab
                         list_widget = self._find_list_widget_in_tab(tab_widget)
                         if list_widget:
-                            list_widget.setIconSize(QSize(size, size))
+                            list_widget.setIconSize(QSize(icon_size, icon_size))
                             list_widget.setGridSize(QSize(grid_size, grid_size))
                             
         except Exception as e:
@@ -6151,16 +6188,47 @@ class AssetManagerUI(QMainWindow):
         # Asset list
         self.asset_list = QListWidget()
         
-        # Configure dynamic thumbnail sizing based on user preference
-        thumbnail_size = self._get_current_thumbnail_size()
-        grid_size = thumbnail_size + 16  # Grid slightly larger than icon for padding
-        
-        self.asset_list.setIconSize(QSize(thumbnail_size, thumbnail_size))
+        # Configure dynamic thumbnail sizing for professional icons with LARGE readable text
+        thumbnail_size = self._get_current_thumbnail_size()  # Now minimum 128px
+        grid_size = thumbnail_size + 50  # Extra padding for large professional icon fonts and text
+        icon_size = thumbnail_size  # Use FULL thumbnail size, no cap
+
+        self.asset_list.setIconSize(QSize(icon_size, icon_size))
         self.asset_list.setGridSize(QSize(grid_size, grid_size))
         self.asset_list.setViewMode(QListWidget.ViewMode.IconMode)  # type: ignore
         self.asset_list.setResizeMode(QListWidget.ResizeMode.Adjust)  # type: ignore
         self.asset_list.setUniformItemSizes(True)  # Prevent size variations
         self.asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
+        
+        # COMPLETELY ELIMINATE text duplication - Professional icons only, NO text labels
+        self.asset_list.setStyleSheet("""
+            QListWidget {
+                background-color: #2b2b2b;
+                border: 1px solid #555;
+                border-radius: 4px;
+                outline: none;
+            }
+            QListWidget::item {
+                background: transparent;
+                border: none;
+                padding: 2px;
+                margin: 2px;
+                text-align: center;
+                color: transparent;  /* HIDE ALL TEXT LABELS */
+            }
+            QListWidget::item:selected {
+                background-color: rgba(0, 120, 215, 120);
+                border: 2px solid rgba(0, 120, 215, 255);
+                border-radius: 6px;
+                color: transparent;  /* KEEP TEXT HIDDEN EVEN WHEN SELECTED */
+            }
+            QListWidget::item:hover {
+                background-color: rgba(0, 120, 215, 60);
+                border-radius: 6px;
+                color: transparent;  /* KEEP TEXT HIDDEN ON HOVER */
+            }
+        """)
+        
         self.asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
         # Connect selection change to preview widget
@@ -6318,16 +6386,32 @@ class AssetManagerUI(QMainWindow):
         # Asset list for this collection
         collection_asset_list = QListWidget()
         
-        # Configure dynamic thumbnail sizing based on user preference
-        thumbnail_size = self._get_current_thumbnail_size()
-        grid_size = thumbnail_size + 16  # Grid slightly larger than icon for padding
-        
-        collection_asset_list.setIconSize(QSize(thumbnail_size, thumbnail_size))
+        # Configure same LARGE sizing as main library for consistency  
+        thumbnail_size = self._get_current_thumbnail_size()  # Now minimum 128px
+        grid_size = thumbnail_size + 50  # Extra padding for large professional icon fonts and text
+        icon_size = thumbnail_size  # Use FULL thumbnail size, no cap
+
+        collection_asset_list.setIconSize(QSize(icon_size, icon_size))
         collection_asset_list.setGridSize(QSize(grid_size, grid_size))
         collection_asset_list.setViewMode(QListWidget.ViewMode.IconMode)  # type: ignore
         collection_asset_list.setResizeMode(QListWidget.ResizeMode.Adjust)  # type: ignore
         collection_asset_list.setUniformItemSizes(True)  # Prevent size variations
         collection_asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
+        
+        # Ensure no text labels are displayed in collections (icons only)
+        collection_asset_list.setStyleSheet("""
+            QListWidget::item {
+                text-align: center;
+                padding: 0px;
+                margin: 0px;
+            }
+            QListWidget::item:selected {
+                background-color: rgba(0, 120, 215, 100);
+                border: 2px solid rgba(0, 120, 215, 255);
+                border-radius: 4px;
+            }
+        """)
+        
         collection_asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
         # Connect selection change to preview widget
@@ -6337,8 +6421,24 @@ class AssetManagerUI(QMainWindow):
         collection_asset_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # type: ignore
         collection_asset_list.customContextMenuRequested.connect(self.show_asset_context_menu)
         
-        # Populate collection assets
-        self.populate_collection_assets(collection_asset_list, collection_data.get('assets', []))
+        # LAZY LOADING: Store collection info and populate on demand
+        setattr(collection_asset_list, 'collection_name', collection_name)
+        setattr(collection_asset_list, 'is_populated', False)
+        setattr(collection_asset_list, 'asset_names', collection_data.get('assets', []))
+        
+        # Add placeholder item
+        placeholder_item = QListWidgetItem("🔄 Click to load assets...")
+        placeholder_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        collection_asset_list.addItem(placeholder_item)
+        
+        # Connect to item activation for lazy loading
+        def on_lazy_activate(item):
+            if hasattr(collection_asset_list, 'is_populated') and not getattr(collection_asset_list, 'is_populated'):
+                collection_asset_list.clear()
+                setattr(collection_asset_list, 'is_populated', True)
+                self.populate_collection_assets(collection_asset_list, getattr(collection_asset_list, 'asset_names', []))
+        
+        collection_asset_list.itemClicked.connect(on_lazy_activate)
         
         collection_layout.addWidget(collection_asset_list)
         
@@ -6364,16 +6464,73 @@ class AssetManagerUI(QMainWindow):
         """Populate a collection's asset list with improved performance for network storage"""
         asset_list_widget.clear()
         
+        print(f"🔍 Populating collection with asset names: {asset_names}")
+        print(f"📂 Current project path: {self.asset_manager.current_project}")
+        
         if not self.asset_manager.current_project:
+            print("❌ No current project set")
             return
             
         project_path = self.asset_manager.current_project
+        print(f"📁 Checking project path exists: {project_path} -> {os.path.exists(project_path)}")
         if not os.path.exists(project_path):
+            print(f"❌ Project path does not exist: {project_path}")
             return
         
+        # Apply same no-text styling to collection tabs to eliminate duplication
+        asset_list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: #2b2b2b;
+                border: 1px solid #555;
+                border-radius: 4px;
+                outline: none;
+            }
+            QListWidget::item {
+                background: transparent;
+                border: none;
+                padding: 2px;
+                margin: 2px;
+                text-align: center;
+                color: transparent;  /* HIDE ALL TEXT LABELS */
+            }
+            QListWidget::item:selected {
+                background-color: rgba(0, 120, 215, 120);
+                border: 2px solid rgba(0, 120, 215, 255);
+                border-radius: 6px;
+                color: transparent;  /* KEEP TEXT HIDDEN EVEN WHEN SELECTED */
+            }
+            QListWidget::item:hover {
+                background-color: rgba(0, 120, 215, 60);
+                border-radius: 6px;
+                color: transparent;  /* KEEP TEXT HIDDEN ON HOVER */
+            }
+        """)
+
         # Use cached file list for better network performance
         try:
             asset_files = self.asset_manager._get_cached_file_list(project_path)
+            print(f"📁 Found {len(asset_files)} files in project")
+            if len(asset_files) == 0:
+                print("🔍 No files found - checking project directory contents:")
+                try:
+                    if os.path.exists(project_path):
+                        dir_contents = []
+                        for root, dirs, files in os.walk(project_path):
+                            for file in files:
+                                if file.lower().endswith(('.ma', '.mb')):
+                                    dir_contents.append(os.path.join(root, file))
+                        print(f"   Direct scan found {len(dir_contents)} Maya files")
+                        if len(dir_contents) > 0:
+                            for file in dir_contents[:3]:
+                                print(f"   - {os.path.basename(file)}")
+                    else:
+                        print(f"   Project path does not exist: {project_path}")
+                except Exception as scan_error:
+                    print(f"   Scan error: {scan_error}")
+            # Debug: Show first few files to understand the naming
+            for i, file_path in enumerate(asset_files[:5]):
+                file_name = os.path.splitext(os.path.basename(file_path))[0]
+                print(f"  File {i+1}: {file_name} (from {os.path.basename(file_path)})")
         except Exception as e:
             print(f"Error getting cached file list: {e}")
             return
@@ -6389,29 +6546,42 @@ class AssetManagerUI(QMainWindow):
         items_processed = 0
         
         # Process files in batches for better performance
+        matching_found = False
         for file_path in asset_files:
             if progress and progress.wasCanceled():
                 break
             
             asset_name = os.path.splitext(os.path.basename(file_path))[0]
             
+            # Debug: Show the comparison for the expected asset
+            if 'Veteran_Rig' in asset_names and not matching_found:
+                print(f"🔍 Looking for 'Veteran_Rig', checking: '{asset_name}'")
+                if asset_name == 'Veteran_Rig':
+                    print(f"✅ EXACT MATCH found!")
+                    matching_found = True
+                elif 'Veteran' in asset_name:
+                    print(f"🔶 Partial match found: {asset_name}")
+            
             # Only add if this asset is in the collection
             if asset_name in asset_names:
+                print(f"✅ Found matching asset: {asset_name} -> {file_path}")
                 try:
-                    # Create enhanced display text
-                    display_text = self._create_asset_display_text(asset_name, file_path)
-                    
-                    item = QListWidgetItem(display_text)
+                    # Professional icons contain all info - no duplicate text needed
+                    # Create clean list item without text to avoid duplication
+                    item = QListWidgetItem()
                     item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
                     
-                    # Set background color based on asset type
-                    asset_color = self.asset_manager.get_asset_type_color(file_path)
-                    item.setBackground(QBrush(asset_color))
+                    # Store asset name for tooltips and context
+                    item.setToolTip(self._create_asset_display_text(asset_name, file_path))
+                    
+                    # Professional icons have their own color scheme - no background needed
+                    # Removed item.setBackground() to prevent color bleeding outside icon shape
                     
                     # Try to load thumbnail with lazy loading for better performance
                     self._set_asset_item_icon(item, file_path)
                     
                     asset_list_widget.addItem(item)
+                    print(f"  ➕ Added {asset_name} to collection widget")
                     
                     items_processed += 1
                     if progress:
@@ -6420,34 +6590,83 @@ class AssetManagerUI(QMainWindow):
                             QApplication.processEvents()
                 
                 except Exception as e:
-                    print(f"Error processing asset {asset_name}: {e}")
+                    print(f"❌ Error processing asset {asset_name}: {e}")
                     continue
+            else:
+                # Debug: show which files are being skipped
+                if items_processed < 5:  # Only show first 5 to avoid spam
+                    print(f"⏭️ Skipping {asset_name} (not in collection)")
+        
+        print(f"📊 Collection population complete: {items_processed} items processed")
         
         if progress:
             progress.close()
             progress.deleteLater()  # Proper cleanup to prevent memory leaks
     
     def _set_asset_item_icon(self, item, file_path):
-        """Set icon for asset item with consistent thumbnail sizing"""
+        """Set professional file icon for asset item with optimized caching"""
         try:
-            # Use the asset manager's thumbnail system
-            thumbnail_icon = self.asset_manager._get_thumbnail_icon(file_path)
-            if thumbnail_icon and not thumbnail_icon.isNull():
-                # Ensure consistent icon size when setting on item
-                item.setIcon(thumbnail_icon)
-                # Force the item to use exactly the icon size we want
-                item.setSizeHint(QSize(80, 80))  # Match grid size for consistency
+            # Check icon cache first for better performance
+            cache_key = f"icon_{file_path}_{self._get_current_thumbnail_size()}"
+            
+            if hasattr(self.asset_manager, '_icon_cache') and cache_key in self.asset_manager._icon_cache:
+                # Use cached icon
+                cached_icon = self.asset_manager._icon_cache[cache_key]
+                item.setIcon(cached_icon)
+                size_hint = self._get_current_thumbnail_size() + 50
+                item.setSizeHint(QSize(size_hint, size_hint))
+                return
+            
+            # Generate new icon if not cached
+            thumbnail_size = self._get_current_thumbnail_size()
+            professional_icon = self.asset_manager._generate_professional_file_icon(file_path, (thumbnail_size, thumbnail_size))
+            
+            if professional_icon and not professional_icon.isNull():
+                # Convert pixmap to icon
+                icon = QIcon()
+                icon.addPixmap(professional_icon, QIcon.Mode.Normal, QIcon.State.Off)
+                
+                # Cache the icon for future use
+                if not hasattr(self.asset_manager, '_icon_cache'):
+                    self.asset_manager._icon_cache = {}
+                
+                # Limit cache size to prevent memory issues
+                if len(self.asset_manager._icon_cache) > 100:
+                    # Remove oldest entries (simple cache cleanup)
+                    keys_to_remove = list(self.asset_manager._icon_cache.keys())[:20]
+                    for old_key in keys_to_remove:
+                        del self.asset_manager._icon_cache[old_key]
+                
+                self.asset_manager._icon_cache[cache_key] = icon
+                
+                item.setIcon(icon)
+                size_hint = thumbnail_size + 50
+                item.setSizeHint(QSize(size_hint, size_hint))
             else:
-                # Fallback to file type icons
+                # Fallback to professional icon system
                 self._set_fallback_icon(item, file_path)
                 
         except Exception as e:
-            print(f"Error setting asset icon for {file_path}: {e}")
+            print(f"Error setting professional asset icon for {file_path}: {e}")
             # Set fallback icon on error
             self._set_fallback_icon(item, file_path)
     
     def _set_fallback_icon(self, item, file_path):
-        """Set fallback file type icon with consistent sizing"""
+        """Set professional file type icon as fallback with consistent sizing - PROFESSIONAL UPGRADE"""
+        try:
+            # Use our professional file icon system for fallbacks with improved size
+            professional_icon = self.asset_manager._generate_professional_file_icon(file_path, (96, 96))
+            if professional_icon and not professional_icon.isNull():
+                # Convert pixmap to icon
+                icon = QIcon()
+                icon.addPixmap(professional_icon, QIcon.Mode.Normal, QIcon.State.Off)
+                item.setIcon(icon)
+                item.setSizeHint(QSize(128, 128))  # Larger fallback size for consistency
+                return
+        except Exception as e:
+            print(f"Error creating professional fallback icon: {e}")
+        
+        # Ultimate fallback to system icons if professional icons fail
         file_ext = os.path.splitext(file_path)[1].lower()
         
         # Set default icon based on file type
@@ -6463,8 +6682,10 @@ class AssetManagerUI(QMainWindow):
             default_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)  # type: ignore
         
         item.setIcon(default_icon)
-        # Ensure consistent size hint for fallback icons too
-        item.setSizeHint(QSize(80, 80))
+        # Professional size hint for fallback icons too
+        thumbnail_size = self.asset_manager.get_ui_preference('thumbnail_size', 64) or 64
+        size_hint = min(thumbnail_size + 26, 98)
+        item.setSizeHint(QSize(size_hint, size_hint))
     
     def add_collection_tab_dialog(self):
         """Show dialog to create a new collection tab"""
@@ -6708,18 +6929,24 @@ class AssetManagerUI(QMainWindow):
                     self.status_bar.showMessage(f"Deleted: {current_item.text()}")
     
     def _refresh_asset_list_safe(self):
-        """Safely refresh asset list without triggering collection filter recursion"""
+        """Safely refresh asset list without triggering collection filter recursion - FIXED DUPLICATION"""
         try:
-            # Clear main asset list
-            if hasattr(self, 'main_asset_list'):
+            # FORCE CLEAR both main_asset_list AND asset_list to prevent duplication
+            if hasattr(self, 'main_asset_list') and self.main_asset_list:
                 self.main_asset_list.clear()
-            elif hasattr(self, 'asset_list'):
+            if hasattr(self, 'asset_list') and self.asset_list:
                 self.asset_list.clear()
-            else:
+            
+            # Get the ONE target list widget
+            target_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
+            if not target_asset_list:
                 return
             
             if not self.asset_manager.current_project:
                 return
+            
+            # Track added paths to prevent duplication
+            added_paths = set()
             
             # Get registered assets from library (with error protection)
             try:
@@ -6728,27 +6955,27 @@ class AssetManagerUI(QMainWindow):
                 print(f"Error getting registered assets: {e}")
                 registered_assets = {}
             
-            # Populate with registered assets first
+            # Populate with registered assets first  
             for asset_name, asset_info in registered_assets.items():
                 try:
                     asset_path = asset_info.get('path', '')
-                    if os.path.exists(asset_path):
-                        display_text = self._create_asset_display_text(asset_name, asset_path, is_registered=True)
-                        item = QListWidgetItem(display_text)
+                    if asset_path and os.path.exists(asset_path) and asset_path not in added_paths:
+                        # Professional icons contain all info - no duplicate text needed
+                        item = QListWidgetItem()
                         item.setData(Qt.ItemDataRole.UserRole, asset_path)  # type: ignore
                         
-                        # Set background color and icon safely
+                        # Store full info in tooltip for user reference
+                        item.setToolTip(self._create_asset_display_text(asset_name, asset_path, is_registered=True))
+                        
+                        # Set professional icon with crash-safe loading
                         try:
-                            asset_color = self.asset_manager.get_asset_type_color(asset_path)
-                            item.setBackground(QBrush(asset_color))
+                            self._set_asset_item_icon(item, asset_path)
                         except:
                             pass
                         
-                        # Add to main list
-                        if hasattr(self, 'main_asset_list'):
-                            self.main_asset_list.addItem(item)
-                        elif hasattr(self, 'asset_list'):
-                            self.asset_list.addItem(item)
+                        # Add to the ONE target list
+                        target_asset_list.addItem(item)
+                        added_paths.add(asset_path)
                 except Exception as e:
                     print(f"Error adding registered asset {asset_name}: {e}")
                     continue
@@ -6757,8 +6984,8 @@ class AssetManagerUI(QMainWindow):
             print(f"Error in _refresh_asset_list_safe: {e}")
 
     def refresh_assets(self):
-        """Refresh the asset library with enhanced thumbnail support"""
-          # CRITICAL: Add recursion protection
+        """Refresh the asset library with enhanced thumbnail support - FIXED DUPLICATION"""
+        # CRITICAL: Add recursion protection
         if hasattr(self, '_refreshing_assets') and self._refreshing_assets:
             print("Warning: Blocking recursive refresh_assets call")
             return
@@ -6766,18 +6993,30 @@ class AssetManagerUI(QMainWindow):
         try:
             self._refreshing_assets = True
           
-            # Clear main asset list
-            if hasattr(self, 'main_asset_list'):
+            # FORCE CLEAR both main_asset_list AND asset_list to prevent duplication
+            if hasattr(self, 'main_asset_list') and self.main_asset_list:
                 self.main_asset_list.clear()
-            elif hasattr(self, 'asset_list'):
+            if hasattr(self, 'asset_list') and self.asset_list:
                 self.asset_list.clear()
-            else:
-                registered_assets = {}
+            
+            # Get the ONE target list widget
+            target_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
+            if not target_asset_list:
                 return
             
             if not self.asset_manager.current_project:
-                registered_assets = {}
                 return
+            
+            # Add loading indicator for better user feedback
+            loading_item = QListWidgetItem("🔄 Loading assets...")
+            loading_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            target_asset_list.addItem(loading_item)
+            
+            # Force UI update to show loading message
+            QApplication.processEvents()
+            
+            # Track added paths to prevent duplication
+            added_paths = set()
             
             # Get registered assets from library (with error protection)
             try:
@@ -6786,66 +7025,84 @@ class AssetManagerUI(QMainWindow):
                 print(f"Error getting registered assets: {e}")
                 registered_assets = {}
             
-            # Populate with registered assets first
+            # Process registered assets in batches for better performance
+            batch_count = 0
             for asset_name, asset_info in registered_assets.items():
                 try:
                     asset_path = asset_info.get('path', '')
-                    if asset_path and os.path.exists(asset_path):
-                        display_text = self._create_asset_display_text(asset_name, asset_path, is_registered=True)
-                        item = QListWidgetItem(display_text)
+                    if asset_path and os.path.exists(asset_path) and asset_path not in added_paths:
+                        # Professional icons contain all info - no duplicate text needed
+                        item = QListWidgetItem()
                         item.setData(Qt.ItemDataRole.UserRole, asset_path)  # type: ignore
                         
-                        # Set background color and icon safely
+                        # Store full info in tooltip for user reference
+                        item.setToolTip(self._create_asset_display_text(asset_name, asset_path, is_registered=True))
+                        
+                        # Set professional icon with crash-safe loading
                         try:
-                            asset_color = self.asset_manager.get_asset_type_color(asset_path)
-                            item.setBackground(QBrush(asset_color))
+                            self._set_asset_item_icon(item, asset_path)
                         except:
                             pass
                         
-                        # Add to main list
-                        current_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
-                        if current_asset_list:
-                            current_asset_list.addItem(item)
+                        # Add to the ONE target list
+                        target_asset_list.addItem(item)
+                        added_paths.add(asset_path)
+                        batch_count += 1
+                        
+                        # Process UI events every 10 items to keep interface responsive
+                        if batch_count % 10 == 0:
+                            QApplication.processEvents()
+                        
                 except Exception as e:
                     print(f"Error adding registered asset {asset_name}: {e}")
                     continue
             
-            # Scan project directory for assets (avoiding recursion)
+            # Remove loading indicator now that registered assets are loaded
+            target_asset_list.takeItem(0)
+            
+            # Scan project directory for assets using cached file list for better performance
             project_path = self.asset_manager.current_project
             if project_path and os.path.exists(project_path):
                 try:
-                    registered_paths = {info.get('path', '') for info in registered_assets.values()}
+                    # Use cached file scanning instead of os.walk for better performance
+                    project_files = self.asset_manager._get_cached_file_list(project_path)
                     
-                    for root, dirs, files in os.walk(project_path):
-                        for file in files:
-                            if file.lower().endswith(('.ma', '.mb', '.obj', '.fbx')):
-                                file_path = os.path.join(root, file)
+                    # Process files in batches to keep UI responsive
+                    batch_size = 25
+                    for i, file_path in enumerate(project_files):
+                        # Skip if already added to prevent duplication
+                        if file_path in added_paths:
+                            continue
+                        
+                        try:
+                            file_name = os.path.basename(file_path)
+                            asset_name = os.path.splitext(file_name)[0]
+                            
+                            # Professional icons contain all info - no duplicate text needed
+                            item = QListWidgetItem()
+                            item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
+                            
+                            # Store full info in tooltip for user reference
+                            item.setToolTip(self._create_asset_display_text(asset_name, file_path, is_registered=False))
+                            
+                            # Set professional icon with crash-safe loading
+                            try:
+                                self._set_asset_item_icon(item, file_path)
+                            except:
+                                pass
+                            
+                            # Add to the ONE target list
+                            target_asset_list.addItem(item)
+                            added_paths.add(file_path)
+                            
+                            # Process UI events every batch to maintain responsiveness
+                            if (i + 1) % batch_size == 0:
+                                QApplication.processEvents()
                                 
-                                # Skip if already registered
-                                if file_path in registered_paths:
-                                    continue
-                                
-                                try:
-                                    asset_name = os.path.splitext(file)[0]
-                                    display_text = self._create_asset_display_text(asset_name, file_path, is_registered=False)
-                                    
-                                    item = QListWidgetItem(display_text)
-                                    item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
-                                    
-                                    # Set background color safely
-                                    try:
-                                        asset_color = self.asset_manager.get_asset_type_color(file_path)
-                                        item.setBackground(QBrush(asset_color))
-                                    except:
-                                        pass
-                                    
-                                    # Add to main list
-                                    current_asset_list = getattr(self, 'main_asset_list', None) or getattr(self, 'asset_list', None)
-                                    if current_asset_list:
-                                        current_asset_list.addItem(item)
-                                except Exception as e:
-                                    print(f"Error adding asset {file}: {e}")
-                                    continue
+                        except Exception as e:
+                            print(f"Error adding asset {file_path}: {e}")
+                            continue
+                            
                 except Exception as e:
                     print(f"Error scanning project directory: {e}")
             
@@ -6858,90 +7115,8 @@ class AssetManagerUI(QMainWindow):
         
         except Exception as e:
             print(f"Error in refresh_assets: {e}")
-            registered_assets = {}
         finally:
             self._refreshing_assets = False
-            if 'registered_assets' not in locals():
-                registered_assets = {}
-        
-        # Add registered assets first (with priority display)
-        for asset_name, asset_info in registered_assets.items():
-            file_path = asset_info['path']
-            
-            # Check if file still exists
-            if not os.path.exists(file_path):
-                continue
-            
-            # Create enhanced display text with library indicator
-            display_text = self._create_asset_display_text(asset_name, file_path, is_registered=True)
-            
-            item = QListWidgetItem(display_text)
-            item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
-            
-            # Set background color based on asset type
-            asset_color = self.asset_manager.get_asset_type_color(file_path)
-            item.setBackground(QBrush(asset_color))
-            
-            # Make registered assets slightly bolder
-            font = item.font()
-            font.setBold(True)
-            item.setFont(font)
-            
-            # Set icon using new thumbnail system
-            self._set_asset_item_icon(item, file_path)
-            
-            # Add to main asset list
-            if hasattr(self, 'main_asset_list'):
-                self.main_asset_list.addItem(item)
-            elif hasattr(self, 'asset_list'):
-                self.asset_list.addItem(item)
-            
-          # Scan for assets in the current project (that aren't already registered)
-        project_path = self.asset_manager.current_project
-        if project_path and os.path.exists(project_path):
-            supported_extensions = ['.ma', '.mb', '.obj', '.fbx']
-            registered_paths = {info['path'] for info in registered_assets.values()}
-          
-            for root, dirs, files in os.walk(project_path):
-                for file in files:
-                    if any(file.lower().endswith(ext) for ext in supported_extensions):
-                        file_path = os.path.join(root, file)
-                        
-                        # Skip if already registered
-                        if file_path in registered_paths:
-                            continue
-                            
-                        asset_name = os.path.splitext(file)[0]
-                        
-                        # Create enhanced display text
-                        display_text = self._create_asset_display_text(asset_name, file_path, is_registered=False)
-                        
-                        item = QListWidgetItem(display_text)
-                        item.setData(Qt.ItemDataRole.UserRole, file_path)  # type: ignore
-                        
-                        # Set background color based on asset type
-                        asset_color = self.asset_manager.get_asset_type_color(file_path)
-                        item.setBackground(QBrush(asset_color))
-                        
-                        # Set icon using new thumbnail system
-                        self._set_asset_item_icon(item, file_path)
-                        
-                        # Add to main asset list
-                        if hasattr(self, 'main_asset_list'):
-                            self.main_asset_list.addItem(item)
-                        elif hasattr(self, 'asset_list'):
-                            self.asset_list.addItem(item)
-        
-        # Update tag and collection filters
-        self.refresh_tag_filter()
-        self.refresh_collection_filter()
-        
-        # Refresh collection tabs if they exist
-        if hasattr(self, 'tab_widget'):
-            self.refresh_collection_tabs()
-        
-        # Update file watcher for new project
-        self._setup_file_watcher()
   
     def _create_asset_display_text(self, asset_name, asset_path, is_registered=False):
         """Create enhanced display text showing asset type and collections"""
@@ -7287,7 +7462,11 @@ class AssetManagerUI(QMainWindow):
         if self.asset_manager.create_asset_collection(collection_name):
             self.status_bar.showMessage(f"Created collection '{collection_name}'")
             self.collection_input.clear()
+            
+            # CRITICAL: Refresh both filter and tabs to show the new collection
             self.refresh_collection_filter()
+            self.refresh_collection_tabs(force_refresh=True)
+            print(f"✅ Created collection '{collection_name}' and refreshed tabs")
         else:
             QMessageBox.warning(self, "Error", "Failed to create collection or collection already exists.")
     
@@ -7511,11 +7690,19 @@ class AssetManagerUI(QMainWindow):
             sender_action = self.sender()
             if isinstance(sender_action, QAction) and sender_action.data():
                 collection_name = sender_action.data()
-                self.asset_manager.add_asset_to_collection(collection_name, self._context_asset_path)
                 asset_name = os.path.splitext(os.path.basename(self._context_asset_path))[0]
-                self.status_bar.showMessage(f"Added {asset_name} to collection '{collection_name}'")
-                self.refresh_collection_filter()
-                self.refresh_assets()  # Refresh to update collection display
+                
+                # Add the asset to the collection
+                if self.asset_manager.add_asset_to_collection(collection_name, self._context_asset_path):
+                    self.status_bar.showMessage(f"Added {asset_name} to collection '{collection_name}'")
+                    
+                    # CRITICAL: Refresh both filter and collection tabs to show the new asset
+                    self.refresh_collection_filter()
+                    self.refresh_collection_tabs(force_refresh=True)  # Force refresh to update tabs
+                    print(f"✅ Added {asset_name} to collection '{collection_name}' and refreshed tabs")
+                else:
+                    self.status_bar.showMessage(f"Failed to add {asset_name} to collection '{collection_name}'")
+                    print(f"❌ Failed to add {asset_name} to collection '{collection_name}'")
     
     def _create_version_for_context_asset(self):
         """Create version for context asset - called by context menu"""
