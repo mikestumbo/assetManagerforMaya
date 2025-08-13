@@ -68,3 +68,6 @@ docs/_build/
 # Development files (optional)
 # Uncomment the line below if you don't want to track dev files
 # dev/
+
+# Releases folder - managed through GitHub Releases
+releases/
