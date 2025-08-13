@@ -1191,9 +1191,9 @@ class AssetManager:
                             Qt.TransformationMode.SmoothTransformation
                         )
                         
-                        # Create final pixmap with exact size and center the scaled image
+                        # Create final pixmap with exact size and transparent background
                         final_pixmap = QPixmap(size[0], size[1])
-                        final_pixmap.fill(Qt.GlobalColor.black)  # Black background for screenshots
+                        final_pixmap.fill(Qt.GlobalColor.transparent)  # Transparent background
                         
                         painter = QPainter(final_pixmap)
                         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -1202,12 +1202,6 @@ class AssetManager:
                         x = (size[0] - scaled_pixmap.width()) // 2
                         y = (size[1] - scaled_pixmap.height()) // 2
                         painter.drawPixmap(x, y, scaled_pixmap)
-                        
-                        # Add subtle screenshot indicator
-                        painter.setPen(QPen(QColor(255, 255, 255, 180), 2))
-                        painter.setFont(QFont("Arial", max(8, size[0]//24), QFont.Weight.Bold))
-                        indicator_rect = QRect(5, 5, size[0]-10, 20)
-                        painter.drawText(indicator_rect, Qt.AlignmentFlag.AlignLeft, "📸 CUSTOM")
                         
                         painter.end()
                         
@@ -4231,6 +4225,14 @@ Please check the asset file and try again
                 if cache_key in self.asset_manager._thumbnail_cache:
                     del self.asset_manager._thumbnail_cache[cache_key]
             
+            # Clear icon cache for tags and collections to show new screenshots immediately
+            if hasattr(self.asset_manager, '_icon_cache'):
+                # Clear all icon cache entries for this asset (different sizes)
+                keys_to_remove = [key for key in self.asset_manager._icon_cache.keys() if self.current_asset_path in key]
+                for key in keys_to_remove:
+                    del self.asset_manager._icon_cache[key]
+                print(f"✅ Cleared {len(keys_to_remove)} icon cache entries for updated screenshot")
+            
             # Show success message
             QMessageBox.information(dialog, "Screenshot Captured! 📸", 
                                   f"High-resolution screenshot saved successfully!\n\n"
@@ -4254,6 +4256,20 @@ Please check the asset file and try again
             if hasattr(self, 'asset_manager') and hasattr(self.asset_manager, 'refresh_assets'):
                 # Small delay to ensure file is written
                 QTimer.singleShot(1000, self.asset_manager.refresh_assets)
+                
+            # Also refresh collection tabs to show new screenshot in collections
+            if hasattr(self, 'asset_manager') and hasattr(self.asset_manager, 'refresh_collection_tabs'):
+                QTimer.singleShot(1500, lambda: self.asset_manager.refresh_collection_tabs(force_refresh=True))
+                
+            # Refresh current tag/collection filter to show new screenshot
+            if hasattr(self, 'asset_manager'):
+                if hasattr(self.asset_manager, 'tag_filter') and self.asset_manager.tag_filter.currentText() != "All Tags":
+                    current_tag = self.asset_manager.tag_filter.currentText()
+                    QTimer.singleShot(2000, lambda: self.asset_manager.filter_by_tag(current_tag))
+                    
+                if hasattr(self.asset_manager, 'collection_filter') and self.asset_manager.collection_filter.currentText() != "All Collections":
+                    current_collection = self.asset_manager.collection_filter.currentText()
+                    QTimer.singleShot(2000, lambda: self.asset_manager.filter_by_collection(current_collection))
                 
             # Update preview display
             if self.current_asset_path:
