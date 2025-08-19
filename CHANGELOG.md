@@ -5,57 +5,40 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2025-08-11
+## [1.2.0] - 2025-08-18
 
-### Added in v1.2.0
+### 🎉 Revolutionary Background Color Fix & Multi-Select Features
 
-#### 🖼️ Resizable Thumbnails - New Feature
+#### 🎨 **BREAKTHROUGH: Guaranteed Visible Background Colors**
 
-- **Dynamic Thumbnail Sizing**: Slider control to adjust thumbnail size from 32px to 128px
-  - Real-time thumbnail updates as you drag the slider
-  - Live size label showing current pixel dimensions
-  - Size preference saved automatically between sessions
-  - Universal application across all asset tabs and collections
+- **🔥 Problem Solved**: Asset type background colors are now **guaranteed visible** in all Maya UI themes
+- **🎯 Technical Innovation**: Custom `AssetTypeItemDelegate` that **physically paints** backgrounds directly onto items
+- **💪 Bulletproof Approach**: Completely bypasses Qt CSS system conflicts that caused invisible colors
+- **🌈 Enhanced Visibility**: HSV color manipulation ensures vibrant, distinct colors for each asset type
+- **⚡ Real-time Updates**: Colors update instantly when asset types change
+- **🎪 Professional Polish**: Selection states enhanced with proper highlighting and borders
 
-- **Smart Thumbnail System**: Enhanced thumbnail generation and caching
-  - Dynamic cache keys for different thumbnail sizes  
-  - Automatic cache clearing when size changes
-  - Memory-efficient thumbnail regeneration
-  - Consistent sizing across main library and collection tabs
+#### 🎯 **Professional Multi-Select Functionality**
 
-#### 🎬 Independent 3D Preview System - Major Enhancement
+- **Ctrl+Click**: Add/remove individual assets from selection
+- **Shift+Click**: Select ranges of assets for batch operations  
+- **Ctrl+A**: Select all assets in current view
+- **Visual Feedback**: Professional blue borders and backgrounds for selected items
+- **Cross-Collection**: Multi-select works in both main library and collection tabs
 
-- **Dedicated Camera System**: Each preview panel gets its own independent camera
-  - True isolation - preview changes don't affect main Maya viewport
-  - Independent orbit, zoom, and frame controls
-  - Professional asset browsing without workspace disruption
-  - Automatic camera cleanup and resource management
+#### � **Bulk Operations for Power Users**
 
-- **Enhanced MEL Integration**: Complete rewrite of 3D preview system
-  - Independent camera creation with optimal positioning (5,3,5) and viewing angle
-  - Direct transform manipulation for smooth orbit and zoom
-  - Proper resource cleanup with automatic camera deletion
-  - Error handling with graceful degradation
+- **Import Selected (Ctrl+I)**: Import multiple assets simultaneously
+- **Add to Collection (Ctrl+Shift+C)**: Batch add assets to collections
+- **Drag & Drop Multiple**: Drag selected assets directly to Maya viewport
+- **Professional UI**: Clear visual indicators for selected items
 
-#### 🔍 Enhanced Preview & Visualization
+#### 🎪 **Enhanced Drag & Drop Support**
 
-- **Comprehensive Asset Preview Widget**: Revolutionary 3D asset visualization system
-  - Real-time 3D preview of selected assets with independent camera controls
-  - Interactive metadata display panel showing comprehensive asset information
-  - Support for Maya files (.ma/.mb), OBJ, FBX, and cache files (.abc/.usd)
-  - Quality settings (Low/Medium/High) for performance optimization
-
-- **Advanced Metadata Extraction System**: Deep asset analysis capabilities
-  - Automatic extraction of geometry data (vertex count, face count, polygons)
-  - Material and texture information detection
-  - Animation frame analysis and timeline information
-  - File system metadata (size, modification date, type)
-  - Intelligent preview quality suggestions based on asset complexity
-
-- **Integrated UI Layout**: Seamless preview integration with existing interface
-  - Horizontal splitter design with 60% asset list, 40% preview panel
-  - Collapsible preview panel with toggle button in toolbar
-  - User preference persistence - remembers preview panel visibility
+- **Drag from Library**: Drag assets directly from Asset Manager to Maya viewport
+- **Instant Import**: Assets import automatically on drop
+- **Multi-Asset Drag**: Drag multiple selected assets at once
+- **Visual Feedback**: Enhanced drag indicators and responsiveness
 
 #### 🔧 Technical Improvements & Bug Fixes
 
@@ -65,30 +48,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Descriptive method names and comprehensive error handling
   - Modular design for enhanced maintainability and extensibility
 
-### Changed in v1.2.0
+### 🔧 Technical Improvements
 
-#### 🎨 UI/UX Enhancements
+#### 🎨 **Background Color System Overhaul**
 
-- **Enhanced Thumbnail Controls**: New resize slider with live size feedback
-- **Toolbar Layout Updates**: Added thumbnail size controls and preview toggles
-- **Improved Asset Selection**: All asset lists now trigger preview and thumbnail updates
-- **User Preferences Extended**: Thumbnail size and preview visibility preferences saved
+- **AssetTypeItemDelegate Class**: Custom Qt delegate for direct painting
+- **HSV Color Manipulation**: Prevents pure white issues and ensures visibility
+- **Selection State Handling**: Professional highlighting for selected items
+- **Repaint Optimization**: Efficient updates when asset types change
+- **Cross-Platform Compatibility**: Works reliably across all Maya UI themes
 
-#### 🔧 Technical Architecture
+#### �️ **Stability & Performance**
 
-- **MEL System Redesign**: Complete rewrite of 3D preview for camera independence
-- **Cache Management**: Dynamic thumbnail caching with size-based keys
-- **Resource Management**: Automatic camera cleanup and memory optimization
-- **Error Handling**: Graceful degradation for preview and thumbnail operations
+- **Memory-Safe Operations**: Enhanced memory management for large selections
+- **UI Responsiveness**: Optimized for smooth interaction with multiple selections
+- **Error Recovery**: Robust handling of edge cases in multi-select scenarios
+- **Thread Safety**: Improved threading for background operations
 
 ### Fixed in v1.2.0
 
 #### 🐛 Critical Bug Fixes
 
-- **3D Preview Independence**: Fixed shared camera issue that affected main Maya viewport
-- **Thumbnail Memory Usage**: Optimized thumbnail generation and caching system
-- **MEL Camera Conflicts**: Eliminated camera naming conflicts and resource leaks
-- **UI Responsiveness**: Improved performance during thumbnail resizing operations
+- **CRITICAL**: Background colors now visible in all Maya UI themes and configurations
+- **FIXED**: Multi-select state management across collection tabs
+- **IMPROVED**: Memory handling for large asset selections
+- **ENHANCED**: UI responsiveness during bulk operations
+- **RESOLVED**: Edge cases in drag & drop with multiple assets
 
 ---
 
@@ -445,14 +430,6 @@ When contributing to this project, **you must update this changelog**:
 
 ### Added in Unreleased
 
-#### Preview & Visualization
-
-- Live 3D preview window with orbit controls for better asset visualization
-- Thumbnail customization to set custom camera angles for asset thumbnails
-- Asset metadata display showing poly count, textures, and bounding box info
-- Preview quality settings (Low/Medium/High) for performance optimization
-- Asset comparison view for side-by-side comparison of similar assets
-
 #### Search & Discovery
 
 - Advanced search filters including poly count, file size, date modified, and creator
@@ -484,14 +461,6 @@ When contributing to this project, **you must update this changelog**:
 - Customizable layouts to save/load different UI arrangements
 - Customizable keyboard shortcuts for common operations
 - Multi-language support for international teams
-
-#### Asset Type Customization
-
-- **Fully customizable asset types** - All asset types (including factory defaults) can now be deleted, modified, or customized
-- **Factory defaults restoration** - New "Restore Factory Defaults" button to restore any deleted factory default types without affecting custom types  
-- **Smart deletion safeguards** - System prevents deletion of the last remaining asset type and automatically migrates existing assets to fallback types
-- **Enhanced UI controls** - Delete buttons now available for all asset types with context-appropriate warning messages
-- **Improved workflow flexibility** - Users can create minimalist setups with only relevant types or complex studio-specific configurations
 
 #### Performance & Optimization
 

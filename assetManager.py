@@ -8,12 +8,13 @@ Version: 1.2.0
 Maya Version: 2025.3+
 
 New in v1.2.0:
+- REVOLUTIONARY BACKGROUND COLOR FIX: Asset type colors now guaranteed visible in all Maya themes
+- CUSTOM DELEGATE TECHNOLOGY: AssetTypeItemDelegate physically paints backgrounds, bypassing CSS conflicts
 - MULTI-SELECT FUNCTIONALITY: Professional asset selection with Ctrl+Click, Shift+Click, and Select All
 - DRAG & DROP SUPPORT: Drag assets directly from library to Maya viewport for instant import
 - BULK OPERATIONS: Import Selected and Add to Collection for batch asset management
 - ENHANCED UI: Visual selection highlighting with professional blue borders and backgrounds
 - KEYBOARD SHORTCUTS: Ctrl+A (Select All), Ctrl+I (Import Selected), Ctrl+Shift+C (Add to Collection)
-- PROFESSIONAL ASSET DISPLAY: Stable, crash-safe asset information system
 - ADVANCED METADATA EXTRACTION: Deep asset analysis for Maya, OBJ, FBX, and cache files
 - INTEGRATED UI LAYOUT: Seamless professional info panel with metadata display  
 - STABLE PERFORMANCE: Eliminated Maya viewport crashes with professional file icons

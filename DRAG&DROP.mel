@@ -4,12 +4,14 @@
 //
 // Asset Manager for Maya 2025.3+
 // Author: Mike Stumbo
-// Version: 1.2.0 - Clean Screenshot-Based 3D Preview
+// Version: 1.2.0 - Revolutionary Background Color Fix & Multi-Select Features
 
 global proc DRAG_DROP_assetManager_installer()
 {
     print("\\n=== Asset Manager Plugin Installer v1.2.0 ===\\n");
-    print("Features: Clean Screenshot-Based 3D Preview with UI improvements\\n");
+    print("🎨 NEW: Background colors guaranteed visible in all Maya themes\\n");
+    print("🎯 NEW: Professional multi-select with Ctrl+Click, Shift+Click, Ctrl+A\\n");
+    print("🚀 NEW: Bulk operations - Import Selected, Add to Collection\\n");
 
     // Locate plugin installation source directory
     string $scriptLocation = `whatIs "DRAG_DROP_assetManager_installer"`;

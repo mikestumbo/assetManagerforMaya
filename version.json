@@ -4,8 +4,8 @@
     "maya_version": "2025.3",
     "python_version": "3.9+",
     "author": "Mike Stumbo",
-    "description": "A comprehensive asset management system for Maya 2025.3 with independent 3D preview and resizable thumbnails",
-    "release_date": "2025-08-11",
+    "description": "A comprehensive asset management system for Maya 2025.3 with guaranteed visible background colors and professional multi-select functionality",
+    "release_date": "2025-08-18",
     "requirements": [
         "Maya 2025.3+",
         "Python 3.9+",

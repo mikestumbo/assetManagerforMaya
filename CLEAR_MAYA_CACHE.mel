@@ -1,6 +1,8 @@
 // Asset Manager - Maya Cache Cleaner & Fresh Install Script
 // This script clears Maya cache files and ensures a clean installation
-// Run this script in Maya's Script Editor before installing Asset Manager
+// Run this script in Maya's Script Editor before installing Asset Manager v1.2.0
+//
+// v1.2.0 Features: Revolutionary background color fix & multi-select functionality
 
 global proc clearMayaCacheForAssetManager()
 {
@@ -138,12 +140,14 @@ global proc clearMayaCacheForAssetManager()
     python("import sys; modules_to_remove = [m for m in list(sys.modules.keys()) if 'assetManager' in m.lower()]; [sys.modules.pop(module, None) for module in modules_to_remove]; print('Removed ' + str(len(modules_to_remove)) + ' Asset Manager modules from cache.') if modules_to_remove else print('No Asset Manager modules found in cache.')");
     
     print("\\n=== Cache cleaning completed! ===\\n");
-    print("Maya is now ready for a fresh Asset Manager installation.\\n");
+    print("Maya is now ready for a fresh Asset Manager v1.2.0 installation.\\n");
     print("Please restart Maya before installing the new version.\\n");
-    print("\\nTo install Asset Manager v1.1.1:");
+    print("\\nTo install Asset Manager v1.2.0:");
     print("1. Restart Maya");
     print("2. Drag the DRAG&DROP.mel file into Maya's viewport");
     print("3. The plugin will install automatically\\n");
+    print("\\n🎨 v1.2.0 NEW: Background colors are now guaranteed visible in all Maya themes!");
+    print("🎯 v1.2.0 NEW: Professional multi-select with Ctrl+Click, Shift+Click, Ctrl+A\\n");
 }
 
 // Run the cache cleaner
