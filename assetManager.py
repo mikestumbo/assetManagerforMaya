@@ -8,6 +8,11 @@ Version: 1.2.0
 Maya Version: 2025.3+
 
 New in v1.2.0:
+- MULTI-SELECT FUNCTIONALITY: Professional asset selection with Ctrl+Click, Shift+Click, and Select All
+- DRAG & DROP SUPPORT: Drag assets directly from library to Maya viewport for instant import
+- BULK OPERATIONS: Import Selected and Add to Collection for batch asset management
+- ENHANCED UI: Visual selection highlighting with professional blue borders and backgrounds
+- KEYBOARD SHORTCUTS: Ctrl+A (Select All), Ctrl+I (Import Selected), Ctrl+Shift+C (Add to Collection)
 - PROFESSIONAL ASSET DISPLAY: Stable, crash-safe asset information system
 - ADVANCED METADATA EXTRACTION: Deep asset analysis for Maya, OBJ, FBX, and cache files
 - INTEGRATED UI LAYOUT: Seamless professional info panel with metadata display  
@@ -263,13 +268,303 @@ try:
                                    QStyle, QComboBox, QTextEdit, QCheckBox,
                                    QScrollArea, QFrame, QTabWidget, QTreeWidget,
                                    QTreeWidgetItem, QInputDialog, QProgressDialog,
-                                   QMenu, QSlider)
-    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter, QPen, QLinearGradient
+                                   QMenu, QSlider, QStyledItemDelegate)
+    from PySide6.QtGui import QAction, QIcon, QPixmap, QFont, QColor, QBrush, QPainter, QPen, QLinearGradient, QKeySequence
     from PySide6.QtCore import Qt, QSize, QTimer, QThread, Signal, QFileSystemWatcher, QObject, QPoint, QRect
     from shiboken6 import wrapInstance
 except ImportError:
     print("PySide6 not available. Please ensure Maya 2025.3+ is being used.")
     sys.exit(1)
+
+
+class AssetTypeItemDelegate(QStyledItemDelegate):
+    """Custom item delegate that directly paints asset type background colors"""
+    
+    def __init__(self, asset_manager, parent=None):
+        super().__init__(parent)
+        self.asset_manager = asset_manager
+        print("🎨 AssetTypeItemDelegate initialized - will paint backgrounds directly!")
+    
+    def paint(self, painter, option, index):
+        """Custom paint method that draws asset type background colors"""
+        try:
+            # Get asset path and type
+            asset_path = index.data(Qt.ItemDataRole.UserRole)
+            if asset_path:
+                asset_type = self.asset_manager.get_asset_type(asset_path)
+                base_color = self.asset_manager.asset_type_colors.get(asset_type, 
+                                                                     self.asset_manager.asset_type_colors['default'])
+                
+                # Create vibrant colors that are guaranteed to be visible
+                if option.state & QStyle.StateFlag.State_Selected:
+                    # Selected: Use saturated, vibrant version of the base color
+                    bg_color = QColor(base_color)
+                    # Instead of lighter(), use a different approach for visibility
+                    bg_color.setHsv(bg_color.hue(), min(255, bg_color.saturation() + 100), min(255, bg_color.value() + 80))
+                    print(f"🔥 PAINTING SELECTED {asset_type}: {os.path.basename(asset_path)} -> {bg_color.name()}")
+                else:
+                    # Unselected: Use a dimmed but visible version
+                    bg_color = QColor(base_color)
+                    bg_color.setAlpha(180)
+                    print(f"🎨 PAINTING BASE {asset_type}: {os.path.basename(asset_path)} -> {bg_color.name()}")
+                
+                # Paint the background directly
+                painter.save()
+                painter.fillRect(option.rect, bg_color)
+                painter.restore()
+                
+                # Draw a border for selected items
+                if option.state & QStyle.StateFlag.State_Selected:
+                    painter.save()
+                    pen = QPen(QColor(255, 255, 255, 200), 2)
+                    painter.setPen(pen)
+                    painter.drawRect(option.rect.adjusted(1, 1, -1, -1))
+                    painter.restore()
+            
+            # Call the parent paint method to draw the icon and other elements
+            super().paint(painter, option, index)
+            
+        except Exception as e:
+            print(f"❌ Error in AssetTypeItemDelegate.paint: {e}")
+            # Fallback to default painting
+            super().paint(painter, option, index)
+
+
+class DragDropAssetListWidget(QListWidget):
+    """Custom QListWidget with enhanced drag & drop for Maya integration"""
+    
+    def __init__(self, asset_manager_ui, parent=None):
+        super().__init__(parent)
+        self.asset_manager_ui = asset_manager_ui
+        
+        # Enable multi-select and drag functionality
+        self.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+        self.setDragEnabled(True)
+        self.setDragDropMode(QListWidget.DragDropMode.DragOnly)
+        
+        # Mouse tracking for improved drag responsiveness
+        self.drag_start_position = None
+        self.mouse_press_item = None
+        
+        print("🖱️ DragDropAssetListWidget initialized with enhanced responsiveness")
+    
+    def mousePressEvent(self, event):
+        """Enhanced mouse press event that prioritizes drag & drop"""
+        try:
+            # Store drag start position and item
+            if event.button() == Qt.MouseButton.LeftButton:
+                self.drag_start_position = event.position()
+                self.mouse_press_item = self.itemAt(event.position().toPoint())
+                print(f"🖱️ Mouse press detected at {self.drag_start_position} on item: {bool(self.mouse_press_item)}")
+            
+            # Call parent implementation for normal selection behavior
+            super().mousePressEvent(event)
+            
+        except Exception as e:
+            print(f"Error in mousePressEvent: {e}")
+            super().mousePressEvent(event)
+    
+    def mouseMoveEvent(self, event):
+        """Enhanced mouse move event that initiates drag when appropriate"""
+        try:
+            # Check if we should start dragging
+            if (self.drag_start_position is not None and 
+                event.buttons() & Qt.MouseButton.LeftButton and
+                self.mouse_press_item is not None):
+                
+                # Calculate distance moved
+                distance = (event.position() - self.drag_start_position).manhattanLength()
+                
+                # Start drag if moved enough (Qt's standard drag distance)
+                if distance >= QApplication.startDragDistance():
+                    print(f"🖱️ Drag distance threshold reached: {distance} >= {QApplication.startDragDistance()}")
+                    self.startDrag(Qt.DropAction.CopyAction)
+                    return
+            
+            # Call parent implementation for normal behavior
+            super().mouseMoveEvent(event)
+            
+        except Exception as e:
+            print(f"Error in mouseMoveEvent: {e}")
+            super().mouseMoveEvent(event)
+    
+    def mouseReleaseEvent(self, event):
+        """Clean up drag tracking on mouse release"""
+        try:
+            # Reset drag tracking
+            if event.button() == Qt.MouseButton.LeftButton:
+                self.drag_start_position = None
+                self.mouse_press_item = None
+            
+            # Call parent implementation
+            super().mouseReleaseEvent(event)
+            
+        except Exception as e:
+            print(f"Error in mouseReleaseEvent: {e}")
+            super().mouseReleaseEvent(event)
+    
+    def startDrag(self, supportedActions):
+        """Enhanced drag start implementation with improved responsiveness"""
+        try:
+            from PySide6.QtCore import QMimeData, QUrl  # type: ignore
+            from PySide6.QtGui import QDrag  # type: ignore
+            
+            # Get selected items - if nothing selected, select the item under mouse
+            selected_items = self.selectedItems()
+            if not selected_items and self.mouse_press_item:
+                self.mouse_press_item.setSelected(True)
+                selected_items = [self.mouse_press_item]
+            
+            if not selected_items:
+                print("🖱️ No assets selected for drag operation")
+                return
+                
+            print(f"🖱️ Starting drag operation with {len(selected_items)} assets")
+            
+            # Create drag data with asset paths
+            mime_data = QMimeData()
+            urls = []
+            asset_paths = []
+            
+            for item in selected_items:
+                asset_path = item.data(Qt.ItemDataRole.UserRole)  # type: ignore
+                if asset_path and os.path.exists(asset_path):
+                    urls.append(QUrl.fromLocalFile(asset_path))
+                    asset_paths.append(asset_path)
+                    print(f"🖱️ Adding to drag: {os.path.basename(asset_path)}")
+            
+            if not urls:
+                print("🖱️ No valid asset files found for drag")
+                return
+                
+            mime_data.setUrls(urls)
+            
+            # Add custom Maya asset data
+            maya_data = "\n".join(asset_paths)
+            mime_data.setData("application/x-maya-assets", maya_data.encode())
+            mime_data.setText(maya_data)  # Fallback text format
+            
+            # Create drag object
+            drag = QDrag(self)
+            drag.setMimeData(mime_data)
+            
+            # Use first selected item's icon as drag pixmap with enhanced visibility
+            if selected_items:
+                icon = selected_items[0].icon()
+                if not icon.isNull():
+                    pixmap = icon.pixmap(64, 64)
+                    
+                    # Add badge for multiple items
+                    if len(selected_items) > 1:
+                        from PySide6.QtGui import QPainter, QFont  # type: ignore
+                        painter = QPainter(pixmap)
+                        painter.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+                        painter.setPen(QColor(255, 255, 255))
+                        painter.fillRect(40, 0, 24, 16, QColor(255, 0, 0, 180))
+                        painter.drawText(42, 12, f"+{len(selected_items)-1}")
+                        painter.end()
+                    
+                    drag.setPixmap(pixmap)
+                    drag.setHotSpot(QPoint(32, 32))  # Center the drag image
+            
+            print(f"🖱️ Executing drag operation for {len(asset_paths)} assets")
+            
+            # Execute drag - this creates the drag cursor and handles the operation
+            result = drag.exec(supportedActions)
+            
+            # Handle the drag result
+            if result == Qt.DropAction.CopyAction:
+                print(f"🖱️ Drag completed with CopyAction - attempting Maya import")
+                self._attempt_maya_import(asset_paths)
+            elif result == Qt.DropAction.MoveAction:
+                print(f"🖱️ Drag completed with MoveAction")
+            elif result == Qt.DropAction.IgnoreAction:
+                print(f"🖱️ Drag was ignored or dropped outside valid area")
+            else:
+                print(f"🖱️ Drag cancelled or failed (result: {result})")
+                
+        except Exception as e:
+            print(f"Error in drag operation: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _attempt_maya_import(self, asset_paths):
+        """Enhanced Maya import with better feedback and error handling"""
+        try:
+            print(f"🖱️ Attempting to import {len(asset_paths)} assets into Maya")
+            
+            if not MAYA_AVAILABLE:
+                print("🖱️ Maya not available - showing import notification")
+                if hasattr(self.asset_manager_ui, 'status_bar'):
+                    self.asset_manager_ui.status_bar.showMessage(
+                        f"⚠️ Maya not available - {len(asset_paths)} assets ready for import"
+                    )
+                return
+                
+            from maya import cmds  # pyright: ignore[reportMissingImports]
+            
+            imported_count = 0
+            failed_assets = []
+            
+            for asset_path in asset_paths:
+                try:
+                    asset_name = os.path.basename(asset_path)
+                    print(f"🖱️ Importing asset: {asset_name}")
+                    
+                    # Use the asset manager's import functionality if available
+                    if (hasattr(self.asset_manager_ui, 'asset_manager') and 
+                        hasattr(self.asset_manager_ui.asset_manager, 'import_asset')):
+                        
+                        success = self.asset_manager_ui.asset_manager.import_asset(asset_path)
+                        if success:
+                            imported_count += 1
+                            print(f"🖱️ ✅ Successfully imported: {asset_name}")
+                        else:
+                            failed_assets.append(asset_name)
+                            print(f"🖱️ ❌ Failed to import: {asset_name}")
+                    else:
+                        # Direct Maya import as fallback
+                        file_ext = os.path.splitext(asset_path)[1].lower()
+                        if file_ext in ['.ma', '.mb']:
+                            cmds.file(asset_path, i=True, ignoreVersion=True)
+                            imported_count += 1
+                            print(f"🖱️ ✅ Direct Maya import successful: {asset_name}")
+                        elif file_ext == '.obj':
+                            cmds.file(asset_path, i=True, type="OBJ", ignoreVersion=True)
+                            imported_count += 1
+                            print(f"🖱️ ✅ OBJ import successful: {asset_name}")
+                        else:
+                            failed_assets.append(f"{asset_name} (unsupported format)")
+                            print(f"🖱️ ❌ Unsupported format: {asset_name}")
+                            
+                except Exception as e:
+                    asset_name = os.path.basename(asset_path)
+                    failed_assets.append(asset_name)
+                    print(f"🖱️ ❌ Error importing {asset_name}: {e}")
+            
+            # Update status bar with results
+            if hasattr(self.asset_manager_ui, 'status_bar'):
+                if imported_count > 0:
+                    message = f"✅ Drag & Drop: Imported {imported_count}/{len(asset_paths)} assets"
+                    if failed_assets:
+                        message += f" ({len(failed_assets)} failed)"
+                    self.asset_manager_ui.status_bar.showMessage(message)
+                else:
+                    self.asset_manager_ui.status_bar.showMessage(
+                        f"❌ Drag & Drop: Failed to import {len(asset_paths)} assets"
+                    )
+            
+            # Print summary
+            print(f"🖱️ Drag & Drop import completed: {imported_count}/{len(asset_paths)} assets imported")
+            if failed_assets:
+                print(f"🖱️ Failed imports: {', '.join(failed_assets)}")
+            
+        except Exception as e:
+            print(f"Error in Maya import after drag: {e}")
+            if hasattr(self.asset_manager_ui, 'status_bar'):
+                self.asset_manager_ui.status_bar.showMessage(f"❌ Drag & Drop error: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
 
 class AssetManager:
@@ -2759,23 +3054,12 @@ class AssetPreviewWidget(QWidget):
         header_layout.addWidget(self.asset_info_label)
         header_layout.addStretch()
         
-        # Main preview area with splitter
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        
-        # 3D Preview area (left side)
+        # Main preview area (now full width for better zoom controls)
         self.preview_widget = self.create_3d_preview_widget()
-        splitter.addWidget(self.preview_widget)
-        
-        # Metadata panel (right side)
-        self.metadata_widget = self.create_metadata_widget()
-        splitter.addWidget(self.metadata_widget)
-        
-        # Set splitter proportions (70% preview, 30% metadata)
-        splitter.setSizes([UIConstants.LIBRARY_WIDTH, UIConstants.PREVIEW_WIDTH])
         
         # Add to main layout
         layout.addLayout(header_layout)
-        layout.addWidget(splitter, 1)
+        layout.addWidget(self.preview_widget, 1)
         
         # Comparison mode toggle (initially hidden)
         self.comparison_widget = self.create_comparison_widget()
@@ -2805,77 +3089,86 @@ class AssetPreviewWidget(QWidget):
         # Zoom controls
         zoom_layout = QHBoxLayout()
         
-        # Zoom out button
+        # Zoom out button - LARGER and more visible
         self.zoom_out_btn = QPushButton("🔍-")
-        self.zoom_out_btn.setMaximumSize(30, 25)
-        self.zoom_out_btn.setToolTip("Zoom Out (Shift + Mouse Wheel)")
+        self.zoom_out_btn.setMinimumSize(50, 35)  # Much larger buttons
+        self.zoom_out_btn.setMaximumSize(50, 35)
+        self.zoom_out_btn.setToolTip("Zoom Out (Mouse Wheel Down)")
         self.zoom_out_btn.setStyleSheet("""
             QPushButton {
                 background-color: #404040;
                 border: 1px solid #666;
-                border-radius: 3px;
+                border-radius: 4px;
                 color: white;
                 font-weight: bold;
-                font-size: 10px;
+                font-size: 12px;  /* Larger font */
             }
             QPushButton:hover {
                 background-color: #505050;
+                border: 1px solid #888;
             }
             QPushButton:pressed {
                 background-color: #353535;
+                border: 1px solid #999;
             }
         """)
-        self.zoom_out_btn.clicked.connect(lambda: self._zoom_by_factor(0.8))
+        self.zoom_out_btn.clicked.connect(lambda: self._preview_zoom_by_factor(0.8))
         
-        # Zoom level label
+        # Zoom level label - LARGER and more readable
         self.zoom_label = QLabel("100%")
-        self.zoom_label.setStyleSheet("color: #888888; font-size: 10px; font-weight: bold;")
-        self.zoom_label.setMinimumWidth(40)
+        self.zoom_label.setStyleSheet("color: #CCCCCC; font-size: 12px; font-weight: bold; padding: 0 8px;")
+        self.zoom_label.setMinimumWidth(60)  # Wider for better readability
         self.zoom_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        # Zoom in button
+        # Zoom in button - LARGER and more visible
         self.zoom_in_btn = QPushButton("🔍+")
-        self.zoom_in_btn.setMaximumSize(30, 25)
-        self.zoom_in_btn.setToolTip("Zoom In (Mouse Wheel)")
+        self.zoom_in_btn.setMinimumSize(50, 35)  # Much larger buttons
+        self.zoom_in_btn.setMaximumSize(50, 35)
+        self.zoom_in_btn.setToolTip("Zoom In (Mouse Wheel Up)")
         self.zoom_in_btn.setStyleSheet("""
             QPushButton {
                 background-color: #404040;
                 border: 1px solid #666;
-                border-radius: 3px;
+                border-radius: 4px;
                 color: white;
                 font-weight: bold;
-                font-size: 10px;
+                font-size: 12px;  /* Larger font */
             }
             QPushButton:hover {
                 background-color: #505050;
+                border: 1px solid #888;
             }
             QPushButton:pressed {
                 background-color: #353535;
+                border: 1px solid #999;
             }
         """)
-        self.zoom_in_btn.clicked.connect(lambda: self._zoom_by_factor(1.25))
+        self.zoom_in_btn.clicked.connect(lambda: self._preview_zoom_by_factor(1.25))
         
-        # Zoom reset button
+        # Zoom reset button - LARGER and clearer
         self.zoom_reset_btn = QPushButton("1:1")
-        self.zoom_reset_btn.setMaximumSize(30, 25)
-        self.zoom_reset_btn.setToolTip("Reset Zoom (Double-click)")
+        self.zoom_reset_btn.setMinimumSize(50, 35)  # Much larger buttons
+        self.zoom_reset_btn.setMaximumSize(50, 35)
+        self.zoom_reset_btn.setToolTip("Reset Zoom to 100% (Double-click image)")
         self.zoom_reset_btn.setStyleSheet("""
             QPushButton {
                 background-color: #404040;
                 border: 1px solid #666;
-                border-radius: 3px;
+                border-radius: 4px;
                 color: white;
                 font-weight: bold;
-                font-size: 9px;
+                font-size: 11px;  /* Slightly smaller for "1:1" text */
             }
             QPushButton:hover {
                 background-color: #505050;
+                border: 1px solid #888;
             }
             QPushButton:pressed {
                 background-color: #353535;
+                border: 1px solid #999;
             }
         """)
-        self.zoom_reset_btn.clicked.connect(self._reset_zoom)
+        self.zoom_reset_btn.clicked.connect(self._preview_reset_zoom)
         
         zoom_layout.addWidget(self.zoom_out_btn)
         zoom_layout.addWidget(self.zoom_label)
@@ -2931,6 +3224,9 @@ class AssetPreviewWidget(QWidget):
                     min-height: 300px;
                 }
             """)
+            
+            # Add double-click zoom reset to info label
+            self.preview_info_label.mouseDoubleClickEvent = self.preview_double_click
             
             layout.addWidget(self.preview_info_label, 1)
             
@@ -3158,31 +3454,43 @@ class AssetPreviewWidget(QWidget):
             print(f"Warning: No preview label available for text: {text[:50]}...")
     
     def _set_preview_pixmap(self, pixmap):
-        """Set preview pixmap in the appropriate preview widget - Clean Code helper method with zoom support"""
-        # Store original pixmap for zoom operations
-        if pixmap and not pixmap.isNull():
-            # Professional info display shows file icons instead of pixmaps
-            if hasattr(self, 'preview_info_label') and self.preview_info_label:
-                self._info_original_pixmap = pixmap.copy()  # Store original for zooming
-                # Apply current zoom level if not default
-                if hasattr(self, '_zoom_level') and self._zoom_level != 1.0:
-                    zoomed_pixmap = self._apply_zoom_to_pixmap(pixmap, self._zoom_level)
-                    self.preview_info_label.setPixmap(zoomed_pixmap)
-                else:
-                    self.preview_info_label.setPixmap(pixmap)
-                    
-            elif hasattr(self, 'preview_label') and self.preview_label:
-                self._original_pixmap = pixmap.copy()  # Store original for zooming
-                # Apply current zoom level if not default
-                if hasattr(self, '_zoom_level') and self._zoom_level != 1.0:
-                    zoomed_pixmap = self._apply_zoom_to_pixmap(pixmap, self._zoom_level)
-                    self.preview_label.setPixmap(zoomed_pixmap)
-                else:
-                    self.preview_label.setPixmap(pixmap)
+        """Enhanced preview pixmap setting with robust zoom support"""
+        try:
+            if not pixmap or pixmap.isNull():
+                print("🔍 ⚠️ Invalid pixmap provided to _set_preview_pixmap")
+                return
+            
+            print(f"🔍 Setting preview pixmap: {pixmap.size().width()}x{pixmap.size().height()}")
+            
+            # Find the active preview widget
+            preview_widget = self._get_active_preview_widget()
+            if not preview_widget:
+                print("🔍 ⚠️ No preview widget available for pixmap")
+                return
+            
+            # Store original pixmap for zoom operations
+            if preview_widget == getattr(self, 'preview_label', None):
+                self._original_pixmap = pixmap.copy()
+                print("🔍 Stored original pixmap for preview_label")
+            elif preview_widget == getattr(self, 'preview_info_label', None):
+                self._info_original_pixmap = pixmap.copy()
+                print("🔍 Stored original pixmap for preview_info_label")
+            
+            # Apply current zoom level if not default
+            current_zoom = getattr(self, '_zoom_level', 1.0)
+            if current_zoom != 1.0:
+                print(f"🔍 Applying current zoom level {current_zoom:.2f} to new pixmap")
+                zoomed_pixmap = self._apply_zoom_to_pixmap(pixmap, current_zoom)
+                preview_widget.setPixmap(zoomed_pixmap)
             else:
-                print("Warning: No preview label available for pixmap")
-        else:
-            print("Warning: Invalid pixmap provided")
+                preview_widget.setPixmap(pixmap)
+            
+            print("🔍 ✅ Preview pixmap set successfully")
+            
+        except Exception as e:
+            print(f"🔍 ❌ Error setting preview pixmap: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _apply_zoom_to_pixmap(self, pixmap, zoom_level):
         """Apply zoom level to a pixmap and return the result"""
@@ -3387,6 +3695,117 @@ class AssetPreviewWidget(QWidget):
         # Professional screenshot system
         self.screenshot_btn.clicked.connect(self.capture_maya_screenshot)
     
+    def wheelEvent(self, event):
+        """Handle mouse wheel events for zoom functionality"""
+        try:
+            # Calculate zoom delta
+            delta = event.angleDelta().y() / 120.0
+            zoom_factor = 1.1 if delta > 0 else 0.9
+            
+            print(f"🔍 Mouse wheel zoom: delta={delta}, factor={zoom_factor}")
+            
+            # Use the local zoom method
+            self._preview_zoom_by_factor(zoom_factor)
+            event.accept()
+            
+        except Exception as e:
+            print(f"🔍 ❌ Error in mouse wheel zoom: {e}")
+            super().wheelEvent(event)
+    
+    def _preview_zoom_by_factor(self, factor):
+        """Enhanced zoom functionality for AssetPreviewWidget"""
+        try:
+            if not hasattr(self, '_zoom_level'):
+                self._zoom_level = 1.0
+            
+            if not hasattr(self, '_min_zoom'):
+                self._min_zoom = 0.1
+            if not hasattr(self, '_max_zoom'):
+                self._max_zoom = 5.0
+            
+            old_zoom = self._zoom_level
+            new_zoom = self._zoom_level * factor
+            self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
+            
+            print(f"🔍 Preview Zoom: {old_zoom:.2f} → {self._zoom_level:.2f} (factor: {factor})")
+            
+            # Update zoom label
+            if hasattr(self, 'zoom_label'):
+                self.zoom_label.setText(f"{int(self._zoom_level * 100)}%")
+            
+            # Update preview display
+            self._preview_apply_zoom_to_pixmap()
+            
+            # Update status
+            zoom_percent = int(self._zoom_level * 100)
+            if hasattr(self, 'preview_status'):
+                self.preview_status.setText(f"Zoom: {zoom_percent}%")
+            
+            print(f"🔍 ✅ Preview zoom operation completed successfully")
+            
+        except Exception as e:
+            print(f"🔍 ❌ Error in preview zoom: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _preview_reset_zoom(self):
+        """Reset zoom to 100% for AssetPreviewWidget"""
+        try:
+            self._zoom_level = 1.0
+            
+            # Update zoom label
+            if hasattr(self, 'zoom_label'):
+                self.zoom_label.setText("100%")
+            
+            # Update preview display
+            self._preview_apply_zoom_to_pixmap()
+            
+            # Update status
+            if hasattr(self, 'preview_status'):
+                self.preview_status.setText("Zoom: 100%")
+                
+            print("🔍 ✅ Preview zoom reset to 100%")
+                
+        except Exception as e:
+            print(f"🔍 ❌ Error in preview zoom reset: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _preview_apply_zoom_to_pixmap(self):
+        """Apply zoom level to the preview pixmap"""
+        try:
+            # Find the preview widget that has a pixmap to zoom
+            preview_widget = None
+            original_pixmap = None
+            
+            # Check for preview_label (most common)
+            if hasattr(self, 'preview_label') and self.preview_label:
+                preview_widget = self.preview_label
+                original_pixmap = getattr(self, '_original_pixmap', None)
+            
+            # Check for preview_info_label (professional display)
+            elif hasattr(self, 'preview_info_label') and self.preview_info_label:
+                preview_widget = self.preview_info_label
+                original_pixmap = getattr(self, '_info_original_pixmap', None)
+            
+            if preview_widget and original_pixmap and not original_pixmap.isNull():
+                # Apply zoom to the original pixmap
+                scaled_pixmap = original_pixmap.scaled(
+                    int(original_pixmap.width() * self._zoom_level),
+                    int(original_pixmap.height() * self._zoom_level),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                preview_widget.setPixmap(scaled_pixmap)
+                print(f"🔍 Applied zoom {self._zoom_level:.2f}x to preview pixmap")
+            else:
+                print(f"🔍 No pixmap available for zoom (widget: {preview_widget is not None}, pixmap: {original_pixmap is not None})")
+                
+        except Exception as e:
+            print(f"🔍 ❌ Error applying zoom to pixmap: {e}")
+            import traceback
+            traceback.print_exc()
+    
     def preview_asset(self, asset_path):
         """Load and preview an asset"""
         if not os.path.exists(asset_path):
@@ -3407,9 +3826,8 @@ class AssetPreviewWidget(QWidget):
         # Update 3D preview
         self.update_3d_preview(asset_path)
         
-        # Extract and display metadata
-        metadata = self.asset_manager.extract_asset_metadata(asset_path)
-        self.update_metadata_display(metadata)
+        # Preview widget handles only preview display
+        # Metadata is handled by separate AssetInformationWidget
         
         # Professional asset information system - no quality suggestions needed
     
@@ -3600,9 +4018,19 @@ class AssetPreviewWidget(QWidget):
                 # Show large SQUARE professional file icon for preview (matches library style)
                 professional_icon = self.asset_manager._generate_professional_file_icon(asset_path, (250, 250))
                 if professional_icon:
+                    # CRITICAL: Store original pixmap for zoom operations
+                    self._info_original_pixmap = professional_icon.copy()
                     self.preview_info_label.setPixmap(professional_icon)
+                    
+                    # Reset zoom level when loading new asset
+                    self._zoom_level = 1.0
+                    self._update_zoom_label()
+                    
+                    print(f"🖼️ Professional icon loaded and original pixmap stored for zoom: {asset_name}")
                 else:
                     self.preview_info_label.setText(f"Preview Ready\n\n{asset_name}")
+                    self._info_original_pixmap = None
+                    print(f"📝 Text preview set (no icon): {asset_name}")
                     
             # Show focused technical details (non-duplicate information)
             if hasattr(self, 'preview_details_label'):
@@ -3625,6 +4053,7 @@ class AssetPreviewWidget(QWidget):
             print(f"Error showing professional asset info: {e}")
             if hasattr(self, 'preview_info_label'):
                 self.preview_info_label.setText(f"Preview Error\n\n{os.path.basename(asset_path)}")
+                self._info_original_pixmap = None
     
     def _load_maya_scene_preview(self, asset_path):
         """Load Maya scene content in preview - Single Responsibility with import optimization"""
@@ -4099,7 +4528,7 @@ Please check the asset file and try again
         if hasattr(self, 'preview_status'):
             self.preview_status.setText("Ready")
             
-        self.update_metadata_display({})
+        # Preview widget only handles preview - metadata handled by AssetInformationWidget
     
     def capture_maya_screenshot(self):
         """Capture high-resolution screenshot from Maya viewport and set as asset thumbnail"""
@@ -4423,113 +4852,205 @@ Please check the asset file and try again
         self.preview_status.setText(f"Rotation: X={self.camera_position['rotation_x']:.0f}° Y={self.camera_position['rotation_y']:.0f}°")
     
     def preview_wheel(self, event):
-        """Handle mouse wheel in preview area (zoom controls with visual feedback)"""
-        if not hasattr(self, '_zoom_level'):
-            self._zoom_level = 1.0
-            
-        # Calculate zoom delta
-        delta = event.angleDelta().y() / 120.0
-        zoom_factor = 1.1 if delta > 0 else 0.9
-        
-        # Update zoom level with constraints
-        new_zoom = self._zoom_level * zoom_factor
-        self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
-        
-        # Apply visual zoom to current preview
-        self._apply_zoom_to_preview()
-        
-        # Update zoom controls
-        self._update_zoom_label()
-        
-        # Update status with zoom percentage
-        zoom_percent = int(self._zoom_level * 100)
-        self.preview_status.setText(f"Zoom: {zoom_percent}% (Mouse wheel to zoom, drag to pan)")
-    
-    def _apply_zoom_to_preview(self):
-        """Apply current zoom level to the preview display"""
+        """Enhanced mouse wheel zoom with robust widget detection"""
         try:
-            # Handle different preview widget types
-            if hasattr(self, 'preview_label') and self.preview_label:
-                # Get current pixmap
-                current_pixmap = self.preview_label.pixmap()
-                if current_pixmap and not current_pixmap.isNull():
-                    # Use stored original if available, otherwise use current as original
-                    if not self._original_pixmap:
-                        self._original_pixmap = current_pixmap.copy()
-                    
-                    # Calculate new size based on zoom
-                    original_size = self._original_pixmap.size()
-                    new_width = int(original_size.width() * self._zoom_level)
-                    new_height = int(original_size.height() * self._zoom_level)
-                    
-                    # Scale the original pixmap to new zoom size
-                    zoomed_pixmap = self._original_pixmap.scaled(
-                        new_width, new_height,
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation
-                    )
-                    
-                    # Apply zoomed pixmap
-                    self.preview_label.setPixmap(zoomed_pixmap)
-                    
-            elif hasattr(self, 'preview_info_label') and self.preview_info_label:
-                # For info display widgets, apply zoom to any pixmap content
-                self._apply_zoom_to_info_label()
+            if not hasattr(self, '_zoom_level'):
+                self._zoom_level = 1.0
                 
+            # Calculate zoom delta
+            delta = event.angleDelta().y() / 120.0
+            zoom_factor = 1.1 if delta > 0 else 0.9
+            
+            print(f"🔍 Mouse wheel zoom: delta={delta}, factor={zoom_factor}")
+            
+            # Use the enhanced zoom by factor method
+            self._zoom_by_factor(zoom_factor)
+            
         except Exception as e:
-            print(f"Error applying zoom: {e}")
+            print(f"🔍 ❌ Error in mouse wheel zoom: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def _apply_zoom_to_info_label(self):
-        """Apply zoom to info label preview (for professional asset display)"""
-        try:
-            if hasattr(self, '_info_original_pixmap') and self._info_original_pixmap:
-                original = self._info_original_pixmap
-                if original and not original.isNull():
-                    # Calculate zoomed size
-                    new_size = original.size() * self._zoom_level
-                    zoomed = original.scaled(
-                        new_size,
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation
-                    )
-                    if hasattr(self, 'preview_info_label') and self.preview_info_label:
-                        self.preview_info_label.setPixmap(zoomed)
-        except Exception as e:
-            print(f"Error applying zoom to info label: {e}")
     
     def _zoom_by_factor(self, factor):
-        """Zoom by a specific factor"""
-        if not hasattr(self, '_zoom_level'):
-            self._zoom_level = 1.0
+        """Enhanced zoom by factor with robust widget detection and debugging"""
+        try:
+            # Initialize zoom level if not set
+            if not hasattr(self, '_zoom_level'):
+                self._zoom_level = 1.0
+                print("🔍 Initialized zoom level to 1.0")
             
-        new_zoom = self._zoom_level * factor
-        self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
-        
-        self._apply_zoom_to_preview()
-        self._update_zoom_label()
+            # Initialize zoom constraints if not set
+            if not hasattr(self, '_min_zoom'):
+                self._min_zoom = 0.1
+            if not hasattr(self, '_max_zoom'):
+                self._max_zoom = 5.0
+                
+            old_zoom = self._zoom_level
+            new_zoom = self._zoom_level * factor
+            self._zoom_level = max(self._min_zoom, min(self._max_zoom, new_zoom))
+            
+            print(f"🔍 Zoom: {old_zoom:.2f} → {self._zoom_level:.2f} (factor: {factor})")
+            
+            # Find and verify preview widget
+            preview_widget = self._get_active_preview_widget()
+            if not preview_widget:
+                print("🔍 ❌ No active preview widget found for zoom")
+                return
+            
+            # Apply zoom to the found widget
+            success = self._apply_zoom_to_widget(preview_widget)
+            if not success:
+                print("🔍 ❌ Failed to apply zoom to widget")
+                return
+            
+            # Update zoom label and status
+            self._update_zoom_label()
+            zoom_percent = int(self._zoom_level * 100)
+            if hasattr(self, 'preview_status'):
+                self.preview_status.setText(f"Zoom: {zoom_percent}%")
+            
+            print(f"🔍 ✅ Zoom operation completed successfully")
+            
+        except Exception as e:
+            print(f"🔍 ❌ Error in zoom by factor: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _get_active_preview_widget(self):
+        """Find the currently active preview widget for zoom operations"""
+        try:
+            # Check for preview_label (most common)
+            if hasattr(self, 'preview_label') and self.preview_label:
+                print("🔍 Found preview_label widget")
+                return self.preview_label
+            
+            # Check for preview_info_label (professional display)
+            if hasattr(self, 'preview_info_label') and self.preview_info_label:
+                print("🔍 Found preview_info_label widget")
+                return self.preview_info_label
+            
+            # Check for other preview widget variants
+            widget_names = ['preview_details_label', 'preview_widget', 'preview_display']
+            for name in widget_names:
+                if hasattr(self, name):
+                    widget = getattr(self, name)
+                    if widget and hasattr(widget, 'setPixmap'):
+                        print(f"🔍 Found {name} widget")
+                        return widget
+            
+            print("🔍 No preview widget found")
+            return None
+            
+        except Exception as e:
+            print(f"🔍 Error finding preview widget: {e}")
+            return None
+    
+    def _apply_zoom_to_widget(self, widget):
+        """Apply zoom to a specific preview widget"""
+        try:
+            # Get current pixmap from widget
+            current_pixmap = None
+            if hasattr(widget, 'pixmap'):
+                current_pixmap = widget.pixmap()
+            
+            if not current_pixmap or current_pixmap.isNull():
+                print("🔍 No pixmap found in widget - cannot zoom")
+                return False
+            
+            # Determine which original pixmap to use
+            original_pixmap = None
+            if widget == getattr(self, 'preview_label', None):
+                if not hasattr(self, '_original_pixmap') or not self._original_pixmap:
+                    print("🔍 Storing original pixmap for preview_label")
+                    self._original_pixmap = current_pixmap.copy()
+                original_pixmap = self._original_pixmap
+                
+            elif widget == getattr(self, 'preview_info_label', None):
+                if not hasattr(self, '_info_original_pixmap') or not self._info_original_pixmap:
+                    print("🔍 Storing original pixmap for preview_info_label")
+                    self._info_original_pixmap = current_pixmap.copy()
+                original_pixmap = self._info_original_pixmap
+            
+            else:
+                # For other widgets, use current pixmap as original
+                print("🔍 Using current pixmap as original for generic widget")
+                original_pixmap = current_pixmap
+            
+            if not original_pixmap or original_pixmap.isNull():
+                print("🔍 No valid original pixmap available")
+                return False
+            
+            # Calculate new size based on zoom
+            original_size = original_pixmap.size()
+            new_width = int(original_size.width() * self._zoom_level)
+            new_height = int(original_size.height() * self._zoom_level)
+            
+            print(f"🔍 Scaling from {original_size.width()}x{original_size.height()} to {new_width}x{new_height}")
+            
+            # Create zoomed pixmap
+            zoomed_pixmap = original_pixmap.scaled(
+                new_width, new_height,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            
+            # Apply zoomed pixmap to widget
+            widget.setPixmap(zoomed_pixmap)
+            print("🔍 ✅ Applied zoomed pixmap to widget")
+            
+            return True
+            
+        except Exception as e:
+            print(f"🔍 Error applying zoom to widget: {e}")
+            return False
     
     def _reset_zoom(self):
-        """Reset zoom to 100%"""
-        self._zoom_level = 1.0
-        self._apply_zoom_to_preview()
-        self._update_zoom_label()
-        self.preview_status.setText("Zoom reset to 100%")
+        """Enhanced zoom reset with robust widget detection"""
+        try:
+            print("🔍 Resetting zoom to 100%")
+            self._zoom_level = 1.0
+            
+            # Find active preview widget
+            preview_widget = self._get_active_preview_widget()
+            if not preview_widget:
+                print("🔍 ❌ No active preview widget found for zoom reset")
+                return
+            
+            # Apply zoom reset
+            success = self._apply_zoom_to_widget(preview_widget)
+            if success:
+                self._update_zoom_label()
+                if hasattr(self, 'preview_status'):
+                    self.preview_status.setText("Zoom reset to 100%")
+                print("🔍 ✅ Zoom reset completed successfully")
+            else:
+                print("🔍 ❌ Failed to reset zoom")
+                
+        except Exception as e:
+            print(f"🔍 ❌ Error resetting zoom: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _update_zoom_label(self):
-        """Update the zoom percentage label"""
-        if hasattr(self, 'zoom_label'):
-            zoom_percent = int(self._zoom_level * 100)
-            self.zoom_label.setText(f"{zoom_percent}%")
+        """Update the zoom percentage label with validation"""
+        try:
+            if hasattr(self, 'zoom_label') and self.zoom_label:
+                zoom_percent = int(self._zoom_level * 100)
+                self.zoom_label.setText(f"{zoom_percent}%")
+        except Exception as e:
+            print(f"Error updating zoom label: {e}")
     
     def preview_double_click(self, event):
-        """Handle double-click events for zoom reset"""
+        """Enhanced double-click zoom reset"""
         try:
-            # Reset zoom on double-click
-            if hasattr(self, '_zoom_level') and hasattr(self, '_original_pixmap'):
-                self._reset_zoom()
-                event.accept()
+            print("🔍 Double-click detected - resetting zoom")
+            self._preview_reset_zoom()  # Use the consistent method
+            event.accept()
         except Exception as e:
-            print(f"Preview double-click error: {e}")
+            print(f"🔍 ❌ Preview double-click error: {e}")
+            import traceback
+            traceback.print_exc()
     
     # Event handlers
     def closeEvent(self, event):
@@ -4551,132 +5072,10 @@ Please check the asset file and try again
         
         super().closeEvent(event)
 
-    def _get_suitable_viewport_panel(self, cmds):
-        """Get suitable viewport panel for thumbnail generation - AssetPreviewWidget version"""
-        try:
-            # First priority: Use MEL 3D preview panel if available
-            if hasattr(self, 'maya_panel_name') and self.maya_panel_name:
-                if cmds.modelPanel(self.maya_panel_name, exists=True):
-                    print(f"✓ Using MEL 3D Preview panel for thumbnail: {self.maya_panel_name}")
-                    return self.maya_panel_name
-                else:
-                    print(f"⚠ MEL 3D Preview panel no longer exists: {self.maya_panel_name}")
-                    self.maya_panel_name = None
-            
-            # Fallback: Try current panel first
-            current_panel = cmds.getPanel(withFocus=True)
-            if current_panel and 'modelPanel' in current_panel:
-                print(f"Using current focused panel: {current_panel}")
-                return current_panel
-            
-            # Last resort: Get any available model panel
-            model_panels = cmds.getPanel(type='modelPanel')
-            if model_panels:
-                print(f"Using first available model panel: {model_panels[0]}")
-                return model_panels[0]
-                
-            print("Warning: No model panel available for preview")
-            return None
-            
-        except Exception as e:
-            print(f"Error getting viewport panel: {e}")
-            return None
-    
-    def refresh_mel_preview(self):
-        """Refresh the MEL-based 3D preview when a new asset is loaded"""
-        if hasattr(self, 'mel_preview') and self.mel_preview and hasattr(self, 'maya_panel_name'):
-            try:
-                import maya.mel as mel # pyright: ignore[reportMissingImports]
-                print(f"Refreshing MEL 3D preview: {self.maya_panel_name}")
-                mel.eval(f'assetManager_refresh3DPreview "{self.maya_panel_name}"')
-                return True
-            except Exception as e:
-                print(f"Error refreshing MEL preview: {e}")
-                return False
-        return False
-    
-    def cleanup_mel_preview(self):
-        """Clean up the MEL-based 3D preview panel"""
-        if hasattr(self, 'mel_preview') and self.mel_preview and hasattr(self, 'maya_panel_name'):
-            try:
-                import maya.mel as mel # pyright: ignore[reportMissingImports]
-                print(f"Cleaning up MEL 3D preview: {self.maya_panel_name}")
-                mel.eval(f'assetManager_cleanup3DPreview "{self.maya_panel_name}"')
-                self.maya_panel_name = None
-                self.mel_preview = False
-                return True
-            except Exception as e:
-                print(f"Error cleaning up MEL preview: {e}")
-                return False
-        return False
-    
-    def frame_selection_mel(self):
-        """Frame selection in the MEL-based 3D preview"""
-        if hasattr(self, 'mel_preview') and self.mel_preview and hasattr(self, 'maya_panel_name'):
-            try:
-                import maya.mel as mel # pyright: ignore[reportMissingImports]
-                mel.eval(f'assetManager_frameSelection "{self.maya_panel_name}"')
-                return True
-            except Exception as e:
-                print(f"Error framing selection in MEL preview: {e}")
-                return False
-        return False
-    
-    def toggle_wireframe_mel(self, wireframe=False):
-        """Toggle wireframe mode in the MEL-based 3D preview"""
-        if hasattr(self, 'mel_preview') and self.mel_preview and hasattr(self, 'maya_panel_name'):
-            try:
-                import maya.mel as mel # pyright: ignore[reportMissingImports]
-                wireframe_int = 1 if wireframe else 0
-                mel.eval(f'assetManager_setWireframe "{self.maya_panel_name}" {wireframe_int}')
-                return True
-            except Exception as e:
-                print(f"Error toggling wireframe in MEL preview: {e}")
-                return False
-        return False
 
-    def clear_3d_preview(self):
-        """Clear the current 3D preview scene with enhanced cleanup"""
-        try:
-            import maya.cmds as cmds # pyright: ignore[reportMissingImports]
-            
-            # Force scene cleanup to prevent import accumulation
-            print("Clearing 3D preview scene...")
-            
-            # Create completely clean scene
-            cmds.file(new=True, force=True)
-            
-            # Clear all tracking to ensure fresh state
-            if hasattr(self, '_last_loaded_scene'):
-                delattr(self, '_last_loaded_scene')
-                print("✓ Cleared scene tracking")
-            
-            # Force viewport refresh if we have a Maya panel
-            if hasattr(self, 'maya_panel_name') and self.maya_panel_name:
-                try:
-                    cmds.refresh(currentView=True)
-                    print("✓ Refreshed Maya viewport")
-                except Exception:
-                    pass
-            
-            # Update info display
-            self.preview_status.setText("Preview cleared")
-            print("✓ 3D preview scene cleared successfully")
-            
-        except Exception as e:
-            print(f"Error clearing 3D preview: {e}")
-            # Force clear tracking even on error
-            if hasattr(self, '_last_loaded_scene'):
-                delattr(self, '_last_loaded_scene')
-
-    def reset_camera_view(self):
-        """Reset camera to default position"""
-        self.camera_position = {'distance': 5.0, 'rotation_x': -30, 'rotation_y': 45}
-        self.preview_status.setText("Camera view reset")
-        
-        # Update preview if asset is loaded
-        if self.current_asset_path:
-            self.update_3d_preview(self.current_asset_path)
+    def load_asset(self, asset_path):
+        """Load an asset for preview - main entry point from UI"""
+        self.preview_asset(asset_path)
     
     def start_asset_comparison(self):
         """Start asset comparison mode"""
@@ -4693,17 +5092,223 @@ Please check the asset file and try again
         )
         
         if comparison_file:
-            self.comparison_widget.show()
-            self.comparison_preview_left.setText(f"Original:\n{os.path.basename(self.current_asset_path)}")
-            self.comparison_preview_right.setText(f"Comparison:\n{os.path.basename(comparison_file)}")
+            if hasattr(self, 'comparison_widget'):
+                self.comparison_widget.show()
+                if hasattr(self, 'comparison_preview_left'):
+                    self.comparison_preview_left.setText(f"Original:\n{os.path.basename(self.current_asset_path)}")
+                if hasattr(self, 'comparison_preview_right'):
+                    self.comparison_preview_right.setText(f"Comparison:\n{os.path.basename(comparison_file)}")
     
     def close_asset_comparison(self):
         """Close asset comparison mode"""
-        self.comparison_widget.hide()
+        if hasattr(self, 'comparison_widget'):
+            self.comparison_widget.hide()
     
-    def load_asset(self, asset_path):
-        """Load an asset for preview - main entry point from UI"""
-        self.preview_asset(asset_path)
+    def _get_suitable_viewport_panel(self, cmds):
+        """Get suitable viewport panel for thumbnail generation - AssetPreviewWidget version"""
+        try:
+            # Use existing panel if available
+            if hasattr(self, 'maya_panel_name') and self.maya_panel_name:
+                if cmds.modelPanel(self.maya_panel_name, exists=True):
+                    return self.maya_panel_name
+                    
+            # Get focused panel if it's a model panel
+            current_panel = cmds.getPanel(withFocus=True)
+            if cmds.getPanel(typeOf=current_panel) == 'modelPanel':
+                return current_panel
+                
+            # Get first available model panel
+            model_panels = cmds.getPanel(type='modelPanel')
+            if model_panels:
+                return model_panels[0]
+                
+            return None
+            
+        except Exception as e:
+            print(f"Error getting viewport panel: {e}")
+            return None
+
+
+class AssetInformationWidget(QWidget):
+    """
+    Separate Asset Information widget for detailed metadata display
+    Following Single Responsibility Principle - focused only on asset information
+    """
+    
+    def __init__(self, asset_manager, parent=None):
+        super().__init__(parent)
+        self.asset_manager = asset_manager
+        self.current_asset_path = None
+        
+        self.setup_ui()
+    
+    def setup_ui(self):
+        """Setup the asset information widget UI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
+        
+        # Header
+        header_label = QLabel("Asset Information")
+        header_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                padding: 8px;
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+        """)
+        layout.addWidget(header_label)
+        
+        # Scrollable metadata area
+        scroll_area = QScrollArea()
+        scroll_widget = QWidget()
+        self.metadata_layout = QVBoxLayout(scroll_widget)
+        
+        # Initialize with empty metadata
+        self.update_metadata_display({})
+        
+        scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        layout.addWidget(scroll_area, 1)
+    
+    def update_metadata_display(self, metadata):
+        """Update the metadata display panel - moved from AssetPreviewWidget"""
+        # Clear existing metadata widgets
+        for i in reversed(range(self.metadata_layout.count())):
+            child = self.metadata_layout.itemAt(i).widget()
+            if child:
+                child.deleteLater()
+        
+        if not metadata:
+            no_data_label = QLabel("No metadata available")
+            no_data_label.setStyleSheet("color: #888888; padding: 10px;")
+            self.metadata_layout.addWidget(no_data_label)
+            return
+        
+        # File information
+        self.add_metadata_section("File Information", [
+            ("Name", metadata.get('file_name', 'Unknown')),
+            ("Type", metadata.get('file_extension', 'Unknown').upper()),
+            ("Size", f"{metadata.get('file_size', 0) / (1024*1024):.2f} MB"),
+            ("Modified", time.strftime('%Y-%m-%d %H:%M', time.localtime(metadata.get('last_modified', 0))))
+        ])
+        
+        # Geometry information
+        if any(key in metadata for key in ['vertex_count', 'face_count', 'poly_count']):
+            geo_info = []
+            if metadata.get('vertex_count', 0) > 0:
+                geo_info.append(("Vertices", f"{metadata['vertex_count']:,}"))
+            if metadata.get('face_count', 0) > 0:
+                geo_info.append(("Faces", f"{metadata['face_count']:,}"))
+            if metadata.get('poly_count', 0) > 0:
+                geo_info.append(("Polygons", f"{metadata['poly_count']:,}"))
+            
+            if geo_info:
+                self.add_metadata_section("Geometry", geo_info)
+        
+        # Material and texture information
+        material_info = []
+        if metadata.get('material_count', 0) > 0:
+            material_info.append(("Materials", str(metadata['material_count'])))
+        if metadata.get('texture_count', 0) > 0:
+            material_info.append(("Textures", str(metadata['texture_count'])))
+        
+        if material_info:
+            self.add_metadata_section("Materials & Textures", material_info)
+        
+        # Animation information
+        if metadata.get('has_animation', False):
+            anim_info = [
+                ("Has Animation", "Yes"),
+                ("Frame Count", str(metadata.get('animation_frames', 0)))
+            ]
+            self.add_metadata_section("Animation", anim_info)
+        
+        # Scene objects
+        scene_objects = metadata.get('scene_objects', [])
+        if scene_objects:
+            objects_info = [("Object Count", str(len(scene_objects)))]
+            if len(scene_objects) <= 10:
+                objects_info.extend([(f"Object {i+1}", obj) for i, obj in enumerate(scene_objects)])
+            
+            self.add_metadata_section("Scene Objects", objects_info)
+        
+        # Complexity and suggestions
+        complexity = metadata.get('complexity_rating', 0)
+        if complexity > 0:
+            complexity_info = [
+                ("Complexity", f"{complexity}/10"),
+                ("Suggested Quality", metadata.get('preview_quality_suggestion', 'Medium'))
+            ]
+            self.add_metadata_section("Performance", complexity_info)
+        
+        self.metadata_layout.addStretch()
+    
+    def add_metadata_section(self, title, items):
+        """Add a metadata section with title and items"""
+        # Section title
+        title_label = QLabel(title)
+        title_label.setStyleSheet("""
+            QLabel {
+                font-weight: bold;
+                color: #ffffff;
+                background-color: #404040;
+                padding: 4px 8px;
+                border-radius: 3px;
+                margin-top: 5px;
+            }
+        """)
+        self.metadata_layout.addWidget(title_label)
+        
+        # Section items
+        for key, value in items:
+            item_widget = QWidget()
+            item_layout = QHBoxLayout(item_widget)
+            item_layout.setContentsMargins(5, 2, 5, 2)
+            
+            key_label = QLabel(f"{key}:")
+            key_label.setStyleSheet("color: #cccccc; font-weight: normal;")
+            key_label.setMinimumWidth(80)
+            
+            value_label = QLabel(str(value))
+            value_label.setStyleSheet("color: #ffffff; font-weight: normal;")
+            value_label.setWordWrap(True)
+            
+            item_layout.addWidget(key_label)
+            item_layout.addWidget(value_label, 1)
+            
+            self.metadata_layout.addWidget(item_widget)
+    
+    def clear_information(self):
+        """Clear the asset information display"""
+        self.current_asset_path = None
+        self.update_metadata_display({})
+    
+    def load_asset_information(self, asset_path):
+        """Load asset information for the specified path"""
+        print(f"📊 AssetInformationWidget.load_asset_information called with: {asset_path}")
+        
+        if not os.path.exists(asset_path):
+            print(f"❌ Asset path does not exist: {asset_path}")
+            self.clear_information()
+            return
+        
+        self.current_asset_path = asset_path
+        print(f"🔄 Extracting metadata for: {asset_path}")
+        
+        # Extract and display metadata
+        metadata = self.asset_manager.extract_asset_metadata(asset_path)
+        print(f"📋 Metadata extracted: {len(metadata)} fields")
+        print(f"📋 Sample metadata keys: {list(metadata.keys())[:5]}")
+        
+        self.update_metadata_display(metadata)
+        print(f"✅ Metadata display updated for: {os.path.basename(asset_path)}")
 
 
 class AssetTypeCustomizationDialog(QDialog):
@@ -5691,7 +6296,10 @@ class AssetManagerUI(QMainWindow):
     def __init__(self, parent=None):
         super(AssetManagerUI, self).__init__(parent)
         self.asset_manager = AssetManager()
-        self.setWindowTitle(f"Asset Manager v{self.asset_manager.version}")
+        self.setWindowTitle("Asset Manager")
+        
+        # Initialize multi-select tracking (v1.2.0 Multi-Select Features)
+        self.selected_assets = set()  # Track selected asset paths across all views
         
         # Set window flags for Maya integration
         self.setWindowFlags(Qt.WindowType.Window)  # type: ignore
@@ -6025,7 +6633,7 @@ class AssetManagerUI(QMainWindow):
         help_menu.addAction(about_action)
     
     def create_toolbar(self):
-        """Create the toolbar"""
+        """Create the toolbar - cleaned up with essential controls only"""
         toolbar = self.addToolBar('Main')
         
         # New project button
@@ -6038,24 +6646,22 @@ class AssetManagerUI(QMainWindow):
         import_btn.triggered.connect(self.import_asset_dialog)
         toolbar.addAction(import_btn)
         
-        # Export selected button
-        export_btn = QAction('Export Selected', self)
-        export_btn.triggered.connect(self.export_selected_dialog)
-        toolbar.addAction(export_btn)
-        
         toolbar.addSeparator()
         
-        # Preview toggle button (v1.2.0 Preview & Visualization feature)
-        self.preview_toggle_btn = QAction('Toggle Preview', self)
-        self.preview_toggle_btn.setCheckable(True)
-        self.preview_toggle_btn.setChecked(True)  # Default to visible
-        self.preview_toggle_btn.triggered.connect(self.toggle_preview_panel)
-        toolbar.addAction(self.preview_toggle_btn)
+        # Toggle preview panel button with visual feedback
+        self.toggle_preview_btn = QAction('Toggle Preview', self)
+        self.toggle_preview_btn.triggered.connect(self._handle_toggle_preview)
+        self.toggle_preview_btn.setToolTip('Show/Hide Asset Preview Panel')
+        self.toggle_preview_btn.setCheckable(True)
+        self.toggle_preview_btn.setChecked(True)  # Default to ON
+        toolbar.addAction(self.toggle_preview_btn)
         
-        toolbar.addSeparator()
+        # Apply initial styling to toggle preview button
+        self._update_toggle_preview_style(True)
         
         # Refresh button
         refresh_btn = QAction('Refresh', self)
+        refresh_btn.setToolTip('Refresh Asset Library and Reload All Assets from Project')
         refresh_btn.triggered.connect(self.refresh_assets)
         toolbar.addAction(refresh_btn)
     
@@ -6221,54 +6827,51 @@ class AssetManagerUI(QMainWindow):
         # Collection Tabs (will be added dynamically)
         self.refresh_collection_tabs()
         
-        # Asset actions (below tabs)
+        # Asset actions (below tabs) - Cleaned up: moved bulk operations to All Assets tab
         actions_layout = QHBoxLayout()
         
-        import_selected_btn = QPushButton("Import Selected")
-        import_selected_btn.clicked.connect(self.import_selected_asset)
-        actions_layout.addWidget(import_selected_btn)
-        
-        delete_asset_btn = QPushButton("Delete Asset")
+        delete_asset_btn = QPushButton("Remove Asset")
+        delete_asset_btn.setToolTip("Remove Selected Asset(s) from Library")
         delete_asset_btn.clicked.connect(self.delete_selected_asset)
         actions_layout.addWidget(delete_asset_btn)
-        
-        # Thumbnail size controls
-        actions_layout.addWidget(QLabel("Size:"))
-        
-        self.thumbnail_size_slider = QSlider(Qt.Orientation.Horizontal)  # type: ignore
-        self.thumbnail_size_slider.setMinimum(32)
-        self.thumbnail_size_slider.setMaximum(128)
-        self.thumbnail_size_slider.setValue(int(self._get_current_thumbnail_size()))
-        self.thumbnail_size_slider.setMaximumWidth(100)
-        self.thumbnail_size_slider.valueChanged.connect(self._on_thumbnail_size_changed)
-        actions_layout.addWidget(self.thumbnail_size_slider)
-        
-        self.thumbnail_size_label = QLabel(f"{self._get_current_thumbnail_size()}px")
-        self.thumbnail_size_label.setMinimumWidth(35)
-        actions_layout.addWidget(self.thumbnail_size_label)
         
         # Add collection tab management buttons
         actions_layout.addStretch()
         
         add_collection_tab_btn = QPushButton("+ Collection Tab")
+        add_collection_tab_btn.setToolTip("Create New Collection Tab to Library")
         add_collection_tab_btn.clicked.connect(self.add_collection_tab_dialog)
         actions_layout.addWidget(add_collection_tab_btn)
         
         refresh_tabs_btn = QPushButton("Refresh Tabs")
+        refresh_tabs_btn.setToolTip("Refresh Collection Tabs and Update Asset Lists")
         refresh_tabs_btn.clicked.connect(self.refresh_collection_tabs)
         actions_layout.addWidget(refresh_tabs_btn)
         
         assets_layout.addLayout(actions_layout)
         content_splitter.addWidget(assets_widget)
         
-        # Right side: Asset preview widget
+        # Right side: Separated preview and information widgets
+        right_side_splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Asset preview widget (focused on preview only - larger zoom buttons!)
         self.asset_preview_widget = AssetPreviewWidget(self.asset_manager)
-        content_splitter.addWidget(self.asset_preview_widget)
+        right_side_splitter.addWidget(self.asset_preview_widget)
         
-        # Set splitter proportions (60% assets, 40% preview)
-        content_splitter.setSizes([400, 250])
+        # Asset information widget (separate from preview for cleaner UI)
+        self.asset_information_widget = AssetInformationWidget(self.asset_manager)
+        right_side_splitter.addWidget(self.asset_information_widget)
         
-        # Make preview panel collapsible
+        # Set right side splitter proportions (60% preview, 40% info)
+        right_side_splitter.setSizes([300, 200])
+        
+        content_splitter.addWidget(right_side_splitter)
+        
+        # Set main splitter proportions (50% assets, 50% right side)
+        content_splitter.setSizes([400, 500])
+        
+        # Make information panel collapsible
+        right_side_splitter.setCollapsible(1, True)
         content_splitter.setCollapsible(1, True)
         
         # Store reference to content splitter for toggle functionality
@@ -6283,25 +6886,28 @@ class AssetManagerUI(QMainWindow):
                 return
             
             if visible is None:
-                # Toggle based on current visibility
-                visible = self.asset_preview_widget.isVisible()
-                visible = not visible
+                # Toggle based on current visibility - FIXED LOGIC
+                current_visible = self.asset_preview_widget.isVisible()
+                visible = not current_visible
             
             if visible:
                 # Show preview panel
                 self.asset_preview_widget.show()
                 self.content_splitter.setSizes([400, 250])
-                self.preview_toggle_btn.setText('Hide Preview')
-                self.preview_toggle_btn.setChecked(True)
             else:
                 # Hide preview panel
                 self.asset_preview_widget.hide()
                 self.content_splitter.setSizes([650, 0])
-                self.preview_toggle_btn.setText('Show Preview')
-                self.preview_toggle_btn.setChecked(False)
+            
+            # Update button state if it exists
+            if hasattr(self, 'toggle_preview_btn'):
+                self.toggle_preview_btn.setChecked(visible)
+                self._update_toggle_preview_style(visible)
                 
             # Save preference
             self.asset_manager.set_ui_preference('preview_panel_visible', visible)
+            
+            print(f"🔍 Preview panel {'shown' if visible else 'hidden'}")
             
         except Exception as e:
             print(f"Error toggling preview panel: {e}")
@@ -6320,6 +6926,81 @@ class AssetManagerUI(QMainWindow):
             # Default to visible if there's an error
             self.toggle_preview_panel(True)
     
+    def _handle_toggle_preview(self):
+        """Handle toggle preview button click with proper state management"""
+        try:
+            # Get current state from the checkable button
+            is_visible = self.toggle_preview_btn.isChecked()
+            
+            # Apply the toggle
+            self.toggle_preview_panel(is_visible)
+            
+            # Update button styling
+            self._update_toggle_preview_style(is_visible)
+            
+        except Exception as e:
+            print(f"Error handling toggle preview: {e}")
+    
+    def _update_toggle_preview_style(self, is_visible):
+        """Update toggle preview button styling based on state"""
+        try:
+            # Get the toolbar to find our button
+            toolbar = None
+            for toolbar_widget in self.findChildren(QToolBar):
+                if hasattr(toolbar_widget, 'objectName') or 'Main' in str(toolbar_widget):
+                    toolbar = toolbar_widget
+                    break
+            
+            if not toolbar:
+                return
+            
+            # Find the toggle preview action widget
+            for action in toolbar.actions():
+                if action == self.toggle_preview_btn:
+                    widget = toolbar.widgetForAction(action)
+                    if widget:
+                        if is_visible:
+                            # Light blue when preview is ON (professional look)
+                            widget.setStyleSheet("""
+                                QToolButton {
+                                    background-color: #4A90E2;
+                                    color: white;
+                                    border: 1px solid #357ABD;
+                                    border-radius: 3px;
+                                    padding: 4px 8px;
+                                    font-weight: bold;
+                                }
+                                QToolButton:hover {
+                                    background-color: #5BA0F2;
+                                    border: 1px solid #4A90E2;
+                                }
+                                QToolButton:pressed {
+                                    background-color: #357ABD;
+                                }
+                            """)
+                        else:
+                            # Normal style when preview is OFF
+                            widget.setStyleSheet("""
+                                QToolButton {
+                                    background-color: #404040;
+                                    color: #CCCCCC;
+                                    border: 1px solid #666666;
+                                    border-radius: 3px;
+                                    padding: 4px 8px;
+                                }
+                                QToolButton:hover {
+                                    background-color: #505050;
+                                    border: 1px solid #777777;
+                                }
+                                QToolButton:pressed {
+                                    background-color: #353535;
+                                }
+                            """)
+                    break
+                    
+        except Exception as e:
+            print(f"Error updating toggle preview style: {e}")
+    
     def _get_current_thumbnail_size(self):
         """Get current thumbnail size from preferences - FORCE MINIMUM SIZE FOR READABLE TEXT"""
         # FORCE minimum 128px for readable text in professional icons
@@ -6327,10 +7008,10 @@ class AssetManagerUI(QMainWindow):
         return max(128, user_size)  # Never smaller than 128px for text readability
     
     def _on_thumbnail_size_changed(self, size):
-        """Handle thumbnail size change - Clean Code: descriptive naming and single purpose"""
+        """Handle thumbnail size change - MOVED TO CUSTOM UI SETTINGS (future update)"""
         try:
-            # Update size label
-            self.thumbnail_size_label.setText(f"{size}px")
+            # NOTE: UI controls removed from bottom bar to fix resizing issues
+            # This will be moved to "Custom UI Settings" in a later update
             
             # Save preference
             self.asset_manager.set_ui_preference('thumbnail_size', size)
@@ -6423,8 +7104,68 @@ class AssetManagerUI(QMainWindow):
         library_widget = QWidget()
         library_layout = QVBoxLayout(library_widget)
         
-        # Asset list
-        self.asset_list = QListWidget()
+        # Top bar with asset controls (Clean Code: Single Responsibility Principle)
+        top_bar_layout = QHBoxLayout()
+        
+        # Asset selection and bulk operation controls - Enhanced with moved buttons
+        select_all_btn = QPushButton("Select All")
+        select_all_btn.setToolTip("Select all assets in current view (Ctrl+A)")
+        select_all_btn.clicked.connect(self.select_all_assets)
+        
+        deselect_all_btn = QPushButton("Deselect All")
+        deselect_all_btn.setToolTip("Clear all asset selections")
+        deselect_all_btn.clicked.connect(self.deselect_all_assets)
+        
+        # Add the bulk operation buttons that were moved from main toolbar
+        import_selected_btn = QPushButton("Import Selected")
+        import_selected_btn.setToolTip("Import all selected assets into Maya scene (Bulk operation with progress) - Ctrl+I")
+        import_selected_btn.clicked.connect(self.import_selected_assets)
+        
+        export_selected_btn = QPushButton("Export Selected")
+        export_selected_btn.setToolTip("Export selected assets to another location (Bulk operation with progress) - Ctrl+E")
+        export_selected_btn.clicked.connect(self.export_selected_dialog)
+        
+        add_to_collection_btn = QPushButton("Add to Collection")
+        add_to_collection_btn.setToolTip("Add selected assets to an existing collection (Bulk management) - Ctrl+Shift+C")
+        add_to_collection_btn.clicked.connect(self.add_selected_to_collection)
+        
+        # Style all control buttons for professional appearance
+        button_style = """
+            QPushButton {
+                background-color: #404040;
+                border: 1px solid #666;
+                border-radius: 4px;
+                color: white;
+                font-weight: bold;
+                padding: 6px 12px;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background-color: #505050;
+                border: 1px solid #888;
+            }
+            QPushButton:pressed {
+                background-color: #353535;
+                border: 1px solid #999;
+            }
+        """
+        select_all_btn.setStyleSheet(button_style)
+        deselect_all_btn.setStyleSheet(button_style)
+        import_selected_btn.setStyleSheet(button_style)
+        export_selected_btn.setStyleSheet(button_style)
+        add_to_collection_btn.setStyleSheet(button_style)
+        
+        top_bar_layout.addWidget(select_all_btn)
+        top_bar_layout.addWidget(deselect_all_btn)
+        top_bar_layout.addWidget(import_selected_btn)
+        top_bar_layout.addWidget(export_selected_btn)
+        top_bar_layout.addWidget(add_to_collection_btn)
+        top_bar_layout.addStretch()  # Push buttons to left
+        
+        library_layout.addLayout(top_bar_layout)
+        
+        # Asset list with multi-select and drag & drop support
+        self.asset_list = DragDropAssetListWidget(self)
         
         # Configure dynamic thumbnail sizing for professional icons with LARGE readable text
         thumbnail_size = self._get_current_thumbnail_size()  # Now minimum 128px
@@ -6438,7 +7179,27 @@ class AssetManagerUI(QMainWindow):
         self.asset_list.setUniformItemSizes(True)  # Prevent size variations
         self.asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
         
-        # COMPLETELY ELIMINATE text duplication - Professional icons only, NO text labels
+        # Set helpful tooltip for multi-select and drag & drop features
+        self.asset_list.setToolTip("""🎯 Asset Library - Multi-Select & Drag & Drop Support:
+
+📱 Multi-Select Controls:
+• Click: Select single asset
+• Ctrl+Click: Add/remove assets from selection  
+• Shift+Click: Select range of assets
+• Select All button: Select all visible assets
+
+🎬 Import Options:
+• Double-click: Import single asset
+• Import Selected: Bulk import all selected assets
+
+🗂️ Collection Management:
+• Add to Collection: Add selected assets to collections
+
+🖱️ Drag & Drop:
+• Drag selected assets to Maya viewport to import
+• Drag multiple assets at once for batch import""")
+        
+        # SIMPLIFIED STYLING - Direct CSS injection handles backgrounds
         self.asset_list.setStyleSheet("""
             QListWidget {
                 background-color: #2b2b2b;
@@ -6447,34 +7208,33 @@ class AssetManagerUI(QMainWindow):
                 outline: none;
             }
             QListWidget::item {
-                background: transparent;
-                border: none;
+                /* Background colors handled by direct CSS injection */
+                border: 2px solid transparent;
                 padding: 2px;
                 margin: 2px;
                 text-align: center;
                 color: transparent;  /* HIDE ALL TEXT LABELS */
-            }
-            QListWidget::item:selected {
-                background-color: rgba(0, 120, 215, 120);
-                border: 2px solid rgba(0, 120, 215, 255);
                 border-radius: 6px;
-                color: transparent;  /* KEEP TEXT HIDDEN EVEN WHEN SELECTED */
             }
             QListWidget::item:hover {
-                background-color: rgba(0, 120, 215, 60);
-                border-radius: 6px;
-                color: transparent;  /* KEEP TEXT HIDDEN ON HOVER */
+                border: 2px solid rgba(255, 255, 255, 120);
             }
         """)
         
         self.asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
-        # Connect selection change to preview widget
+        # Multi-select and drag & drop connections
+        self.asset_list.itemSelectionChanged.connect(self.on_asset_current_changed)
         self.asset_list.currentItemChanged.connect(self.on_asset_selection_changed)
         
         # Enable context menu for asset management features
         self.asset_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # type: ignore
         self.asset_list.customContextMenuRequested.connect(self.show_asset_context_menu)
+        
+        # CRITICAL: Apply custom delegate for direct background color painting
+        self.asset_type_delegate = AssetTypeItemDelegate(self.asset_manager)
+        self.asset_list.setItemDelegate(self.asset_type_delegate)
+        print("🎨 Applied AssetTypeItemDelegate to main asset list!")
         
         library_layout.addWidget(self.asset_list)
         
@@ -6621,8 +7381,8 @@ class AssetManagerUI(QMainWindow):
             desc_label.setStyleSheet("color: gray; font-style: italic;")
             collection_layout.addWidget(desc_label)
         
-        # Asset list for this collection
-        collection_asset_list = QListWidget()
+        # Asset list for this collection with multi-select and drag & drop
+        collection_asset_list = DragDropAssetListWidget(self)
         
         # Configure same LARGE sizing as main library for consistency  
         thumbnail_size = self._get_current_thumbnail_size()  # Now minimum 128px
@@ -6636,19 +7396,24 @@ class AssetManagerUI(QMainWindow):
         collection_asset_list.setUniformItemSizes(True)  # Prevent size variations
         collection_asset_list.setMovement(QListWidget.Movement.Static)  # Prevent layout changes
         
-        # Ensure no text labels are displayed in collections (icons only)
+        # SIMPLIFIED STYLING - Direct CSS injection handles backgrounds
         collection_asset_list.setStyleSheet("""
             QListWidget::item {
+                /* Background colors handled by direct CSS injection */
+                border: 2px solid transparent;
+                padding: 2px;
+                margin: 2px;
                 text-align: center;
-                padding: 0px;
-                margin: 0px;
+                color: transparent;  /* HIDE ALL TEXT LABELS */
+                border-radius: 6px;
             }
-            QListWidget::item:selected {
-                background-color: rgba(0, 120, 215, 100);
-                border: 2px solid rgba(0, 120, 215, 255);
-                border-radius: 4px;
+            QListWidget::item:hover {
+                border: 2px solid rgba(255, 255, 255, 120);
             }
         """)
+        
+        # Multi-select connections
+        collection_asset_list.itemSelectionChanged.connect(self.on_asset_current_changed)
         
         collection_asset_list.itemDoubleClicked.connect(self.import_selected_asset)
         
@@ -6658,6 +7423,11 @@ class AssetManagerUI(QMainWindow):
         # Enable context menu
         collection_asset_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # type: ignore
         collection_asset_list.customContextMenuRequested.connect(self.show_asset_context_menu)
+        
+        # CRITICAL: Apply custom delegate for direct background color painting
+        collection_delegate = AssetTypeItemDelegate(self.asset_manager)
+        collection_asset_list.setItemDelegate(collection_delegate)
+        print(f"🎨 Applied AssetTypeItemDelegate to collection: {collection_name}")
         
         # LAZY LOADING: Store collection info and populate on demand
         setattr(collection_asset_list, 'collection_name', collection_name)
@@ -6724,7 +7494,7 @@ class AssetManagerUI(QMainWindow):
                 outline: none;
             }
             QListWidget::item {
-                background: transparent;
+                /* Removed 'background: transparent' to allow asset type colors */
                 border: none;
                 padding: 2px;
                 margin: 2px;
@@ -6880,6 +7650,19 @@ class AssetManagerUI(QMainWindow):
                 item.setIcon(icon)
                 size_hint = thumbnail_size + 50
                 item.setSizeHint(QSize(size_hint, size_hint))
+                
+                # Set initial asset type background color using CSS injection
+                asset_type = self.asset_manager.get_asset_type(file_path)
+                type_color = self.asset_manager.asset_type_colors.get(asset_type, 
+                                                                    self.asset_manager.asset_type_colors['default'])
+                
+                # Apply initial color with CSS override approach
+                visible_color = QColor(type_color)
+                item.setProperty("assetType", asset_type)
+                item.setProperty("assetColor", visible_color.name())
+                
+                print(f"🎨 Set {asset_type} CSS color property for: {os.path.basename(file_path)} (Color: {visible_color.name()})")
+                
             else:
                 # Fallback to professional icon system
                 self._set_fallback_icon(item, file_path)
@@ -6900,6 +7683,13 @@ class AssetManagerUI(QMainWindow):
                 icon.addPixmap(professional_icon, QIcon.Mode.Normal, QIcon.State.Off)
                 item.setIcon(icon)
                 item.setSizeHint(QSize(128, 128))  # Larger fallback size for consistency
+                
+                # Set initial asset type background color for enhanced visual organization
+                asset_type = self.asset_manager.get_asset_type(file_path)
+                type_color = self.asset_manager.asset_type_colors.get(asset_type, 
+                                                                    self.asset_manager.asset_type_colors['default'])
+                item.setBackground(QBrush(type_color))
+                
                 return
         except Exception as e:
             print(f"Error creating professional fallback icon: {e}")
@@ -7113,23 +7903,155 @@ class AssetManagerUI(QMainWindow):
             self.status_bar.showMessage("Assets added to library successfully")
     
     def on_asset_selection_changed(self, current_item, previous_item):
-        """Handle asset selection change and update preview"""
+        """Handle asset selection change and update both preview and information widgets"""
         try:
-            if hasattr(self, 'asset_preview_widget') and self.asset_preview_widget:
-                if current_item:
-                    # Get asset path from item data
-                    asset_path = current_item.data(Qt.ItemDataRole.UserRole)  # type: ignore
-                    if asset_path and os.path.exists(asset_path):
-                        # Load asset in preview widget
+            print(f"🎯 Asset selection changed - current_item: {current_item}")
+            
+            if current_item:
+                # Get asset path from item data
+                asset_path = current_item.data(Qt.ItemDataRole.UserRole)  # type: ignore
+                print(f"📁 Asset path from item data: {asset_path}")
+                
+                if asset_path and os.path.exists(asset_path):
+                    print(f"✅ Valid asset path exists: {asset_path}")
+                    
+                    # Load asset in preview widget
+                    if hasattr(self, 'asset_preview_widget') and self.asset_preview_widget:
+                        print(f"🖼️ Loading preview widget for: {asset_path}")
                         self.asset_preview_widget.load_asset(asset_path)
+                    
+                    # Load asset information in information widget
+                    if hasattr(self, 'asset_information_widget') and self.asset_information_widget:
+                        print(f"📊 Loading information widget for: {asset_path}")
+                        self.asset_information_widget.load_asset_information(asset_path)
                     else:
-                        # Clear preview if no valid path
-                        self.asset_preview_widget.clear_preview()
+                        print(f"❌ Asset information widget not found!")
                 else:
-                    # Clear preview when no item selected
+                    print(f"❌ Invalid asset path: {asset_path}")
+                    # Clear both widgets if no valid path
+                    if hasattr(self, 'asset_preview_widget') and self.asset_preview_widget:
+                        self.asset_preview_widget.clear_preview()
+                    if hasattr(self, 'asset_information_widget') and self.asset_information_widget:
+                        self.asset_information_widget.clear_information()
+            else:
+                print(f"🔄 No current item - clearing widgets")
+                # Clear both widgets when no item selected
+                if hasattr(self, 'asset_preview_widget') and self.asset_preview_widget:
                     self.asset_preview_widget.clear_preview()
+                if hasattr(self, 'asset_information_widget') and self.asset_information_widget:
+                    self.asset_information_widget.clear_information()
         except Exception as e:
             print(f"Error updating asset preview: {e}")
+    
+    def on_asset_current_changed(self):
+        """Handle selection change for multi-select tracking - Single Responsibility"""
+        try:
+            # Update selected assets tracking
+            current_list = self.get_current_asset_list()
+            if current_list:
+                selected_items = current_list.selectedItems()
+                self.selected_assets.clear()
+                
+                for item in selected_items:
+                    asset_path = item.data(Qt.ItemDataRole.UserRole)  # type: ignore
+                    if asset_path:
+                        self.selected_assets.add(asset_path)
+                
+                # Apply asset type color highlighting to selected items
+                self._apply_asset_type_selection_colors(current_list)
+                
+                # Update status bar with selection count
+                if len(self.selected_assets) > 1:
+                    self.status_bar.showMessage(f"{len(self.selected_assets)} assets selected")
+                elif len(self.selected_assets) == 1:
+                    asset_name = os.path.basename(list(self.selected_assets)[0])
+                    self.status_bar.showMessage(f"Selected: {asset_name}")
+                else:
+                    self.status_bar.showMessage("Ready")
+                    
+        except Exception as e:
+            print(f"Error handling selection change: {e}")
+    
+    def _apply_asset_type_selection_colors(self, list_widget):
+        """Trigger repaint of asset items to show colors via custom delegate"""
+        try:
+            if not list_widget:
+                return
+            
+            # Force repaint of all items to trigger the custom delegate
+            for i in range(list_widget.count()):
+                item = list_widget.item(i)
+                if item:
+                    # Update the item to trigger repaint
+                    list_widget.update(list_widget.indexFromItem(item))
+            
+            print(f"🎨 Triggered repaint for {list_widget.count()} items with custom delegate")
+            
+        except Exception as e:
+            print(f"❌ Error triggering delegate repaint: {e}")
+    
+    def _refresh_asset_list_colors(self, list_widget):
+        """Refresh all asset colors using direct CSS injection"""
+        try:
+            if not list_widget:
+                return
+                
+            print(f"🔄 Refreshing colors for {list_widget.count()} assets...")
+            
+            # Trigger the color application
+            self._apply_asset_type_selection_colors(list_widget)
+            
+        except Exception as e:
+            print(f"❌ Error refreshing asset list colors: {e}")
+    
+    def _start_asset_drag(self, supported_actions):
+        """Start drag operation with selected assets"""
+        try:
+            from PySide6.QtCore import QMimeData, QUrl  # type: ignore
+            from PySide6.QtGui import QDrag  # type: ignore
+            
+            current_list = self.get_current_asset_list()
+            if not current_list:
+                return
+            
+            selected_items = current_list.selectedItems()
+            if not selected_items:
+                return
+                
+            # Create drag data with asset paths
+            mime_data = QMimeData()
+            urls = []
+            asset_paths = []
+            
+            for item in selected_items:
+                asset_path = item.data(Qt.ItemDataRole.UserRole)  # type: ignore
+                if asset_path and os.path.exists(asset_path):
+                    urls.append(QUrl.fromLocalFile(asset_path))
+                    asset_paths.append(asset_path)
+            
+            if urls:
+                mime_data.setUrls(urls)
+                
+                # Add custom data for Maya import
+                mime_data.setData("application/x-maya-assets", "\n".join(asset_paths).encode())
+                
+                # Create drag object
+                drag = QDrag(current_list)
+                drag.setMimeData(mime_data)
+                
+                # Use first selected item's icon as drag pixmap
+                if selected_items:
+                    icon = selected_items[0].icon()
+                    if not icon.isNull():
+                        drag.setPixmap(icon.pixmap(64, 64))
+                
+                # Execute drag - this will trigger Maya's drop handling
+                drag.exec_(supported_actions)
+                
+                print(f"✓ Started drag operation with {len(asset_paths)} assets")
+                
+        except Exception as e:
+            print(f"Error starting drag operation: {e}")
     
     def import_selected_asset(self):
         """Import the selected asset from the current tab"""
@@ -7144,6 +8066,130 @@ class AssetManagerUI(QMainWindow):
                 self.status_bar.showMessage(f"Imported: {current_item.text()}")
             else:
                 QMessageBox.warning(self, "Error", "Failed to import asset")
+    
+    def select_all_assets(self):
+        """Select all assets in the current asset list - Clean Code helper method"""
+        current_asset_list = self.get_current_asset_list()
+        if current_asset_list:
+            current_asset_list.selectAll()
+            self.on_asset_current_changed()  # Update selection tracking
+            print(f"✓ Selected all {current_asset_list.count()} assets")
+    
+    def deselect_all_assets(self):
+        """Deselect all assets in the current asset list - Clean Code helper method"""
+        current_asset_list = self.get_current_asset_list()
+        if current_asset_list:
+            current_asset_list.clearSelection()
+            self.selected_assets.clear()  # Clear multi-select tracking
+            self.on_asset_current_changed()  # Update selection tracking
+            print("✓ Deselected all assets")
+    
+    def import_selected_assets(self):
+        """Import all selected assets - Bulk Operation with progress feedback"""
+        if not self.selected_assets:
+            QMessageBox.information(self, "No Selection", "Please select one or more assets to import.")
+            return
+        
+        try:
+            from maya import cmds  # pyright: ignore[reportMissingImports]
+            
+            # Confirm bulk import
+            asset_count = len(self.selected_assets)
+            reply = QMessageBox.question(
+                self, "Confirm Bulk Import", 
+                f"Import {asset_count} selected assets into Maya scene?\n\n"
+                f"This will reference/import all selected assets.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No  # type: ignore
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:  # type: ignore
+                # Show progress dialog for bulk operation
+                progress = QProgressDialog("Importing assets...", "Cancel", 0, asset_count, self)
+                progress.setWindowModality(Qt.WindowModality.WindowModal)
+                progress.show()
+                
+                imported_count = 0
+                failed_imports = []
+                
+                for i, asset_path in enumerate(self.selected_assets):
+                    if progress.wasCanceled():
+                        break
+                        
+                    progress.setValue(i)
+                    progress.setLabelText(f"Importing {os.path.basename(asset_path)}...")
+                    QApplication.processEvents()  # Keep UI responsive
+                    
+                    try:
+                        if self.asset_manager.import_asset(asset_path):
+                            imported_count += 1
+                        else:
+                            failed_imports.append(os.path.basename(asset_path))
+                    except Exception as e:
+                        failed_imports.append(f"{os.path.basename(asset_path)} ({str(e)})")
+                
+                progress.close()
+                
+                # Show results summary
+                if imported_count > 0:
+                    success_msg = f"✅ Successfully imported {imported_count} assets"
+                    if failed_imports:
+                        success_msg += f"\n⚠️ {len(failed_imports)} imports failed"
+                    self.status_bar.showMessage(success_msg)
+                    
+                    if failed_imports and len(failed_imports) <= 5:
+                        QMessageBox.information(self, "Import Results", 
+                                              f"{success_msg}\n\nFailed imports:\n" + "\n".join(failed_imports))
+                else:
+                    QMessageBox.warning(self, "Import Failed", "No assets were imported successfully.")
+                    
+        except Exception as e:
+            QMessageBox.warning(self, "Import Error", f"Bulk import failed: {str(e)}")
+    
+    def add_selected_to_collection(self):
+        """Add selected assets to a collection - Bulk Collection Management"""
+        if not self.selected_assets:
+            QMessageBox.information(self, "No Selection", "Please select one or more assets to add to collection.")
+            return
+        
+        # Show collection selection dialog
+        collections = self.asset_manager.get_asset_collections()
+        if not collections:
+            reply = QMessageBox.question(
+                self, "No Collections", 
+                "No collections exist. Create a new collection?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No  # type: ignore
+            )
+            if reply == QMessageBox.StandardButton.Yes:  # type: ignore
+                self.add_collection_tab_dialog()
+                return
+        
+        # Collection selection dialog
+        collection_names = list(collections.keys())
+        collection_name, ok = QInputDialog.getItem(
+            self, "Select Collection", 
+            f"Add {len(self.selected_assets)} selected assets to collection:", 
+            collection_names, 0, False
+        )
+        
+        if ok and collection_name:
+            try:
+                added_count = 0
+                for asset_path in self.selected_assets:
+                    if self.asset_manager.add_asset_to_collection(collection_name, asset_path):
+                        added_count += 1
+                
+                # Refresh collection tabs and UI
+                self.refresh_collection_tabs()
+                self.refresh_collection_filter()
+                
+                self.status_bar.showMessage(
+                    f"✅ Added {added_count} assets to '{collection_name}' collection"
+                )
+                
+                print(f"✓ Added {added_count} assets to collection '{collection_name}'")
+                
+            except Exception as e:
+                QMessageBox.warning(self, "Collection Error", f"Failed to add assets to collection: {str(e)}")
     
     def delete_selected_asset(self):
         """Delete the selected asset from the current tab"""
@@ -7350,6 +8396,15 @@ class AssetManagerUI(QMainWindow):
                     self.refresh_collection_filter()
                 except Exception as e:
                     print(f"Error refreshing collection filter: {e}")
+            
+            # Apply background colors via custom delegate repaint
+            try:
+                current_list = self.get_current_asset_list()
+                if current_list:
+                    self._refresh_asset_list_colors(current_list)
+                    print("🎨 Refreshed asset colors via custom delegate")
+            except Exception as e:
+                print(f"Error refreshing delegate colors: {e}")
         
         except Exception as e:
             print(f"Error in refresh_assets: {e}")
@@ -7888,7 +8943,8 @@ class AssetManagerUI(QMainWindow):
         menu.addSeparator()
         
         # Delete action
-        delete_action = menu.addAction("Delete Asset")
+        delete_action = menu.addAction("Remove Asset")
+        delete_action.setToolTip("Remove Selected Asset(s) from Library")
         delete_action.triggered.connect(self.delete_selected_asset)
         
         menu.exec(sender_widget.mapToGlobal(position))
