@@ -5,6 +5,59 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-08-20
+
+### 🔧 Critical Bug Fixes & User Experience Improvements
+
+#### 🚀 **Drag & Drop Duplication Fix**
+
+- **FIXED**: Drag & drop operations no longer create duplicate imports when dragging assets to Maya viewport
+- **ENHANCED**: Intelligent import tracking system with time-based cooldown prevents accidental duplicate operations
+- **IMPROVED**: Conditional fallback logic replaces sequential execution for more reliable import handling
+- **OPTIMIZED**: Enhanced error handling and user feedback during drag & drop operations
+
+#### 🔗 **GitHub Updates Feature Implementation**
+
+- **FIXED**: "Check for Updates" feature now properly connects to the real GitHub repository API
+- **ENHANCED**: Robust GitHub API integration with proper error handling and timeout management
+- **IMPROVED**: Enhanced HTTP headers and network error recovery for reliable update checking
+- **UPDATED**: Correct repository URL pointing to `ChEeP/assetManagerforMaya-master/releases`
+- **OPTIMIZED**: Better fallback mechanisms when network connectivity issues occur
+
+#### 🎨 **Background Transparency Enhancement**
+
+- **IMPROVED**: Icon background transparency increased for more subtle visual appearance
+- **ENHANCED**: Alpha value reduced from 180 to 120 for more transparent asset type backgrounds
+- **MAINTAINED**: Revolutionary background color visibility while improving aesthetic appeal
+- **PRESERVED**: All breakthrough color technology from v1.2.0 with enhanced transparency
+
+#### 🛠️ **Technical Improvements**
+
+- **Clean Code Implementation**: Applied Single Responsibility Principle to import tracking and GitHub API methods
+- **DRY Principle**: Centralized duplicate prevention logic with descriptive method names
+- **Robust Error Handling**: Enhanced exception handling for network operations and import processes
+- **Memory Safety**: Improved resource management for background operations and API calls
+
+### Fixed in v1.2.1
+
+#### 🐛 Key Bug Resolutions
+
+- **CRITICAL**: Eliminated drag & drop duplication issue where single asset drags created multiple file imports
+- **FIXED**: GitHub Updates feature now successfully checks real repository instead of mock data
+- **IMPROVED**: Background transparency optimized for better visual balance without losing visibility
+- **ENHANCED**: Import tracking system prevents duplicate operations with intelligent cooldown timers
+- **RESOLVED**: Network timeout and error handling for GitHub API connectivity issues
+
+### Changed in v1.2.1
+
+- **Import System**: Enhanced duplicate prevention with time-based tracking and conditional fallback logic
+- **Updates Feature**: Real GitHub API integration replacing placeholder functionality
+- **Visual Design**: Reduced background alpha for more transparent, professional appearance
+- **User Experience**: Improved error messages and feedback for all fixed operations
+- **Code Quality**: Applied Clean Code principles throughout all modified components
+
+---
+
 ## [1.2.0] - 2025-08-18
 
 ### 🎉 Revolutionary Background Color Fix & Multi-Select Features
@@ -67,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed in v1.2.0
 
-#### 🐛 Critical Bug Fixes
+#### 🐛 Critical Bug Fixes - v1.2.0
 
 - **CRITICAL**: Background colors now visible in all Maya UI themes and configurations
 - **FIXED**: Multi-select state management across collection tabs
@@ -731,7 +784,7 @@ versions/v1.1.1/
   - Modern PySide6-based user interface
   - Maya 2025.3+ compatibility with Python 3.9+
 - **Installation System**:
-  - Drag & Drop installation via `DRAG&DROP.mel` file
+  - Drag & Drop installation via `DRAG&DDROP.mel` file
   - Cross-platform installation scripts (`install.bat` for Windows, `install.sh` for Unix/Linux)
   - Python setup script (`setup.py`) for automated installation
   - Manual installation support

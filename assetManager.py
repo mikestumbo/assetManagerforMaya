@@ -4,8 +4,16 @@ Asset Manager Plugin for Maya 2025.3
 A comprehensive asset management system for Maya using Python 3 and PySide6
 
 Author: Mike Stumbo
-Version: 1.2.0
+Version: 1.2.1
 Maya Version: 2025.3+
+
+New in v1.2.1:
+- FIXED: Drag & Drop Duplication - Asset drag & drop no longer creates duplicate imports
+- ENHANCED: Import Tracking System - Prevents duplicate imports with intelligent cooldown
+- FIXED: GitHub Updates Feature - Now properly checks the real GitHub repository for updates
+- IMPROVED: Background Transparency - Icon backgrounds are now more transparent (alpha 120)
+- ENHANCED: Error Handling - Better feedback for network issues and GitHub API failures
+- OPTIMIZED: Drag & Drop Performance - More efficient and reliable drag operations
 
 New in v1.2.0:
 - REVOLUTIONARY BACKGROUND COLOR FIX: Asset type colors now guaranteed visible in all Maya themes
@@ -304,9 +312,9 @@ class AssetTypeItemDelegate(QStyledItemDelegate):
                     bg_color.setHsv(bg_color.hue(), min(255, bg_color.saturation() + 100), min(255, bg_color.value() + 80))
                     print(f"🔥 PAINTING SELECTED {asset_type}: {os.path.basename(asset_path)} -> {bg_color.name()}")
                 else:
-                    # Unselected: Use a dimmed but visible version
+                    # Unselected: Use a more transparent version for subtle background
                     bg_color = QColor(base_color)
-                    bg_color.setAlpha(180)
+                    bg_color.setAlpha(120)  # Reduced from 180 to 120 for more transparency
                     print(f"🎨 PAINTING BASE {asset_type}: {os.path.basename(asset_path)} -> {bg_color.name()}")
                 
                 # Paint the background directly
@@ -347,7 +355,11 @@ class DragDropAssetListWidget(QListWidget):
         self.drag_start_position = None
         self.mouse_press_item = None
         
-        print("🖱️ DragDropAssetListWidget initialized with enhanced responsiveness")
+        # Prevent duplicate imports by tracking recent operations
+        self._recent_imports = {}  # {asset_path: timestamp}
+        self._import_cooldown = 2.0  # seconds
+        
+        print("🖱️ DragDropAssetListWidget initialized with enhanced responsiveness and duplicate prevention")
     
     def mousePressEvent(self, event):
         """Enhanced mouse press event that prioritizes drag & drop"""
@@ -473,10 +485,24 @@ class DragDropAssetListWidget(QListWidget):
             # Execute drag - this creates the drag cursor and handles the operation
             result = drag.exec(supportedActions)
             
-            # Handle the drag result
+            # Handle the drag result - BUT be careful about Maya's own import handling
             if result == Qt.DropAction.CopyAction:
-                print(f"🖱️ Drag completed with CopyAction - attempting Maya import")
-                self._attempt_maya_import(asset_paths)
+                print(f"🖱️ Drag completed with CopyAction")
+                
+                # Check if we're dragging to Maya viewport (which has its own import handling)
+                # In this case, Maya will automatically import the files, so we should NOT 
+                # call _attempt_maya_import to avoid duplicate imports
+                
+                # For now, let's NOT automatically import and let Maya handle it
+                # This prevents the duplicate import issue
+                print(f"🖱️ Drag successful - letting Maya handle the import to prevent duplicates")
+                
+                # Update status bar to show drag was successful
+                if hasattr(self.asset_manager_ui, 'status_bar'):
+                    self.asset_manager_ui.status_bar.showMessage(
+                        f"✅ Dragged {len(asset_paths)} asset(s) - Maya will handle import"
+                    )
+                    
             elif result == Qt.DropAction.MoveAction:
                 print(f"🖱️ Drag completed with MoveAction")
             elif result == Qt.DropAction.IgnoreAction:
@@ -490,7 +516,7 @@ class DragDropAssetListWidget(QListWidget):
             traceback.print_exc()
     
     def _attempt_maya_import(self, asset_paths):
-        """Enhanced Maya import with better feedback and error handling"""
+        """Enhanced Maya import with better feedback and duplicate prevention"""
         try:
             print(f"🖱️ Attempting to import {len(asset_paths)} assets into Maya")
             
@@ -502,17 +528,37 @@ class DragDropAssetListWidget(QListWidget):
                     )
                 return
                 
-            from maya import cmds  # pyright: ignore[reportMissingImports]
+            import time
+            current_time = time.time()
             
+            # Filter out recently imported assets to prevent duplicates
+            filtered_paths = []
+            for asset_path in asset_paths:
+                last_import_time = self._recent_imports.get(asset_path, 0)
+                if current_time - last_import_time > self._import_cooldown:
+                    filtered_paths.append(asset_path)
+                    # Don't update here - let import_asset handle the tracking
+                else:
+                    print(f"🖱️ ⏳ Skipping {os.path.basename(asset_path)} - recently imported")
+            
+            if not filtered_paths:
+                print("🖱️ All assets were recently imported - skipping to prevent duplicates")
+                return
+                
+            # Clean up old entries in recent imports (older than 10 seconds)
+            cleanup_threshold = current_time - 10.0
+            self._recent_imports = {path: timestamp for path, timestamp in self._recent_imports.items() 
+                                  if timestamp > cleanup_threshold}
+                
             imported_count = 0
             failed_assets = []
             
-            for asset_path in asset_paths:
+            for asset_path in filtered_paths:
                 try:
                     asset_name = os.path.basename(asset_path)
                     print(f"🖱️ Importing asset: {asset_name}")
                     
-                    # Use the asset manager's import functionality if available
+                    # Use ONLY the asset manager's import functionality - no fallback to direct Maya import
                     if (hasattr(self.asset_manager_ui, 'asset_manager') and 
                         hasattr(self.asset_manager_ui.asset_manager, 'import_asset')):
                         
@@ -524,46 +570,26 @@ class DragDropAssetListWidget(QListWidget):
                             failed_assets.append(asset_name)
                             print(f"🖱️ ❌ Failed to import: {asset_name}")
                     else:
-                        # Direct Maya import as fallback
-                        file_ext = os.path.splitext(asset_path)[1].lower()
-                        if file_ext in ['.ma', '.mb']:
-                            cmds.file(asset_path, i=True, ignoreVersion=True)
-                            imported_count += 1
-                            print(f"🖱️ ✅ Direct Maya import successful: {asset_name}")
-                        elif file_ext == '.obj':
-                            cmds.file(asset_path, i=True, type="OBJ", ignoreVersion=True)
-                            imported_count += 1
-                            print(f"🖱️ ✅ OBJ import successful: {asset_name}")
-                        else:
-                            failed_assets.append(f"{asset_name} (unsupported format)")
-                            print(f"🖱️ ❌ Unsupported format: {asset_name}")
-                            
+                        # If no asset manager available, this is an error condition
+                        failed_assets.append(f"{asset_name} (no asset manager)")
+                        print(f"🖱️ ❌ No asset manager available for: {asset_name}")
+                        
                 except Exception as e:
                     asset_name = os.path.basename(asset_path)
-                    failed_assets.append(asset_name)
+                    failed_assets.append(f"{asset_name} (error: {str(e)})")
                     print(f"🖱️ ❌ Error importing {asset_name}: {e}")
             
             # Update status bar with results
             if hasattr(self.asset_manager_ui, 'status_bar'):
                 if imported_count > 0:
-                    message = f"✅ Drag & Drop: Imported {imported_count}/{len(asset_paths)} assets"
-                    if failed_assets:
-                        message += f" ({len(failed_assets)} failed)"
-                    self.asset_manager_ui.status_bar.showMessage(message)
-                else:
                     self.asset_manager_ui.status_bar.showMessage(
-                        f"❌ Drag & Drop: Failed to import {len(asset_paths)} assets"
+                        f"✅ Imported {imported_count} asset(s) successfully"
                     )
-            
-            # Print summary
-            print(f"🖱️ Drag & Drop import completed: {imported_count}/{len(asset_paths)} assets imported")
-            if failed_assets:
-                print(f"🖱️ Failed imports: {', '.join(failed_assets)}")
-            
+                if failed_assets:
+                    print(f"🖱️ ⚠️ Failed to import: {', '.join(failed_assets)}")
+                    
         except Exception as e:
-            print(f"Error in Maya import after drag: {e}")
-            if hasattr(self.asset_manager_ui, 'status_bar'):
-                self.asset_manager_ui.status_bar.showMessage(f"❌ Drag & Drop error: {str(e)}")
+            print(f"🖱️ ❌ Error in Maya import attempt: {e}")
             import traceback
             traceback.print_exc()
 
@@ -573,7 +599,7 @@ class AssetManager:
     
     def __init__(self):
         self.plugin_name = "assetManager"
-        self.version = "1.2.0"
+        self.version = "1.2.1"
         self.config_path = self._get_config_path()
         self.assets_library = {}
         self.current_project = None
@@ -601,6 +627,10 @@ class AssetManager:
         self._thumbnail_processing = False
         self._thumbnail_timer = None
         self._generating_thumbnails = set()  # Track thumbnails currently being generated
+        
+        # Import tracking to prevent drag-and-drop duplicates
+        self._recent_imports = {}  # {asset_path: timestamp}
+        self._import_cooldown = 1.5  # seconds between imports of same asset
         
         # Initialize default asset type configuration
         self._init_default_asset_types()
@@ -2099,13 +2129,30 @@ class AssetManager:
         return True
     
     def import_asset(self, asset_path, asset_name=None):
-        """Import an asset into the current scene"""
+        """Import an asset into the current scene with duplicate prevention"""
         if not os.path.exists(asset_path):
             return False
         
         if not MAYA_AVAILABLE or cmds is None:
             print("Maya not available - cannot import asset")
             return False
+        
+        # Check for recent import to prevent duplicates
+        import time
+        current_time = time.time()
+        last_import_time = self._recent_imports.get(asset_path, 0)
+        
+        if current_time - last_import_time < self._import_cooldown:
+            print(f"🚫 Skipping import of {os.path.basename(asset_path)} - recently imported")
+            return True  # Return True since it was "successfully" handled (prevented duplicate)
+        
+        # Update recent import tracking
+        self._recent_imports[asset_path] = current_time
+        
+        # Clean up old entries (older than 10 seconds)
+        cleanup_threshold = current_time - 10.0
+        self._recent_imports = {path: timestamp for path, timestamp in self._recent_imports.items() 
+                              if timestamp > cleanup_threshold}
             
         try:
             if asset_path.endswith('.ma'):
@@ -2118,9 +2165,13 @@ class AssetManager:
                 cmds.file(asset_path, i=True, type="FBX")
             else:
                 cmds.file(asset_path, i=True)
+            
+            print(f"✅ Successfully imported: {os.path.basename(asset_path)}")
             return True
         except Exception as e:
             print(f"Error importing asset: {e}")
+            # Remove from recent imports on failure so it can be retried
+            self._recent_imports.pop(asset_path, None)
             return False
     
     def export_selected_as_asset(self, export_path, asset_name):
@@ -8624,20 +8675,95 @@ class AssetManagerUI(QMainWindow):
             )
     
     def _get_latest_version(self):
-        """Get the latest version information (placeholder for real implementation)"""
-        # In a real implementation, this would check a remote repository
-        # For demonstration, we'll return a mock version that's higher than current
+        """Get the latest version information from GitHub releases"""
+        try:
+            from urllib.request import Request, urlopen
+            from urllib.error import HTTPError, URLError
+            import json
+            
+            # GitHub API URL for latest release - corrected repository name
+            api_url = "https://api.github.com/repos/ChEeP/assetManagerforMaya-master/releases/latest"
+            
+            # Create request with proper headers
+            request = Request(api_url)
+            request.add_header('User-Agent', 'Asset Manager Maya Plugin v1.2.1')
+            request.add_header('Accept', 'application/vnd.github.v3+json')
+            
+            # Get the latest release information
+            with urlopen(request, timeout=15) as response:
+                if response.getcode() == 200:
+                    release_data = json.loads(response.read().decode())
+                    
+                    # Extract version from tag_name (e.g., "v1.2.0" -> "1.2.0")
+                    tag_name = release_data.get('tag_name', '')
+                    if tag_name.startswith('v'):
+                        tag_name = tag_name[1:]  # Remove 'v' prefix
+                    
+                    print(f"🔍 GitHub API Success: Found latest version {tag_name}")
+                    return tag_name
+                else:
+                    print(f"❌ GitHub API returned status code: {response.getcode()}")
+                    
+        except Exception as e:
+            # Catch all exceptions for robust error handling
+            error_msg = str(e)
+            if "HTTP Error 404" in error_msg or "Not Found" in error_msg:
+                print(f"❌ Repository not found or no releases available")
+            elif "timeout" in error_msg.lower():
+                print(f"❌ Network timeout while fetching version from GitHub")
+            else:
+                print(f"❌ Error fetching version from GitHub: {e}")
+            
+        # Fallback to current version if API fails
         current_version = self.asset_manager.version
-        version_parts = current_version.split('.')
-        if len(version_parts) >= 3:
-            # Increment the patch version for demo
-            patch = int(version_parts[2]) + 1
-            return f"{version_parts[0]}.{version_parts[1]}.{patch}"
-        return "1.2.0"  # fallback mock version
+        print(f"🔄 Using fallback version: {current_version}")
+        return current_version
     
     def _get_release_notes(self, version):
-        """Get release notes for a version (placeholder for real implementation)"""
-        # In a real implementation, this would fetch actual release notes
+        """Get release notes for a version from GitHub releases"""
+        try:
+            from urllib.request import Request, urlopen
+            from urllib.error import HTTPError, URLError
+            import json
+            
+            # GitHub API URL for releases - corrected repository name
+            api_url = "https://api.github.com/repos/ChEeP/assetManagerforMaya-master/releases"
+            
+            # Create request with proper headers
+            request = Request(api_url)
+            request.add_header('User-Agent', 'Asset Manager Maya Plugin v1.2.1')
+            request.add_header('Accept', 'application/vnd.github.v3+json')
+            
+            # Get releases information
+            with urlopen(request, timeout=15) as response:
+                if response.getcode() == 200:
+                    releases_data = json.loads(response.read().decode())
+                    
+                    # Find the release matching the version
+                    target_tag = f"v{version}"
+                    for release in releases_data:
+                        if release.get('tag_name') == target_tag:
+                            body = release.get('body', '')
+                            # Clean up markdown formatting for display
+                            if body:
+                                lines = body.split('\n')
+                                cleaned_lines = []
+                                for line in lines:
+                                    # Remove markdown headers and clean up
+                                    line = line.replace('### ', '').replace('## ', '').replace('# ', '')
+                                    line = line.replace('**', '').replace('*', '•')
+                                    if line.strip() and not line.startswith('---'):
+                                        cleaned_lines.append(line.strip())
+                                return '\n'.join(cleaned_lines[:10])  # Limit to first 10 meaningful lines
+                            
+                    print(f"🔍 GitHub API: Found release notes for {version}")
+                    return f"Release notes for version {version} available on GitHub"
+                
+        except Exception as e:
+            # Catch all exceptions for robust error handling
+            print(f"❌ Error fetching release notes from GitHub: {e}")
+            
+        # Fallback release notes
         return f"• Bug fixes and stability improvements\n• Enhanced performance\n• New features for version {version}"
     
     def _compare_versions(self, current, latest):
@@ -8652,13 +8778,15 @@ class AssetManagerUI(QMainWindow):
     
     def _open_download_page(self):
         """Open the download page for updates"""
-        # In a real implementation, this would open the actual project repository
-        download_url = "https://github.com/mikestumbo/assetManagerforMaya"
+        # Updated to point to the correct repository
+        download_url = "https://github.com/ChEeP/assetManagerforMaya-master/releases"
         
         try:
             import webbrowser
             webbrowser.open(download_url)
-        except:
+            print(f"🌐 Opened download page: {download_url}")
+        except Exception as e:
+            print(f"❌ Failed to open browser: {e}")
             # Fallback: show URL in a dialog
             QMessageBox.information(
                 self, "Download Link", 

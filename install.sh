@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Asset Manager for Maya 2025.3 v1.2.0 - Installation Script"
+echo "Asset Manager for Maya 2025.3 v1.2.1 - Installation Script"
 echo "========================================================="
 echo
 

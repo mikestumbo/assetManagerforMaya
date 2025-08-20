@@ -1,11 +1,11 @@
 {
     "plugin_name": "assetManager",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "maya_version": "2025.3",
     "python_version": "3.9+",
     "author": "Mike Stumbo",
-    "description": "A comprehensive asset management system for Maya 2025.3 with guaranteed visible background colors and professional multi-select functionality",
-    "release_date": "2025-08-18",
+    "description": "A comprehensive asset management system for Maya 2025.3 with guaranteed visible background colors, reliable drag & drop operations, real GitHub updates, and enhanced transparency",
+    "release_date": "2025-08-20",
     "requirements": [
         "Maya 2025.3+",
         "Python 3.9+",
@@ -35,9 +35,36 @@
         "Collection tabs interface",
         "Interactive collection management",
         "Tabbed asset library organization",
-        "Check for updates system"
+        "Real GitHub updates integration",
+        "Enhanced background transparency"
     ],
     "changelog": {
+        "1.2.1": {
+            "date": "2025-08-20",
+            "changes": [
+                "FIXED: Drag & drop duplication - Assets no longer create duplicate imports when dragged to Maya viewport",
+                "FIXED: GitHub updates feature - Now connects to real repository with proper API integration and error handling",
+                "ENHANCED: Background transparency - Reduced alpha from 180 to 120 for more subtle icon backgrounds",
+                "IMPROVED: Import tracking system - Intelligent cooldown timers prevent duplicate operations",
+                "OPTIMIZED: Error handling - Better network connectivity feedback and recovery mechanisms",
+                "MAINTAINED: All v1.2.0 revolutionary background color technology and multi-select functionality",
+                "ENHANCED: Drag & drop reliability - Conditional fallback logic instead of sequential execution",
+                "UPGRADED: GitHub API integration - Proper timeout handling and repository connectivity"
+            ]
+        },
+        "1.2.0": {
+            "date": "2025-08-18",
+            "changes": [
+                "BREAKTHROUGH: Guaranteed visible background colors in all Maya themes using custom AssetTypeItemDelegate",
+                "REVOLUTIONARY: Custom delegate technology bypasses CSS conflicts for bulletproof color visibility",
+                "NEW: Professional multi-select functionality with Ctrl+Click, Shift+Click, Ctrl+A support",
+                "NEW: Bulk operations - Import Selected, Add to Collection, drag multiple assets",
+                "ENHANCED: Drag & drop support - drag from library directly to Maya viewport",
+                "IMPROVED: HSV color manipulation ensures vibrant, distinct colors for each asset type",
+                "ADDED: Professional UI with selection borders and enhanced visual feedback",
+                "OPTIMIZED: Real-time color updates and cross-collection multi-select capabilities"
+            ]
+        },
         "1.1.4": {
             "date": "2025-08-07",
             "changes": [

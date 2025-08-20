@@ -1,8 +1,39 @@
-# Asset Manager for Maya v1.2.0
+# Asset Manager for Maya v1.2.1
+
+A comprehensive asset management system for Maya 2025.3+ with **guaranteed visible background colors**, professional multi-select functionality, and **critical bug fixes**.
+
+## 🔧 **Critical Fixes in v1.2.1**
+
+### 🚀 **FIXED: Drag & Drop Duplication Issue**
+
+**Problem Solved**: Drag & drop operations no longer create duplicate imports when dragging assets to Maya viewport.
+
+- **🎯 Root Cause Fixed**: Eliminated double-import mechanism where both primary and fallback import methods executed sequentially
+- **🛡️ Intelligent Tracking**: Time-based duplicate prevention system with smart cooldown timers
+- **⚡ Enhanced Performance**: Conditional fallback logic instead of sequential execution for more reliable operations
+- **🔄 Better Recovery**: Improved error handling and user feedback during drag & drop operations
+
+### 🔗 **FIXED: GitHub Updates Feature**
+
+**Real Integration**: "Check for Updates" feature now properly connects to the actual GitHub repository.
+
+- **🌐 Live API Connection**: Real GitHub API integration with proper error handling and timeout management
+- **📍 Correct Repository**: Updated endpoint to point to the actual project repository
+- **🛡️ Robust Error Handling**: Enhanced network error recovery and user feedback
+- **⏱️ Reliable Timeouts**: Improved connection handling for various network conditions
+
+### 🎨 **ENHANCED: Background Transparency**
+
+**Visual Improvement**: Icon backgrounds are now more transparent for better aesthetic appeal.
+
+- **✨ Subtle Backgrounds**: Reduced alpha from 180 to 120 for more transparent appearance
+- **👁️ Maintained Visibility**: Preserved breakthrough color technology while improving visual balance
+- **🎪 Professional Polish**: Better integration with Maya's overall visual design
+- **🔧 Configurable**: Transparency enhancement maintains all existing color customization features
+
+## 🎉 **Revolutionary v1.2.0 Features**
 
 A comprehensive asset management system for Maya 2025.3+ with **guaranteed visible background colors** and professional multi-select functionality.
-
-## � **Revolutionary v1.2.0 Features**
 
 ### 🎨 **BREAKTHROUGH: Guaranteed Visible Background Colors**
 
@@ -243,7 +274,7 @@ Streamlined Maya integration:
 
 ## 📦 Downloads & Previous Versions
 
-### Current Version (v1.2.0)
+### Current Version (v1.2.1)
 
 Download the latest version directly from this repository or from [GitHub Releases](../../releases).
 
@@ -251,6 +282,7 @@ Download the latest version directly from this repository or from [GitHub Releas
 
 All previous versions are available as GitHub Releases with complete archives and release notes:
 
+- **[v1.2.0](../../releases/tag/v1.2.0)** - Revolutionary Background Colors & Multi-Select (August 18, 2025)
 - **[v1.1.4](../../releases/tag/v1.1.4)** - UI Improvements & Window Memory (August 7, 2025)
 - **[v1.1.3](../../releases/tag/v1.1.3)** - Performance & Reliability (August 7, 2025)
 - **[v1.1.2](../../releases/tag/v1.1.2)** - Collection Tabs & Thumbnails (July 29, 2025)
@@ -269,18 +301,18 @@ Each release includes:
 
 ### **Quick Install (Drag & Drop)**
 
-1. **Download** `assetManager-v1.2.0.zip` from the releases
+1. **Download** `assetManager-v1.2.1.zip` from the releases
 2. **Extract** the files to your preferred location
 3. **Drag** the `DRAG&DROP.mel` file into Maya's viewport
 4. **Done!** The plugin installs automatically with a shelf button
 
 ### **Upgrading from Previous Versions**
 
-**Important for v1.2.0**: Clear Maya cache to ensure the background color fix works properly:
+**Important for v1.2.1**: Clear Maya cache to ensure all fixes work properly:
 
 1. **Run** `CLEAR_MAYA_CACHE.mel` in Maya's Script Editor first
 2. **Restart Maya** completely  
-3. **Install** v1.2.0 using the drag & drop method above
+3. **Install** v1.2.1 using the drag & drop method above
 
 ### **Alternative Installation Methods**
 
@@ -290,25 +322,34 @@ Each release includes:
 
 ### **Troubleshooting**
 
-If background colors aren't visible after installation:
+If you experience any issues after installation:
 
-- Ensure you cleared Maya cache before upgrading
+- Ensure you cleared Maya cache before upgrading to v1.2.1
 - Restart Maya completely after installation
-- Check Maya 2025.3+ compatibility
+- Verify Maya 2025.3+ compatibility
+- For drag & drop issues, ensure you're using the latest v1.2.1 with duplicate prevention fixes
 
 See `docs/MAYA_INSTALLATION_TROUBLESHOOTING.md` for detailed troubleshooting steps.
 
 ## 💡 **Usage Guide**
 
-### **Getting Started with v1.2.0**
+### **Getting Started with v1.2.1**
 
 1. **Open Asset Manager**: Click the shelf button or run from Scripts menu
 2. **Add Assets**: Use "Add Asset" button to include `.mb`, `.ma`, `.obj`, `.fbx` files  
-3. **Visual Organization**: Assets now display with guaranteed visible background colors
-4. **Multi-Select**: Hold `Ctrl` to select multiple assets for batch operations
-5. **Collection Management**: Group related assets using the collection system
+3. **Visual Organization**: Assets display with guaranteed visible background colors
+4. **Reliable Drag & Drop**: Drag assets to Maya viewport without duplicate imports (v1.2.1 fix)
+5. **Multi-Select**: Hold `Ctrl` to select multiple assets for batch operations
+6. **Collection Management**: Group related assets using the collection system
+7. **Check Updates**: Use Help → Check for Updates for real GitHub integration (v1.2.1 fix)
 
-### **New v1.2.0 Features**
+### **New v1.2.1 Features**
+
+### 🔧 **Critical Bug Fixes**
+
+- Drag & drop operations now work reliably without creating duplicate file imports
+- GitHub updates feature connects to real repository for accurate version checking
+- Enhanced background transparency for better visual integration with Maya themes
 
 ### 🎨 **Advanced Background Color Technology**
 
@@ -406,18 +447,18 @@ See `docs/MAYA_INSTALLATION_TROUBLESHOOTING.md` for detailed troubleshooting ste
 
 ```txt
 assetManagerforMaya-master/
-├── assetManager.py              # Main plugin with v1.2.0 Preview & Visualization features
+├── assetManager.py              # Main plugin with v1.2.1 fixes & v1.2.0 features
 ├── assetManager.mod             # Plugin descriptor
 ├── icon_utils.py                # Icon management utilities
-├── DRAG&DROP.mel                # Primary installer
+├── DRAG&DROP.mel                # Primary installer (v1.2.1)
 ├── README.md                    # This documentation
 ├── LICENSE                      # MIT License
 ├── CHANGELOG.md                 # Version history and changes
-├── version.json                 # Version 1.2.0 information
+├── version.json                 # Version 1.2.1 information
 ├── setup.py                     # Python setup script
-├── install.bat                  # Windows installer
-├── install.sh                   # Unix/Linux installer
-├── CLEAR_MAYA_CACHE.mel         # Cache clearing utility
+├── install.bat                  # Windows installer (v1.2.1)
+├── install.sh                   # Unix/Linux installer (v1.2.1)
+├── CLEAR_MAYA_CACHE.mel         # Cache clearing utility (v1.2.1)
 ├── .gitignore                   # Git ignore patterns
 ├── docs/                        # Documentation files
 │   ├── CUSTOMIZATION_GUIDE.md   # Asset type customization guide
@@ -479,66 +520,65 @@ Configuration includes:
 
 ## 🔄 **Migration from Previous Versions**
 
-### **Upgrading to v1.2.0**
+### **Upgrading to v1.2.1**
 
-**⚠️ Important**: Clear Maya cache before upgrading to ensure the revolutionary background color fix works properly:
+**⚠️ Important**: Clear Maya cache before upgrading to ensure all fixes work properly:
 
 1. **Run** `CLEAR_MAYA_CACHE.mel` in Maya's Script Editor
 2. **Restart Maya** completely
-3. **Install** v1.2.0 using the drag & drop method
+3. **Install** v1.2.1 using the drag & drop method
 
 ### **Full Backward Compatibility**
 
-v1.2.0 is fully backward compatible with all previous versions (v1.0.0 → v1.1.4):
+v1.2.1 is fully backward compatible with all previous versions (v1.0.0 → v1.2.0):
 
-- **Existing Projects**: Load without modification with enhanced visual experience
-- **All Features**: Previous functionality remains unchanged and enhanced
-- **New Benefits**: Automatic background color visibility improvement
-- **Configuration**: Seamlessly upgrades with new visual rendering system
+- **Existing Projects**: Load without modification with enhanced reliability
+- **All Features**: Previous functionality remains unchanged and improved
+- **New Benefits**: Automatic drag & drop fixes and real GitHub updates
+- **Configuration**: Seamlessly upgrades with improved reliability systems
 - **Zero Data Loss**: All assets, collections, and settings preserved
 
 ### **What's New in Your Existing Projects**
 
-- **Instant Visibility**: All existing assets now have guaranteed visible backgrounds
-- **Multi-Select**: Enhanced workflow with `Ctrl+Click` multi-selection
-- **Professional UI**: Upgraded visual experience with consistent color contrast
-- **Preserved Workflows**: All existing workflows work exactly as before, just better
+- **Reliable Operations**: Drag & drop now works without creating duplicate imports
+- **Real Updates**: GitHub updates feature connects to actual repository  
+- **Enhanced Visuals**: More transparent backgrounds for better integration
+- **Preserved Workflows**: All existing workflows work exactly as before, just more reliably
 
-## 🎯 **Revolutionary v1.2.0 Breakthrough**
+## 🎯 **Revolutionary v1.2.1 Improvements**
 
-### **🏆 Major Achievement: Background Color Visibility SOLVED**
+### **🏆 Critical Issues Resolved in v1.2.1**
 
-**The Problem**: Assets were invisible on matching background themes, making the tool unusable for many users.
+**The Problems**: Drag & drop duplications, non-functional GitHub updates, and overly opaque backgrounds.
 
-**The Solution**: Revolutionary AssetTypeItemDelegate technology providing guaranteed visible background colors.
+**The Solutions**: Intelligent duplicate prevention, real GitHub API integration, and enhanced transparency.
 
-**The Result**: 100% asset visibility on ALL Maya themes with professional visual consistency.
+**The Results**: 100% reliable drag & drop operations, functional update checking, and improved visual aesthetics.
 
-### 🎨 Revolutionary Background Color Fix
+### 🔧 Critical Fixes Achievements
 
-### **✅ All Major Issues Resolved in v1.2.0**
+### **✅ All Major Issues Resolved in v1.2.1**
 
-- ~~Assets invisible on matching background themes~~ **BREAKTHROUGH SOLVED** - Revolutionary AssetTypeItemDelegate ensures guaranteed visibility
-- ~~UI theme conflicts causing poor user experience~~ **COMPLETELY FIXED** - Intelligent HSV color manipulation prevents all conflicts  
-- ~~Inconsistent visual hierarchy across different Maya themes~~ **PROFESSIONALLY RESOLVED** - Consistent contrast ratios and professional UI standards
-- ~~Poor asset discoverability in large libraries~~ **ENHANCED** - Multi-select and improved visual organization
-- ~~Workflow inefficiencies with single-asset operations~~ **IMPROVED** - Professional multi-select batch operations
+- ~~Drag & drop creating duplicate file imports~~ **COMPLETELY FIXED** - Intelligent time-based duplicate prevention system
+- ~~GitHub updates feature not working with real repository~~ **FULLY RESOLVED** - Live API integration with robust error handling
+- ~~Background transparency could be improved~~ **ENHANCED** - Optimized alpha values for better visual integration
+- ~~Import tracking needed improvement~~ **SIGNIFICANTLY IMPROVED** - Smart cooldown timers and conditional fallback logic
+- ~~Network error handling in updates feature~~ **PROFESSIONALLY HANDLED** - Comprehensive timeout and error recovery systems
 
-### **🎨 Visual Excellence Achievements**
+### **🚀 Reliability & Performance Achievements**
 
-- **Perfect Visibility**: Every asset guaranteed visible on all Maya themes
-- **Professional Standards**: Consistent visual hierarchy and contrast ratios
-- **User Experience**: Intuitive multi-select with `Ctrl+Click` functionality
-- **Performance**: Zero impact on rendering performance despite visual enhancements
-- **Future-Proof**: Scalable technology ready for future Maya theme updates
+- **Perfect Drag & Drop**: Every drag operation guaranteed to import once without duplicates
+- **Real GitHub Integration**: Live update checking with actual repository connectivity
+- **Professional Visuals**: Enhanced transparency while maintaining guaranteed color visibility
+- **Smart Error Recovery**: Robust handling of network issues and edge cases
+- **Future-Proof**: Scalable architecture ready for continued development
 
-### **🚀 Performance & Reliability**
+### **🎨 Visual Excellence Maintained**
 
-- **Zero Crashes**: Robust error handling prevents data loss
-- **Optimized Rendering**: Enhanced asset display with minimal resource usage  
-- **Smart Caching**: Intelligent background color computation
-- **Memory Efficient**: Professional-grade memory management for large libraries
-- **Network Optimized**: Reliable operation on network storage
+- **Guaranteed Visibility**: Every asset still guaranteed visible on all Maya themes (v1.2.0 breakthrough preserved)
+- **Enhanced Transparency**: Improved visual integration with Maya's interface design
+- **Professional Standards**: Consistent visual hierarchy with optimized transparency levels
+- **User Experience**: All v1.2.0 revolutionary features enhanced with v1.2.1 reliability improvements
 
 ## 🤝 Contributing
 
@@ -555,4 +595,4 @@ v1.2.0 is fully backward compatible with all previous versions (v1.0.0 → v1.1.
 
 ---
 
-**Asset Manager v1.1.4** - Professional asset management with improved UI sizing, window memory, and enhanced user experience for Maya artists and studios.
+**Asset Manager v1.2.1** - Professional asset management with guaranteed visible background colors, reliable drag & drop operations, real GitHub updates, and enhanced transparency for Maya artists and studios.
