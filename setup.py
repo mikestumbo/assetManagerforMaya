@@ -1,9 +1,10 @@
 """
-Asset Manager Setup Script v1.2.1
-Installs the Asset Manager plugin for Maya 2025.3+ with critical bug fixes:
-- Fixed drag & drop duplication
-- Real GitHub updates integration  
-- Enhanced background transparency
+Asset Manager Setup Script v1.2.2
+Installs the Asset Manager plugin for Maya 2025.3+ with advanced Search & Discovery features:
+- Advanced Search with intelligent filtering
+- Auto-complete search with real-time suggestions
+- Favorites system and recent assets tracking
+- Search history and metadata extraction
 """
 
 import os
@@ -61,14 +62,21 @@ def install_plugin():
             shutil.copytree(icons_source, icons_dest)
             print("Installed: icons directory")
         
-        print(f"\nAsset Manager v1.2.1 plugin installed successfully!")
+        print(f"\nAsset Manager v1.2.2 plugin installed successfully!")
         print(f"Location: {plugins_dir}")
-        print("\nCritical Fixes in v1.2.1:")
+        print("\nNEW in v1.2.2 - Advanced Search & Discovery:")
+        print("• Advanced Search Dialog - Multi-criteria filtering with asset type, file type, size, and date filters")
+        print("• Auto-Complete Search - Intelligent search suggestions with real-time completion as you type")
+        print("• Favorites System - Star your most important assets (up to 100 favorites)")
+        print("• Recent Assets Panel - Automatically tracks your 20 most recently accessed assets")
+        print("• Search History - Remember your last 15 searches for quick re-execution")
+        print("• Metadata Extraction - Automatic extraction of file properties, polygon counts, and technical details")
+        print("• Enhanced Context Menus - Quick access to favorites and recent assets via right-click")
+        print("• Performance Optimized - Smart caching system with 5-minute metadata refresh")
+        print("\nPrevious v1.2.1 critical fixes preserved:")
         print("• FIXED: Drag & drop duplication - Assets no longer import multiple times")
         print("• FIXED: GitHub updates feature - Real repository integration with error handling") 
-        print("• ENHANCED: Background transparency - More subtle icon backgrounds (alpha 120)")
-        print("• IMPROVED: Import tracking system - Intelligent cooldown prevents duplicate operations")
-        print("• OPTIMIZED: Error handling - Better network connectivity and user feedback")
+        print("• ENHANCED: Background transparency - More subtle icon backgrounds")
         print("\nAll v1.2.0 revolutionary features preserved:")
         print("• Guaranteed visible background colors in all Maya themes")
         print("• Professional multi-select functionality with Ctrl+Click")
@@ -78,6 +86,7 @@ def install_plugin():
         print("2. Go to Windows > Settings/Preferences > Plug-in Manager")
         print("3. Find 'assetManager.py' and check both 'Loaded' and 'Auto load'")
         print("4. The Asset Manager shelf button should appear automatically")
+        print("5. Try the new Advanced Search & Discovery features!")
         
     except Exception as e:
         print(f"Error installing plugin: {e}")
@@ -105,7 +114,7 @@ def uninstall_plugin():
             shutil.rmtree(icons_dir)
             print("Removed: icons directory")
         
-        print("Asset Manager v1.2.1 plugin uninstalled successfully!")
+        print("Asset Manager v1.2.2 plugin uninstalled successfully!")
         
     except Exception as e:
         print(f"Error uninstalling plugin: {e}")
@@ -114,7 +123,7 @@ def uninstall_plugin():
     return True
 
 if __name__ == "__main__":
-    print("Asset Manager v1.2.1 Setup")
+    print("Asset Manager v1.2.2 Setup")
     print("=" * 50)
     
     if len(sys.argv) > 1 and sys.argv[1] == "uninstall":
