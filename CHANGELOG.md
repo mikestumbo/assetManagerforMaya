@@ -5,6 +5,107 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-08-20
+
+### 🔍 Search & Discovery Features - Major Enhancement
+
+#### 🎯 **Advanced Search System**
+
+- **NEW**: Advanced Search Dialog with comprehensive filtering capabilities
+  - Text search with smart auto-completion and similarity matching
+  - File size filters (min/max in MB) for storage management
+  - Date modified filters (before/after) for version control
+  - Polygon count filters for performance optimization
+  - Asset type and collection-specific searches
+  - Creator/author filtering for team organization
+
+#### 🌟 **Smart Auto-Completion & Suggestions**
+
+- **ENHANCED**: Intelligent search suggestions based on asset names, tags, and collections
+- **SMART**: Similarity matching algorithm with configurable threshold (60% default)
+- **DYNAMIC**: Real-time suggestion updates as assets and tags are added
+- **CONTEXTUAL**: Search history integration for quick access to previous searches
+
+#### 📚 **Recent Assets Tracking**
+
+- **NEW**: Automatic tracking of recently imported assets (last 20 by default)
+- **PERSISTENT**: Recent assets saved across Maya sessions
+- **INTERACTIVE**: Quick "Recent" button in search panel for instant access
+- **SMART**: Auto-cleanup of non-existent files from recent list
+
+#### ⭐ **Favorites System**
+
+- **NEW**: Mark assets as favorites for quick access (up to 100 favorites)
+- **VISUAL**: Star indicators (★/☆) in context menus and search results
+- **FILTERABLE**: "Favorites" button for instant favorites-only view
+- **CONTEXT MENU**: Right-click assets to add/remove from favorites
+
+#### 🔍 **Search History & Quick Access**
+
+- **NEW**: Remember last 15 search terms for quick recall
+- **DROPDOWN**: Search history dropdown in main search panel
+- **AUTO-SAVE**: Search terms automatically saved when performing searches
+- **SMART**: Minimum 2-character requirement prevents noise in history
+
+#### 🚀 **Enhanced Search UI**
+
+- **REDESIGNED**: "Search & Discovery" panel replacing basic search
+- **QUICK FILTERS**: Recent and Favorites toggle buttons for instant filtering
+- **ADVANCED ACCESS**: "Advanced..." button for power-user search features
+- **AUTO-COMPLETE**: Smart suggestions in main search field
+- **MENU INTEGRATION**: Tools → Advanced Search... for easy access
+
+### 🛠️ Technical Improvements
+
+#### 🔧 **Search Architecture**
+
+- **Clean Code Implementation**: SearchConstants class following DRY principles
+- **Modular Design**: Separate AdvancedSearchDialog class with single responsibility
+- **Efficient Caching**: Metadata caching system with 5-minute timeout
+- **Memory Safe**: Configurable limits on recent assets, favorites, and search history
+
+#### 📊 **Enhanced Metadata Extraction**
+
+- **GEOMETRY DATA**: Automatic polygon and vertex count extraction from OBJ files
+- **FILE PROPERTIES**: File size, modification date, and creator information
+- **EXTENSIBLE**: Framework for Maya (.ma/.mb) and FBX geometry analysis
+- **CACHED**: Intelligent metadata caching prevents repeated file analysis
+
+#### 🎨 **UI/UX Enhancements**
+
+- **RESPONSIVE**: Search results with real-time filtering and sorting
+- **VISUAL FEEDBACK**: Asset type color coding in search results
+- **CONTEXTUAL**: Tooltips and status messages for user guidance
+- **PROFESSIONAL**: Modern dialog design with logical grouping
+
+### Fixed in v1.2.2
+
+#### 🔧 Search System Integration
+
+- **ENHANCED**: Import tracking now automatically adds assets to recent list
+- **INTEGRATED**: Context menu includes favorite add/remove actions
+- **SYNCHRONIZED**: Search suggestions update when assets/tags/collections change
+- **OPTIMIZED**: Search UI refreshes automatically during asset library updates
+
+### Changed in v1.2.2
+
+- **SEARCH PANEL**: Replaced basic "Search" with comprehensive "Search & Discovery"
+- **CONTEXT MENU**: Added star-based favorites actions for all assets
+- **MAIN UI**: Enhanced search field with auto-completion capabilities
+- **TOOLS MENU**: Added "Advanced Search..." for power users
+- **ASSET IMPORT**: Recent assets automatically tracked during import operations
+
+### Technical Details v1.2.2
+
+- **Search Constants**: Configurable limits for all search components
+- **Database Architecture**: Persistent storage of favorites, recent assets, and search history
+- **Performance Optimized**: Cached metadata extraction with intelligent timeouts
+- **Cross-Session**: All search data survives Maya restarts and crashes
+- **Memory Efficient**: Bounded collections prevent unlimited growth
+- **Backward Compatible**: Seamless upgrade from v1.2.1 with data migration
+
+---
+
 ## [1.2.1] - 2025-08-20
 
 ### 🔧 Critical Bug Fixes & User Experience Improvements
@@ -482,14 +583,6 @@ When contributing to this project, **you must update this changelog**:
 ## [Unreleased]
 
 ### Added in Unreleased
-
-#### Search & Discovery
-
-- Advanced search filters including poly count, file size, date modified, and creator
-- Smart search with AI-powered suggestions and auto-complete functionality
-- Recent assets panel for quick access to recently used/imported assets
-- Favorite assets feature for bookmarking frequently used items
-- Search history to remember and recall previous searches
 
 #### Import/Export Enhancements
 

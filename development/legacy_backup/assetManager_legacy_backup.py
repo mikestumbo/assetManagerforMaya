@@ -4,19 +4,21 @@ Asset Manager Plugin for Maya 2025.3
 A comprehensive asset management system for Maya using Python 3 and PySide6
 
 Author: Mike Stumbo
-Version: 1.2.2
+Version: 1.2.3 - Phase 2 Refactoring: UI Separation
 Maya Version: 2025.3+
 
-New in v1.2.2:
-- REVOLUTIONARY: Advanced Search & Discovery System with intelligent filtering and auto-complete
-- NEW: Real-time search suggestions with asset name, tag, and collection auto-completion
-- NEW: Favorites system - Star your most-used assets for quick access
-- NEW: Recent assets tracking - Automatically tracks your recently used assets
-- NEW: Search history with intelligent suggestions based on usage patterns
-- NEW: Advanced metadata extraction with file size, polygon count, and creator information
-- NEW: Multi-criteria search filters (file size, poly count, date modified, creator, file types)
-- ENHANCED: Search performance with metadata caching and background processing
-- IMPROVED: User experience with persistent favorites and recent assets across sessions
+New in v1.2.3 - Phase 2 Refactoring: UI Separation:
+- ARCHITECTURE: Implemented Model-View-Controller (MVC) pattern
+- NEW: UIService - Complete separation of user interface from business logic
+- NEW: EventController - Mediates communication between Model and View layers
+- ENHANCED: Event-driven architecture for loose coupling between components
+- IMPROVED: Testability through independent layer testing capabilities
+- OPTIMIZED: Maintainability with clear separation of concerns
+
+Phase 1 Features (Preserved):
+- SearchService: Handles search, favorites, recent assets, and auto-complete
+- MetadataService: Handles metadata extraction, caching, and file analysis
+- AssetStorageService: Handles file operations, project management, and collections
 
 New in v1.2.1:
 - FIXED: Drag & Drop Duplication - Asset drag & drop no longer creates duplicate imports
@@ -87,6 +89,17 @@ from datetime import datetime, date
 from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from difflib import SequenceMatcher
+
+# === Phase 1 Refactoring: Service Extraction ===
+# Import extracted services following Single Responsibility Principle
+from search_service import SearchService
+from metadata_service import MetadataService  
+from asset_storage_service import AssetStorageService
+
+# === Phase 2 Refactoring: UI Separation ===  
+# Import MVC architecture components
+from ui_service import UIService
+from event_controller import EventController
 
 # Clean Code Constants - Replace magic numbers with named constants
 class SearchConstants:
@@ -630,22 +643,61 @@ class DragDropAssetListWidget(QListWidget):
 
 
 class AssetManager:
-    """Main Asset Manager class handling core functionality"""
+    """
+    Main Asset Manager class - Refactored with MVC architecture
+    
+    Phase 2 Refactoring: Implemented Model-View-Controller pattern:
+    - Model: Business logic services (Search, Metadata, Storage)
+    - View: UI Service handling all interface operations  
+    - Controller: Event controller coordinating between Model and View
+    
+    Benefits:
+    - Complete separation of concerns
+    - Improved testability and maintainability
+    - Event-driven architecture for loose coupling
+    - Easy to extend with new UI components or business logic
+    """
     
     def __init__(self):
         self.plugin_name = "assetManager"
-        self.version = "1.2.2"
+        self.version = "1.2.3"  # Phase 2 Refactoring: UI Separation
         self.config_path = self._get_config_path()
-        self.assets_library = {}
-        self.current_project = None
-        
-        # Recursion protection flags
-        self._processing_project_entry = False
         
         # Performance optimization: File system cache
         self._file_cache = {}
         self._cache_timestamps = {}
         self._cache_timeout = 30  # seconds
+        
+        # Thumbnail system attributes
+        self._thumbnail_cache_size_limit = 50  # Limit to prevent memory bloat
+        
+        # Initialize configuration manager for service dependency injection
+        self.config_manager = self._initialize_config_manager()
+        
+        # === Phase 1 & 2 Refactoring: MVC Architecture ===
+        
+        # MODEL LAYER: Business Logic Services
+        self.search_service = SearchService()
+        self.metadata_service = MetadataService(cache_timeout=300)  # 5 minutes cache
+        self.storage_service = AssetStorageService()
+        
+        # VIEW LAYER: UI Service
+        self.ui_service = UIService()
+        
+        # CONTROLLER LAYER: Event Coordination
+        self.controller = EventController(
+            search_service=self.search_service,
+            metadata_service=self.metadata_service,
+            storage_service=self.storage_service,
+            ui_service=self.ui_service
+        )
+        
+        # Legacy attributes for backward compatibility during transition
+        self.assets_library = {}  # Will be managed by storage_service
+        self.current_project = None  # Will be managed by storage_service
+        
+        # Recursion protection flags
+        self._processing_project_entry = False
         
         # Thread pool for background operations
         self._thread_pool = ThreadPoolExecutor(max_workers=2)  # Reduced workers to prevent Maya overload
@@ -656,27 +708,18 @@ class AssetManager:
         # Thumbnail system with memory-safe caching and duplicate prevention
         self._thumbnail_cache = {}  # Cache QPixmap objects
         self._icon_cache = {}  # NEW: Cache QIcon objects to prevent UI duplication
-        self._thumbnail_cache_size_limit = 50  # Limit to prevent memory bloat
         self._thumbnail_generation_queue = []
         self._thumbnail_workers = 1  # Limited workers for memory safety
         self._thumbnail_processing = False
         self._thumbnail_timer = None
         self._generating_thumbnails = set()  # Track thumbnails currently being generated
         
-        # Import tracking to prevent drag-and-drop duplicates
-        self._recent_imports = {}  # {asset_path: timestamp}
+        # Import tracking to prevent drag-and-drop duplicates (maintained for backward compatibility)
+        self._recent_imports = {}  # {asset_path: timestamp} - will migrate to storage_service
         self._import_cooldown = 1.5  # seconds between imports of same asset
         
-        # === NEW v1.2.2: Search & Discovery System ===
-        # Recent assets tracking
-        self._recent_assets = []  # List of recently used asset paths
-        self._recent_assets_timestamps = {}  # {asset_path: timestamp}
-        
-        # Favorite assets system
-        self._favorite_assets = set()  # Set of favorite asset paths
-        
-        # Search history tracking
-        self._search_history = []  # List of recent search terms
+        # MVC initialization state
+        self._mvc_initialized = False
         
         # Advanced metadata cache for search filters
         self._metadata_cache = {}  # {asset_path: metadata_dict}
@@ -921,6 +964,58 @@ class AssetManager:
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
         return os.path.join(config_dir, "config.json")
+    
+    def _initialize_config_manager(self):
+        """
+        Initialize configuration manager for service dependency injection
+        Phase 1 Refactoring: Provides shared configuration across services
+        """
+        config_manager = {
+            'config_path': self.config_path,
+            'plugin_name': self.plugin_name,
+            'version': self.version,
+            'cache_timeout': self._cache_timeout,
+            'thumbnail_cache_limit': self._thumbnail_cache_size_limit,
+            'maya_available': MAYA_AVAILABLE
+        }
+        return config_manager
+    
+    def initialize_mvc_architecture(self) -> bool:
+        """
+        Initialize the MVC architecture
+        Phase 2 Refactoring: Setup Model-View-Controller pattern
+        """
+        try:
+            print(f"🎯 Initializing Asset Manager v{self.version} MVC Architecture...")
+            
+            # Initialize the controller (which handles UI initialization and event connection)
+            if self.controller.initialize_controller():
+                self._mvc_initialized = True
+                print("✅ MVC Architecture successfully initialized!")
+                return True
+            else:
+                print("⚠️ MVC Architecture initialized without UI (headless mode)")
+                self._mvc_initialized = True  # Still consider it initialized for headless operation
+                return True
+                
+        except Exception as e:
+            print(f"❌ MVC Architecture initialization failed: {e}")
+            return False
+    
+    def show_ui(self) -> bool:
+        """
+        Show the Asset Manager UI
+        Phase 2 Refactoring: Delegates to MVC Controller
+        """
+        if not self._mvc_initialized:
+            if not self.initialize_mvc_architecture():
+                return False
+        
+        return self.controller.show_application()
+    
+    def is_mvc_initialized(self) -> bool:
+        """Check if MVC architecture is initialized"""
+        return self._mvc_initialized
     
     def _is_network_path(self, path):
         """Check if path is on a network drive (Windows UNC or mapped drive)"""

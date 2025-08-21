@@ -1,8 +1,38 @@
-# Asset Manager for Maya v1.2.1
+# Asset Manager for Maya v1.2.2
 
-A comprehensive asset management system for Maya 2025.3+ with **guaranteed visible background colors**, professional multi-select functionality, and **critical bug fixes**.
+A comprehensive asset management system for Maya 2025.3+ with **advanced Search & Discovery features**, guaranteed visible background colors, professional multi-select functionality, and critical bug fixes.
 
-## 🔧 **Critical Fixes in v1.2.1**
+## � **NEW in v1.2.2: Advanced Search & Discovery**
+
+### 🚀 **Intelligent Asset Discovery**
+
+**Revolutionary Search**: Find exactly what you need with powerful search and discovery tools.
+
+- **🔍 Advanced Search Dialog**: Multi-criteria filtering with asset type, file type, size, date, and polygon count filters
+- **⚡ Auto-Complete Search**: Intelligent search suggestions with real-time completion as you type
+- **📅 Date Range Filtering**: Find assets modified within specific time periods using calendar controls
+- **📐 Polygon Count Search**: Discover models by polygon count ranges for LOD optimization
+- **💾 File Size Filtering**: Search by file size ranges to manage storage efficiently
+
+### 📚 **Smart Asset Memory**
+
+**Never Lose Track**: Intelligent tracking of your most important assets.
+
+- **🕒 Recent Assets Panel**: Automatically tracks your 20 most recently accessed assets
+- **⭐ Favorites System**: Star your most important assets (up to 100 favorites)
+- **📖 Search History**: Remember your last 15 searches for quick re-execution
+- **🔄 Smart Persistence**: All tracking data preserved between Maya sessions
+
+### 🎯 **Enhanced Discovery Features**
+
+**Powerful Organization**: Advanced tools for better asset organization and discovery.
+
+- **🏷️ Metadata Extraction**: Automatic extraction of file creation dates, modification times, and technical details
+- **🔍 Pattern Matching**: Intelligent search with fuzzy matching and similarity scoring
+- **⚡ Performance Optimized**: Smart caching system with 5-minute metadata refresh for optimal performance
+- **🖱️ Context Menu Integration**: Quick access to favorites and recent assets via right-click menus
+
+## �🔧 **Critical Fixes in v1.2.1**
 
 ### 🚀 **FIXED: Drag & Drop Duplication Issue**
 

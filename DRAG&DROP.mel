@@ -4,14 +4,16 @@
 //
 // Asset Manager for Maya 2025.3+
 // Author: Mike Stumbo
-// Version: 1.2.1 - Fixed Drag & Drop Duplication, Real GitHub Updates, Enhanced Transparency
+// Version: 1.2.2 - Advanced Search & Discovery, Enhanced Asset Management
 
 global proc DRAG_DROP_assetManager_installer()
 {
-    print("\\n=== Asset Manager Plugin Installer v1.2.1 ===\\n");
-    print("🚀 FIXED: Drag & drop no longer creates duplicate imports\\n");
-    print("🔗 FIXED: GitHub updates feature now works with real repository\\n");
-    print("🎨 ENHANCED: More transparent icon backgrounds for better aesthetics\\n");
+    print("\\n=== Asset Manager Plugin Installer v1.2.2 ===\\n");
+    print("� NEW: Advanced Search & Discovery with intelligent filtering\\n");
+    print("⚡ NEW: Auto-complete search with real-time suggestions\\n");
+    print("⭐ NEW: Favorites system and recent assets tracking\\n");
+    print("📚 NEW: Search history and metadata extraction\\n");
+    print("🚀 PREVIOUS: Fixed drag & drop duplication and GitHub updates\\n");
 
     // Locate plugin installation source directory
     string $scriptLocation = `whatIs "DRAG_DROP_assetManager_installer"`;
@@ -33,14 +35,15 @@ global proc DRAG_DROP_assetManager_installer()
     
     string $possibleDirs[];
     $possibleDirs[0] = $baseDir;
-    $possibleDirs[1] = $baseDir + "/versions/v1.2.1";
-    $possibleDirs[2] = $baseDir + "/versions/v1.2.0";
-    $possibleDirs[3] = $baseDir + "/versions/v1.1.4";
-    $possibleDirs[4] = $baseDir + "/versions/v1.1.3";
-    $possibleDirs[5] = $baseDir + "/versions/v1.1.2";
-    $possibleDirs[6] = $baseDir + "/versions/v1.1.1";
-    $possibleDirs[7] = $baseDir + "/versions/v1.1.0";
-    $possibleDirs[8] = $baseDir + "/versions/assetManager_1.0.0";
+    $possibleDirs[1] = $baseDir + "/versions/v1.2.2";
+    $possibleDirs[2] = $baseDir + "/versions/v1.2.1";
+    $possibleDirs[3] = $baseDir + "/versions/v1.2.0";
+    $possibleDirs[4] = $baseDir + "/versions/v1.1.4";
+    $possibleDirs[5] = $baseDir + "/versions/v1.1.3";
+    $possibleDirs[6] = $baseDir + "/versions/v1.1.2";
+    $possibleDirs[7] = $baseDir + "/versions/v1.1.1";
+    $possibleDirs[8] = $baseDir + "/versions/v1.1.0";
+    $possibleDirs[9] = $baseDir + "/versions/assetManager_1.0.0";
     
     string $scriptDir = "";
     string $pluginFile = "";
@@ -173,7 +176,7 @@ global proc DRAG_DROP_assetManager_installer()
         
         // Show success message
         confirmDialog -title "Asset Manager - Installer" 
-                     -message "Asset Manager v1.2.1 has been successfully installed!"
+                     -message "Asset Manager v1.2.2 has been successfully installed!"
                      -button "OK"
                      -defaultButton "OK";
         
@@ -240,7 +243,7 @@ global proc createAssetManagerShelfButton()
     
     string $buttonName = `shelfButton -parent $currentShelf
                 -label "Asset Manager"
-                -annotation "Asset Manager for Maya"
+                -annotation "Asset Manager"
                 -image $iconImage
                 -imageOverlayLabel ""
                 -command $buttonCmd

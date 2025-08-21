@@ -32,6 +32,19 @@ MANIFEST
 *.ma.bak
 *.mb.bak
 
+# Asset Manager - Configuration and cache files
+asset_manager_config.json
+asset_manager_cache.db
+*.assetdb
+*.thumbnails
+search_index/
+metadata_cache/
+
+# Maya integration files (user-specific)
+userSetup_assetManager.py
+shelf_AssetManager.mel
+workspace_AssetManager.mel
+
 # OS
 .DS_Store
 .DS_Store?
@@ -68,6 +81,15 @@ docs/_build/
 # Development files (optional)
 # Uncomment the line below if you don't want to track dev files
 # dev/
+
+# Asset Manager Development & Testing
+test_assets/
+mock_data/
+development_db/
+*.test.json
+*.dev.log
+integration_tests/temp/
+ui_tests/screenshots/
 
 # Releases folder - managed through GitHub Releases
 releases/
