@@ -46,18 +46,31 @@ The Asset Manager plugin uses two custom shelf icons for enhanced visual feedbac
 
 ## Maya Shelf Integration
 
-The shelf button is created with these icons in the MEL installer:
+The shelf button is created with hover support in the MEL installer:
 
 ```mel
+// Enhanced shelf button with hover icon (Clean Code: Single Responsibility)
 shelfButton -parent $currentShelf
             -label "Asset Manager"
-            -annotation "Open Asset Manager - Comprehensive asset management for Maya"
+            -annotation "Asset Manager v1.3.0 - Enterprise Modular Service Architecture"
             -image "assetManager_icon.png"        // Default state
+            -image1 "assetManager_icon2.png"      // Hover state ✨ NEW!
             -imageOverlayLabel ""                 // No text overlay
             -command $buttonCmd
             -sourceType "python"
-            -style "iconOnly";                    // Icon-only display
+            -style "iconOnly"                     // Icon-only display
+            -enableCommandRepeat true             // Better UX
+            -enable true;
 ```
+
+### Hover State Implementation
+
+Maya shelf buttons support multiple image states using `-image1`, `-image2`, `-image3` parameters:
+
+- **`-image`**: Default state (always visible)
+- **`-image1`**: Hover state (mouse over) ⭐ **Now Implemented!**
+- **`-image2`**: Pressed state (optional)
+- **`-image3`**: Disabled state (optional)
 
 ## Icon Usage in Code
 

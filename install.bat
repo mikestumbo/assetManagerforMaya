@@ -1,37 +1,87 @@
 @echo off
-echo Asset Manager for Maya 2025.3 v1.2.2 - Installation Script
-echo =========================================================
+title Asset Manager v1.3.0 - Windows Installation
+color 0A
+
+echo.
+echo ================================================================
+echo    Asset Manager for Maya (All Versions) v1.3.0 - Windows Installer
+echo ================================================================
+echo    Unified Installation Architecture ^| Multi-Version Compatible
+echo    OneDrive ^& Cloud Sync Support ^| Smart Path Detection
+echo ================================================================
 echo.
 
 REM Check if Python is available
+echo [1/4] Checking Python installation...
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Error: Python is not installed or not in PATH
-    echo Please install Python or add it to your PATH
+    color 0C
+    echo.
+    echo ❌ ERROR: Python is not installed or not available in PATH
+    echo.
+    echo    Please install Python from https://python.org
+    echo    Make sure to check "Add Python to PATH" during installation
+    echo.
     pause
     exit /b 1
 )
 
-echo Installing Asset Manager plugin...
+for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
+echo    ✅ Python %PYTHON_VERSION% detected
+
+echo.
+echo [2/4] Initializing unified installation core...
+echo    📦 Using AssetManagerInstaller class for consistent results
+
+REM Change to script directory to ensure relative paths work
+cd /d "%~dp0"
+
+echo.
+echo [3/4] Running installation with unified setup.py core...
+echo    🔧 This uses the same core logic as DRAG^&DROP.mel and install.sh
 echo.
 
-REM Run the installation script
+REM Run the unified installation
 python setup.py
 
+if %errorlevel% neq 0 (
+    color 0C
+    echo.
+    echo ❌ Installation failed. Please check error messages above.
+    echo.
+    pause
+    exit /b 1
+)
+
+color 0A
 echo.
-echo Installation complete!
+echo [4/4] Installation verification...
+echo    ✅ Unified installation architecture complete
 echo.
-echo Asset Manager v1.2.2 - NEW Search & Discovery Features:
-echo * Advanced Search with intelligent filtering
-echo * Auto-complete search with real-time suggestions
-echo * Favorites system and recent assets tracking
-echo * Search history and metadata extraction
+echo ================================================================
+echo                    🎉 INSTALLATION SUCCESSFUL 🎉
+echo ================================================================
 echo.
-echo Next steps:
-echo 1. Open Maya 2025.3
-echo 2. Go to Windows ^> Settings/Preferences ^> Plug-in Manager
-echo 3. Find 'assetManager.py' and enable it
-echo 4. The Asset Manager menu will appear in Maya's menu bar
-echo 5. Try the new Search & Discovery features!
+echo 🚀 NEXT STEPS:
+echo.
+echo   1️⃣  Launch any Maya version (2022, 2023, 2024, 2025+)
+echo   2️⃣  Run in Maya's Script Editor (Python):
+echo        import assetManager
+echo        assetManager.show_asset_manager()
+echo.
+echo   💡 TIP: Works across all Maya versions - installed once, use everywhere!
+echo.
+echo � INSTALLATION METHODS COMPARISON:
+echo   • install.bat (this method): Windows command-line installation
+echo   • DRAG^&DROP.mel: Maya GUI installation with shelf button
+echo   • install.sh: Unix/Linux/macOS installation
+echo   • All methods use the same unified setup.py core!
+echo.
+echo 🔧 ARCHITECTURE HIGHLIGHTS:
+echo   • Single Source of Truth: All installers use setup.py core
+echo   • Clean Code: AssetManagerInstaller class with clear methods
+echo   • DRY Principle: No code duplication between installation methods
+echo   • Multi-Version Support: Works with all Maya versions (2022-2025+)
+echo   • General Scripts Directory: ~/Documents/maya/scripts/ (not version-specific)
 echo.
 pause

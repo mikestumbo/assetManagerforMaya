@@ -1,0 +1,37 @@
+# Maya Character Reference - QUICK GUIDE
+
+## NEVER USE IN MAYA SCRIPTS:
+❌ 🎯 🚀 ✅ ❌ ⚠️ ℹ️ 📦 🔧 🎨 📂 📄 🔄 💻 🛤️ 🧹 🎉
+
+## ALWAYS USE INSTEAD:
+[OK]       - Success/completion
+[ERROR]    - Errors/failures  
+[WARN]     - Warnings
+[INFO]     - Information
+[DONE]     - Task completion
+[READY]    - System ready
+[TEST]     - Testing/debug
+[INSTALL]  - Installation steps
+[FEATURES] - Feature highlights
+[SYSTEM]   - System checks
+
+## MAYA-SAFE FORMATTING:
+=== Main Headers ===
+--- Sub Sections ---  
+*** Important Notes ***
+... Progress Dots ...
+
+* Bullet points
+1. Numbered lists
+- Dashes for sub-items
+
+## PYTHON IN MEL - CRITICAL RULE:
+❌ NEVER split Python lists across multiple python() calls
+❌ NEVER split Python indented blocks (for, if, try) across calls
+✅ Keep complete Python statements in single python() call
+✅ Use \n for line breaks in multi-line Python code
+
+WRONG:  python("for x in items:"); python("    print(x)");
+RIGHT:  python("for x in items:\n    print(x)");
+
+REMEMBER: Maya uses cp1252 codec - ASCII ONLY!
