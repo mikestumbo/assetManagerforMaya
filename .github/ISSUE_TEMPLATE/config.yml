@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/mikestumbo/assetManagerforMaya/discussions
+    about: Ask questions, share ideas, and discuss Asset Manager for Maya with the community
+  - name: 📖 Documentation
+    url: https://github.com/mikestumbo/assetManagerforMaya/blob/main/README.md
+    about: Read the documentation, installation guide, and usage instructions
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/mikestumbo/assetManagerforMaya/security/policy
+    about: Report security vulnerabilities privately (DO NOT create public issues)
