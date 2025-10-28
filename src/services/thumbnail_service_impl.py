@@ -1360,22 +1360,83 @@ class ThumbnailServiceImpl(IThumbnailService):
             cache_path = self._get_cache_path(cache_key)
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             
-            # Create simple file type icon
+            # Create file type icon with custom graphics (v1.4.0)
             extension = file_path.suffix.lower()
             
-            # Color mapping for different file types (v1.2.2 style)
+            # Map file extensions to custom icon files
+            icon_map = {
+                '.ma': 'maya_ascii_am_icon.png',
+                '.mb': 'maya_binary_am_icon.png',
+                '.usd': 'usd_am_icon.png',
+                '.fbx': 'fbx_am_icon.png',
+                '.obj': 'obj_am_icon.png',
+                '.abc': 'abc_am_icon.png',
+                '.tex': 'tex_am_icon.png',
+            }
+            
+            # Get custom icon path
+            custom_icon_name = icon_map.get(extension, 'unknown_am_icon.png')
+            icons_dir = Path(__file__).parent.parent.parent / 'icons'
+            custom_icon_path = icons_dir / custom_icon_name
+            
+            # Try to load custom icon
+            if custom_icon_path.exists():
+                # Load and scale custom icon
+                pixmap = QPixmap(str(custom_icon_path))
+                if not pixmap.isNull():
+                    # Scale to requested size
+                    pixmap = pixmap.scaled(
+                        size[0], size[1],
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation
+                    )
+                    
+                    # Only add text overlay for unknown file types
+                    # Known file types have complete custom icons with built-in labels
+                    is_unknown_type = extension not in icon_map
+                    
+                    if is_unknown_type:
+                        # Overlay extension text for unknown file types only
+                        painter = QPainter(pixmap)
+                        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+                        
+                        # Draw extension text
+                        painter.setPen(QPen(Qt.GlobalColor.white))
+                        font = QFont("Arial", max(8, size[0] // 8), QFont.Weight.Bold)
+                        painter.setFont(font)
+                        
+                        text = extension.upper().replace('.', '') if extension else "FILE"
+                        rect = QRect(0, 0, pixmap.width(), pixmap.height())
+                        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
+                        
+                        painter.end()
+                    
+                    # Save to cache
+                    if pixmap.save(str(cache_path), "PNG"):
+                        if is_unknown_type:
+                            print(f"✅ Created custom icon with text overlay: {extension}")
+                        else:
+                            print(f"✅ Using custom icon (no text): {extension}")
+                        return str(cache_path)
+            
+            # Fallback to programmatic colored icon if custom icon fails
+            print(f"⚠️ Custom icon not found: {custom_icon_path}, using fallback")
+            
+            # Color mapping for fallback (v1.4.0 style)
             color_map = {
-                '.ma': QColor(100, 150, 255),   # Maya - Blue
+                '.ma': QColor(100, 150, 255),   # Maya ASCII - Blue
                 '.mb': QColor(80, 120, 200),    # Maya Binary - Dark Blue  
                 '.obj': QColor(255, 150, 100),  # OBJ - Orange
                 '.fbx': QColor(150, 255, 100),  # FBX - Green
-                '.usd': QColor(255, 100, 150),  # USD - Pink
+                '.usd': QColor(100, 195, 238),  # USD - Cyan (#64c3ee)
                 '.abc': QColor(255, 255, 100),  # Alembic - Yellow
+                '.tex': QColor(255, 100, 150),  # RenderMan Texture - Pink
             }
             
             color = color_map.get(extension, QColor(150, 150, 150))
             
-            # Create pixmap and draw icon
+            # Create pixmap and draw fallback icon
             pixmap = QPixmap(size[0], size[1])
             pixmap.fill(Qt.GlobalColor.transparent)
             
@@ -1402,7 +1463,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             
             # Save icon
             if pixmap.save(str(cache_path), "PNG"):
-                print(f"✅ Created file type icon: {extension}")
+                print(f"✅ Created fallback file type icon: {extension}")
                 return str(cache_path)
             
         except Exception as e:
