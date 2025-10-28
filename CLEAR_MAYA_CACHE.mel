@@ -1,9 +1,9 @@
-// Asset Manager Maya Cache Cleaner v1.3.0
-// Run this script in Maya's Script Editor before installing Asset Manager v1.3.0
+// Asset Manager Maya Cache Cleaner v1.4.0
+// Run this script in Maya's Script Editor before installing Asset Manager v1.4.0
 
 global proc clearMayaCacheForAssetManager()
 {
-    print("\n=== Maya Cache Cleaner for Asset Manager v1.3.0 ===\n");
+    print("\n=== Maya Cache Cleaner for Asset Manager v1.4.0 ===\n");
     
     // Get Maya directories with robust path handling
     string $scriptsDir = `internalVar -userScriptDir`;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Asset Manager v1.3.0 - Unified Installation System
+Asset Manager v1.4.0 - Unified Installation System
 Single Source of Truth for all installation methods
 
 This module provides the core installation logic that is used by:
@@ -16,7 +16,7 @@ Following Clean Code principles:
 - Cross-Platform: Works on Windows, macOS, and Linux
 
 Author: Mike Stumbo
-Version: 1.3.0
+Version: 1.4.0
 """
 
 import os

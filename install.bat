@@ -1,10 +1,10 @@
 @echo off
-title Asset Manager v1.3.0 - Windows Installation
+title Asset Manager v1.4.0 - Windows Installation
 color 0A
 
 echo.
 echo ================================================================
-echo    Asset Manager for Maya (All Versions) v1.3.0 - Windows Installer
+echo    Asset Manager for Maya (All Versions) v1.4.0 - Windows Installer
 echo ================================================================
 echo    Unified Installation Architecture ^| Multi-Version Compatible
 echo    OneDrive ^& Cloud Sync Support ^| Smart Path Detection

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Asset Manager for Maya v1.3.0
+Asset Manager for Maya v1.4.0
 Ultra-minimal plugin entry point implementing Clean Code and SOLID principles.
 
 Features:
 - Enterprise Modular Service Architecture (EMSA)
+- USD Pipeline System (Maya → USD export)
 - Enhanced Screenshot Capture with professional dialog
 - Maya Module System for automatic plugin discovery
 - Dependency Injection with professional service container
@@ -13,7 +14,7 @@ Features:
 - 100% backward compatibility with all features
 
 Author: Mike Stumbo
-Version: 1.3.0
+Version: 1.4.0
 License: MIT
 """
 
@@ -32,9 +33,9 @@ def maya_useNewAPI():
 
 # Maya Plugin Metadata - Required for Maya 2025+ security compliance
 PLUGIN_NAME = "assetManager"
-PLUGIN_VERSION = "1.3.0"
+PLUGIN_VERSION = "1.4.0"
 PLUGIN_AUTHOR = "Mike Stumbo"
-PLUGIN_DESCRIPTION = "Asset Manager for Maya - Enterprise Modular Service Architecture"
+PLUGIN_DESCRIPTION = "Asset Manager for Maya - Enterprise Modular Service Architecture with USD Pipeline"
 PLUGIN_REQUIRED_API_VERSION = "20250000"  # Maya 2025
 PLUGIN_VENDOR = "Mike Stumbo"
 

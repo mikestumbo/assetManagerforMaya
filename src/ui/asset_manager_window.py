@@ -48,7 +48,7 @@ except ImportError:
     except ImportError:
         # Ultimate fallback - define UI_CONFIG locally
         UI_CONFIG = {
-            'WINDOW_TITLE': 'Asset Manager v1.3.0',
+            'WINDOW_TITLE': 'Asset Manager v1.4.0',
             'WINDOW_SIZE': (1400, 900),
             'MIN_WINDOW_SIZE': (800, 600)
         }
@@ -364,6 +364,15 @@ class AssetManagerWindow(QMainWindow):
         manage_collections_action = QAction("&Manage Collections...", self)
         manage_collections_action.triggered.connect(self._on_manage_collections)
         collections_menu.addAction(manage_collections_action)
+        
+        # USD Pipeline menu - NEW! v1.4.0
+        usd_menu = menubar.addMenu("&USD Pipeline")
+        
+        usd_export_action = QAction("&Export to USD...", self)
+        usd_export_action.setShortcut(QKeySequence("Ctrl+U"))
+        usd_export_action.setStatusTip("Open USD Pipeline Creator for Maya → USD export")
+        usd_export_action.triggered.connect(self._on_usd_pipeline)
+        usd_menu.addAction(usd_export_action)
         
         # Help menu
         help_menu = menubar.addMenu("&Help")
@@ -1058,7 +1067,7 @@ Asset Manager Project created on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Usage
 
-This project is managed by Asset Manager v1.3.0. Use the Asset Manager interface to:
+This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface to:
 - Browse and organize assets
 - Import assets into Maya
 - Create new assets from scenes
@@ -2333,11 +2342,18 @@ This project is managed by Asset Manager v1.3.0. Use the Asset Manager interface
     def _on_about(self) -> None:
         """Handle about dialog"""
         about_text = (
-            "<h2>Asset Manager v1.3.0</h2>"
+            "<h2>Asset Manager v1.4.0</h2>"
             "<p><b>Enterprise Modular Service Architecture (EMSA)</b></p>"
             "<p>A comprehensive asset management system for Maya<br>"
             "Built with Clean Code & SOLID principles</p>"
             "<p><b>Author:</b> Mike Stumbo</p>"
+            "<hr>"
+            "<h3>New in v1.4.0</h3>"
+            "<p><b>USD Pipeline System</b><br>"
+            "Complete Maya → USD export workflow<br>"
+            "• Geometry, Materials, Rigging (UsdSkel)<br>"
+            "• RenderMan material preservation<br>"
+            "• Interactive export dialog with progress tracking</p>"
             "<hr>"
             "<h3>API Integrations</h3>"
             "<p><b>Pixar RenderMan®</b> (v26.3)<br>"
@@ -2659,10 +2675,42 @@ This project is managed by Asset Manager v1.3.0. Use the Asset Manager interface
         collection_count = len(getattr(self, '_collections', {}))
         print(f"🔄 Collections display refreshed - {collection_count} collections loaded")
     
+    def _on_usd_pipeline(self) -> None:
+        """Open USD Pipeline Creator dialog - Single Responsibility
+        
+        Clean Code: New v1.4.0 feature for Maya → USD export
+        """
+        try:
+            from .dialogs.usd_pipeline_dialog import USDPipelineDialog
+            
+            dialog = USDPipelineDialog(self)
+            
+            # Connect signals if needed
+            dialog.export_started.connect(lambda: print("📤 USD export started..."))
+            dialog.export_completed.connect(
+                lambda success, msg: print(f"{'✅' if success else '❌'} USD export: {msg}")
+            )
+            
+            dialog.exec()
+            
+        except ImportError as e:
+            QMessageBox.critical(
+                self,
+                "Import Error",
+                f"Failed to load USD Pipeline dialog:\n{e}\n\n"
+                "USD Pipeline requires Python USD libraries (pxr)."
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to open USD Pipeline:\n{str(e)}"
+            )
+    
     def _on_check_update(self) -> None:
         """Check for plugin updates - Single Responsibility"""
         QMessageBox.information(self, "Check for Updates", 
-                               "Update Checker\n\nAsset Manager v1.3.0\n"
+                               "Update Checker\n\nAsset Manager v1.4.0\n"
                                "You are running the latest version.\n"
                                "Check back later for updates.")
     

@@ -1,5 +1,5 @@
 """
-Asset Manager Package Initialization
+Asset Manager Package Initialization v1.4.0
 Exposes the main show_asset_manager function for easy access.
 """
 

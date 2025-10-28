@@ -11,7 +11,7 @@ BOLD='\033[1m'
 
 echo
 echo -e "${BOLD}${CYAN}====================================================================${NC}"
-echo -e "${BOLD}${CYAN}    Asset Manager for Maya (All Versions) v1.3.0 - Unix/Linux/macOS Installer${NC}"
+echo -e "${BOLD}${CYAN}    Asset Manager for Maya (All Versions) v1.4.0 - Unix/Linux/macOS Installer${NC}"
 echo -e "${BOLD}${CYAN}====================================================================${NC}"
 echo -e "${CYAN}    Unified Installation Architecture ${NC}${BOLD}|${NC}${CYAN} Multi-Version Compatible${NC}"
 echo -e "${CYAN}    OneDrive & iCloud Drive Support ${NC}${BOLD}|${NC}${CYAN} Smart Path Detection${NC}"

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Asset Manager v1.3.0 - Maya 2025+ Exclusive (NO PLUGIN REGISTRATION)
+Asset Manager v1.4.0 - Maya 2025+ Exclusive (NO PLUGIN REGISTRATION)
 Pure UI Module - No Maya Node Registration to Avoid Unknown Data Issues
 
 Author: Mike Stumbo
-Version: 1.3.0
+Version: 1.4.0
 Maya Version: 2025.3+
 """
 

@@ -1,13 +1,46 @@
-# Asset Manager for Maya v1.3.0
+# Asset Manager for Maya v1.4.0
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
 > Use ASCII markers: `[OK]`, `[ERROR]`, `[WARN]`, `[INFO]` only  
 > Reference: `MAYA_CHARACTERS_REFERENCE.txt` & `docs/MAYA_CODING_STANDARDS.md`
 
-A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
+A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
 
-## 🏗️ **NEW in v1.3.0: Unified Installation Architecture**
+## 🚀 **NEW in v1.4.0: USD Pipeline System**
+
+### 🎬 **Complete Maya → USD Export Workflow**
+
+**Professional USD Integration**: Production-ready pipeline for exporting Maya assets to Universal Scene Description format.
+
+- **🏗️ Full Pipeline Architecture**: Clean separation with 4 interfaces and 3 service implementations
+  - `IMayaSceneParser` - Extracts geometry, materials, rigging from Maya scenes
+  - `IUSDExportService` - Orchestrates complete export workflow
+  - `IUSDRigConverter` - Converts Maya rigging to UsdSkel format
+  - `IUSDMaterialConverter` - Material conversion (interface ready for implementation)
+
+- **📦 Export Capabilities**:
+  - ✅ **Geometry** - Vertices, faces, normals, UVs, vertex colors, transforms
+  - ✅ **Materials** - RenderMan shader support, texture paths
+  - ✅ **Rigging** - UsdSkel structure, skin weights, bind poses, joint hierarchies
+  - ✅ **Formats** - .usda (ASCII), .usdc (Binary), .usdz (Package)
+
+- **🎨 Interactive UI Dialog**:
+  - Source selection with Maya file browser
+  - Format and export options configuration
+  - Pre-export validation with scene analysis
+  - Real-time progress tracking (0-100%)
+  - Export cancellation support
+
+- **🏆 Disney/Pixar Standards**:
+  - Proper USD stage setup (Y-up axis, cm units)
+  - UsdSkel accuracy for animation pipelines
+  - RenderMan material preservation
+  - Production-ready for film/game workflows
+
+- **📋 Menu Integration**: `USD Pipeline → Export to USD...` (Ctrl+U)
+
+## 🏗️ **v1.3.0: Unified Installation Architecture**
 
 ### 🚀 **Clean Code Revolution - Single Source of Truth**
 
@@ -19,7 +52,7 @@ A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modul
 - **🔧 Enhanced Development Tools**: On-demand hot reload system generation with improved functionality
 - **📖 Comprehensive Documentation**: Complete installation method comparison and architecture guide
 
-## ✨ **NEW in v1.3.0: User Experience Enhancements**
+## ✨ **v1.3.0: User Experience Enhancements**
 
 ### 🎨 **Icon Zoom Control**
 

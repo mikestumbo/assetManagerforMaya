@@ -5,6 +5,61 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-10-28
+
+### 🚀 **USD Pipeline System - MAJOR NEW FEATURE**
+
+#### 🎬 **Complete Maya → USD Export Workflow**
+
+- **NEW FEATURE**: Production-ready USD Pipeline for exporting Maya assets to Universal Scene Description
+- **ARCHITECTURE**: Clean separation with 4 interfaces and 3 service implementations (~2,500 lines)
+  - `IMayaSceneParser` - Extracts geometry, materials, rigging from Maya scenes (705 lines)
+  - `IUSDExportService` - Orchestrates complete export workflow (650 lines)
+  - `IUSDRigConverter` - Converts Maya rigging to UsdSkel format (550 lines)
+  - `IUSDMaterialConverter` - Material conversion interface (ready for implementation)
+
+#### 📦 **Export Capabilities**
+
+- **GEOMETRY**: Vertices, face topology, normals, UVs, vertex colors, transforms (Gf.Matrix4d)
+- **MATERIALS**: RenderMan shader detection, texture path handling, UsdPreviewSurface conversion
+- **RIGGING**: UsdSkel structure, skin weights, bind/rest poses, joint hierarchies
+- **FORMATS**: .usda (ASCII), .usdc (Binary), .usdz (Package)
+- **VALIDATION**: Pre-export checks with scene analysis (mesh count, material detection, joint topology)
+
+#### 🎨 **Interactive USD Pipeline Dialog**
+
+- **NEW UI**: Professional export dialog with 550+ lines (src/ui/dialogs/usd_pipeline_dialog.py)
+- **SOURCE SELECTION**: Maya file browser (.ma/.mb) with include options
+- **OPTIONS**: Format selection, material conversion, rigging parameters, max influences (1-16)
+- **VALIDATION**: Real-time scene analysis showing meshes, materials, joints, skin clusters
+- **PROGRESS**: Live progress bar (0-100%) with phase descriptions
+- **CANCELLATION**: User-controlled export cancellation with cleanup
+- **MENU**: Integrated at `USD Pipeline → Export to USD...` with Ctrl+U shortcut
+
+#### 🏆 **Disney/Pixar Production Standards**
+
+- **STAGE SETUP**: Proper Y-up axis, centimeter units (0.01m), default /root prim
+- **USDSKEL**: Accurate skeleton conversion with bind transforms for animation pipelines
+- **RENDERMAN**: RenderMan material preservation for Disney/Pixar workflows
+- **METADATA**: Stage comments, up axis, units per meter for pipeline compatibility
+
+#### 🔧 **Technical Implementation**
+
+- **DEPENDENCY INJECTION**: Service implementations with optional converters
+- **PROGRESS TRACKING**: Real-time updates with QTimer (100ms refresh)
+- **ERROR HANDLING**: Comprehensive validation with detailed error messages
+- **6-PHASE WORKFLOW**: Parse (20%), Stage (10%), Geometry (30%), Materials (20%), Rigging (10%), Save (10%)
+- **TYPE SAFETY**: Conditional imports with type suppression for Maya/USD libraries
+- **CLEAN CODE**: Single Responsibility, Dependency Inversion, explicit method names
+
+### 📊 **Statistics**
+
+- **TOTAL NEW CODE**: ~2,500 lines across 4 implementation files
+- **INTERFACES**: 4 complete interface definitions
+- **DATA MODELS**: 6 dataclasses (MayaSceneData, MeshData, MaterialData, JointData, SkinClusterData, USDExportOptions)
+- **SERVICES**: 3 complete implementations + 1 interface ready for future
+- **UI INTEGRATION**: 1 dialog with full service integration
+
 ## [1.3.0] - 2025-10-15
 
 ### ✨ **User Experience Enhancements**
@@ -43,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **RELEASE NOTES**: Standardized naming convention matching v1.0.0-v1.2.2 releases
 - **MAINTAINABILITY**: Clear separation of concerns for better project navigation
 
-### � **CRITICAL: Maya Crash Elimination - Architectural Revolution**
+### 🔥 **CRITICAL: Maya Crash Elimination - Architectural Revolution**
 
 #### 🚨 **Maya ACCESS_VIOLATION Crash Fix**
 
