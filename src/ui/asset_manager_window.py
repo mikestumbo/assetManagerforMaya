@@ -2708,11 +2708,56 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             )
     
     def _on_check_update(self) -> None:
-        """Check for plugin updates - Single Responsibility"""
-        QMessageBox.information(self, "Check for Updates", 
-                               "Update Checker\n\nAsset Manager v1.4.0\n"
-                               "You are running the latest version.\n"
-                               "Check back later for updates.")
+        """Check for plugin updates from GitHub - Single Responsibility"""
+        try:
+            import urllib.request
+            import urllib.error
+            import json
+            
+            # Get current version
+            current_version = "1.4.0"
+            
+            # Check GitHub API for latest release
+            url = "https://api.github.com/repos/mikestumbo/assetManagerforMaya/releases/latest"
+            req = urllib.request.Request(url)
+            req.add_header('Accept', 'application/vnd.github.v3+json')
+            
+            try:
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    data = json.loads(response.read().decode('utf-8'))
+                    latest_version = data.get('tag_name', '').lstrip('v')
+                    
+                    if latest_version and latest_version > current_version:
+                        # New version available
+                        release_url = data.get('html_url', 'https://github.com/mikestumbo/assetManagerforMaya/releases')
+                        message = (f"Update Checker\n\n"
+                                 f"New version available!\n\n"
+                                 f"Current: v{current_version}\n"
+                                 f"Latest: v{latest_version}\n\n"
+                                 f"Visit GitHub to download:\n{release_url}")
+                        QMessageBox.information(self, "Update Available", message)
+                    else:
+                        # Running latest version
+                        QMessageBox.information(self, "Check for Updates", 
+                                              f"Update Checker\n\n"
+                                              f"Asset Manager v{current_version}\n"
+                                              f"You are running the latest version.\n"
+                                              f"Check back later for updates.")
+                        
+            except urllib.error.URLError as e:
+                # Network error or timeout
+                QMessageBox.warning(self, "Update Check Failed",
+                                  f"Could not check for updates.\n\n"
+                                  f"Error: {str(e)}\n\n"
+                                  f"Please check your internet connection.")
+                                  
+        except Exception as e:
+            # Fallback for any other errors
+            QMessageBox.information(self, "Check for Updates", 
+                                   f"Update Checker\n\n"
+                                   f"Asset Manager v1.4.0\n"
+                                   f"Could not connect to GitHub.\n"
+                                   f"Error: {str(e)}")
     
     # Missing toolbar and UI action handlers - Clean Code implementation
     def _on_remove_selected_asset(self) -> None:
