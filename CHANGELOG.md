@@ -5,6 +5,43 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2025-10-29
+
+### 🚀 **Performance Fixes - Auto-Install**
+
+#### 🎯 **Non-Blocking Auto-Installation (Threading)**
+
+- **BUG FIX**: Auto-install dialog was modal and blocked Maya restart
+- **THREADING**: Installation now runs in background thread
+- **RESPONSIVENESS**: Maya remains fully interactive during installation
+- **CLEAN ARCHITECTURE**: Separated concerns following **Single Responsibility Principle**
+
+#### 📝 **Fixed Components**
+
+- **asset_manager_window.py**:
+  - `_download_and_install_update()`: Launches background thread for installation
+  - `install_in_background()`: Performs download/extract/install off main thread
+  - `_show_install_success()`: Displays success message on main thread (Qt-safe)
+  - `_show_install_error()`: Displays errors and handles backup restoration
+
+#### 🔧 **Technical Implementation**
+
+- **Threading Module**: Uses Python's `threading.Thread` for async execution
+- **Qt Thread Safety**: `QTimer.singleShot(0, ...)` schedules UI updates on main thread
+- **Status Updates**: Progress bar shows installation phases (download, extract, backup, install)
+- **Error Recovery**: Automatic backup restoration on installation failure
+- **Non-Modal Dialogs**: Success/error dialogs don't block Maya restart
+
+#### 🎁 **User Benefits**
+
+- ✅ **No more blocking** - Maya stays responsive during installation
+- ✅ **Can restart immediately** - No modal dialogs preventing restart
+- ✅ **Better UX** - Progress updates keep user informed
+- ✅ **Reliable** - Automatic backup and error recovery
+- ✅ **Professional** - Clean, non-blocking installation experience
+
+---
+
 ## [1.4.3] - 2025-10-29
 
 ### 🚀 **Performance Fixes - Update Checker**
@@ -16,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **RESPONSIVENESS**: Maya remains fully responsive during update checks
 - **CLEAN ARCHITECTURE**: Separated concerns following **Single Responsibility Principle**
 
-#### 📝 **Fixed Components**
+#### 📝 **Fixed Components (v1.4.3)**
 
 - **asset_manager_window.py**:
   - `_on_check_update()`: Launches background thread with progress indicator
@@ -24,14 +61,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `_show_update_result()`: Displays update information on main thread (Qt-safe)
   - `_show_update_error()`: Displays errors on main thread (Qt-safe)
 
-#### 🔧 **Technical Implementation**
+#### 🔧 **Code Changes**
 
 - **Threading Module**: Uses Python's `threading.Thread` for async execution
 - **Qt Thread Safety**: `QTimer.singleShot(0, ...)` schedules UI updates on main thread
 - **Timeout**: Increased from 5s to 10s for better reliability
 - **Daemon Thread**: Background thread automatically terminates with Maya
 
-#### 🎁 **User Benefits**
+#### 🎁 **User Benefits (v1.4.3)**
 
 - ✅ **No more freezing** - Maya stays responsive during update checks
 - ✅ **Instant feedback** - Progress bar shows immediately
@@ -55,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AUTO-LOAD**: Automatic `mayaUsdPlugin` loading with error handling
 - **RECOGNITION**: All USD formats now recognized in file browsers and dialogs
 
-#### 📝 **Fixed Components**
+#### 📝 **Fixed Components (v1.4.2)**
 
 - **asset_manager_window.py**:
   - `_import_asset_to_maya()`: Added USD import case with plugin auto-loading
@@ -63,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - File dialogs: All USD extensions added to filters
   - "3D Models" filter: Now includes all USD variants
 
-#### 🎁 **User Benefits**
+#### 🎁 **User Benefits (v1.4.2)**
 
 - ✅ **Double-click USD files** in library to import into Maya scene
 - ✅ **Add USD assets** from file browsers with full format support
@@ -92,7 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DYNAMIC IMPORTS**: UI components dynamically read version from plugin metadata
 - **MAINTENANCE**: Future version updates only require changing one constant
 
-#### 📝 **Updated Components**
+#### 📝 **Fixed Components (v1.4.1)**
 
 - **assetManager.py**: `PLUGIN_VERSION = "1.4.1"` - Single source of truth
 - **asset_manager_window.py**:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Asset Manager for Maya v1.4.3
+Asset Manager for Maya v1.4.4
 Ultra-minimal plugin entry point implementing Clean Code and SOLID principles.
 
 Features:
@@ -9,6 +9,7 @@ Features:
 - USD Pipeline System (Maya → USD export & import)
 - Full USD Import Support (.usd, .usda, .usdc, .usdz)
 - Non-Blocking Update Checker (Threading)
+- Non-Blocking Auto-Install (Threading)
 - Enhanced Screenshot Capture with professional dialog
 - Maya Module System for automatic plugin discovery
 - Dependency Injection with professional service container
@@ -17,7 +18,7 @@ Features:
 - 100% backward compatibility with all features
 
 Author: Mike Stumbo
-Version: 1.4.3
+Version: 1.4.4
 License: MIT
 """
 
@@ -36,7 +37,7 @@ def maya_useNewAPI():
 
 # Maya Plugin Metadata - Required for Maya 2025+ security compliance
 PLUGIN_NAME = "assetManager"
-PLUGIN_VERSION = "1.4.3"
+PLUGIN_VERSION = "1.4.4"
 PLUGIN_AUTHOR = "Mike Stumbo"
 PLUGIN_DESCRIPTION = "Asset Manager for Maya - Enterprise Modular Service Architecture with USD Pipeline"
 PLUGIN_REQUIRED_API_VERSION = "20250000"  # Maya 2025

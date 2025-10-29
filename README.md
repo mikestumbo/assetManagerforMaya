@@ -1,4 +1,4 @@
-# Asset Manager for Maya v1.4.3
+# Asset Manager for Maya v1.4.4
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
@@ -7,7 +7,27 @@
 
 A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
 
-## � **NEW in v1.4.3: Performance Fix - Update Checker**
+## 🚀 **NEW in v1.4.4: Performance Fix - Auto-Install**
+
+### ✨ **Non-Blocking Auto-Installation**
+
+**Bug Fix**: Auto-install dialog was modal and prevented Maya restart after installation!
+
+- **🧵 Background Threading**: Download and installation run in separate thread
+- **⚡ No More Blocking**: Maya stays responsive during entire installation process
+- **📊 Progress Updates**: Status bar shows download, extract, backup, and install phases
+- **🏗️ Clean Architecture**: Follows Single Responsibility Principle
+- **🔄 Error Recovery**: Automatic backup restoration on installation failure
+- **✅ Non-Modal Dialogs**: Success/error messages don't block Maya restart
+
+**Technical Details**:
+
+- Implemented `threading.Thread` for async installation operations
+- Used `QTimer.singleShot(0, ...)` for thread-safe UI updates
+- Split installation into focused background function
+- Added proper error handling with backup restoration
+
+## 🚀 **v1.4.3: Performance Fix - Update Checker**
 
 ### ✨ **Non-Blocking Update Check**
 
