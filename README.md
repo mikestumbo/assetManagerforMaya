@@ -1,4 +1,4 @@
-# Asset Manager for Maya v1.4.0
+# Asset Manager for Maya v1.4.1
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
@@ -7,7 +7,19 @@
 
 A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
 
-## 🚀 **NEW in v1.4.0: USD Pipeline System**
+## 🎯 **NEW in v1.4.1: Dynamic Version Management**
+
+### ✨ **DRY Principle Implementation**
+
+**Single Source of Truth**: Refactored version management to eliminate hardcoded version strings throughout the codebase.
+
+- **🎯 Central Version Constant**: `assetManager.PLUGIN_VERSION = "1.4.1"` - One place to update
+- **🔄 Dynamic Imports**: UI components automatically read version from plugin metadata
+- **🧹 Code Quality**: Eliminates version mismatch issues and reduces maintenance overhead
+- **📝 Future-Proof**: Version updates now require changing only one constant
+- **✅ Consistent Display**: About dialog and update checker always show correct version
+
+## 🚀 **v1.4.0: USD Pipeline System**
 
 ### 🎬 **Complete Maya → USD Export Workflow**
 
@@ -416,11 +428,16 @@ Streamlined Maya integration powered by professional service architecture:
 
 ## 📦 Downloads & Previous Versions
 
-### Current Version (v1.3.0)
+### Current Version (v1.4.1)
 
-**Latest Release**: Enhanced with Unified Installation Architecture and Clean Code principles implementation
+**Latest Release**: Dynamic Version Management with DRY principle implementation for simplified maintenance and consistent version display.
 
 Download the latest version directly from this repository or from [GitHub Releases](../../releases).
+
+### Version History
+
+- **[v1.4.1](../../releases/tag/v1.4.1)** - Dynamic Version Management (October 29, 2025)
+- **[v1.4.0](../../releases/tag/v1.4.0)** - USD Pipeline System (October 28, 2025)
 
 ### Previous Versions
 
