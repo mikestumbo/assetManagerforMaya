@@ -5,6 +5,41 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2025-10-29
+
+### 🚀 **Performance Fixes - Update Checker**
+
+#### 🎯 **Non-Blocking Update Check (Threading)**
+
+- **BUG FIX**: Update checker was freezing Maya UI during GitHub API calls
+- **THREADING**: Implemented background thread for network operations
+- **RESPONSIVENESS**: Maya remains fully responsive during update checks
+- **CLEAN ARCHITECTURE**: Separated concerns following **Single Responsibility Principle**
+
+#### 📝 **Fixed Components**
+
+- **asset_manager_window.py**:
+  - `_on_check_update()`: Launches background thread with progress indicator
+  - `check_in_background()`: Performs GitHub API call off main thread
+  - `_show_update_result()`: Displays update information on main thread (Qt-safe)
+  - `_show_update_error()`: Displays errors on main thread (Qt-safe)
+
+#### 🔧 **Technical Implementation**
+
+- **Threading Module**: Uses Python's `threading.Thread` for async execution
+- **Qt Thread Safety**: `QTimer.singleShot(0, ...)` schedules UI updates on main thread
+- **Timeout**: Increased from 5s to 10s for better reliability
+- **Daemon Thread**: Background thread automatically terminates with Maya
+
+#### 🎁 **User Benefits**
+
+- ✅ **No more freezing** - Maya stays responsive during update checks
+- ✅ **Instant feedback** - Progress bar shows immediately
+- ✅ **Better UX** - Can cancel or continue working while checking
+- ✅ **Reliable** - Longer timeout handles slow connections
+
+---
+
 ## [1.4.2] - 2025-10-29
 
 ### 🔧 **USD Support Fixes**

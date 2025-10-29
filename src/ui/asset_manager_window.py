@@ -2740,88 +2740,121 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             )
     
     def _on_check_update(self) -> None:
-        """Check for plugin updates from GitHub with auto-install - Dynamic version (DRY Principle)"""
-        try:
-            import urllib.request
-            import urllib.error
-            import json
-            
-            # Get current version dynamically from plugin - Single Source of Truth
-            current_version = PLUGIN_VERSION
-            
-            # Check GitHub API for latest release
-            url = "https://api.github.com/repos/mikestumbo/assetManagerforMaya/releases/latest"
-            req = urllib.request.Request(url)
-            req.add_header('Accept', 'application/vnd.github.v3+json')
-            
+        """Check for plugin updates from GitHub with auto-install - Dynamic version (DRY Principle)
+        
+        NON-BLOCKING: Runs in background thread to prevent Maya UI freeze
+        """
+        import threading
+        
+        # Show status immediately
+        self._set_status("Checking for updates...", show_progress=True)
+        
+        def check_in_background():
+            """Background thread function for update check"""
             try:
-                with urllib.request.urlopen(req, timeout=5) as response:
-                    data = json.loads(response.read().decode('utf-8'))
-                    latest_version = data.get('tag_name', '').lstrip('v')
+                import urllib.request
+                import urllib.error
+                import json
+                
+                # Get current version dynamically from plugin - Single Source of Truth
+                current_version = PLUGIN_VERSION
+                
+                # Check GitHub API for latest release
+                url = "https://api.github.com/repos/mikestumbo/assetManagerforMaya/releases/latest"
+                req = urllib.request.Request(url)
+                req.add_header('Accept', 'application/vnd.github.v3+json')
+                
+                try:
+                    with urllib.request.urlopen(req, timeout=10) as response:
+                        data = json.loads(response.read().decode('utf-8'))
+                        latest_version = data.get('tag_name', '').lstrip('v')
+                        
+                        # Schedule UI update on main thread
+                        QTimer.singleShot(0, lambda: self._show_update_result(
+                            current_version, latest_version, data
+                        ))
+                        
+                except urllib.error.URLError as e:
+                    # Schedule error dialog on main thread
+                    QTimer.singleShot(0, lambda: self._show_update_error(str(e)))
                     
-                    if latest_version and latest_version > current_version:
-                        # New version available - offer auto-install
-                        release_url = data.get('html_url', 'https://github.com/mikestumbo/assetManagerforMaya/releases')
-                        
-                        # Find the ZIP asset
-                        zip_url = None
-                        for asset in data.get('assets', []):
-                            if asset.get('name', '').endswith('.zip') and 'assetManager' in asset.get('name', ''):
-                                zip_url = asset.get('browser_download_url')
-                                break
-                        
-                        # Show dialog with auto-install option
-                        msg = QMessageBox(self)
-                        msg.setWindowTitle("Update Available")
-                        msg.setIcon(QMessageBox.Icon.Information)
-                        msg.setText(f"<h3>New version available!</h3>"
-                                   f"<p><b>Current:</b> v{current_version}<br>"
-                                   f"<b>Latest:</b> v{latest_version}</p>")
-                        
-                        install_btn = None
-                        manual_btn = None
-                        
-                        if zip_url:
-                            msg.setInformativeText("Would you like to download and install the update automatically?")
-                            install_btn = msg.addButton("Download && Install", QMessageBox.ButtonRole.AcceptRole)
-                            manual_btn = msg.addButton("Manual Download", QMessageBox.ButtonRole.ActionRole)
-                            msg.addButton(QMessageBox.StandardButton.Cancel)
-                            msg.setDefaultButton(install_btn)
-                        else:
-                            msg.setInformativeText(f"Visit GitHub to download:\n{release_url}")
-                            msg.addButton(QMessageBox.StandardButton.Ok)
-                        
-                        msg.exec()
-                        
-                        if zip_url and install_btn and msg.clickedButton() == install_btn:
-                            # User wants auto-install
-                            self._download_and_install_update(zip_url, latest_version)
-                        elif zip_url and manual_btn and msg.clickedButton() == manual_btn:
-                            # Open browser to release page
-                            import webbrowser
-                            webbrowser.open(release_url)
-                    else:
-                        # Running latest version
-                        QMessageBox.information(self, "Check for Updates", 
-                                              f"Update Checker\n\n"
-                                              f"Asset Manager v{current_version}\n"
-                                              f"You are running the latest version.\n"
-                                              f"Check back later for updates.")
-                        
-            except urllib.error.URLError as e:
-                # Network error or timeout
-                QMessageBox.warning(self, "Update Check Failed",
-                                  f"Could not check for updates.\n\n"
-                                  f"Error: {str(e)}\n\n"
-                                  f"Please check your internet connection.")
-                                  
+            except Exception as e:
+                # Schedule fallback dialog on main thread
+                QTimer.singleShot(0, lambda: self._show_update_error(str(e)))
+            finally:
+                # Hide progress bar on main thread
+                QTimer.singleShot(0, lambda: self._progress_bar.setVisible(False))
+        
+        # Run check in background thread
+        thread = threading.Thread(target=check_in_background, daemon=True)
+        thread.start()
+    
+    def _show_update_result(self, current_version: str, latest_version: str, data: dict) -> None:
+        """Show update check result - runs on main thread"""
+        try:
+            if latest_version and latest_version > current_version:
+                # New version available - offer auto-install
+                release_url = data.get('html_url', 'https://github.com/mikestumbo/assetManagerforMaya/releases')
+                
+                # Find the ZIP asset
+                zip_url = None
+                for asset in data.get('assets', []):
+                    if asset.get('name', '').endswith('.zip') and 'assetManager' in asset.get('name', ''):
+                        zip_url = asset.get('browser_download_url')
+                        break
+                
+                # Show dialog with auto-install option
+                msg = QMessageBox(self)
+                msg.setWindowTitle("Update Available")
+                msg.setIcon(QMessageBox.Icon.Information)
+                msg.setText(f"<h3>New version available!</h3>"
+                           f"<p><b>Current:</b> v{current_version}<br>"
+                           f"<b>Latest:</b> v{latest_version}</p>")
+                
+                install_btn = None
+                manual_btn = None
+                
+                if zip_url:
+                    msg.setInformativeText("Would you like to download and install the update automatically?")
+                    install_btn = msg.addButton("Download && Install", QMessageBox.ButtonRole.AcceptRole)
+                    manual_btn = msg.addButton("Manual Download", QMessageBox.ButtonRole.ActionRole)
+                    msg.addButton(QMessageBox.StandardButton.Cancel)
+                    msg.setDefaultButton(install_btn)
+                else:
+                    msg.setInformativeText(f"Visit GitHub to download:\n{release_url}")
+                    msg.addButton(QMessageBox.StandardButton.Ok)
+                
+                msg.exec()
+                
+                if zip_url and install_btn and msg.clickedButton() == install_btn:
+                    # User wants auto-install
+                    self._download_and_install_update(zip_url, latest_version)
+                elif zip_url and manual_btn and msg.clickedButton() == manual_btn:
+                    # Open browser to release page
+                    import webbrowser
+                    webbrowser.open(release_url)
+            else:
+                # Running latest version
+                QMessageBox.information(self, "Check for Updates", 
+                                      f"Update Checker\n\n"
+                                      f"Asset Manager v{current_version}\n"
+                                      f"You are running the latest version.\n"
+                                      f"Check back later for updates.")
+                
+            self._set_status("Ready")
+                
         except Exception as e:
-            # Fallback for any other errors
-            QMessageBox.information(self, "Check for Updates", 
-                                   f"Update Checker\n\n"
-                                   f"Asset Manager v1.4.0\n"
-                                   f"Could not connect to GitHub.\n"
-                                   f"Error: {str(e)}")
+            QMessageBox.warning(self, "Update Check Error", 
+                               f"Error displaying update information:\n{str(e)}")
+            self._set_status("Ready")
+    
+    def _show_update_error(self, error_msg: str) -> None:
+        """Show update check error - runs on main thread"""
+        QMessageBox.warning(self, "Update Check Failed",
+                          f"Could not check for updates.\n\n"
+                          f"Error: {error_msg}\n\n"
+                          f"Please check your internet connection.")
+        self._set_status("Ready")
     
     def _download_and_install_update(self, zip_url: str, version: str) -> None:
         """Download and install update automatically - Single Responsibility"""

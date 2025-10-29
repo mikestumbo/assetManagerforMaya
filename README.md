@@ -1,4 +1,4 @@
-# Asset Manager for Maya v1.4.2
+# Asset Manager for Maya v1.4.3
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
@@ -7,7 +7,27 @@
 
 A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
 
-## 🔧 **NEW in v1.4.2: USD Support Fixes**
+## � **NEW in v1.4.3: Performance Fix - Update Checker**
+
+### ✨ **Non-Blocking Update Check**
+
+**Bug Fix**: Update checker was freezing Maya UI during GitHub API calls - now fully responsive!
+
+- **🧵 Background Threading**: Network calls run in separate thread
+- **⚡ No More Freezing**: Maya stays responsive during update checks
+- **📊 Progress Indicator**: Instant feedback with progress bar
+- **🏗️ Clean Architecture**: Follows Single Responsibility Principle
+- **⏱️ Better Timeout**: Increased to 10 seconds for reliability
+- **🔒 Qt Thread Safety**: UI updates properly scheduled on main thread
+
+**Technical Details**:
+
+- Implemented `threading.Thread` for async GitHub API calls
+- Split `_on_check_update()` into three focused methods (SRP)
+- Used `QTimer.singleShot(0, ...)` for thread-safe UI updates
+- Daemon thread automatically terminates with Maya
+
+## 🔧 **v1.4.2: USD Support Fixes**
 
 ### ✨ **Complete USD Import Implementation**
 
