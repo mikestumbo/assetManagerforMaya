@@ -2708,7 +2708,7 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             )
     
     def _on_check_update(self) -> None:
-        """Check for plugin updates from GitHub - Single Responsibility"""
+        """Check for plugin updates from GitHub with auto-install - Single Responsibility"""
         try:
             import urllib.request
             import urllib.error
@@ -2728,14 +2728,46 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     latest_version = data.get('tag_name', '').lstrip('v')
                     
                     if latest_version and latest_version > current_version:
-                        # New version available
+                        # New version available - offer auto-install
                         release_url = data.get('html_url', 'https://github.com/mikestumbo/assetManagerforMaya/releases')
-                        message = (f"Update Checker\n\n"
-                                 f"New version available!\n\n"
-                                 f"Current: v{current_version}\n"
-                                 f"Latest: v{latest_version}\n\n"
-                                 f"Visit GitHub to download:\n{release_url}")
-                        QMessageBox.information(self, "Update Available", message)
+                        
+                        # Find the ZIP asset
+                        zip_url = None
+                        for asset in data.get('assets', []):
+                            if asset.get('name', '').endswith('.zip') and 'assetManager' in asset.get('name', ''):
+                                zip_url = asset.get('browser_download_url')
+                                break
+                        
+                        # Show dialog with auto-install option
+                        msg = QMessageBox(self)
+                        msg.setWindowTitle("Update Available")
+                        msg.setIcon(QMessageBox.Icon.Information)
+                        msg.setText(f"<h3>New version available!</h3>"
+                                   f"<p><b>Current:</b> v{current_version}<br>"
+                                   f"<b>Latest:</b> v{latest_version}</p>")
+                        
+                        install_btn = None
+                        manual_btn = None
+                        
+                        if zip_url:
+                            msg.setInformativeText("Would you like to download and install the update automatically?")
+                            install_btn = msg.addButton("Download && Install", QMessageBox.ButtonRole.AcceptRole)
+                            manual_btn = msg.addButton("Manual Download", QMessageBox.ButtonRole.ActionRole)
+                            msg.addButton(QMessageBox.StandardButton.Cancel)
+                            msg.setDefaultButton(install_btn)
+                        else:
+                            msg.setInformativeText(f"Visit GitHub to download:\n{release_url}")
+                            msg.addButton(QMessageBox.StandardButton.Ok)
+                        
+                        msg.exec()
+                        
+                        if zip_url and install_btn and msg.clickedButton() == install_btn:
+                            # User wants auto-install
+                            self._download_and_install_update(zip_url, latest_version)
+                        elif zip_url and manual_btn and msg.clickedButton() == manual_btn:
+                            # Open browser to release page
+                            import webbrowser
+                            webbrowser.open(release_url)
                     else:
                         # Running latest version
                         QMessageBox.information(self, "Check for Updates", 
@@ -2758,6 +2790,106 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                                    f"Asset Manager v1.4.0\n"
                                    f"Could not connect to GitHub.\n"
                                    f"Error: {str(e)}")
+    
+    def _download_and_install_update(self, zip_url: str, version: str) -> None:
+        """Download and install update automatically - Single Responsibility"""
+        import urllib.request
+        import tempfile
+        import zipfile
+        import shutil
+        import os
+        
+        progress = None
+        backup_dir = None
+        maya_scripts = ""
+        
+        try:
+            # Show progress dialog
+            progress = QMessageBox(self)
+            progress.setWindowTitle("Installing Update")
+            progress.setIcon(QMessageBox.Icon.Information)
+            progress.setText(f"<h3>Downloading Asset Manager v{version}...</h3>")
+            progress.setStandardButtons(QMessageBox.StandardButton.NoButton)
+            progress.setModal(True)
+            progress.show()
+            
+            # Process events to show dialog
+            from PySide6.QtWidgets import QApplication
+            QApplication.processEvents()
+            
+            # Download ZIP to temp folder
+            temp_dir = tempfile.mkdtemp(prefix='assetManager_update_')
+            zip_path = os.path.join(temp_dir, f'assetManager-v{version}.zip')
+            
+            progress.setText(f"<h3>Downloading Asset Manager v{version}...</h3>"
+                           f"<p>Please wait...</p>")
+            QApplication.processEvents()
+            
+            urllib.request.urlretrieve(zip_url, zip_path)
+            
+            # Extract ZIP
+            progress.setText(f"<h3>Extracting update...</h3>")
+            QApplication.processEvents()
+            
+            extract_dir = os.path.join(temp_dir, 'extracted')
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
+            
+            # Find Maya scripts folder
+            maya_scripts = os.path.join(os.path.expanduser('~'), 'Documents', 'maya', '2025', 'scripts', 'assetManager')
+            
+            # Backup current installation
+            progress.setText(f"<h3>Creating backup...</h3>")
+            QApplication.processEvents()
+            
+            if os.path.exists(maya_scripts):
+                backup_dir = maya_scripts + '_backup'
+                if os.path.exists(backup_dir):
+                    shutil.rmtree(backup_dir)
+                shutil.copytree(maya_scripts, backup_dir)
+            
+            # Install new version
+            progress.setText(f"<h3>Installing Asset Manager v{version}...</h3>")
+            QApplication.processEvents()
+            
+            if os.path.exists(maya_scripts):
+                shutil.rmtree(maya_scripts)
+            
+            shutil.copytree(extract_dir, maya_scripts)
+            
+            # Cleanup temp files
+            shutil.rmtree(temp_dir)
+            
+            if progress:
+                progress.close()
+            
+            # Success message
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Update Installed")
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setText(f"<h3>Asset Manager v{version} installed successfully!</h3>")
+            msg.setInformativeText("<p><b>Please restart Maya</b> to use the new version.</p>"
+                                  f"<p><small>Backup saved to:<br>{backup_dir if backup_dir else 'N/A'}</small></p>")
+            msg.addButton(QMessageBox.StandardButton.Ok)
+            msg.exec()
+            
+        except Exception as e:
+            if progress:
+                progress.close()
+            
+            QMessageBox.critical(self, "Installation Failed",
+                               f"<h3>Failed to install update</h3>"
+                               f"<p>Error: {str(e)}</p>"
+                               f"<p>Please try manual installation from GitHub.</p>")
+            
+            # Restore backup if it exists
+            if backup_dir and os.path.exists(backup_dir):
+                try:
+                    if os.path.exists(maya_scripts):
+                        shutil.rmtree(maya_scripts)
+                    shutil.copytree(backup_dir, maya_scripts)
+                except:
+                    pass
     
     # Missing toolbar and UI action handlers - Clean Code implementation
     def _on_remove_selected_asset(self) -> None:
