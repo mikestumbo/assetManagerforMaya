@@ -33,6 +33,14 @@ from ..core.interfaces.event_publisher import IEventPublisher, EventType
 from .collection_manager_dialog import CollectionManagerDialog
 from ..core.models.asset import Asset
 
+# Import plugin version for dynamic version display - DRY Principle
+try:
+    import assetManager
+    PLUGIN_VERSION = assetManager.PLUGIN_VERSION
+except ImportError:
+    # Fallback for development/testing outside Maya
+    PLUGIN_VERSION = "1.4.1"
+
 # Robust import strategy for Maya compatibility
 try:
     from ..config.constants import UI_CONFIG
@@ -46,9 +54,9 @@ except ImportError:
             sys.path.insert(0, str(current_dir))
         from config.constants import UI_CONFIG
     except ImportError:
-        # Ultimate fallback - define UI_CONFIG locally
+        # Ultimate fallback - define UI_CONFIG locally with dynamic version
         UI_CONFIG = {
-            'WINDOW_TITLE': 'Asset Manager v1.4.0',
+            'WINDOW_TITLE': f'Asset Manager v{PLUGIN_VERSION}',
             'WINDOW_SIZE': (1400, 900),
             'MIN_WINDOW_SIZE': (800, 600)
         }
@@ -2340,15 +2348,22 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         self._on_toggle_preview_unified()
     
     def _on_about(self) -> None:
-        """Handle about dialog"""
+        """Handle about dialog - Dynamic version from plugin metadata (DRY Principle)"""
         about_text = (
-            "<h2>Asset Manager v1.4.0</h2>"
+            f"<h2>Asset Manager v{PLUGIN_VERSION}</h2>"
             "<p><b>Enterprise Modular Service Architecture (EMSA)</b></p>"
             "<p>A comprehensive asset management system for Maya<br>"
             "Built with Clean Code & SOLID principles</p>"
             "<p><b>Author:</b> Mike Stumbo</p>"
             "<hr>"
-            "<h3>New in v1.4.0</h3>"
+            "<h3>New in v1.4.1</h3>"
+            "<p><b>Dynamic Version Management</b><br>"
+            "Single source of truth for version display<br>"
+            "• Automatic version detection from plugin<br>"
+            "• Simplified maintenance and updates<br>"
+            "• DRY (Don't Repeat Yourself) principle applied</p>"
+            "<hr>"
+            "<h3>v1.4.0 Features</h3>"
             "<p><b>USD Pipeline System</b><br>"
             "Complete Maya → USD export workflow<br>"
             "• Geometry, Materials, Rigging (UsdSkel)<br>"
@@ -2708,14 +2723,14 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             )
     
     def _on_check_update(self) -> None:
-        """Check for plugin updates from GitHub with auto-install - Single Responsibility"""
+        """Check for plugin updates from GitHub with auto-install - Dynamic version (DRY Principle)"""
         try:
             import urllib.request
             import urllib.error
             import json
             
-            # Get current version
-            current_version = "1.4.0"
+            # Get current version dynamically from plugin - Single Source of Truth
+            current_version = PLUGIN_VERSION
             
             # Check GitHub API for latest release
             url = "https://api.github.com/repos/mikestumbo/assetManagerforMaya/releases/latest"
