@@ -1,4 +1,4 @@
-# Asset Manager for Maya v1.4.1
+# Asset Manager for Maya v1.4.2
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
@@ -7,13 +7,36 @@
 
 A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
 
-## 🎯 **NEW in v1.4.1: Dynamic Version Management**
+## 🔧 **NEW in v1.4.2: USD Support Fixes**
+
+### ✨ **Complete USD Import Implementation**
+
+**Bug Fix**: USD import functionality was incomplete in previous versions - now fully operational!
+
+- **🎯 Full USD Format Support**: Import all Universal Scene Description formats
+  - `.usd` - Binary USD files
+  - `.usda` - ASCII USD files  
+  - `.usdc` - Crate (binary) USD files
+  - `.usdz` - Zipped USD archives
+- **🔌 Auto-Plugin Loading**: Automatically loads `mayaUsdPlugin` when importing USD files
+- **📂 File Browser Integration**: All USD formats recognized in dialogs and filters
+- **🖱️ Double-Click Import**: Simply double-click USD assets in library to import into scene
+- **⚡ Error Handling**: Clear messages if mayaUSD plugin is unavailable
+
+**What's Fixed**:
+
+- Added missing USD import handler in `_import_asset_to_maya()`
+- Updated all file extension lists to include `.usda`, `.usdc`, `.usdz`
+- File dialog filters now properly recognize all USD variants
+- Asset counting includes all USD formats
+
+## 🎯 **v1.4.1: Dynamic Version Management**
 
 ### ✨ **DRY Principle Implementation**
 
 **Single Source of Truth**: Refactored version management to eliminate hardcoded version strings throughout the codebase.
 
-- **🎯 Central Version Constant**: `assetManager.PLUGIN_VERSION = "1.4.1"` - One place to update
+- **🎯 Central Version Constant**: `assetManager.PLUGIN_VERSION` - One place to update
 - **🔄 Dynamic Imports**: UI components automatically read version from plugin metadata
 - **🧹 Code Quality**: Eliminates version mismatch issues and reduces maintenance overhead
 - **📝 Future-Proof**: Version updates now require changing only one constant

@@ -5,6 +5,47 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2025-10-29
+
+### 🔧 **USD Support Fixes**
+
+#### 🎯 **Complete USD Import Implementation**
+
+- **BUG FIX**: USD import functionality was incomplete in v1.4.0/v1.4.1
+- **NEW**: Full USD file import support for all formats
+  - `.usd` - Universal Scene Description (binary)
+  - `.usda` - USD ASCII format  
+  - `.usdc` - USD Crate format (binary)
+  - `.usdz` - USD ZIP archive
+- **AUTO-LOAD**: Automatic `mayaUsdPlugin` loading with error handling
+- **RECOGNITION**: All USD formats now recognized in file browsers and dialogs
+
+#### 📝 **Fixed Components**
+
+- **asset_manager_window.py**:
+  - `_import_asset_to_maya()`: Added USD import case with plugin auto-loading
+  - Asset counting: Updated to recognize all USD formats
+  - File dialogs: All USD extensions added to filters
+  - "3D Models" filter: Now includes all USD variants
+
+#### 🎁 **User Benefits**
+
+- ✅ **Double-click USD files** in library to import into Maya scene
+- ✅ **Add USD assets** from file browsers with full format support
+- ✅ **Seamless integration** with Maya 2025's built-in mayaUSD plugin
+- ✅ **Helpful error messages** if mayaUSD plugin is not available
+
+#### 📦 **Supported USD Formats**
+
+| Format | Description | Support |
+|--------|-------------|---------|
+| `.usd` | Binary USD | ✅ Import |
+| `.usda` | ASCII USD | ✅ Import |
+| `.usdc` | Crate USD | ✅ Import |
+| `.usdz` | ZIP USD | ✅ Import |
+
+---
+
 ## [1.4.1] - 2025-10-29
 
 ### ✨ **Dynamic Version Management (DRY Principle)**
@@ -426,7 +467,7 @@ Version 1.3.0 represents a **Clean Code revolution** in the Asset Manager instal
 - **Multi-Asset Drag**: Drag multiple selected assets at once
 - **Visual Feedback**: Enhanced drag indicators and responsiveness
 
-#### 🔧 Technical Improvements & Bug Fixes
+#### 🔧 Technical Improvements & Bug Fixs
 
 - **Clean Code Architecture**: Complete codebase refactoring following Clean Code principles
   - Single Responsibility Principle applied to all classes and methods

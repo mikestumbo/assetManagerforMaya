@@ -897,6 +897,21 @@ class AssetManagerWindow(QMainWindow):
                     return True
                 else:
                     raise Exception("Alembic plugin not available")
+            elif file_ext in ['.usd', '.usda', '.usdc', '.usdz']:
+                # USD files - Universal Scene Description
+                try:
+                    # Load mayaUSD plugin
+                    if cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True) or cmds.loadPlugin('mayaUsdPlugin', quiet=True):
+                        # Import USD file using Maya USD import
+                        cmds.file(file_path, i=True, type="USD Import", 
+                                 ignoreVersion=True,
+                                 returnNewNodes=True)
+                        return True
+                    else:
+                        raise Exception("mayaUSD plugin not available. Please install Maya USD.")
+                except Exception as usd_error:
+                    # Fallback error message
+                    raise Exception(f"USD import failed: {usd_error}")
             else:
                 raise Exception(f"Unsupported file type: {file_ext}")
                 
@@ -1203,7 +1218,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             # Count assets
             assets_dir = project_path / "assets"
             if assets_dir.exists():
-                asset_extensions = ['.ma', '.mb', '.obj', '.fbx', '.abc', '.usd', 
+                asset_extensions = ['.ma', '.mb', '.obj', '.fbx', '.abc', 
+                                  '.usd', '.usda', '.usdc', '.usdz',
                                   '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr']
                 asset_count = 0
                 for ext in asset_extensions:
@@ -1586,7 +1602,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     return
             
             # Get supported file extensions for the dialog filter
-            supported_exts = ['.ma', '.mb', '.obj', '.fbx', '.abc', '.usd', 
+            supported_exts = ['.ma', '.mb', '.obj', '.fbx', '.abc', 
+                            '.usd', '.usda', '.usdc', '.usdz',
                             '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr',
                             '.mov', '.mp4', '.avi', '.mtl', '.mat', '.zip', '.rar']
             
@@ -1596,7 +1613,7 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 filters += f"*{ext} "
             filters = filters.strip() + ");;"
             filters += "Maya Files (*.ma *.mb);;"
-            filters += "3D Models (*.obj *.fbx *.abc *.usd);;"
+            filters += "3D Models (*.obj *.fbx *.abc *.usd *.usda *.usdc *.usdz);;"
             filters += "Images (*.png *.jpg *.jpeg *.tiff *.tga *.exr *.hdr);;"
             filters += "All Files (*)"
             
@@ -1644,7 +1661,7 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 self,
                 "Add Multiple Assets to Library",
                 str(Path.home()),
-                "Asset Files (*.ma *.mb *.obj *.fbx *.abc *.usd *.png *.jpg *.jpeg *.tiff *.tga *.exr *.hdr *.mov *.mp4 *.avi *.mtl *.mat *.zip *.rar);;All Files (*)"
+                "Asset Files (*.ma *.mb *.obj *.fbx *.abc *.usd *.usda *.usdc *.usdz *.png *.jpg *.jpeg *.tiff *.tga *.exr *.hdr *.mov *.mp4 *.avi *.mtl *.mat *.zip *.rar);;All Files (*)"
             )
             
             if file_paths:
