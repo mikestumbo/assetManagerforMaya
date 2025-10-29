@@ -5,6 +5,34 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-10-29
+
+### ✨ **Dynamic Version Management (DRY Principle)**
+
+#### 🎯 **Single Source of Truth**
+
+- **REFACTORING**: Implemented DRY (Don't Repeat Yourself) principle for version management
+- **ARCHITECTURE**: Single version constant in `assetManager.PLUGIN_VERSION`
+- **DYNAMIC IMPORTS**: UI components dynamically read version from plugin metadata
+- **MAINTENANCE**: Future version updates only require changing one constant
+
+#### 📝 **Updated Components**
+
+- **assetManager.py**: `PLUGIN_VERSION = "1.4.1"` - Single source of truth
+- **asset_manager_window.py**:
+  - Dynamic version import with fallback: `import assetManager; PLUGIN_VERSION = assetManager.PLUGIN_VERSION`
+  - Updated `_on_about()` dialog with f-string: `f"Asset Manager v{PLUGIN_VERSION}"`
+  - Updated `_on_check_update()` to use dynamic version
+  - UI_CONFIG fallback uses f-string: `f'Asset Manager v{PLUGIN_VERSION}'`
+- **DRAG&DROP.mel**: All version references updated to v1.4.1
+
+#### 🎁 **Benefits**
+
+- **MAINTAINABILITY**: No more searching for hardcoded version strings
+- **CONSISTENCY**: All UI elements always show the correct version
+- **SIMPLIFIED RELEASES**: Change one constant, update everywhere automatically
+- **ERROR PREVENTION**: Eliminates version mismatch issues across components
+
 ## [1.4.0] - 2025-10-28
 
 ### 🚀 **USD Pipeline System - MAJOR NEW FEATURE**
