@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `_show_install_success()`: Displays success message on main thread (Qt-safe)
   - `_show_install_error()`: Displays errors and handles backup restoration
 
-#### 🔧 **Technical Implementation**
+#### 🔧 **Technical Details**
 
 - **Threading Module**: Uses Python's `threading.Thread` for async execution
 - **Qt Thread Safety**: `QTimer.singleShot(0, ...)` schedules UI updates on main thread
@@ -221,7 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLEAN CODE**: Removed unnecessary panning feature applying YAGNI principle
 - **SIMPLICITY**: Focused controls for better user experience
 
-### 🧹 **Clean Code Refactoring**
+#### 🧹 **Clean Code Refactoring**
 
 #### 📐 **SOLID Principles Implementation**
 
@@ -342,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **COMPREHENSIVE**: Updated README.md with unified architecture explanation
 - **COMPARISON**: Method selection guide helping users choose appropriate installer
 - **ARCHITECTURE**: Deep dive into Clean Code principles and design decisions
-- **TROUBLESHOOTING**: Enhanced error handling and resolution guidance
+- **TROUBLESHOUTING**: Enhanced error handling and resolution guidance
 
 ### 🎉 **Summary**
 
@@ -1125,11 +1125,6 @@ versions/v1.1.2/
     - Real-time preview of color changes across both systems
     - Add new custom asset types with personalized colors
     - Delete custom asset types (default types protected)
-    - Reset all colors to system defaults or specific categories
-  - **Custom Asset Type Creation**: Create studio-specific or project-specific asset types
-    - Unlimited custom asset types (weapon, vehicle, building, etc.)
-    - Persistent storage in configuration file
-    - Custom types appear in all menus and legends
   - **Enhanced Context Menu**: Right-click asset → Asset Type → Customize Colors...
     - Dynamic menu showing all available types (default + custom)
     - Direct access to color customization from asset context
@@ -1301,12 +1296,6 @@ When contributing to this project, please:
 5. Include appropriate sections: Added, Changed, Deprecated, Removed, Fixed, Security
 
 **Resources:**
-
-- For detailed contribution guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
-- For changelog entry examples and templates: [`.github/CHANGELOG_TEMPLATE.md`](.github/CHANGELOG_TEMPLATE.md)
-- For pull request checklist: [`.github/pull_request_template.md`](.github/pull_request_template.md)
-
-## Links
 
 - [Project Repository](https://github.com/mikestumbo/assetManagerforMaya)
 - [Maya Plugin Documentation](https://help.autodesk.com/view/MAYAUL/2025/ENU/?guid=Maya_SDK_DEVKIT_Maya_Plugin_Development_html)
