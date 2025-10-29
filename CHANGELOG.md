@@ -5,6 +5,45 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2025-10-29
+
+### ⚡ **Performance Fixes - Non-Blocking Auto-Update**
+
+#### 🎯 **Threading Implementation for Responsive UI**
+
+- **PERFORMANCE**: Auto-update system now uses background threads to prevent Maya UI freezing
+- **NON-BLOCKING**: GitHub API calls run asynchronously in daemon threads
+- **RESPONSIVE**: Maya interface remains fully interactive during update checks and downloads
+- **THREAD-SAFE**: QTimer.singleShot() ensures UI updates happen on main thread safely
+
+#### 📝 **Refactored Components**
+
+- **asset_manager_window.py**:
+  - `_on_check_update()`: Converted to threaded implementation with background network calls
+  - `_download_and_install_update()`: Now runs installation in background thread
+  - Added `_show_update_result()`: Main-thread callback for displaying update information
+  - Added `_show_update_error()`: Main-thread callback for error handling
+  - Added `_show_install_success()`: Main-thread callback for successful installation
+  - Added `_show_install_error()`: Main-thread callback for installation failures
+
+#### 🎁 **User Experience Improvements**
+
+- ✅ **Instant UI Response**: Update checks no longer freeze Maya interface
+- ✅ **Background Downloads**: Update installation runs asynchronously
+- ✅ **Progress Feedback**: Status bar shows current operation progress
+- ✅ **Error Resilience**: Network timeouts and errors handled gracefully
+- ✅ **Same Functionality**: All existing features preserved with better performance
+
+#### 🔧 **Implementation Details**
+
+- **Threading**: Python `threading.Thread` with daemon=True for background operations
+- **UI Safety**: `QTimer.singleShot(0, callback)` for thread-safe main-thread updates
+- **Error Handling**: Comprehensive exception handling in background threads
+- **Resource Management**: Proper cleanup of temporary files and backup restoration
+- **Backward Compatibility**: No breaking changes to existing API or user workflows
+
+---
+
 ## [1.4.2] - 2025-10-29
 
 ### 🔧 **USD Support Fixes**
