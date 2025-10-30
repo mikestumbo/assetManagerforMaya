@@ -1,0 +1,4 @@
+// Simple Asset Manager Launch - Working v1.4.3
+// Run this in Maya Script Editor (MEL tab)
+
+python("import maya_plugin; maya_plugin.show_asset_manager()");
