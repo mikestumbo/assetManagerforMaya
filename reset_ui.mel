@@ -1,0 +1,28 @@
+// Hide the stuck progress bar and reset Asset Manager status
+// Run this in Maya Script Editor (MEL tab)
+
+python("
+try:
+    import maya_plugin
+    
+    # Get the asset manager window instance
+    if hasattr(maya_plugin, '_asset_manager_window') and maya_plugin._asset_manager_window:
+        window = maya_plugin._asset_manager_window
+        
+        # Hide progress bar if it exists
+        if hasattr(window, '_progress_bar') and window._progress_bar:
+            window._progress_bar.setVisible(False)
+            print('✅ Progress bar hidden')
+        
+        # Reset status
+        if hasattr(window, '_set_status'):
+            window._set_status('Ready')
+            print('✅ Status reset to Ready')
+        
+        print('✅ Asset Manager UI reset complete')
+    else:
+        print('ℹ️ Asset Manager window not found')
+        
+except Exception as e:
+    print(f'❌ Error resetting UI: {e}')
+");

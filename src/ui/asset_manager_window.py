@@ -2740,54 +2740,107 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             )
     
     def _on_check_update(self) -> None:
-        """Check for plugin updates from GitHub with auto-install - Dynamic version (DRY Principle)
-
-        NON-BLOCKING: Runs in background thread to prevent Maya UI freeze
+        """Check for plugin updates from GitHub - BULLETPROOF VERSION
+        
+        Uses simplified approach to avoid lambda closure issues
         """
         import threading
+        print("🔍 Starting bulletproof update check...")
 
-        # Show status immediately
+        # Show progress immediately
         self._set_status("Checking for updates...", show_progress=True)
 
-        def check_in_background():
-            """Background thread function for update check"""
+        def safe_hide_progress():
+            """Safely hide progress bar"""
+            try:
+                if hasattr(self, '_progress_bar') and self._progress_bar:
+                    self._progress_bar.setVisible(False)
+                print("✅ Progress bar hidden safely")
+            except Exception as e:
+                print(f"⚠️ Could not hide progress bar: {e}")
+
+        def safe_show_result(current: str, latest: str, has_update: bool):
+            """Safely show update result"""
+            try:
+                if has_update:
+                    from PySide6.QtWidgets import QMessageBox
+                    QMessageBox.information(
+                        self, 
+                        "Update Available", 
+                        f"New version available!\n\nCurrent: v{current}\nLatest: v{latest}\n\nVisit GitHub to download."
+                    )
+                else:
+                    from PySide6.QtWidgets import QMessageBox
+                    QMessageBox.information(
+                        self, 
+                        "Up to Date", 
+                        f"You are running the latest version (v{current})."
+                    )
+                self._set_status("Ready")
+                print("✅ Update result shown safely")
+            except Exception as e:
+                print(f"⚠️ Could not show result: {e}")
+
+        def safe_show_error(error_msg: str):
+            """Safely show error"""
+            try:
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.warning(
+                    self, 
+                    "Update Check Failed", 
+                    f"Could not check for updates.\n\nError: {error_msg}"
+                )
+                self._set_status("Ready") 
+                print("✅ Error shown safely")
+            except Exception as e:
+                print(f"⚠️ Could not show error: {e}")
+
+        def check_update_thread():
+            """Background thread - simplified and bulletproof"""
+            print("🔍 Background thread started")
+            
             try:
                 import urllib.request
-                import urllib.error
+                import urllib.error  
                 import json
-
-                # Get current version dynamically from plugin - Single Source of Truth
+                import maya.utils # type: ignore
+                
+                # Get versions
                 current_version = PLUGIN_VERSION
-
-                # Check GitHub API for latest release
+                print(f"� Current version: {current_version}")
+                
+                # Make HTTP request
                 url = "https://api.github.com/repos/mikestumbo/assetManagerforMaya/releases/latest"
                 req = urllib.request.Request(url)
                 req.add_header('Accept', 'application/vnd.github.v3+json')
-
-                try:
-                    with urllib.request.urlopen(req, timeout=10) as response:
-                        data = json.loads(response.read().decode('utf-8'))
-                        latest_version = data.get('tag_name', '').lstrip('v')
-
-                        # Schedule UI update on main thread
-                        QTimer.singleShot(0, lambda: self._show_update_result(
-                            current_version, latest_version, data
-                        ))
-
-                except urllib.error.URLError as e:
-                    # Schedule error dialog on main thread
-                    QTimer.singleShot(0, lambda: self._show_update_error(str(e)))
-
+                
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = json.loads(response.read().decode('utf-8'))
+                    latest_version = data.get('tag_name', '').lstrip('v')
+                    print(f"� Latest version: {latest_version}")
+                    
+                    # Simple version comparison
+                    has_update = latest_version != current_version and latest_version > current_version
+                    print(f"📍 Has update: {has_update}")
+                    
+                    # Schedule UI update
+                    maya.utils.executeDeferred(lambda: safe_show_result(current_version, latest_version, has_update))
+                    
             except Exception as e:
-                # Schedule fallback dialog on main thread
-                QTimer.singleShot(0, lambda: self._show_update_error(str(e)))
+                print(f"❌ Background thread error: {e}")
+                import maya.utils # type: ignore
+                maya.utils.executeDeferred(lambda: safe_show_error(str(e)))
+                
             finally:
-                # Hide progress bar on main thread
-                QTimer.singleShot(0, lambda: self._progress_bar.setVisible(False))
+                print("🔍 Background thread cleanup")
+                import maya.utils # type: ignore
+                maya.utils.executeDeferred(safe_hide_progress)
+                print("✅ Background thread complete")
 
-        # Run check in background thread
-        thread = threading.Thread(target=check_in_background, daemon=True)
+        # Start background thread
+        thread = threading.Thread(target=check_update_thread, daemon=True)
         thread.start()
+        print("🚀 Background thread launched")
 
     def _show_update_result(self, current_version: str, latest_version: str, data: dict) -> None:
         """Show update check result - runs on main thread"""
@@ -2879,8 +2932,10 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             temp_dir = None
 
             try:
-                # Update status on main thread
-                QTimer.singleShot(0, lambda: self._set_status(f"Downloading Asset Manager v{version}...", show_progress=True))
+                import maya.utils # type: ignore
+                
+                # Update status on main thread using Maya-specific method
+                maya.utils.executeDeferred(lambda: self._set_status(f"Downloading Asset Manager v{version}...", show_progress=True))
 
                 # Download ZIP to temp folder
                 temp_dir = tempfile.mkdtemp(prefix='assetManager_update_')
@@ -2888,8 +2943,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
                 urllib.request.urlretrieve(zip_url, zip_path)
 
-                # Update status
-                QTimer.singleShot(0, lambda: self._set_status("Extracting update...", show_progress=True))
+                # Update status using Maya-specific method
+                maya.utils.executeDeferred(lambda: self._set_status("Extracting update...", show_progress=True))
 
                 # Extract ZIP
                 extract_dir = os.path.join(temp_dir, 'extracted')
@@ -2899,8 +2954,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 # Find Maya scripts folder
                 maya_scripts = os.path.join(os.path.expanduser('~'), 'Documents', 'maya', '2025', 'scripts', 'assetManager')
 
-                # Update status
-                QTimer.singleShot(0, lambda: self._set_status("Creating backup...", show_progress=True))
+                # Update status using Maya-specific method
+                maya.utils.executeDeferred(lambda: self._set_status("Creating backup...", show_progress=True))
 
                 # Backup current installation
                 if os.path.exists(maya_scripts):
@@ -2909,8 +2964,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                         shutil.rmtree(backup_dir)
                     shutil.copytree(maya_scripts, backup_dir)
 
-                # Update status
-                QTimer.singleShot(0, lambda: self._set_status(f"Installing Asset Manager v{version}...", show_progress=True))
+                # Update status using Maya-specific method
+                maya.utils.executeDeferred(lambda: self._set_status(f"Installing Asset Manager v{version}...", show_progress=True))
 
                 # Install new version
                 if os.path.exists(maya_scripts):
@@ -2922,8 +2977,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 shutil.rmtree(temp_dir)
                 temp_dir = None
 
-                # Success - show dialog on main thread
-                QTimer.singleShot(0, lambda: self._show_install_success(version, backup_dir))
+                # Success - show dialog on main thread using Maya-specific method
+                maya.utils.executeDeferred(lambda: self._show_install_success(version, backup_dir))
 
             except Exception as e:
                 # Cleanup on error
@@ -2942,8 +2997,9 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     except:
                         pass
 
-                # Show error on main thread
-                QTimer.singleShot(0, lambda: self._show_install_error(str(e)))
+                # Show error on main thread using Maya-specific method
+                import maya.utils # type: ignore
+                maya.utils.executeDeferred(lambda: self._show_install_error(str(e)))
 
         # Run installation in background thread
         thread = threading.Thread(target=install_in_background, daemon=True)

@@ -1,0 +1,4 @@
+// Reset Asset Manager UI - Fixed MEL syntax
+// Run this in Maya Script Editor (MEL tab)
+
+python("try:\n    import maya_plugin\n    if hasattr(maya_plugin, '_asset_manager_window') and maya_plugin._asset_manager_window:\n        window = maya_plugin._asset_manager_window\n        if hasattr(window, '_progress_bar') and window._progress_bar:\n            window._progress_bar.setVisible(False)\n            print('Progress bar hidden')\n        if hasattr(window, '_set_status'):\n            window._set_status('Ready')\n            print('Status reset to Ready')\n        print('Asset Manager UI reset complete')\n    else:\n        print('Asset Manager window not found')\nexcept Exception as e:\n    print('Error resetting UI: ' + str(e))");
