@@ -5,6 +5,53 @@ All notable changes to the Asset Manager for Maya project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-11-18
+
+### 🚀 **Maya 2026.3, MayaUSD 0.34.5 & RenderMan 27 Compatibility**
+
+#### 🎬 **Production Software Updates**
+
+- **MAYA 2026.3**: Full API compatibility with Autodesk Maya 2026.3
+  - Updated `PLUGIN_REQUIRED_API_VERSION` to `"20260000"`
+  - Python API updates for latest Maya release
+  - PySide6 integration maintained for modern UI
+  
+- **MAYAUSD 0.34.5**: Latest Universal Scene Description plugin support
+  - Compatible with MayaUSD 0.34.5 features
+  - Enhanced material import with `shadingMode=useRegistry`
+  - RenderMan material preservation (no forced standardSurface conversion)
+  - Improved skeleton/animation import
+
+- **RENDERMAN 27**: Complete Pixar RenderMan 27 shader support
+  - Expanded shader library with 75+ RenderMan 27 shaders
+  - New shaders: PxrMarschnerHair, PxrLayerSurface, PxrVoronoise, and more
+  - Better shader categorization (Surface, Patterns, Utilities, Lights, Filters)
+  - Proper `ri:` shader ID export for USD materials
+  - Material parameter preservation through USD pipeline
+
+#### 📋 **Version Tracking**
+
+- Added software version constants for dependency verification:
+  - `SUPPORTED_MAYA_VERSION = "2026.3"`
+  - `SUPPORTED_MAYAUSD_VERSION = "0.34.5"`
+  - `SUPPORTED_RENDERMAN_VERSION = "27"`
+
+#### 🔧 **Technical Changes**
+
+- **Updated Plugin Metadata**: Version 1.5.0 with compatibility information
+- **RenderMan Shader Library**: Complete list of RenderMan 27 nodes with inline documentation
+- **Material Converter**: Enhanced USD material export for RenderMan 27
+- **Documentation**: Updated README with supported versions section
+
+#### 🎯 **Benefits**
+
+- Future-proof with latest industry-standard software
+- Production-ready for professional studio workflows
+- Better RenderMan material handling in USD pipeline
+- Version awareness for compatibility checking
+
+---
+
 ## [1.4.3] - 2025-10-29
 
 ### ⚡ **Performance Fixes - Non-Blocking Auto-Update**

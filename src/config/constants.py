@@ -8,7 +8,6 @@ Enterprise Refactoring: Clean Code & SOLID Principles
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any
 
 
 @dataclass(frozen=True)
@@ -31,7 +30,7 @@ class ThumbnailConstants:
     GENERATION_BATCH_SIZE: int = 5
     CACHE_TIMEOUT_LOCAL: int = 30  # seconds
     CACHE_TIMEOUT_NETWORK: int = 120  # seconds
-    
+
     @property
     def DEFAULT_SIZE(self) -> tuple[int, int]:
         return (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
@@ -45,8 +44,8 @@ class UIConstants:
     PREVIEW_MIN_HEIGHT: int = 250
     PREVIEW_FRAME_WIDTH: int = 400
     PREVIEW_FRAME_HEIGHT: int = 300
-    
-    # Splitter sizes  
+
+    # Splitter sizes
     LIBRARY_WIDTH: int = 700
     PREVIEW_WIDTH: int = 300
 
@@ -56,23 +55,24 @@ class ErrorMessages:
     """Centralized error messages - Single Source of Truth"""
     MAYA_NOT_AVAILABLE: str = "Maya not available - cannot import asset"
     FILE_NOT_FOUND: str = "FILE\nNOT FOUND"
-    MAYA_ERROR: str = "MAYA\nERROR" 
+    MAYA_ERROR: str = "MAYA\nERROR"
     MAYA_SCENE_FALLBACK: str = "MAYA\nSCENE"
 
 
 @dataclass(frozen=True)
 class PerformanceConstants:
-    """Performance-related constants"""
+
+
     THREAD_POOL_MAX_WORKERS: int = 2
     CACHE_TIMEOUT_SECONDS: int = 30
     IMPORT_COOLDOWN_SECONDS: float = 1.5
     NETWORK_TIMEOUT_THRESHOLD: float = 5.0
     REFRESH_DELAY_MS: int = 2000
 
-
 # Singleton instances - immutable configuration
 SEARCH_CONFIG = SearchConstants()
-THUMBNAIL_CONFIG = ThumbnailConstants()
+
+
 UI_CONFIG = UIConstants()
 ERROR_MESSAGES = ErrorMessages()
 PERFORMANCE_CONFIG = PerformanceConstants()

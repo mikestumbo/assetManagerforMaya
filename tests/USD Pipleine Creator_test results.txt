@@ -1,0 +1,545 @@
+try:
+    import assetManager
+    assetManager.show_asset_manager()
+except Exception as e:
+    print('Error:', str(e))
+    import maya.cmds as cmds
+    cmds.confirmDialog(title='Asset Manager', message='Loading error: ' + str(e), button='OK')
+🎨 Launching Asset Manager v1.3.0...
+🎨 Launching Asset Manager v1.4.3 UI...
+✅ Using PySide6 (Maya 2025+)
+✅ Maya parent window obtained for proper Z-order
+✅ Full-featured thumbnail service created via direct import
+✅ Standalone asset repository created via direct import
+✅ Event publisher created via relative import
+# src.services.renderman_service_impl : ✅ RenderMan for Maya detected
+# src.services.renderman_service_impl : ✅ prman Python API available
+✅ RenderMan service registered and available
+✅ Arnold-USD support available via mtoa
+✅ Pixar USD Python API available
+✅ USD Service initialized - Disney's Universal Scene Description support active
+✅ USD service registered and available
+# src.services.ngskintools_service_impl : # src.services.ngskintools_service_impl : ✅ ngSkinTools2 plugin detected (v2.4.0)
+# src.services.ngskintools_service_impl : # src.services.ngskintools_service_impl : ✅ ngSkinTools2 Python API available
+✅ ngSkinTools2 service registered and available
+✅ Essential EMSA services registered
+✅ Library service registered
+🔧 Configuring services...
+✅ Registered thumbnail service
+✅ Registered asset repository
+✅ Registered event publisher
+✅ Registered library service
+🎯 Successfully configured 3 services
+✅ Services configured
+✅ Asset Manager window configured for Maya integration with proper focus
+🎨 Using system background color: #444444
+✅ Asset library services resolved from container
+🏷️  No custom tags config file found
+🎨 Creating asset list widget with drag support and event connections...
+✅ Asset list signals connected: itemSelectionChanged, itemDoubleClicked, drag enabled
+🎨 Creating asset list widget with drag support and event connections...
+✅ Asset list signals connected: itemSelectionChanged, itemDoubleClicked, drag enabled
+🎨 Creating asset list widget with drag support and event connections...
+✅ Asset list signals connected: itemSelectionChanged, itemDoubleClicked, drag enabled
+🎨 Updating keychart colors for 6 asset types
+  ✅ Updated Maya Scene: #ff9632
+  ✅ Updated 3D Model: #96ff96
+  ✅ Updated Image: #6496ff
+  ✅ Updated Video: #ff6496
+  ✅ Updated Material: #c864ff
+  ✅ Updated Archive: #969696
+  ✅ Keychart colors updated successfully
+✅ Asset preview widget - container services resolved
+📸 Using custom screenshot icon: screen-shot_icon.png
+✅ Window geometry restored: 1540x769
+✅ Window state restored
+# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Loading recent assets...
+🕒 Found 0 recent assets
+🕒 Recent tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Populated recent assets tab with 0 items
+⭐ Loading favorite assets...
+⭐ Found 0 favorite assets
+⭐ Favorites tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+⭐ Populated favorites tab with 0 items
+✅ Last project restored: D:\Maya\projects\MyProject
+🎉 Asset Manager v1.4.3 launched successfully!
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+✅ Window state saved: 1540x769
+✅ Arnold-USD support available via mtoa
+✅ Pixar USD Python API available
+✅ USD Service initialized - Disney's Universal Scene Description support active
+// src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
+// Warning: src.services.usd.external_usd_bridge_impl : ⚠️ USD command-line tools not detected
+// src.services.usd.usd_import_service_impl : USD Import Service initialized with 2 methods: mayaUSD, Pure Python
+// src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry restored: 750x1242
+// src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Loading recent assets...
+🕒 Found 0 recent assets
+🕒 Recent tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Populated recent assets tab with 0 items
+⭐ Loading favorite assets...
+⭐ Found 0 favorite assets
+⭐ Favorites tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+⭐ Populated favorites tab with 0 items
+📤 USD export started...
+// src.services.usd.usd_export_service_impl : Starting USD export from current scene → C:\temp\veteran_rig_test.usda
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: plugin_dir = C:\Users\ChEeP\OneDrive\Documents\Mike Stumbo plugins\assetManagerforMaya-master\src
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: scripts_dir = C:\Users\ChEeP\OneDrive\Documents\Mike Stumbo plugins\assetManagerforMaya-master\src\scripts
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: script_path = C:\Users\ChEeP\OneDrive\Documents\Mike Stumbo plugins\assetManagerforMaya-master\src\scripts\HIDE_BLENDSHAPE_TARGETS.py
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: script_path exists = True
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: script_path is_file = True
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: Loading script from C:\Users\ChEeP\OneDrive\Documents\Mike Stumbo plugins\assetManagerforMaya-master\src\scripts
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: Calling cleanup_blendshapes_for_export()
+ðŸ”§ BLENDSHAPE CLEANUP: Starting cleanup_blendshapes_for_export()
+
+======================================================================
+ðŸ”§ BLENDSHAPE TARGET & DUPLICATE MESH CLEANUP
+======================================================================
+# Found 22 blendShape nodes
+// builtins : Found 22 blendShape nodes
+
+ðŸ“Š Found 9 blendShape target meshes
+ðŸ“Š Found 32 duplicate/FK/IK meshes
+# Hidden: model:Veteran_Model_Jacket:SmileShape
+// builtins : Hidden: model:Veteran_Model_Jacket:SmileShape
+# Hidden: model:Veteran_Model_Jacket:SquintShape
+// builtins : Hidden: model:Veteran_Model_Jacket:SquintShape
+# Hidden: FitEyeSphereShape
+// builtins : Hidden: FitEyeSphereShape
+# Hidden: LipInnerAreaMeshExtrudeShape
+// builtins : Hidden: LipInnerAreaMeshExtrudeShape
+# Hidden: ForeHeadAreaMeshShape
+// builtins : Hidden: ForeHeadAreaMeshShape
+# Hidden: EyeLidInnerAreaMeshShape
+// builtins : Hidden: EyeLidInnerAreaMeshShape
+# Hidden: LipInnerAreaMeshShape
+// builtins : Hidden: LipInnerAreaMeshShape
+# Hidden: ForeHeadAreaMeshExtrudeShape
+// builtins : Hidden: ForeHeadAreaMeshExtrudeShape
+# Hidden: EyeLidInnerAreaMeshExtrudeShape
+// builtins : Hidden: EyeLidInnerAreaMeshExtrudeShape
+# Hidden: model:Veteran_Model_Jacket:Open_Close_copy1Shape
+// builtins : Hidden: model:Veteran_Model_Jacket:Open_Close_copy1Shape
+# Hidden: model:Jacket_Blend8Shape
+// builtins : Hidden: model:Jacket_Blend8Shape
+# Hidden: model:Jacket_Blend6Shape
+// builtins : Hidden: model:Jacket_Blend6Shape
+# Hidden: L_Button_02_GeoShapeDeformed
+// builtins : Hidden: L_Button_02_GeoShapeDeformed
+# Hidden: model:Jacket_Blend13Shape
+// builtins : Hidden: model:Jacket_Blend13Shape
+# Hidden: model:Veteran_Model_Jacket:StuckOutShape
+// builtins : Hidden: model:Veteran_Model_Jacket:StuckOutShape
+# Hidden: model:Jacket_Blend7Shape
+// builtins : Hidden: model:Jacket_Blend7Shape
+# Hidden: model:Veteran_Model_Jacket:Open_CloseShape
+// builtins : Hidden: model:Veteran_Model_Jacket:Open_CloseShape
+# Hidden: model:Jacket_Blend3Shape
+// builtins : Hidden: model:Jacket_Blend3Shape
+# Hidden: model:Veteran_Model_Jacket:CurlShape
+// builtins : Hidden: model:Veteran_Model_Jacket:CurlShape
+# Hidden: L_Button_04_GeoShapeDeformed
+// builtins : Hidden: L_Button_04_GeoShapeDeformed
+# Hidden: model:Jacket_Blend2Shape
+// builtins : Hidden: model:Jacket_Blend2Shape
+# Hidden: model:Jacket_Blend10Shape
+// builtins : Hidden: model:Jacket_Blend10Shape
+# Hidden: model:Veteran_Model_Jacket:DisgustShape
+// builtins : Hidden: model:Veteran_Model_Jacket:DisgustShape
+# Hidden: R_Button_03_GeoShapeDeformed
+// builtins : Hidden: R_Button_03_GeoShapeDeformed
+# Hidden: model:Veteran_Model_Jacket:MidFrownShape
+// builtins : Hidden: model:Veteran_Model_Jacket:MidFrownShape
+# Hidden: model:Jacket_Blend11Shape
+// builtins : Hidden: model:Jacket_Blend11Shape
+# Hidden: model:Veteran_Model_Jacket:FullFrownShape
+// builtins : Hidden: model:Veteran_Model_Jacket:FullFrownShape
+# Hidden: model:Jacket_Blend4Shape
+// builtins : Hidden: model:Jacket_Blend4Shape
+# Hidden: model:Jacket_Blend5Shape
+// builtins : Hidden: model:Jacket_Blend5Shape
+# Hidden: model:Veteran_Model_Jacket:LfBrow_Dwn_Shape
+// builtins : Hidden: model:Veteran_Model_Jacket:LfBrow_Dwn_Shape
+# Hidden: model:Veteran_Model_Jacket:BtmLids_Up_Shape
+// builtins : Hidden: model:Veteran_Model_Jacket:BtmLids_Up_Shape
+# Hidden: L_Button_03_GeoShapeDeformed
+// builtins : Hidden: L_Button_03_GeoShapeDeformed
+# Hidden: model:Open_Close_copy1Shape
+// builtins : Hidden: model:Open_Close_copy1Shape
+# Hidden: R_Button_02_GeoShapeDeformed
+// builtins : Hidden: R_Button_02_GeoShapeDeformed
+# Hidden: model:Veteran_Model_Jacket:GrinShape
+// builtins : Hidden: model:Veteran_Model_Jacket:GrinShape
+# Hidden: model:Veteran_Model_Jacket:Eyes_Close_Shape
+// builtins : Hidden: model:Veteran_Model_Jacket:Eyes_Close_Shape
+# Hidden: R_Button_04_GeoShapeDeformed
+// builtins : Hidden: R_Button_04_GeoShapeDeformed
+# Hidden: model:Jacket_Blend9Shape
+// builtins : Hidden: model:Jacket_Blend9Shape
+# Hidden: model:Jacket_Blend12Shape
+// builtins : Hidden: model:Jacket_Blend12Shape
+
+âœ… Hidden 9 blendShape targets
+âœ… Hidden 30 duplicate/FK/IK meshes
+
+======================================================================
+âœ… TOTAL HIDDEN: 39 meshes
+======================================================================
+
+ðŸ”§ BLENDSHAPE CLEANUP: cleanup_blendshapes_for_export() completed with result: (9, 30)
+// src.services.usd.usd_export_service_impl : 🔧 PRE-EXPORT CLEANUP: cleanup_blendshapes_for_export() returned bs_count=9, dup_count=30
+// src.services.usd.usd_export_service_impl : ✅ Pre-export cleanup complete: 9 blendshapes, 30 duplicates hidden (total: 39)
+// src.services.usd.usd_export_service_impl : ✨ Pre-export cleanup: 39 objects hidden
+// src.services.usd.maya_scene_parser_impl : Parsing current Maya scene
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:Body_Geo (49382 vertices, 49380 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:Chain_Geo (5454 vertices, 5128 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:Jacket_Geo (9594 vertices, 9592 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:L_Button_01_Geo (122 vertices, 120 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:L_InrEye_Geo (2202 vertices, 2200 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:L_OutrEye_Geo (1562 vertices, 1560 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:L_Zipper_Geo (8340 vertices, 8026 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:LwrTeeth_Geo (24168 vertices, 24166 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:R_Button_01_Geo (122 vertices, 120 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:R_InrEye_Geo (2202 vertices, 2200 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:R_OutrEye_Geo (1562 vertices, 1560 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:R_Zipper_Geo (7424 vertices, 7355 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:Tags_Geo (10448 vertices, 10448 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:Tongue_Geo (6717 vertices, 6656 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:UprTeeth_Geo (25104 vertices, 25102 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:Beard_xgen (400 vertices, 354 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:Hair_xgen (219 vertices, 192 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:L_Eyebrow_xgen (27 vertices, 16 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:L_Eyelash_xgen (48 vertices, 23 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:Manbun_xgen (400 vertices, 400 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:R_Eyebrow_xgen (24 vertices, 14 faces)
+// src.services.usd.maya_scene_parser_impl : Extracted mesh data: |model:Veteran_Geo_Grp|model:xgen_Grp|model:R_Eyelash_xgen (48 vertices, 23 faces)
+// Error: The data is not a numeric or string value, and cannot be displayed.
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 7 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 7 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 6 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 5 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 7 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 4 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 2 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 212 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 5 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 5 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 7 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 8 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 39 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 85 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 3 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted joint hierarchy: 1 joints
+// src.services.usd.maya_scene_parser_impl : Extracted 548 joints (including FK/IK control systems)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster1 (85 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster22 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster11 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster12 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster3 (1 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster4 (1 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster16 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster5 (2 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster17 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster7 (1 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster8 (1 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster21 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster23 (84 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster9 (6 joints)
+// src.services.usd.maya_scene_parser_impl : Extracted skin cluster: skinCluster10 (2 joints)
+// src.services.usd.maya_scene_parser_impl : No skin cluster found on: |model:Veteran_Geo_Grp|model:xgen_Grp|model:Beard_xgen
+// src.services.usd.maya_scene_parser_impl : No skin cluster found on: |model:Veteran_Geo_Grp|model:xgen_Grp|model:Hair_xgen
+// src.services.usd.maya_scene_parser_impl : No skin cluster found on: |model:Veteran_Geo_Grp|model:xgen_Grp|model:L_Eyebrow_xgen
+// Error: src.services.usd.maya_scene_parser_impl : Failed to extract skin cluster for |model:Veteran_Geo_Grp|model:xgen_Grp|model:L_Eyelash_xgen: 'NoneType' object is not iterable
+// Error: src.services.usd.maya_scene_parser_impl : Failed to extract skin cluster for |model:Veteran_Geo_Grp|model:xgen_Grp|model:Manbun_xgen: 'NoneType' object is not iterable
+// src.services.usd.maya_scene_parser_impl : No skin cluster found on: |model:Veteran_Geo_Grp|model:xgen_Grp|model:R_Eyebrow_xgen
+// Error: src.services.usd.maya_scene_parser_impl : Failed to extract skin cluster for |model:Veteran_Geo_Grp|model:xgen_Grp|model:R_Eyelash_xgen: 'NoneType' object is not iterable
+// src.services.usd.maya_scene_parser_impl : 🔍 Found 642 total NURBS curve shapes (including intermediates)
+// src.services.usd.maya_scene_parser_impl : 🎯 Filtered to 642 NURBS curves for extraction
+// src.services.usd.maya_scene_parser_impl : Found 642 NURBS curves to extract
+// src.services.usd.maya_scene_parser_impl : Successfully extracted 599 NURBS curves
+// src.services.usd.maya_scene_parser_impl : Extracted 599 NURBS curves (rig controls)
+// src.services.usd.maya_scene_parser_impl : Extracted 1653 rig connections
+// src.services.usd.maya_scene_parser_impl : Extracted 0 constraints
+// src.services.usd.maya_scene_parser_impl : Extracted 0 set-driven keys
+// src.services.usd.maya_scene_parser_impl : Extracted 1653 rig connections, 0 constraints, 0 set-driven keys
+// src.services.usd.maya_scene_parser_impl : Parsed scene: 22 meshes, 31 materials, 548 joints, 599 curves
+// src.services.usd.usd_export_service_impl : 🔍 SCENE PARSED: 22 meshes, 31 materials, 599 NURBS curves, 548 joints
+// src.services.usd.usd_export_service_impl : Created USD stage: C:\temp\veteran_rig_test.usda
+// src.services.usd.usd_export_service_impl : 🔥 Checking geometry export: export_meshes=True, mesh_count=22
+// src.services.usd.usd_export_service_impl : 🔥 Starting geometry export for 22 meshes
+// src.services.usd.usd_export_service_impl : 🔥 _export_geometry CALLED with 22 meshes
+// src.services.usd.usd_export_service_impl : 🔥 export_meshes option: True
+// src.services.usd.usd_export_service_impl : 🔥 Starting mesh loop for 22 meshes
+// src.services.usd.usd_export_service_impl : 🔥 Created 22 mesh prims: ['model_Veteran_Geo_Grp_model_Body_Geo', 'model_Veteran_Geo_Grp_model_Chain_Geo', 'model_Veteran_Geo_Grp_model_Jacket_Geo', 'model_Veteran_Geo_Grp_model_L_Button_01_Geo', 'model_Veteran_Geo_Grp_model_L_InrEye_Geo', 'model_Veteran_Geo_Grp_model_L_OutrEye_Geo', 'model_Veteran_Geo_Grp_model_L_Zipper_Geo', 'model_Veteran_Geo_Grp_model_LwrTeeth_Geo', 'model_Veteran_Geo_Grp_model_R_Button_01_Geo', 'model_Veteran_Geo_Grp_model_R_InrEye_Geo']...
+// src.services.usd.usd_export_service_impl : 🔥 _export_geometry RETURNING TRUE - processed 22 meshes
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_Chain_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_Chain_Bsdf already exists, skipping model_Veteran_Chain_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_Chain_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_MainMesh_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_MainMesh_Bsdf already exists, skipping model_Veteran_MainMesh_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_MainMesh_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LwrTeeth_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LwrTeeth_Bsdf already exists, skipping model_Veteran_LwrTeeth_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LwrTeeth_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_RtButn03_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_RtButn03_Bsdf already exists, skipping model_Veteran_RtButn03_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_RtButn03_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asFaceCyan: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asFaceCyan
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for standardSurface1: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: standardSurface1
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for openPBR_shader1: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: openPBR_shader1
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_Tongue_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_Tongue_Bsdf already exists, skipping model_Veteran_Tongue_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_Tongue_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_Body_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_Body_Bsdf already exists, skipping model_Veteran_Body_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_Body_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asFaceBlue: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asFaceBlue
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Iris_Mat, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Iris_Mat already exists, skipping model_Iris_Mat
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Iris_Mat using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Pupils_Mat, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Pupils_Mat already exists, skipping model_Pupils_Mat
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Pupils_Mat using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asFaceGreen: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asFaceGreen
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LfButn03_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LfButn03_Bsdf already exists, skipping model_Veteran_LfButn03_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LfButn03_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_RtButn02_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_RtButn02_Bsdf already exists, skipping model_Veteran_RtButn02_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_RtButn02_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asClusterControlShader: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asClusterControlShader
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for particleCloud1: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: particleCloud1
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LfButn01_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LfButn01_Bsdf already exists, skipping model_Veteran_LfButn01_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LfButn01_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_UprTeeth_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_UprTeeth_Bsdf already exists, skipping model_Veteran_UprTeeth_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_UprTeeth_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_Tags_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_Tags_Bsdf already exists, skipping model_Veteran_Tags_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_Tags_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LfButn04_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LfButn04_Bsdf already exists, skipping model_Veteran_LfButn04_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LfButn04_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_RtButn04_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_RtButn04_Bsdf already exists, skipping model_Veteran_RtButn04_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_RtButn04_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LfButn02_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LfButn02_Bsdf already exists, skipping model_Veteran_LfButn02_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LfButn02_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Cornea_Mat, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Cornea_Mat already exists, skipping model_Cornea_Mat
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Cornea_Mat using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for lambert1: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: lambert1
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asFaceRed: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asFaceRed
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_RtButn01_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_RtButn01_Bsdf already exists, skipping model_Veteran_RtButn01_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_RtButn01_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_RtZipr_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_RtZipr_Bsdf already exists, skipping model_Veteran_RtZipr_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_RtZipr_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Veteran_LfZipr_Bsdf, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Veteran_LfZipr_Bsdf already exists, skipping model_Veteran_LfZipr_Bsdf
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Veteran_LfZipr_Bsdf using Arnold-USD
+// Error: src.services.usd.usd_material_converter_impl : Failed to connect Preview Surface shader for asFaceBrown: Used null prim - UsdExpiredPrimAccessError thrown:
+//  -> Usd_ThrowExpiredPrimAccessError at S:\Jenkins\workspace\ECP\ecg-usd-build\ecg-usd-full-python3.11-windows\ecg-usd-build\usd\pxr\usd\usd\primData.cpp:266
+// Warning: src.services.usd.usd_export_service_impl : Failed to convert material: asFaceBrown
+// Error: src.services.usd.usd_material_converter_impl : Arnold-USD conversion failed for model_Sclera_Mat, falling back to manual: AiNode() missing 1 required positional argument: 'nentry_name'
+// Warning: src.services.usd.usd_material_converter_impl : Material path /Materials/model_Sclera_Mat already exists, skipping model_Sclera_Mat
+// src.services.usd.usd_export_service_impl : Successfully converted RenderMan material model_Sclera_Mat using Arnold-USD
+// src.services.usd.usd_export_service_impl : Exported 31 materials
+// src.services.usd.usd_export_service_impl : 🎯 NURBS EXPORT CHECK: options.export_nurbs_curves=True, scene_data.nurbs_curves count=599
+// src.services.usd.usd_export_service_impl : 🎯 STARTING NURBS EXPORT: 599 curves found
+// src.services.usd.usd_export_service_impl : ✨ Exporting 599 NURBS curves (rig controls)
+// Error: src.services.usd.usd_export_service_impl : Failed to export NURBS curves: 'Prim' object has no attribute 'CreatePurposeAttr'
+❌ USD export: Failed to export NURBS curves
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry saved: 750x1242
+✅ Window state saved: 1540x769
+✅ Asset Manager singleton reference cleared

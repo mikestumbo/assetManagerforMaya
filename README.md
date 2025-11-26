@@ -1,11 +1,54 @@
-# Asset Manager for Maya v1.4.3
+# Asset Manager for Maya v1.5.0
 
 > **⚠️ MAYA DEVELOPMENT STANDARDS**  
 > Maya uses `cp1252` codec - **NO Unicode/emoji** characters in MEL scripts!  
 > Use ASCII markers: `[OK]`, `[ERROR]`, `[WARN]`, `[INFO]` only  
 > Reference: `MAYA_CHARACTERS_REFERENCE.txt` & `docs/MAYA_CODING_STANDARDS.md`
 
-A comprehensive asset management system for Maya 2025.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
+A comprehensive asset management system for Maya 2026.3+ with **Enterprise Modular Service Architecture (EMSA)**, **USD Pipeline System**, SOLID principles implementation, professional design patterns, and **Unified Installation Architecture**.
+
+## 🚀 **Supported Software Versions**
+
+- **Maya**: 2026.3 (Autodesk Media & Entertainment Suite)
+- **MayaUSD**: 0.34.5 (Latest Universal Scene Description plugin)
+- **RenderMan**: 27 (Pixar - Latest production renderer)
+- **PySide6**: For Maya 2026+ UI compatibility
+
+## 🆕 **NEW in v1.5.0: Maya 2026.3 & RenderMan 27 Compatibility**
+
+### ✨ **Production-Ready Updates**
+
+**Complete compatibility with latest professional software versions!**
+
+- **🎬 Maya 2026.3 API**: Updated for latest Autodesk Maya release
+  - Updated API version requirements (`PLUGIN_REQUIRED_API_VERSION = "20260000"`)
+  - Full compatibility with Maya 2026.3 Python API
+  - PySide6 integration for modern UI components
+  
+- **🎨 RenderMan 27 Support**: Latest Pixar renderer integration
+  - Updated RenderMan material converter for RenderMan 27 shaders
+  - Proper USD export with `ri:` shader IDs
+  - Support for all RenderMan 27 shader types (PxrSurface, PxrDisney, etc.)
+  - Material parameter preservation in USD workflow
+  
+- **📦 MayaUSD 0.34.5**: Latest Universal Scene Description plugin
+  - Compatible with MayaUSD 0.34.5 import/export features
+  - Updated `shadingMode=useRegistry` for material handling
+  - RenderMan material preservation on import (no forced conversion to standardSurface)
+  - Enhanced skeleton/animation import with `readAnimData=1`
+
+- **📋 Version Tracking**: Added version constants for dependency verification
+  - `SUPPORTED_MAYA_VERSION = "2026.3"`
+  - `SUPPORTED_MAYAUSD_VERSION = "0.34.5"`
+  - `SUPPORTED_RENDERMAN_VERSION = "27"`
+
+**Technical Updates**:
+
+- Maya API version requirement: `20260000` (Maya 2026)
+- Plugin descriptor updated for security compliance
+- RenderMan shader type detection updated for latest API
+- USD material registry integration for RenderMan 27 shaders
+- Cross-version compatibility maintained for older Maya installations
 
 ## 🔧 **NEW in v1.4.3: Performance Fixes - Non-Blocking Auto-Update**
 

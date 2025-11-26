@@ -1,4 +1,4 @@
-// Asset Manager Professional Installer v1.4.1 - Dynamic Version Management
+// Asset Manager Professional Installer v1.4.3 - Dynamic Version Management
 // Drag this file into Maya viewport to install
 
 global proc createProfessionalButton(string $installDir)
@@ -59,14 +59,12 @@ global proc createProfessionalButton(string $installDir)
     } else {
         print("Icons not found in install directory, checking source...\n");
         
-        // Use the same baseDir logic to find source icons
-        string $possibleIconPaths[] = {
-            "C:/Users/ChEeP/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png",
-            (`getenv "USERPROFILE"` + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png"),
-            (`getenv "USERPROFILE"` + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png")
-        };
-        
-        int $iconFound = 0;
+    // Use the same baseDir logic to find source icons
+    string $userProfile = `getenv "USERPROFILE"`;
+    string $possibleIconPaths[] = {
+        ($userProfile + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png"),
+        ($userProfile + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png")
+    };        int $iconFound = 0;
         for ($iconPath in $possibleIconPaths) {
             if (`filetest -r $iconPath`) {
                 print("Using source icons from: " + `dirname $iconPath` + "\n");
@@ -93,7 +91,7 @@ global proc createProfessionalButton(string $installDir)
     shelfButton
         -parent $shelf
         -label "Asset Manager"
-        -annotation "Asset Manager v1.4.1 Professional\nDynamic version management\nClick to launch Asset Manager UI"
+        -annotation "Asset Manager v1.4.3 Professional\nDynamic version management\nClick to launch Asset Manager UI"
         -image $mainIcon
         -highlightImage $hoverIcon
         -command $command
@@ -132,7 +130,7 @@ global proc copySourceDirectory(string $src, string $dst)
 global proc showSuccessDialog()
 {
     confirmDialog
-        -title "Asset Manager v1.4.1 - Installer"
+        -title "Asset Manager v1.4.3 - Installer"
         -message "Asset Manager Installed Successfully!\n\nAuto-load enabled - Asset Manager will be available on Maya startup."
         -button "OK"
         -defaultButton "OK"
@@ -149,7 +147,7 @@ global proc setupAutoLoad(string $installDir)
     
     // Python code to add Asset Manager to path on startup
     string $autoLoadCode = (
-        "\n# Asset Manager v1.4.1 - Auto-load Configuration\n" +
+        "\n# Asset Manager v1.4.3 - Auto-load Configuration\n" +
         "# Added by DRAG&DROP.mel installer\n" +
         "import sys\n" +
         "from pathlib import Path\n" +
@@ -157,13 +155,13 @@ global proc setupAutoLoad(string $installDir)
         "asset_manager_path = r'" + $installDir + "'\n" +
         "if asset_manager_path not in sys.path:\n" +
         "    sys.path.insert(0, asset_manager_path)\n" +
-        "    print('[OK] Asset Manager v1.4.1 path added - Ready for use')\n" +
+        "    print('[OK] Asset Manager v1.4.3 path added - Ready for use')\n" +
         "\n" +
         "# Optional: Uncomment to auto-launch Asset Manager on Maya startup\n" +
         "# try:\n" +
         "#     import assetManager\n" +
         "#     assetManager.show_asset_manager()\n" +
-        "#     print('[OK] Asset Manager v1.4.1 launched automatically')\n" +
+        "#     print('[OK] Asset Manager v1.4.3 launched automatically')\n" +
         "# except Exception as e:\n" +
         "#     print('[ERROR] Asset Manager auto-launch failed:', str(e))\n"
     );
@@ -178,7 +176,7 @@ global proc setupAutoLoad(string $installDir)
         python("try:\n" +
                "    with open(userSetup_path, 'r', encoding='utf-8') as f:\n" +
                "        content = f.read()\n" +
-               "    has_asset_manager = 'Asset Manager v1.4.1' in content\n" +
+               "    has_asset_manager = 'Asset Manager v1.4.3' in content\n" +
                "    print('Asset Manager config in userSetup:', has_asset_manager)\n" +
                "except Exception as e:\n" +
                "    print('Error reading userSetup.py:', str(e))\n" +
@@ -219,7 +217,7 @@ global proc setupAutoLoad(string $installDir)
 
 global proc DRAG_DROP_assetManager_installer()
 {
-    print("Asset Manager Professional Installer v1.4.1\n");
+    print("Asset Manager Professional Installer v1.4.3\n");
     
     // Robust source directory detection
     string $baseDir = "";
@@ -229,10 +227,10 @@ global proc DRAG_DROP_assetManager_installer()
     print("MEL info: " + $melInfo + "\n");
     
     // Method 2: Use known pattern - look for typical Asset Manager installation paths
+    string $userProfile = `getenv "USERPROFILE"`;
     string $possiblePaths[] = {
-        "C:/Users/ChEeP/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master",
-        `getenv "USERPROFILE"` + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master",
-        `getenv "USERPROFILE"` + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master"
+        ($userProfile + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master"),
+        ($userProfile + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master")
     };
     
     // Test each possible path
@@ -321,11 +319,12 @@ global proc DRAG_DROP_assetManager_installer()
         print("INFO: Checking alternative installation locations...\n");
         
         // Check both possible Maya scripts locations for existing installation
+        string $userProfile = `getenv "USERPROFILE"`;
         string $altDirs[] = {
-            (`getenv "USERPROFILE"` + "/OneDrive/Documents/maya/scripts/assetManager/"),
-            (`getenv "USERPROFILE"` + "/Documents/maya/scripts/assetManager/"),
-            (`getenv "USERPROFILE"` + "/Documents/maya/2025.3/scripts/assetManager/"),
-            (`getenv "USERPROFILE"` + "/Documents/maya/2025/scripts/assetManager/")
+            ($userProfile + "/OneDrive/Documents/maya/scripts/assetManager/"),
+            ($userProfile + "/Documents/maya/scripts/assetManager/"),
+            ($userProfile + "/Documents/maya/2025.3/scripts/assetManager/"),
+            ($userProfile + "/Documents/maya/2025/scripts/assetManager/")
         };
         
         for ($altDir in $altDirs) {
@@ -354,7 +353,7 @@ global proc DRAG_DROP_assetManager_installer()
     print("===========================================\n");
     print("PROFESSIONAL INSTALLATION COMPLETE!\n");
     print("===========================================\n");
-    print("Asset Manager v1.4.1 installed successfully\n");
+    print("Asset Manager v1.4.3 installed successfully\n");
     print("Dynamic version management enabled\n");
     print("Professional icons and EMSA architecture ready\n");
     print("Module activated for immediate use\n");

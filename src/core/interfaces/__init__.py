@@ -12,13 +12,17 @@ from .thumbnail_service import IThumbnailService
 from .maya_integration import IMayaIntegration
 from .event_publisher import IEventPublisher, EventType
 from .library_service import ILibraryService
+from .usd_import_service import IUsdImportService, UsdImportOptions, ImportResult
 
 __all__ = [
     'IAssetRepository',
-    'IMetadataExtractor', 
+    'IMetadataExtractor',
     'IThumbnailService',
     'IMayaIntegration',
     'IEventPublisher',
     'EventType',
-    'ILibraryService'
+    'ILibraryService',
+    'IUsdImportService',
+    'UsdImportOptions',
+    'ImportResult'
 ]

@@ -1,0 +1,207 @@
+"""
+COMPLETE USD PIPELINE TEST - Step-by-Step Guide
+================================================
+
+Follow these steps IN ORDER to test the complete USD round-trip pipeline.
+
+PREREQUISITES:
+- Maya is open with veteran_rig loaded and rigged
+- Asset Manager plugin folder is at: 
+  C:\Users\ChEeP\OneDrive\Documents\Mike Stumbo plugins\assetManagerforMaya-master
+
+
+PHASE 1: EXPORT USD FROM CURRENT SCENE
+========================================
+
+1. Open Maya Script Editor (Python tab)
+
+2. Copy and paste EXPORT_USD_FROM_SCENE.py
+
+3. Execute (Ctrl+Enter)
+
+4. EXPECTED OUTPUT:
+   ✅ EXPORT COMPLETE!
+   Exported:
+     Meshes: ~85
+     Joints: ~548
+     Skin Clusters: ~22
+     NURBS Curves: ~599
+   
+   File saved: veteran_rig_v3_FRESH.usda
+
+5. VERIFY:
+   - Check file exists in Windows Explorer
+   - File size should be ~300-400 MB
+   - If any errors, STOP and report them
+
+
+PHASE 2: RELOAD ASSET MANAGER WITH FIXED CODE
+==============================================
+
+6. Copy and paste RELOAD_ASSET_MANAGER.py into Maya Script Editor
+
+7. Execute (Ctrl+Enter)
+
+8. EXPECTED OUTPUT:
+   🔄 FORCING ASSET MANAGER RELOAD...
+   Removing cached modules: [list of modules]
+   ✅ Removed XX cached modules
+   ✅ Asset Manager reloaded successfully!
+   ✨ RELOAD COMPLETE
+
+9. VERIFY:
+   - Asset Manager window closes and reopens
+   - New window title shows "Asset Manager"
+   - If it doesn't reopen, manually run: import assetManager; assetManager.main()
+
+
+PHASE 3: TEST DIRECT IMPORT (DIAGNOSTIC)
+=========================================
+
+10. Start with a NEW Maya scene:
+    - File > New Scene (Don't Save)
+    - This ensures clean test
+
+11. Copy and paste DIAGNOSE_USD_IMPORT.py into Maya Script Editor
+
+12. Execute (Ctrl+Enter)
+
+13. EXPECTED OUTPUT:
+    🔍 USD IMPORT DIAGNOSTIC
+    ✅ mayaUSD plugin loaded (v0.33.0)
+    ✅ USD library available
+    ✅ USD stage opened
+    🦴 Found skeleton: /Root/veteran_rig (or similar)
+    📊 Found 1 skeleton(s)
+    📊 Found 22 skinned mesh(es)
+    
+    🚀 Starting import test...
+    [Various import logs]
+    
+    IMPORT RESULTS:
+      Success: True
+      Skin clusters created: 22
+      Total vertices: ~148,747
+      Imported meshes: ~85
+    
+    MAYA SCENE VERIFICATION:
+      SkinClusters in scene: 22
+      ✅ SUCCESS! Found these skinClusters:
+        - skinCluster1
+        - skinCluster3
+        - skinCluster4
+        [etc.]
+
+14. VERIFY IN MAYA:
+    - Open Outliner: you should see "diagnostic_test:*" namespace
+    - Run in Script Editor: cmds.ls(type='skinCluster')
+    - Should show 22 skinCluster nodes
+    - Select a joint, rotate it - mesh should deform!
+
+15. IF DIAGNOSTIC FAILS:
+    - Copy the error messages
+    - Check what step failed (1, 2, 3, or 4)
+    - Report the specific error
+
+
+PHASE 4: TEST ASSET MANAGER IMPORT
+===================================
+
+16. Start with ANOTHER new Maya scene:
+    - File > New Scene (Don't Save)
+    - Clear diagnostic test
+
+17. In Asset Manager window:
+    - Click "Add Assets" or browse to:
+      D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\
+    
+18. Find veteran_rig_v3_FRESH.usda in the list
+
+19. DOUBLE-CLICK the USD file to import
+
+20. EXPECTED IN SCRIPT EDITOR:
+    🚀 Starting USD import: veteran_rig_v3_FRESH.usda
+    Importing USD with mayaUSD: veteran_rig_v3_FRESH.usda → namespace:veteran_rig_v3_FRESH
+    Imported XXXX nodes
+    🦴 Applying skin weights from USD...
+    Found 1 skeleton(s)
+       Processing skeleton: /Root/veteran_rig
+       Creating skinCluster for: Geo_Body (49,382 vertices)
+       ✅ Created skinCluster: skinCluster1
+       [... more skinClusters ...]
+    ✅ Created 22 skin clusters
+    ✅ USD Import Success: Created 22 skin clusters
+       Processed 148,747 vertices
+
+21. VERIFY IN MAYA:
+    - Open Outliner: see "veteran_rig_v3_FRESH:*" namespace
+    - Run: cmds.ls(type='skinCluster')
+    - Should show 22 skinCluster nodes
+    - Select FKHead_M joint (or any joint)
+    - Rotate it - head mesh should deform smoothly!
+    - Check NURBS curves are at correct positions
+
+22. VISUAL CHECKS:
+    ✅ All geometry visible
+    ✅ Joints in skeleton hierarchy
+    ✅ NURBS curves at correct positions (centered on joints)
+    ✅ Mesh deforms when joints rotate
+    ✅ No errors in Script Editor
+    ✅ Character looks correct
+
+
+SUCCESS CRITERIA:
+=================
+
+The USD pipeline is WORKING if:
+✅ Export creates 300+ MB USD file with 22 skin clusters
+✅ Diagnostic test creates 22 skinClusters in Maya
+✅ Asset Manager import creates 22 skinClusters
+✅ Mesh deforms when joints move
+✅ NURBS curves are correctly positioned
+✅ No errors in Script Editor
+
+
+FAILURE SCENARIOS:
+==================
+
+IF EXPORT FAILS:
+- Check if veteran rig is loaded in scene
+- Check if D:\Maya\projects\Athens_Sequence\ directory exists
+- Report the error message
+
+IF RELOAD FAILS:
+- Manually close Asset Manager window
+- Run: del sys.modules['assetManager']
+- Run: import assetManager; assetManager.main()
+
+IF DIAGNOSTIC FAILS AT STEP 1:
+- mayaUSD plugin issue - try: cmds.loadPlugin('mayaUsdPlugin', quiet=False)
+
+IF DIAGNOSTIC FAILS AT STEP 2:
+- USD library not found - check Maya 2025 installation
+
+IF DIAGNOSTIC FAILS AT STEP 3:
+- USD file is corrupted - re-export
+
+IF DIAGNOSTIC FAILS AT STEP 4:
+- Import service error - report the full traceback
+
+IF ASSET MANAGER IMPORT FAILS:
+- Asset Manager didn't reload properly - repeat PHASE 2
+- Check Script Editor for error messages
+- If no skinClusters created, the old code is still running
+
+
+REPORTING ISSUES:
+=================
+
+If something fails, report:
+1. Which PHASE it failed (1, 2, 3, or 4)
+2. Which STEP number
+3. The exact error message from Script Editor
+4. What you saw vs. what was expected
+
+
+Let's test the complete pipeline! 🚀
+"""

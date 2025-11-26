@@ -16,8 +16,15 @@ global proc test_hover_icon_fix()
     }
     
     // Define test icons (using Asset Manager icons)
-    string $defaultIcon = "C:/Users/ChEeP/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png";
-    string $hoverIcon = "C:/Users/ChEeP/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon2.png";
+    string $userProfile = `getenv "USERPROFILE"`;
+    string $defaultIcon = $userProfile + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png";
+    string $hoverIcon = $userProfile + "/OneDrive/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon2.png";
+    
+    // Try alternative path if OneDrive path doesn't exist
+    if (!`filetest -f $defaultIcon`) {
+        $defaultIcon = $userProfile + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon.png";
+        $hoverIcon = $userProfile + "/Documents/Mike Stumbo plugins/assetManagerforMaya-master/icons/assetManager_icon2.png";
+    }
     
     // Verify icons exist
     int $defaultExists = `filetest -f $defaultIcon`;

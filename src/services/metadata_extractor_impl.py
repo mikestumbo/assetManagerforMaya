@@ -8,7 +8,6 @@ Enterprise Refactoring: Clean Code & SOLID Principles
 """
 
 import os
-import stat
 import platform
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -23,7 +22,7 @@ class MetadataExtractorImpl(IMetadataExtractor):
     Metadata Extractor Implementation - Single Responsibility for file metadata
     Uses Strategy Pattern for different file type handling
     """
-    
+
     def __init__(self):
         self._supported_formats = {
             '.ma', '.mb', '.mel',  # Maya files
@@ -32,7 +31,7 @@ class MetadataExtractorImpl(IMetadataExtractor):
             '.mov', '.mp4', '.avi',  # Video
             '.txt', '.md', '.json'  # Documents
         }
-    
+
     def extract_metadata(self, file_path: Path) -> FileMetadata:
         """
         Extract comprehensive metadata from file
@@ -40,10 +39,10 @@ class MetadataExtractorImpl(IMetadataExtractor):
         """
         if not file_path.exists():
             raise FileNotFoundError(f"File does not exist: {file_path}")
-        
+
         # Get basic file stats
         stats = file_path.stat()
-        
+
         # Extract basic metadata
         metadata = FileMetadata(
             file_path=file_path,
@@ -59,16 +58,16 @@ class MetadataExtractorImpl(IMetadataExtractor):
             mime_type=self._get_mime_type(file_path),
             custom_properties=self._extract_custom_properties(file_path)
         )
-        
+
         return metadata
-    
+
     def get_file_size(self, file_path: Path) -> int:
         """Get file size in bytes"""
         try:
             return file_path.stat().st_size
         except (OSError, IOError):
             return 0
-    
+
     def get_creation_date(self, file_path: Path) -> Optional[str]:
         """Get file creation date"""
         try:
@@ -77,7 +76,7 @@ class MetadataExtractorImpl(IMetadataExtractor):
             return creation_time.isoformat() if creation_time else None
         except (OSError, IOError):
             return None
-    
+
     def get_modification_date(self, file_path: Path) -> Optional[str]:
         """Get file modification date"""
         try:
@@ -86,11 +85,11 @@ class MetadataExtractorImpl(IMetadataExtractor):
             return mod_time.isoformat() if mod_time else None
         except (OSError, IOError):
             return None
-    
+
     def is_supported_format(self, file_path: Path) -> bool:
         """Check if file format is supported for metadata extraction"""
         return file_path.suffix.lower() in self._supported_formats
-    
+
     def _get_creation_date_from_stats(self, stats: os.stat_result) -> Optional[datetime]:
         """Extract creation date from file stats (platform-specific)"""
         try:
@@ -102,28 +101,28 @@ class MetadataExtractorImpl(IMetadataExtractor):
                 return datetime.fromtimestamp(stats.st_ctime)
         except (OSError, ValueError):
             return None
-    
+
     def _get_modification_date_from_stats(self, stats: os.stat_result) -> Optional[datetime]:
         """Extract modification date from file stats"""
         try:
             return datetime.fromtimestamp(stats.st_mtime)
         except (OSError, ValueError):
             return None
-    
+
     def _get_access_date_from_stats(self, stats: os.stat_result) -> Optional[datetime]:
         """Extract access date from file stats"""
         try:
             return datetime.fromtimestamp(stats.st_atime)
         except (OSError, ValueError):
             return None
-    
+
     def _is_readonly(self, file_path: Path) -> bool:
         """Check if file is read-only"""
         try:
             return not os.access(file_path, os.W_OK)
         except (OSError, IOError):
             return False
-    
+
     def _is_hidden(self, file_path: Path) -> bool:
         """Check if file is hidden (platform-specific)"""
         try:
@@ -137,7 +136,7 @@ class MetadataExtractorImpl(IMetadataExtractor):
                 return file_path.name.startswith('.')
         except Exception:
             return False
-    
+
     def _is_system_file(self, file_path: Path) -> bool:
         """Check if file is a system file"""
         try:
@@ -152,7 +151,7 @@ class MetadataExtractorImpl(IMetadataExtractor):
                 return any(str(file_path).startswith(sys_dir) for sys_dir in system_dirs)
         except Exception:
             return False
-    
+
     def _get_mime_type(self, file_path: Path) -> Optional[str]:
         """Get MIME type for file"""
         try:
@@ -161,17 +160,17 @@ class MetadataExtractorImpl(IMetadataExtractor):
             return mime_type
         except Exception:
             return None
-    
+
     def _extract_custom_properties(self, file_path: Path) -> Dict[str, Any]:
         """
         Extract file-type specific custom properties
         Uses Strategy Pattern for different file types
         """
         properties = {}
-        
+
         try:
             extension = file_path.suffix.lower()
-            
+
             if extension in {'.ma', '.mb'}:
                 properties.update(self._extract_maya_properties(file_path))
             elif extension in {'.png', '.jpg', '.jpeg', '.tiff', '.tga'}:
@@ -180,20 +179,20 @@ class MetadataExtractorImpl(IMetadataExtractor):
                 properties.update(self._extract_video_properties(file_path))
             elif extension == '.json':
                 properties.update(self._extract_json_properties(file_path))
-            
+
         except Exception as e:
             properties['extraction_error'] = str(e)
-        
+
         return properties
-    
+
     def _extract_maya_properties(self, file_path: Path) -> Dict[str, Any]:
         """Extract Maya-specific file properties"""
         properties = {}
-        
+
         try:
             # Basic Maya file detection
             properties['file_type'] = 'maya_scene'
-            
+
             if file_path.suffix.lower() == '.ma':
                 properties['format'] = 'maya_ascii'
                 # Could parse ASCII file for more details
@@ -201,19 +200,19 @@ class MetadataExtractorImpl(IMetadataExtractor):
                 properties['format'] = 'maya_binary'
             elif file_path.suffix.lower() == '.mel':
                 properties['format'] = 'maya_script'
-            
+
             # Add version detection if possible
             properties['maya_compatible'] = True
-            
+
         except Exception:
             properties['maya_error'] = 'Could not extract Maya properties'
-        
+
         return properties
-    
+
     def _extract_image_properties(self, file_path: Path) -> Dict[str, Any]:
         """Extract image-specific properties"""
         properties = {}
-        
+
         try:
             # Try to get image dimensions using PIL if available
             try:
@@ -227,47 +226,47 @@ class MetadataExtractorImpl(IMetadataExtractor):
             except (ImportError, ModuleNotFoundError):
                 # PIL not available, basic detection
                 properties['format'] = file_path.suffix.upper()
-            
+
             properties['file_type'] = 'image'
-            
+
         except Exception:
             properties['image_error'] = 'Could not extract image properties'
-        
+
         return properties
-    
+
     def _extract_video_properties(self, file_path: Path) -> Dict[str, Any]:
         """Extract video-specific properties"""
         properties = {}
-        
+
         try:
             properties['file_type'] = 'video'
             properties['format'] = file_path.suffix.upper()
-            
+
             # Could add ffprobe integration for detailed video info
-            
+
         except Exception:
             properties['video_error'] = 'Could not extract video properties'
-        
+
         return properties
-    
+
     def _extract_json_properties(self, file_path: Path) -> Dict[str, Any]:
         """Extract JSON file properties"""
         import json
         properties = {}
-        
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                
+
             properties['file_type'] = 'json'
             properties['json_keys'] = list(data.keys()) if isinstance(data, dict) else []
             properties['json_size'] = len(data) if isinstance(data, (list, dict)) else 1
             properties['valid_json'] = True
-            
+
         except json.JSONDecodeError:
             properties['valid_json'] = False
             properties['json_error'] = 'Invalid JSON format'
         except Exception:
             properties['json_error'] = 'Could not parse JSON'
-        
+
         return properties
