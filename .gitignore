@@ -78,6 +78,11 @@ coverage.xml
 # Documentation builds
 docs/_build/
 
+# Large API reference documentation (keep local only)
+docs/development/OpenUSD-reference/
+docs/development/api/RenderManAPI_27.0/
+docs/development/api/rfm-24.0-doxygen/
+
 # Development files (optional)
 # Uncomment the line below if you don't want to track dev files
 # dev/
