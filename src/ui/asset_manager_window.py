@@ -376,11 +376,11 @@ class AssetManagerWindow(QMainWindow):
         # USD Pipeline menu - NEW! v1.4.0
         usd_menu = menubar.addMenu("&USD Pipeline")
 
-        usd_export_action = QAction("&Export to USD...", self)
-        usd_export_action.setShortcut(QKeySequence("Ctrl+U"))
-        usd_export_action.setStatusTip("Open USD Pipeline Creator for Maya → USD export")
-        usd_export_action.triggered.connect(self._on_usd_pipeline)
-        usd_menu.addAction(usd_export_action)
+        usd_open_creator_action = QAction("&Open Creator", self)
+        usd_open_creator_action.setShortcut(QKeySequence("Ctrl+U"))
+        usd_open_creator_action.setStatusTip("Open USD Pipeline Creator for import and export")
+        usd_open_creator_action.triggered.connect(self._on_usd_pipeline)
+        usd_menu.addAction(usd_open_creator_action)
 
         # Help menu
         help_menu = menubar.addMenu("&Help")
