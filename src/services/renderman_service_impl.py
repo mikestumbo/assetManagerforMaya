@@ -114,7 +114,7 @@ class RenderManService:
 
             # Detect RenderMan lights (PxrRectLight, PxrDomeLight, etc.)
             light_types = ['PxrRectLight', 'PxrDomeLight', 'PxrDiskLight',
-                          'PxrSphereLight', 'PxrCylinderLight', 'PxrDistantLight']
+                           'PxrSphereLight', 'PxrCylinderLight', 'PxrDistantLight']
             for light_type in light_types:
                 lights = cmds.ls(search_pattern, type=light_type) or []
                 renderman_nodes['lights'].extend(lights)
@@ -152,7 +152,7 @@ class RenderManService:
             return {}
 
     def generate_renderman_thumbnail(self, file_path: Path, output_path: Path,
-                                    size: tuple = (256, 256)) -> bool:
+                                     size: tuple = (256, 256)) -> bool:
         """
         Generate high-quality thumbnail using RenderMan IPR
 
@@ -205,7 +205,7 @@ class RenderManService:
             render_view = mel.eval('$tmp = $gRenderViewWindow')
             if render_view:
                 cmds.renderWindowEditor(render_view, edit=True,
-                                       writeImage=str(output_path))
+                                        writeImage=str(output_path))
 
             if output_path.exists():
                 self.logger.info(f"✅ RenderMan thumbnail generated: {output_path.name}")
@@ -384,6 +384,7 @@ class RenderManService:
             pass
 
         return info
+
 
 # Singleton instance
 _renderman_service = None

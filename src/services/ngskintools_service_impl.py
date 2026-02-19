@@ -5,7 +5,7 @@ ngSkinTools2 Service Implementation
 Provides ngSkinTools2 integration with availability checking.
 
 Author: Asset Manager Development Team
-Version: 1.3.0
+Version: 1.5.0
 
 Official API Documentation:
 - ngSkinTools2 API: https://www.ngskintools.com/documentation/v2/api/
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 
 class NgSkinToolsService:
-
 
     def __init__(self):
         """Initialize ngSkinTools2 service"""
@@ -398,6 +397,7 @@ class NgSkinToolsService:
                 'Dual quaternion skinning'
             ] if self.is_available() else []
         }
+
 
 # Singleton instance factory
 _ngskintools_service_instance = None

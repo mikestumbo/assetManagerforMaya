@@ -1,3 +1,7 @@
 [flake8]
 max-line-length = 120
-extend-ignore = E203, W503
+extend-ignore = E203, W503, F401, F821
+# F401: imported but unused (type: ignore comments)
+# F821: undefined name (pxr module attributes)
+per-file-ignores =
+    src/services/usd/usd_pipeline.py:F821

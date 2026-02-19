@@ -4,7 +4,7 @@ USD Material Converter Interface
 Defines contract for converting Maya materials to USD
 
 Author: Mike Stumbo
-Version: 1.4.0
+Version: 1.5.0
 """
 
 from abc import ABC, abstractmethod
@@ -62,7 +62,7 @@ class IUSDMaterialConverter(ABC):
             material_name: Name for USD material
             renderman_params: RenderMan shader parameters
             usd_stage: USD stage to create material in
-            usd_service: Optional USD service for Arnold-USD availability check
+            usd_service: Unused (kept for API compatibility)
 
         Returns:
             Created UsdShade.Material with RenderMan shader

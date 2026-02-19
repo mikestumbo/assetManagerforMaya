@@ -43,6 +43,9 @@ class USDExportOptions:
     nurbs_curves_renderable: bool = False  # Whether NURBS curves should be renderable (default: guide purpose)
     export_rig_connections: bool = True  # NEW: Export functional rig connections - INDUSTRY FIRST!
 
+    # Packaging options (v1.5.0)
+    bundle_mrig: bool = True  # Bundle .mrig file inside .usdz package for single-file distribution
+
     # Animation options
     export_animation: bool = False
     frame_range: Optional[tuple] = None  # (start, end) or None for current frame

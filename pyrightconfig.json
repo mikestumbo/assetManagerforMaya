@@ -1,0 +1,33 @@
+{
+  "include": ["src", "tests"],
+  "exclude": ["**/__pycache__", "**/node_modules", "**/archive", ".git"],
+  "ignore": ["**/archive"],
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Windows",
+
+  "typeCheckingMode": "basic",
+
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none",
+  "reportOptionalMemberAccess": "warning",
+  "reportUnknownMemberType": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportPrivateUsage": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportUnusedExpression": "warning",
+  "reportUnusedVariable": "warning",
+  "reportUnusedImport": "warning",
+
+  "stubPath": "typings",
+
+  "executionEnvironments": [
+    {
+      "root": "src",
+      "extraPaths": ["."],
+      "pythonVersion": "3.10"
+    }
+  ]
+}

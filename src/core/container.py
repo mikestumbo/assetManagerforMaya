@@ -149,11 +149,6 @@ class EMSAContainer:
             self._services[interface] = implementation
             self._singletons[interface] = None
 
-    def register_singleton(self, interface: Type[T], implementation: Type[T]) -> None:
-        # Register a singleton service implementation.
-        with self._lock:
-            self._services[interface] = implementation
-
     def register_instance(self, interface: Type[T], instance: T) -> None:
         # Register an existing instance as a service.
         with self._lock:
@@ -258,6 +253,7 @@ class EMSAContainer:
             services[interface.__name__] = "transient"
 
         return services
+
 
 # Type alias for backward compatibility and cleaner type annotations
 ServiceContainer = EMSAContainer

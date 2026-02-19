@@ -1,12 +1,12 @@
 """
-Collections Widget for Asset Manager v1.3.0
+Collections Widget for Asset Manager v1.5.0
 
 This module provides a dedicated widget for displaying and managing asset collections
 within the Asset Library. It follows Clean Code principles and implements SOLID
 design patterns for maintainable and extensible collection display.
 
 Author: Asset Manager Development Team
-Version: 1.3.0
+Version: 1.5.0
 License: MIT
 """
 
@@ -224,7 +224,10 @@ class CollectionsDisplayWidget(QWidget):
             },
             "Props": {
                 "description": "Miscellaneous props and objects for scene decoration",
-                "assets": ["Sword_Medieval.ma", "Shield_Knight.ma", "Treasure_Chest.ma", "Magic_Staff.ma", "Ancient_Book.ma"],
+                "assets": [
+                    "Sword_Medieval.ma", "Shield_Knight.ma", "Treasure_Chest.ma",
+                    "Magic_Staff.ma", "Ancient_Book.ma"
+                ],
                 "created": "2024-01-25",
                 "category": "Props",
                 "asset_count": 5
@@ -346,7 +349,8 @@ class CollectionsDisplayWidget(QWidget):
         QMessageBox.information(
             self,
             "Collection Created",
-            f"Collection '{collection_name}' has been created successfully.\n\nYou can now add assets to this collection."
+            f"Collection '{collection_name}' has been created successfully.\n\n"
+            "You can now add assets to this collection."
         )
 
     def _reset_dropdown_selection(self) -> None:
@@ -467,8 +471,10 @@ class CollectionsDisplayWidget(QWidget):
         """Refresh collections display - Single Responsibility"""
         # In a real implementation, this would reload from the collection manager
         self._populate_collection_selector()
-        QMessageBox.information(self, "Collections Refreshed",
-                              f"Refreshed {len(self.collections_data)} collections")
+        QMessageBox.information(
+            self, "Collections Refreshed",
+            f"Refreshed {len(self.collections_data)} collections"
+        )
 
     def update_collections(self, collections_data: Dict[str, Any]) -> None:
         """Update collections data from external source - Single Responsibility"""

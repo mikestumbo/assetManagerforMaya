@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa: F811
+# pyright: reportRedeclaration=false
 """
 Standalone Services Implementation - Maya Compatible
 Self-contained service implementations for Maya Asset Manager
@@ -22,8 +24,6 @@ from dataclasses import dataclass, field
 
 
 def safe_import():
-
-
     try:
         # Try relative imports first (package context)
         from ..core.interfaces.asset_repository import IAssetRepository
@@ -49,6 +49,7 @@ def safe_import():
         except ImportError:
             # Ultimate fallback - return None and we'll define locally
             return None, None, None, None, None, None
+
 
 # Attempt imports
 _imports = safe_import()
@@ -520,7 +521,7 @@ class StandaloneAssetRepository(IAssetRepository):
             # Create new scene with minimal UI interaction
             cmds.file(new=True, force=True)
 
-        except Exception as _e:
+        except Exception:
             # Fallback: try without callback clearing
             try:
                 cmds.file(new=True, force=True)
@@ -650,13 +651,19 @@ class StandaloneAssetRepository(IAssetRepository):
 
                 # Count cameras (exclude default cameras)
                 all_cameras = cmds.ls(f"{temp_namespace}:*", type='camera') or []
-                metadata['cameras'] = [cam for cam in all_cameras if 'persp' not in cam and 'top' not in cam and 'side' not in cam and 'front' not in cam]
+                default_cams = ['persp', 'top', 'side', 'front']
+                metadata['cameras'] = [
+                    cam for cam in all_cameras
+                    if not any(dc in cam for dc in default_cams)
+                ]
 
                 # Count lights
                 lights = cmds.ls(f"{temp_namespace}:*", type='light') or []
                 metadata['lights'] = lights
 
-                self.logger.info(f"✅ Full metadata extracted: {metadata['poly_count']} polys, {metadata['material_count']} materials")
+                poly_count = metadata['poly_count']
+                mat_count = metadata['material_count']
+                self.logger.info(f"✅ Metadata: {poly_count} polys, {mat_count} materials")
 
             finally:
                 # CRITICAL: Clean up the imported namespace
@@ -786,7 +793,8 @@ class StandaloneAssetRepository(IAssetRepository):
                         if not cmds.objExists(renamed):
                             self.logger.info(f"   ✅ Deleted after rename: {node.split(':')[-1]}")
                     except Exception:
-                        self.logger.warning(f"   ⚠️ Could not delete locked node: {node.split(':')[-1]} (acceptable for nested references)")
+                        node_short = node.split(':')[-1]
+                        self.logger.warning(f"   ⚠️ Could not delete locked node: {node_short} (acceptable)")
 
                 # Final namespace removal attempt
                 try:
@@ -910,7 +918,9 @@ class StandaloneAssetRepository(IAssetRepository):
                     except Exception as vol_error:
                         self.logger.warning(f"Volume aggregate unlock error: {vol_error}")
 
-                self.logger.info(f"Unlocked nodes: {', '.join(locked_nodes[:3])}{'...' if len(locked_nodes) > 3 else ''}")
+                node_list = ', '.join(locked_nodes[:3])
+                suffix = '...' if len(locked_nodes) > 3 else ''
+                self.logger.info(f"Unlocked nodes: {node_list}{suffix}")
 
         except Exception as e:
             self.logger.warning(f"Lock management error: {e}")
@@ -923,8 +933,7 @@ class StandaloneAssetRepository(IAssetRepository):
                 'rmanDefaultDisplay.displayType',
                 'rmanDefaultDisplay.displayChannels[0]',
                 'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]',
-                'defaultArnoldRenderOptions.drivers'
+                'rmanBakingGlobals.displays[0]'
             ]
 
             connections_broken = 0
@@ -1073,7 +1082,9 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # Disconnect all connections that involve the aggregate
             try:
-                connections = cmds.listConnections(node_name, plugs=True, connections=True, skipConversionNodes=True) or []
+                connections = cmds.listConnections(
+                    node_name, plugs=True, connections=True, skipConversionNodes=True
+                ) or []
                 for idx in range(0, len(connections), 2):
                     src = connections[idx]
                     dest = connections[idx + 1] if idx + 1 < len(connections) else None
@@ -1192,7 +1203,7 @@ class StandaloneAssetRepository(IAssetRepository):
             # Only report as failure if it's not a nested reference
             return False
 
-        except Exception as _e:
+        except Exception:
             return False
 
     def _force_aggressive_cleanup(self, namespace: str, cmds) -> bool:
@@ -1507,7 +1518,7 @@ class StandaloneThumbnailService(IThumbnailService):
 
     def _init__(self):
         """Initialize standalone thumbnail service"""
-        self.logger = logging.getLogger(_name__)
+        self.logger = logging.getLogger(__name__)
 
     def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
         """
@@ -1612,7 +1623,7 @@ class StandaloneEventPublisher(IEventPublisher):
 
     def _init__(self):
         """Initialize standalone event publisher"""
-        self.logger = logging.getLogger(_name__)
+        self.logger = logging.getLogger(__name__)
         self._subscribers: Dict[EventType, List[Tuple[str, Callable]]] = {}
 
     def subscribe(self, event_type: EventType, callback: Callable[[Dict[str, Any]], None]) -> str:

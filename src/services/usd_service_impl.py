@@ -49,36 +49,6 @@ class UsdService:
 
             self._mayausd_available = cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True)
 
-            # Check for Arnold-USD plugin (for RenderMan material conversion)
-            self._arnoldusd_available = False
-            try:
-                # Arnold-USD plugin names may vary, try common ones
-                arnold_plugin_names = ['mtoa', 'arnoldUsd', 'usdArnold', 'arnold']
-                for plugin_name in arnold_plugin_names:
-                    if cmds.pluginInfo(plugin_name, query=True, loaded=True):
-                        self._arnoldusd_available = True
-                        print(f"✅ Arnold-USD support available via {plugin_name}")
-                        break
-
-                # If not loaded, try to load Arnold plugins
-                if not self._arnoldusd_available:
-                    for plugin_name in arnold_plugin_names:
-                        try:
-                            cmds.loadPlugin(plugin_name, quiet=True)
-                            if cmds.pluginInfo(plugin_name, query=True, loaded=True):
-                                self._arnoldusd_available = True
-                                print(f"✅ Arnold-USD plugin {plugin_name} loaded successfully")
-                                break
-                        except Exception:
-                            continue
-
-                if not self._arnoldusd_available:
-                    print("ℹ️ Arnold-USD not available - RenderMan materials will use fallback conversion")
-
-            except Exception as e:
-                print(f"ℹ️ Arnold-USD check failed: {e}")
-                self._arnoldusd_available = False
-
             # Check for pxr USD Python API
             try:
                 from pxr import Usd  # type: ignore  # noqa: F401
@@ -97,11 +67,6 @@ class UsdService:
         except Exception as e:
             print(f"⚠️ Error checking USD availability: {e}")
             return False
-
-    @property
-    def arnoldusd_available(self) -> bool:
-        """Check if Arnold-USD is available for RenderMan material conversion"""
-        return getattr(self, '_arnoldusd_available', False)
 
     def is_usd_available(self) -> bool:
         """Check if USD is available"""
@@ -552,6 +517,7 @@ class UsdService:
             })
 
         return info
+
 
 # Singleton instance
 _usd_service_instance: Optional[UsdService] = None

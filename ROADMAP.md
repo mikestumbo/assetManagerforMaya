@@ -1,8 +1,66 @@
 # Asset Manager for Maya - Product Roadmap
 
 > **Strategic Planning Document**  
-> Last Updated: October 15, 2025  
-> Current Version: v1.3.0
+> Last Updated: December 22, 2025  
+> Current Version: v1.5.0
+
+---
+
+## 🎯 USD Rig Creator - v1.5.0 Enhancements ✅ IMPLEMENTED
+
+**Status**: ✅ IMPLEMENTED in v1.5.0 | **Completed**: December 2025
+
+The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Maya rig data to `.mrig` format and reimports onto USD geometry. All 6 planned enhancements have been implemented:
+
+### Enhancement 1: Progress Callback 📊 ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ Added `set_progress_callback()` method to both exporter and importer
+- ✅ Progress reporting at each stage (0-100%)
+- ✅ Stage names for UI feedback (e.g., "Extracting controllers", "Importing constraints")
+
+### Enhancement 2: Validation Pass ✅ ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ `validate_rig()` method performs pre-export checks
+- ✅ Warns about unsupported node types (expressions, scripts, unknown nodes)
+- ✅ Reports broken constraints and missing IK handle joints
+- ✅ Returns `ValidationResult` with errors, warnings, and unsupported nodes
+
+### Enhancement 3: Space Switches 🔀 ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ `_extract_space_switches()` exports space switch setups
+- ✅ Detects parent constraints with multiple targets
+- ✅ Finds enum attributes driving constraint weights
+- ✅ `_import_space_switches()` recreates via SDKs
+
+### Enhancement 4: Custom Attributes 🏷️ ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ `_extract_custom_attributes()` preserves user-defined attributes
+- ✅ Exports type, value, min/max, enum names, keyable/channelBox state
+- ✅ `_create_custom_attributes()` recreates on import
+
+### Enhancement 5: Proxy Attributes 🔗 ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ `_extract_proxy_attributes()` captures proxy connections
+- ✅ Records source node and attribute for each proxy
+- ✅ `_connect_proxy_attributes()` reconnects on import
+
+### Enhancement 6: Undo Support ↩️ ✅
+
+**Status**: IMPLEMENTED
+
+- ✅ Import wrapped in `cmds.undoInfo(openChunk=True, chunkName="Import Rig Data")`
+- ✅ Single-step undo of entire rig import
+- ✅ Automatic rollback on partial failures
 
 ---
 
@@ -271,7 +329,7 @@
 ## 📊 Feature Priority Matrix
 
 | Feature | Impact | Effort | Priority | Version |
-|---------|--------|--------|----------|---------|
+| ------- | ------ | ------ | -------- | ------- |
 | Smart Search | HIGH | LOW | 1 | v1.4.0 |
 | Version Control | HIGH | MEDIUM | 2 | v1.4.0 |
 | Custom Metadata | HIGH | MEDIUM | 3 | v1.4.0 |

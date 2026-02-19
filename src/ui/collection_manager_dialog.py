@@ -1,12 +1,12 @@
 """
-Collection Manager Dialog for Asset Manager v1.3.0
+Collection Manager Dialog for Asset Manager v1.5.0
 
 This module provides the Collection Manager Dialog interface for organizing and managing
 asset collections within the Asset Manager system. It follows Clean Code principles
 and implements SOLID design patterns for maintainable and extensible collection management.
 
 Author: Asset Manager Development Team
-Version: 1.3.0
+Version: 1.5.0
 License: MIT
 """
 
@@ -65,7 +65,7 @@ class CollectionManagerDialog(QDialog):
 
     def _setup_ui(self) -> None:
         """Setup the user interface - Single Responsibility"""
-        self.setWindowTitle("Collection Manager - Asset Manager v1.3.0")
+        self.setWindowTitle("Collection Manager - Asset Manager v1.5.0")
         self.setModal(True)
         self.resize(1000, 700)
 
@@ -204,7 +204,7 @@ class CollectionManagerDialog(QDialog):
         self.category_input.setMinimumWidth(200)  # Ensure adequate width for text
         self.category_input.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.category_input.addItems(["Characters", "Environments", "Props",
-                                    "Textures", "Animation", "Custom"])
+                                      "Textures", "Animation", "Custom"])
         self.category_input.currentTextChanged.connect(self._mark_modified)
         category_layout.addWidget(self.category_input)
         basic_layout.addLayout(category_layout)
@@ -535,12 +535,12 @@ class CollectionManagerDialog(QDialog):
 
             # Check search filter
             search_match = (search_text == "" or
-                          search_text in collection_name.lower() or
-                          search_text in collection_data.get("description", "").lower())
+                            search_text in collection_name.lower() or
+                            search_text in collection_data.get("description", "").lower())
 
             # Check category filter
             category_match = (category_filter == "All Categories" or
-                            collection_data.get("category", "Custom") == category_filter)
+                              collection_data.get("category", "Custom") == category_filter)
 
             item.setHidden(not (search_match and category_match))
 
@@ -591,8 +591,10 @@ class CollectionManagerDialog(QDialog):
 
         name = name.strip()
         if name in self.existing_collections:
-            QMessageBox.warning(self, "Duplicate Name",
-                              f"A collection named '{name}' already exists.")
+            QMessageBox.warning(
+                self, "Duplicate Name",
+                f"A collection named '{name}' already exists."
+            )
             return
 
         # Create new collection with default data
@@ -624,16 +626,20 @@ class CollectionManagerDialog(QDialog):
             QMessageBox.information(self, "No Selection", "Please select a collection to duplicate.")
             return
 
-        name, ok = QInputDialog.getText(self, "Duplicate Collection",
-                                      "New collection name:",
-                                      text=f"{self.current_collection}_copy")
+        name, ok = QInputDialog.getText(
+            self, "Duplicate Collection",
+            "New collection name:",
+            text=f"{self.current_collection}_copy"
+        )
         if not ok or not name.strip():
             return
 
         name = name.strip()
         if name in self.existing_collections:
-            QMessageBox.warning(self, "Duplicate Name",
-                              f"A collection named '{name}' already exists.")
+            QMessageBox.warning(
+                self, "Duplicate Name",
+                f"A collection named '{name}' already exists."
+            )
             return
 
         # Copy collection data
@@ -652,10 +658,12 @@ class CollectionManagerDialog(QDialog):
             return
 
         # Confirm deletion
-        reply = QMessageBox.question(self, "Confirm Deletion",
-                                   f"Are you sure you want to delete the collection '{self.current_collection}'?",
-                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                   QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            self, "Confirm Deletion",
+            f"Are you sure you want to delete the collection '{self.current_collection}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
 
         if reply == QMessageBox.StandardButton.Yes:
             del self.existing_collections[self.current_collection]
@@ -671,16 +679,21 @@ class CollectionManagerDialog(QDialog):
             return
 
         # Simulate asset selection dialog
-        text, ok = QInputDialog.getText(self, "Add Assets",
-                                      "Enter asset names (comma-separated):")
+        text, ok = QInputDialog.getText(
+            self, "Add Assets",
+            "Enter asset names (comma-separated):"
+        )
         if not ok or not text.strip():
             return
 
         assets = [asset.strip() for asset in text.split(",") if asset.strip()]
 
         for asset in assets:
-            if asset not in [self.assets_list.item(i).text()
-                           for i in range(self.assets_list.count())]:
+            existing = [
+                self.assets_list.item(i).text()
+                for i in range(self.assets_list.count())
+            ]
+            if asset not in existing:
                 self.assets_list.addItem(asset)
 
         self._update_asset_count()
@@ -705,10 +718,12 @@ class CollectionManagerDialog(QDialog):
         if self.assets_list.count() == 0:
             return
 
-        reply = QMessageBox.question(self, "Clear Assets",
-                                   "Are you sure you want to remove all assets from this collection?",
-                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                   QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            self, "Clear Assets",
+            "Are you sure you want to remove all assets from this collection?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
 
         if reply == QMessageBox.StandardButton.Yes:
             self.assets_list.clear()
@@ -717,15 +732,19 @@ class CollectionManagerDialog(QDialog):
 
     def _import_collections(self) -> None:
         """Import collections from file - Single Responsibility"""
-        QMessageBox.information(self, "Import Collections",
-                               "Import functionality will be implemented in a future version.\n"
-                               "This will allow importing collection definitions from JSON files.")
+        QMessageBox.information(
+            self, "Import Collections",
+            "Import functionality will be implemented in a future version.\n"
+            "This will allow importing collection definitions from JSON files."
+        )
 
     def _export_collections(self) -> None:
         """Export collections to file - Single Responsibility"""
-        QMessageBox.information(self, "Export Collections",
-                               "Export functionality will be implemented in a future version.\n"
-                               "This will allow exporting collection definitions to JSON files.")
+        QMessageBox.information(
+            self, "Export Collections",
+            "Export functionality will be implemented in a future version.\n"
+            "This will allow exporting collection definitions to JSON files."
+        )
 
     def _mark_modified(self) -> None:
         """Mark the dialog as having unsaved changes - Single Responsibility"""
@@ -750,8 +769,10 @@ class CollectionManagerDialog(QDialog):
     def _update_stats_label(self) -> None:
         """Update the collections statistics label - Single Responsibility"""
         total = len(self.existing_collections)
-        visible = sum(1 for i in range(self.collections_list.count())
-                     if not self.collections_list.item(i).isHidden())
+        visible = sum(
+            1 for i in range(self.collections_list.count())
+            if not self.collections_list.item(i).isHidden()
+        )
 
         if visible == total:
             self.stats_label.setText(f"{total} collection{'s' if total != 1 else ''} loaded")
@@ -767,8 +788,10 @@ class CollectionManagerDialog(QDialog):
         collection_data = {
             "category": self.category_input.currentText(),
             "description": self.description_input.toPlainText(),
-            "assets": [self.assets_list.item(i).text()
-                      for i in range(self.assets_list.count())],
+            "assets": [
+                self.assets_list.item(i).text()
+                for i in range(self.assets_list.count())
+            ],
             "auto_include_by_tag": self.auto_include_by_tag.isChecked(),
             "auto_include_by_type": self.auto_include_by_type.isChecked(),
             "auto_include_by_folder": self.auto_include_by_folder.isChecked(),
@@ -779,8 +802,10 @@ class CollectionManagerDialog(QDialog):
         new_name = self.name_input.text().strip()
         if new_name != self.current_collection:
             if new_name in self.existing_collections:
-                QMessageBox.warning(self, "Duplicate Name",
-                                  f"A collection named '{new_name}' already exists.")
+                QMessageBox.warning(
+                    self, "Duplicate Name",
+                    f"A collection named '{new_name}' already exists."
+                )
                 return
 
             # Rename collection
@@ -806,8 +831,11 @@ class CollectionManagerDialog(QDialog):
             reply = QMessageBox.question(
                 self, "Unsaved Changes",
                 "You have unsaved changes. Do you want to save them before closing?",
-                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Save)
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Save
+            )
 
             if reply == QMessageBox.StandardButton.Save:
                 self._save_changes()
@@ -824,8 +852,11 @@ class CollectionManagerDialog(QDialog):
             reply = QMessageBox.question(
                 self, "Unsaved Changes",
                 "You have unsaved changes. Do you want to save them before closing?",
-                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Save)
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Save
+            )
 
             if reply == QMessageBox.StandardButton.Save:
                 self._save_changes()

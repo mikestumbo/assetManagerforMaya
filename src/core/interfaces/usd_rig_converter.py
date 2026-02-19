@@ -4,7 +4,7 @@ USD Rig Converter Interface
 Defines contract for converting Maya rigging to UsdSkel
 
 Author: Mike Stumbo
-Version: 1.4.0
+Version: 1.5.0
 """
 
 from abc import ABC, abstractmethod

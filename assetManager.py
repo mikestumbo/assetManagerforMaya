@@ -33,15 +33,17 @@ import maya.cmds as cmds  # type: ignore
 
 
 def maya_useNewAPI():
-
-
     pass
+
 
 # Maya Plugin Metadata - Required for Maya 2025+ security compliance
 PLUGIN_NAME = "assetManager"
-PLUGIN_VERSION = "1.3.0"
+PLUGIN_VERSION = "1.5.0"
 PLUGIN_AUTHOR = "Mike Stumbo"
-PLUGIN_DESCRIPTION = "Asset Manager for Maya - Enterprise Modular Service Architecture with USD Pipeline (Maya 2026.3 | MayaUSD 0.34.5 | RenderMan 27)"
+PLUGIN_DESCRIPTION = (
+    "Asset Manager for Maya - Enterprise Modular Service Architecture "
+    "with USD Pipeline (Maya 2026.3 | MayaUSD 0.34.5 | RenderMan 27)"
+)
 PLUGIN_REQUIRED_API_VERSION = "20260000"  # Maya 2026
 PLUGIN_VENDOR = "Mike Stumbo"
 
@@ -60,7 +62,7 @@ class AssetManagerPlugin:
     def __init__(self):
         """Initialize plugin with minimal overhead."""
         self._plugin_name = "assetManager"
-        self._plugin_version = "1.3.0"
+        self._plugin_version = "1.5.0"
         self._emsa_container: Optional[Any] = None
         self._is_initialized = False
 
@@ -266,6 +268,7 @@ class AssetManagerPlugin:
         """
         self.uninitialize()
 
+
 # Global plugin instance following Singleton pattern
 _asset_manager_plugin: Optional[AssetManagerPlugin] = None
 
@@ -282,7 +285,7 @@ def initializePlugin(mobject: om.MObject) -> None:
 
     try:
         # Register plugin with Maya using proper MFnPlugin
-        _plugin_fn = om.MFnPlugin(mobject, PLUGIN_VENDOR, PLUGIN_VERSION, PLUGIN_REQUIRED_API_VERSION)
+        om.MFnPlugin(mobject, PLUGIN_VENDOR, PLUGIN_VERSION, PLUGIN_REQUIRED_API_VERSION)
 
         # Maya 2025.3 compatibility - skip metadata that causes crashes
         print(f"INFO: Registered Maya plugin: {PLUGIN_NAME} v{PLUGIN_VERSION}")
@@ -296,7 +299,7 @@ def initializePlugin(mobject: om.MObject) -> None:
         if not _asset_manager_plugin.initialize():
             raise RuntimeError("Plugin initialization failed")
 
-        print("🚀 Asset Manager v1.3.0 ready for production use!")
+        print("🚀 Asset Manager v1.5.0 ready for production use!")
 
     except Exception as e:
         print(f"ERROR: Failed to initialize Asset Manager plugin: {e}")
@@ -320,7 +323,7 @@ def uninitializePlugin(mobject: om.MObject) -> None:
             _asset_manager_plugin = None
 
         # Deregister plugin from Maya
-        _plugin_fn = om.MFnPlugin(mobject)
+        om.MFnPlugin(mobject)
         print(f"Asset Manager v{PLUGIN_VERSION} unloaded successfully")
 
     except Exception as e:
@@ -348,7 +351,7 @@ def show_asset_manager():
     original_path = sys.path[:]
 
     try:
-        print("🎨 Launching Asset Manager v1.3.0...")
+        print("🎨 Launching Asset Manager v1.5.0...")
 
         # Get current plugin directory using existing robust method
         plugin_dir = _get_current_plugin_directory()
@@ -452,10 +455,9 @@ def _show_user_friendly_error(title: str, message: str) -> None:
         # Fallback to print if Maya UI is not available
         print(f"ERROR - {title}: {message}")
 
+
 # Entry point for direct execution (development/testing)
 if __name__ == "__main__":
-
-
     print("For Maya integration, load as plugin through Maya's Plugin Manager")
     print("Or use Maya Module System for automatic discovery")
     print("To launch UI directly, call: show_asset_manager()")

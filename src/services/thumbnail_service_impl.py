@@ -116,7 +116,12 @@ class ThumbnailServiceImpl(IThumbnailService):
         """Get cache file path for cache key"""
         return self._cache_dir / f"{cache_key}.png"
 
-    def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False) -> Optional[str]:
+    def generate_thumbnail(
+        self,
+        file_path: Path,
+        size: Tuple[int, int] = (64, 64),
+        force_playblast: bool = False
+    ) -> Optional[str]:
         """Generate or retrieve thumbnail for asset.
 
         Args:
@@ -503,7 +508,9 @@ class ThumbnailServiceImpl(IThumbnailService):
             original_settings['displayAppearance'] = cmds.modelEditor(active_panel, query=True, displayAppearance=True)
             original_settings['displayLights'] = cmds.modelEditor(active_panel, query=True, displayLights=True)
             original_settings['shadows'] = cmds.modelEditor(active_panel, query=True, shadows=True)
-            original_settings['useDefaultMaterial'] = cmds.modelEditor(active_panel, query=True, useDefaultMaterial=True)
+            original_settings['useDefaultMaterial'] = cmds.modelEditor(
+                active_panel, query=True, useDefaultMaterial=True
+            )
 
             # Enable textures and materials
             cmds.modelEditor(active_panel, edit=True, displayTextures=True)  # Show textures
@@ -554,7 +561,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
         Based on September 25th test analysis, this handles:
         - Locked objects (globalVolumeAggregate, ngSkinTools data)
-        - Persistent render connections (RenderMan, Arnold)
+        - Persistent render connections (RenderMan, etc.)
         - Complex asset structures with multiple renderers
         - Scene-level metadata and references
 
@@ -648,7 +655,10 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                             # Force unlock with all attributes
                             try:
-                                cmds.lockNode(node, lock=False, lockName=False, lockUnpublished=False, ignoreComponents=True)
+                                cmds.lockNode(
+                                    node, lock=False, lockName=False,
+                                    lockUnpublished=False, ignoreComponents=True
+                                )
                             except Exception:
                                 pass
 
@@ -713,7 +723,8 @@ class ThumbnailServiceImpl(IThumbnailService):
                         if not cmds.objExists(renamed):
                             print(f"   ✅ Deleted after rename: {node.split(':')[-1]}")
                     except Exception:
-                        print(f"   ⚠️ Could not delete locked node: {node.split(':')[-1]} (acceptable for nested references)")
+                        node_short = node.split(':')[-1]
+                        print(f"   ⚠️ Could not delete locked node: {node_short} (acceptable)")
 
                 # Delete namespace with all content (don't move to root!)
                 try:
@@ -750,7 +761,8 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 for vol_node in volume_nodes:
                                     try:
                                         if cmds.objExists(vol_node):
-                                            # Always try to unlock, don't query first (query can fail on nested namespaces)
+                                            # Always try to unlock, don't query first
+                                            # (query can fail on nested namespaces)
                                             cmds.lockNode(vol_node, lock=False)
                                             print(f"   ✅ Unlocked: {vol_node.split(':')[-1]}")
                                     except Exception as unlock_err:
@@ -773,7 +785,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                                     if cmds.objExists(node) and ':' in node and namespace in node:
                                         cmds.delete(node)
                                         nodes_deleted += 1
-                                except Exception as _e:
+                                except Exception:
                                     pass  # Expected for default nodes
 
                             print(f"   ✅ Deleted {nodes_deleted} nodes from namespace")
@@ -789,7 +801,8 @@ class ThumbnailServiceImpl(IThumbnailService):
                                     # Focus on globalVolumeAggregate nodes specifically
                                     locked_volumes = [n for n in remaining_nodes if 'globalVolumeAggregate' in n]
                                     if locked_volumes:
-                                        print(f"   🔓 Attempting to unlock {len(locked_volumes)} volume aggregate nodes...")
+                                        count = len(locked_volumes)
+                                        print(f"   🔓 Attempting to unlock {count} volume aggregate nodes...")
                                         for vol_node in locked_volumes:
                                             try:
                                                 cmds.lockNode(vol_node, lock=False)
@@ -924,8 +937,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 'rmanDefaultDisplay.displayType',
                 'rmanDefaultDisplay.displayChannels[0]',
                 'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]',
-                'defaultArnoldRenderOptions.drivers'
+                'rmanBakingGlobals.displays[0]'
             ]
 
             connections_broken = 0
@@ -1071,7 +1083,9 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Disconnect all connections involving this aggregate
             try:
-                connections = cmds.listConnections(node_name, plugs=True, connections=True, skipConversionNodes=True) or []
+                connections = cmds.listConnections(
+                    node_name, plugs=True, connections=True, skipConversionNodes=True
+                ) or []
                 for idx in range(0, len(connections), 2):
                     src = connections[idx]
                     dest = connections[idx + 1] if idx + 1 < len(connections) else None
@@ -1197,7 +1211,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             # print(f"⚠️ Could not delete volume aggregate: {node_name}")
             return False
 
-        except Exception as _e:
+        except Exception:
             # print(f"⚠️ Volume aggregate cleanup error: {e}")
             return False
 
@@ -1328,11 +1342,15 @@ class ThumbnailServiceImpl(IThumbnailService):
         try:
             # Import with settings that worked in v1.2.2
             if file_path.suffix.lower() == '.ma':
-                cmds.file(str(file_path), i=True, type="mayaAscii",
-                         ignoreVersion=True, mergeNamespacesOnClash=True)
+                cmds.file(
+                    str(file_path), i=True, type="mayaAscii",
+                    ignoreVersion=True, mergeNamespacesOnClash=True
+                )
             else:  # .mb
-                cmds.file(str(file_path), i=True, type="mayaBinary",
-                         ignoreVersion=True, mergeNamespacesOnClash=True)
+                cmds.file(
+                    str(file_path), i=True, type="mayaBinary",
+                    ignoreVersion=True, mergeNamespacesOnClash=True
+                )
 
             print(f"✅ Imported Maya scene: {file_path.name}")
 
@@ -1352,7 +1370,9 @@ class ThumbnailServiceImpl(IThumbnailService):
             for mesh in meshes[:limit]:
                 try:
                     parents = cmds.listRelatives(mesh, parent=True, fullPath=True) or []
-                    transforms.extend(parent for parent in parents if not namespace or parent.startswith(f"{namespace}:"))
+                    for parent in parents:
+                        if not namespace or parent.startswith(f"{namespace}:"):
+                            transforms.append(parent)
                 except Exception:
                     continue
 

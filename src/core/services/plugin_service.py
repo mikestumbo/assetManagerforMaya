@@ -15,7 +15,7 @@ class PluginService(IPluginService):
 
     def __init__(self):
         """Initialize the plugin service."""
-        self._version = "1.3.0"
+        self._version = "1.5.0"
         self._is_initialized = False
         self._asset_manager_window = None
 
@@ -71,7 +71,7 @@ class PluginService(IPluginService):
     def _create_main_ui(self) -> None:
         """Create the main Asset Manager UI using EMSA architecture."""
         try:
-            print("🚀 Attempting to launch Asset Manager v1.3.0 UI...")
+            print("🚀 Attempting to launch Asset Manager v1.5.0 UI...")
 
             # Try to launch using the maya module command first
             import maya.cmds as cmds  # type: ignore
@@ -79,7 +79,7 @@ class PluginService(IPluginService):
             # Use Maya's built-in command to run the asset manager
             try:
                 cmds.assetManager()
-                print("🚀 Asset Manager v1.3.0 main UI launched via Maya command!")
+                print("🚀 Asset Manager v1.5.0 main UI launched via Maya command!")
                 return
             except Exception:
                 print("⚠️ Maya command not available, trying direct import...")
@@ -126,7 +126,7 @@ class PluginService(IPluginService):
 
         # Fallback buttons
         cmds.button(label="Launch Full UI", height=35,
-                   command=lambda x: self._try_launch_full_ui())
+                    command=lambda x: self._try_launch_full_ui())
 
         cmds.separator(height=15)
         cmds.button(label="Close", command=f'cmds.deleteUI("{window}")')
@@ -142,7 +142,8 @@ class PluginService(IPluginService):
             print("🔧 Using Maya-native UI for optimal stability")
             cmds.confirmDialog(
                 title="Asset Manager UI",
-                message="Full PySide6 UI is temporarily disabled for compatibility.\nUsing Maya-native UI for optimal stability.",
+                message="Full PySide6 UI is temporarily disabled for compatibility.\n"
+                        "Using Maya-native UI for optimal stability.",
                 button=["OK"]
             )
         except Exception as e:

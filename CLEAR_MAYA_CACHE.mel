@@ -1,96 +1,76 @@
-// Asset Manager Maya Cache Cleaner v1.4.0
-// Run this script in Maya's Script Editor before installing Asset Manager v1.4.0
+// Asset Manager Maya Cache Cleaner v1.5.0
+// Run this script in Maya's Script Editor before installing Asset Manager v1.5.0
+// This COMPLETELY removes all cached versions to ensure fresh installation
 
 global proc clearMayaCacheForAssetManager()
 {
-    print("\n=== Maya Cache Cleaner for Asset Manager v1.4.0 ===\n");
+    print("\n");
+    print("╔══════════════════════════════════════════════════════════════╗\n");
+    print("║     ASSET MANAGER v1.5.0 - COMPLETE CACHE CLEANER          ║\n");
+    print("╚══════════════════════════════════════════════════════════════╝\n");
     
-    // Get Maya directories with robust path handling
+    // Get Maya directories
     string $scriptsDir = `internalVar -userScriptDir`;
-    print("Maya Scripts Directory: " + $scriptsDir + "\n");
+    string $prefsDir = `internalVar -userPrefDir`;
+    print("\n📁 Maya Scripts Directory: " + $scriptsDir + "\n");
+    print("📁 Maya Prefs Directory: " + $prefsDir + "\n");
     
-    // Define multiple possible Asset Manager locations
-    string $possiblePaths[];
-    $possiblePaths[0] = $scriptsDir + "assetManager/";
-    $possiblePaths[1] = $scriptsDir + "../scripts/assetManager/";
+    // ========== STEP 1: FORCE CLEAR ALL PYTHON MODULES ==========
+    print("\n━━━ STEP 1: Clearing Python Module Cache ━━━\n");
     
-    // Check OneDrive path specifically for this user
-    string $oneDrivePath = "C:/Users/ChEeP/OneDrive/Documents/maya/scripts/assetManager/";
-    $possiblePaths[2] = $oneDrivePath;
+    python("import sys, gc");
+    python("before_count = len(sys.modules)");
+    // More aggressive keywords - look for any part of module path
+    python("keywords = ['asset', 'emsa', 'standalone', 'usd', 'pipeline', 'maya_scene', 'rig_converter', 'material_converter', 'thumbnail', 'collection', 'maya_rig', 'skeleton', 'skin_cluster', 'src.', 'mrig', 'exporter', 'importer']");
+    python("modules_to_remove = [m for m in list(sys.modules.keys()) if any(kw in m.lower() for kw in keywords)]");
+    python("print('🔍 Found ' + str(len(modules_to_remove)) + ' Asset Manager related modules')");
+    python("for m in modules_to_remove:\n    try:\n        del sys.modules[m]\n        print('  ✅ Removed: ' + m)\n    except:\n        pass");
+    python("after_count = len(sys.modules)");
+    python("print('📊 Modules: ' + str(before_count) + ' → ' + str(after_count))");
+    python("gc.collect()");
+    python("print('🧹 Garbage collection completed')");
     
-    // Find actual Asset Manager installation
-    string $assetManagerDir = "";
-    for ($path in $possiblePaths) {
-        print("Checking path: " + $path + "\n");
-        if (`filetest -d $path`) {
-            $assetManagerDir = $path;
-            print("[OK] Found Asset Manager at: " + $assetManagerDir + "\n");
-            break;
-        } else {
-            print("[NOT FOUND] Path: " + $path + "\n");
-        }
-    }
+    // ========== STEP 2: REMOVE ALL INSTALLATION DIRECTORIES ==========
+    print("\n━━━ STEP 2: Removing All Installation Directories ━━━\n");
     
-    // Clean up Python module cache
-    print("\n--- Cleaning Python module cache ---\n");
-    python("import sys");
-    python("print('Python sys.modules before cleanup:', len(sys.modules))");
-    python("modules = [m for m in list(sys.modules.keys()) if any(keyword in m.lower() for keyword in ['asset', 'emsa', 'standalone'])]");
-    python("print('Found Asset Manager modules:', modules)");
-    python("for m in modules: sys.modules.pop(m, None)");
-    python("print('[OK] Cleaned Asset Manager modules from cache')");
-    python("print('Python sys.modules after cleanup:', len(sys.modules))");
+    python("import os, shutil, stat");
     
-    // Clear Python bytecode cache with better error handling
-    print("\n--- Clearing Python bytecode cache ---\n");
-    python("import os, shutil");
-    python("cache_paths = [r'C:\\Users\\ChEeP\\OneDrive\\Documents\\maya\\scripts\\assetManager\\__pycache__', r'C:\\Users\\ChEeP\\OneDrive\\Documents\\maya\\scripts\\assetManager\\src\\__pycache__']");
-    python("for cache_path in cache_paths:\n    if os.path.exists(cache_path):\n        try:\n            shutil.rmtree(cache_path)\n            print('[OK] Cleared cache: ' + cache_path)\n        except Exception as e:\n            print('[ERROR] Could not clear ' + cache_path + ': ' + str(e))\n    else:\n        print('[INFO] Cache not found: ' + cache_path)");
+    // Define ALL possible installation locations
+    python("maya_docs = os.path.expanduser('~/Documents/maya')");
+    python("onedrive_maya = r'C:\\Users\\ChEeP\\OneDrive\\Documents\\maya'");
     
-    // Force garbage collection
-    python("import gc; collected = gc.collect(); print('[OK] Garbage collection completed - collected ' + str(collected) + ' objects')");
+    python("install_paths = []");
+    python("for maya_root in [maya_docs, onedrive_maya]:\n    install_paths.append(os.path.join(maya_root, 'scripts', 'assetManager'))\n    install_paths.append(os.path.join(maya_root, 'scripts', 'src'))\n    for ver in ['2022', '2023', '2024', '2025', '2026']:\n        install_paths.append(os.path.join(maya_root, ver, 'scripts', 'assetManager'))\n        install_paths.append(os.path.join(maya_root, ver, 'scripts', 'src'))");
     
-    // Remove current Asset Manager installation with better error handling
-    print("\n--- Removing current Asset Manager installation ---\n");
+    python("def force_remove(path):\n    def handle_readonly(func, path, exc):\n        os.chmod(path, stat.S_IWRITE)\n        func(path)\n    if os.path.exists(path):\n        if os.path.isdir(path):\n            shutil.rmtree(path, onerror=handle_readonly)\n        else:\n            os.chmod(path, stat.S_IWRITE)\n            os.remove(path)\n        return True\n    return False");
     
-    if ($assetManagerDir != "" && `filetest -d $assetManagerDir`) {
-        print("Found Asset Manager installation: " + $assetManagerDir + "\n");
-        
-        // Step 1: Verify directory exists (Fail Fast principle)
-        python("import os, shutil, sys");
-        python("asset_dir = r'" + $assetManagerDir + "'");
-        python("print('[DEBUG] Target directory: ' + asset_dir)");
-        python("print('[DEBUG] Directory exists: ' + str(os.path.exists(asset_dir)))");
-        
-        // Step 2: Check if directory is accessible (Single Responsibility)
-        python("if os.path.exists(asset_dir): print('[DEBUG] Directory is accessible'); os.listdir(asset_dir)[:3]");
-        
-        // Step 3: Attempt removal with read-only file handling (Single Responsibility)
-        python("removal_success = True");
-        python("removal_error = ''");
-        python("import stat");
-        python("def handle_remove_readonly(func, path, exc): os.chmod(path, stat.S_IWRITE); func(path)");
-        python("if os.path.exists(asset_dir): \n  try: \n    shutil.rmtree(asset_dir, onerror=handle_remove_readonly) \n  except Exception as e: \n    removal_success = False; removal_error = str(e)");
-        
-        // Step 4: Report removal results (Clear Error Messages principle)
-        python("if removal_success: print('[OK] Directory removal completed')");
-        python("if not removal_success: print('[ERROR] Could not remove directory: ' + removal_error)");
-        
-        // Step 5: Verify removal was successful (Fail Fast verification)
-        python("if os.path.exists(asset_dir): print('[FAILED] Directory still exists!'); print('[ACTION] Please close Maya and manually delete the directory')");
-        python("if not os.path.exists(asset_dir): print('[VERIFIED] Directory successfully removed')");
-        
-    } else {
-        print("[INFO] No current Asset Manager installation found to remove.\n");
-    }
+    python("removed_count = 0");
+    python("for path in install_paths:\n    if os.path.exists(path):\n        print('🗑️  Removing: ' + path)\n        try:\n            force_remove(path)\n            if not os.path.exists(path):\n                print('  ✅ Removed successfully')\n                removed_count += 1\n            else:\n                print('  ⚠️  Still exists - may need manual removal')\n        except Exception as e:\n            print('  ❌ Error: ' + str(e))");
+    python("print('\\n📊 Removed ' + str(removed_count) + ' directories')");
     
-    // Clear shelf buttons with better error handling
-    print("\n--- Removing old shelf buttons ---\n");
+    // ========== STEP 3: CLEAR ALL PYCACHE DIRECTORIES ==========
+    print("\n━━━ STEP 3: Clearing All __pycache__ Directories ━━━\n");
+    
+    python("pycache_removed = 0");
+    python("for maya_root in [maya_docs, onedrive_maya]:\n    scripts_path = os.path.join(maya_root, 'scripts')\n    if os.path.exists(scripts_path):\n        for root, dirs, files in os.walk(scripts_path):\n            if '__pycache__' in dirs:\n                cache_path = os.path.join(root, '__pycache__')\n                try:\n                    shutil.rmtree(cache_path)\n                    print('🗑️  Removed: ' + cache_path)\n                    pycache_removed += 1\n                except:\n                    pass");
+    python("print('\\n📊 Removed ' + str(pycache_removed) + ' __pycache__ directories')");
+    
+    // ========== STEP 4: REMOVE STANDALONE FILES ==========
+    print("\n━━━ STEP 4: Removing Standalone Files ━━━\n");
+    
+    python("standalone_files = ['assetManager.py', 'maya_plugin.py', 'assetManager_3DPreview.mel']");
+    python("files_removed = 0");
+    python("for maya_root in [maya_docs, onedrive_maya]:\n    scripts_path = os.path.join(maya_root, 'scripts')\n    if os.path.exists(scripts_path):\n        for filename in standalone_files:\n            filepath = os.path.join(scripts_path, filename)\n            if os.path.exists(filepath):\n                try:\n                    os.remove(filepath)\n                    print('🗑️  Removed: ' + filepath)\n                    files_removed += 1\n                except Exception as e:\n                    print('❌ Could not remove ' + filepath + ': ' + str(e))");
+    python("print('\\n📊 Removed ' + str(files_removed) + ' standalone files')");
+    
+    // ========== STEP 5: REMOVE SHELF BUTTONS ==========
+    print("\n━━━ STEP 5: Removing Shelf Buttons ━━━\n");
+    
     global string $gShelfTopLevel;
+    int $buttonsRemoved = 0;
     
     if (`control -exists $gShelfTopLevel`) {
         string $shelves[] = `tabLayout -query -childArray $gShelfTopLevel`;
-        int $buttonsRemoved = 0;
         
         for ($shelf in $shelves) {
             if (`shelfLayout -exists $shelf`) {
@@ -98,9 +78,10 @@ global proc clearMayaCacheForAssetManager()
                 for ($button in $buttons) {
                     if (`shelfButton -exists $button`) {
                         string $label = `shelfButton -query -label $button`;
+                        string $annotation = `shelfButton -query -annotation $button`;
                         
-                        if (`gmatch $label "*Asset Manager*"` || `gmatch $label "*Asset*"`) {
-                            print("Removing shelf button: " + $button + " (Label: " + $label + ")\n");
+                        if (`gmatch $label "*Asset*"` || `gmatch $annotation "*Asset*"` || `gmatch $label "*asset*"`) {
+                            print("🗑️  Removing shelf button: " + $label + "\n");
                             deleteUI $button;
                             $buttonsRemoved++;
                         }
@@ -109,39 +90,34 @@ global proc clearMayaCacheForAssetManager()
             }
         }
         
-        if ($buttonsRemoved > 0) {
-            print("[OK] Removed " + $buttonsRemoved + " old shelf buttons\n");
-        } else {
-            print("[INFO] No Asset Manager shelf buttons found to remove\n");
-        }
-    } else {
-        print("[WARN] Shelf system not available\n");
+        print("📊 Removed " + $buttonsRemoved + " shelf buttons\n");
     }
     
-    print("\n=== Cache cleaning completed! ===\n");
-    print("[OK] Maya is now ready for Asset Manager v1.3.0 installation.\n");
-    print("\n[INSTALL] INSTALLATION INSTRUCTIONS:\n");
-    print("1. Drag DRAG&DROP.mel into Maya viewport\n");
-    print("2. Watch for installation success messages\n");
-    print("3. Look for Asset Manager shelf button\n");
-    print("4. Click the button to launch Asset Manager v1.3.0\n");
+    // ========== STEP 6: VERIFY CLEANUP ==========
+    print("\n━━━ STEP 6: Verification ━━━\n");
     
-    print("\n[FEATURES] v1.3.0 HIGHLIGHTS:\n");
-    print("* Version-agnostic installation (works across Maya versions)");
-    print("* Simplified architecture - No Maya plugin registration!");
-    print("* Pure UI module - Eliminates 'unknown data' issues!");
-    print("* Main scripts directory - Future-proof structure!");
-    print("* Professional custom screenshot icon!");
-    print("* Complete EMSA architecture support!");
-    print("* Immediate activation - No restart required!");
-    print("* Maya 2025+ PySide6 exclusive!");
-    print("* Production-ready deployment with Clean Code!\n");
+    python("remaining = []");
+    python("for path in install_paths:\n    if os.path.exists(path):\n        remaining.append(path)");
+    python("if remaining:\n    print('⚠️  WARNING: Some paths still exist:')\n    for p in remaining:\n        print('  ❌ ' + p)\n    print('\\n  Please close Maya and manually delete these.')\nelse:\n    print('✅ All installation directories successfully removed!')");
     
-    // Verify Maya is ready
-    python("print('\\n[SYSTEM] SYSTEM CHECK:')");
-    python("import sys; print('[OK] Python version: ' + sys.version.split()[0])");
-    python("try:\n\timport PySide6\n\tprint('[OK] PySide6 available')\nexcept ImportError:\n\tprint('[WARN] PySide6 not available - Maya 2025+ required')");
-    python("print('[READY] System ready for Asset Manager v1.3.0!\\n')");
+    // Final summary
+    print("\n");
+    print("╔══════════════════════════════════════════════════════════════╗\n");
+    print("║                    CLEANUP COMPLETE!                        ║\n");
+    print("╠══════════════════════════════════════════════════════════════╣\n");
+    print("║  Maya is ready for Asset Manager v1.5.0 installation       ║\n");
+    print("║                                                             ║\n");
+    print("║  NEXT STEPS:                                                ║\n");
+    print("║  1. RESTART MAYA (required for fresh import)               ║\n");
+    print("║  2. Drag DRAG&DROP.mel into Maya viewport                  ║\n");
+    print("║  3. Click the Asset Manager shelf button                   ║\n");
+    print("╚══════════════════════════════════════════════════════════════╝\n");
+    
+    // System check
+    python("print('\\n🔧 SYSTEM INFO:')");
+    python("import sys; print('  Python: ' + sys.version.split()[0])");
+    python("try:\n    from PySide6 import __version__\n    print('  PySide6: ' + __version__)\nexcept:\n    print('  PySide6: Not available')");
+    python("print('\\n✅ Ready for v1.5.0!')");
 }
 
 // Run the cache cleaner

@@ -1,0 +1,153 @@
+================================================================================
+🚀 USD_PIPELINE.PY LOADED - CLEAN ARCHITECTURE
+================================================================================
+================================================================================
+🎯🎯🎯 USD_PIPELINE_DIALOG.PY LOADING 🎯🎯🎯
+================================================================================
+✅ Pixar USD Python API available
+✅ USD Service initialized - Disney's Universal Scene Description support active
+// src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
+// Warning: src.services.usd.external_usd_bridge_impl : ⚠️ USD command-line tools not detected
+// src.services.usd.usd_import_service_impl : USD Import Service initialized with 2 methods: mayaUSD, Pure Python
+// src.services.usd.usd_pipeline : USD Pipeline initialized
+// src.services.usd.usd_pipeline :   Maya: True
+// src.services.usd.usd_pipeline :   USD Python: True
+// src.services.usd.usd_pipeline :   mayaUSD: True
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline initialized
+// src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry restored: 700x1561
+// src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Loading recent assets...
+🕒 Found 0 recent assets
+🕒 Recent tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Populated recent assets tab with 0 items
+⭐ Loading favorite assets...
+⭐ Found 0 favorite assets
+⭐ Favorites tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+⭐ Populated favorites tab with 0 items
+// src.services.usd.usd_pipeline : 📄 Extracted USD: Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : 📦 Extracted rig backup: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline : 🔍 Hybrid check: hybrid_mode=True, rig_mb_path=C:\Users\ChEeP\AppData\Local\Temp\usdz_import_ncje6t7p\Veteran_Rig.rig.mb, exists=True
+// src.services.usd.usd_pipeline : ✅ HYBRID MODE ACTIVATED
+// src.services.usd.usd_pipeline : 🎭 USD ANIMATION LAYERS: USD meshes + animatable skeleton
+// src.services.usd.usd_pipeline : 📦 Loading USD proxy with meshes and skeleton...
+// src.services.usd.usd_pipeline : 📂 USD default prim: /SkelRoot
+// src.services.usd.usd_pipeline : 📊 USD contains: 79 meshes, 121 skeletons, 0 curves, 30 materials
+// src.services.usd.usd_pipeline : 📊 USD has skeleton-bound meshes (skinned)
+// src.services.usd.usd_pipeline : 🎬 Creating USD Stage (mayaUsdProxyShape)...
+# Using V3 Lighting API for UsdPreviewSurface shading.
+// src.services.usd.usd_pipeline : 🔄 Forced stage reload for skeleton imaging
+// src.services.usd.usd_pipeline : ✅ Created USD proxy shape: Veteran_Rig_USDShape
+// src.services.usd.usd_pipeline : 📂 Loading USD file: C:\Users\ChEeP\AppData\Local\Temp\usdz_import_ncje6t7p\Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : 📦 USD proxy shape(s) created: 1
+// src.services.usd.usd_pipeline : ✅ USD Stage loaded - 79 meshes, 121 skeletons, 0 curves, 30 materials
+// Warning: src.services.usd.usd_pipeline : ⚠️ Complex skeleton setup detected - if meshes don't display, try: Right-click USD proxy > Duplicate As > Maya Data
+// src.services.usd.usd_pipeline : ✅ USD proxy loaded: 79 meshes, 121 skeleton joints
+// src.services.usd.usd_pipeline : 📦 USD Proxy Shape: Veteran_Rig_USDShape
+// src.services.usd.usd_pipeline : 🔗 Phase 1: Creating USD skeleton bindings...
+// src.services.usd.usd_pipeline : 🔗 Checking USD skeleton bindings...
+// src.services.usd.usd_pipeline : ✅ Opened USD stage: C:/Users/ChEeP/AppData/Local/Temp/usdz_import_ncje6t7p/Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : 🦴 Found skeleton: /SkelRoot/Group/FitSkeleton/Root
+// src.services.usd.usd_pipeline : 📦 Found 79 meshes
+// src.services.usd.usd_pipeline : ✅ USD already has skeleton bindings:
+// src.services.usd.usd_pipeline :    📊 Meshes with binding: 19
+// src.services.usd.usd_pipeline :    📊 Meshes with weights: 19
+// src.services.usd.usd_pipeline : 💡 Skipping Phase 1 - using existing bindings
+// src.services.usd.usd_pipeline : 🦴 Phase 2: Creating Maya joint proxies...
+// src.services.usd.usd_pipeline : 🦴 Phase 2: Creating Maya joint proxies from .rig.mb file...
+// src.services.usd.usd_pipeline : 🦴 USD skeleton has 39 joints
+// src.services.usd.usd_pipeline : 🔍 Sample USD joints: ['MiddleFinger3', 'RingFinger3', 'Scapula', 'Knee', 'Ankle', 'Toes', 'IndexFinger1', 'PinkyFinger2', 'Shoulder', 'ThumbFinger4']
+// src.services.usd.usd_pipeline : 📦 Found Maya rig file: C:\Users\ChEeP\AppData\Local\Temp\usdz_import_ncje6t7p\Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline : 📥 Importing Maya rig to query skeleton positions...
+// src.services.usd.usd_pipeline : 🔄 Importing Maya rig file...
+requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
+requires "stereoCamera" "10.0";
+updateRenderOverride;
+requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
+requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.1 @ 2389090";
+requires "stereoCamera" "10.0";
+# File read in  1.8 seconds.
+// src.services.usd.usd_pipeline : ✅ Maya rig imported (references deferred)
+// src.services.usd.usd_pipeline : 🔍 Querying imported joints...
+// src.services.usd.usd_pipeline : 🦴 Found 548 total joints in Maya rig
+// src.services.usd.usd_pipeline : 🎯 Filtered to 66 joints matching USD skeleton
+// src.services.usd.usd_pipeline : 🔄 Unsided joints to mirror: ['FootSideInner', 'FootSideOuter', 'Heel']
+// src.services.usd.usd_pipeline : 🔍 Joint breakdown: 30 left, 30 right, 6 center, +6 mirrored
+// src.services.usd.usd_pipeline : 🔍 Matched joints (sample): ['Ankle_L', 'Ankle_R', 'Cup_L', 'Cup_R', 'Elbow_L', 'Elbow_R', 'Hip_L', 'Hip_R', 'IndexFinger1_L', 'IndexFinger1_R', 'IndexFinger2_L', 'IndexFinger2_R', 'IndexFinger3_L', 'IndexFinger3_R', 'IndexFinger4_L']
+// src.services.usd.usd_pipeline : 🔍 Filtered out 482 non-deformation joints (helpers, IK, controls)
+// src.services.usd.usd_pipeline : 🔗 Phase 3.1: Building joint hierarchy...
+// src.services.usd.usd_pipeline : 🔍 DEBUG: Walking from Hip_L...
+// src.services.usd.usd_pipeline :    Found ancestor (full): Root_M
+// src.services.usd.usd_pipeline : 🔍 DEBUG: Walking from Scapula_L...
+// src.services.usd.usd_pipeline :    Found ancestor (full): Chest_M
+// src.services.usd.usd_pipeline : ✅ Built hierarchy map for 66 joints (1 roots)
+// src.services.usd.usd_pipeline : 🔍 Root joints: ['Root_M']
+// src.services.usd.usd_pipeline : 🔄 Mirroring FootSideInner: L@0.936, R@-0.936
+// src.services.usd.usd_pipeline : 🔄 Mirroring FootSideOuter: L@1.250, R@-1.250
+// src.services.usd.usd_pipeline : 🔄 Mirroring Heel: L@0.837, R@-0.837
+// src.services.usd.usd_pipeline : 🔍 Joint 0 (Ankle_L): pos=[0.8369, 0.3529, -0.0386]
+// src.services.usd.usd_pipeline : 🔍 Joint 1 (Ankle_R): pos=[-0.8369, 0.3529, -0.0386]
+// src.services.usd.usd_pipeline : 🔍 Joint 2 (Cup_L): pos=[3.0638, 7.0268, 0.2669]
+// src.services.usd.usd_pipeline : ✅ Created 6 mirrored proxy joints
+// src.services.usd.usd_pipeline : ✅ Created 66 proxy joints
+// src.services.usd.usd_pipeline : 🔗 Building proxy joint hierarchy...
+// src.services.usd.usd_pipeline : ✅ Created hierarchy: 1 root joints
+// src.services.usd.usd_pipeline : ✅ Parented proxy skeleton under USD transform: Veteran_Rig_USD
+// src.services.usd.usd_pipeline : 
+// ✅ Phase 3.1 Complete: Created 72 joint hierarchy
+// src.services.usd.usd_pipeline : 🔄 Includes 6 mirrored foot joints
+// src.services.usd.usd_pipeline : 🔗 Hierarchy: 1 root joint(s)
+// src.services.usd.usd_pipeline : 💡 Joint orientations preserved from source rig
+// src.services.usd.usd_pipeline : 💡 Positions extracted from native Maya rig
+// src.services.usd.usd_pipeline : 🎨 Phase 3.2: Verifying USD skin bindings...
+// src.services.usd.usd_pipeline : 🎨 Phase 3.2: Verifying USD skin bindings...
+// src.services.usd.usd_pipeline : 🦴 USD skeleton: /SkelRoot/Group/FitSkeleton/Root
+// src.services.usd.usd_pipeline : 🦴 Skeleton joints: 39
+// src.services.usd.usd_pipeline : ✅ bindTransforms: 39 matrices
+// src.services.usd.usd_pipeline : ✅ restTransforms: 39 matrices
+// src.services.usd.usd_pipeline :    ✅ model_Chain_Geo: 21816 weights
+// src.services.usd.usd_pipeline :    ✅ model_Tags_Geo: 31344 weights
+// src.services.usd.usd_pipeline :    ✅ model_L_Button_03_Geo: 308 weights
+// src.services.usd.usd_pipeline :    ✅ model_R_Button_03_Geo: 1078 weights
+// src.services.usd.usd_pipeline :    ✅ model_Body_Geo_usdExport: 246910 weights
+// src.services.usd.usd_pipeline : 
+// ✅ Phase 3.2 Complete: USD skin bindings verified
+// src.services.usd.usd_pipeline : 📊 Meshes with weights: 19
+// src.services.usd.usd_pipeline : 📊 Meshes with binding: 19
+// src.services.usd.usd_pipeline : 🎨 Total weight values: 691480
+// src.services.usd.usd_pipeline : ✅ All skinned meshes have proper skeleton binding
+// src.services.usd.usd_pipeline : 💡 USD meshes will deform when skeleton animates
+// src.services.usd.usd_pipeline : 🗑️ Removing imported rig (kept proxy hierarchy)...
+// src.services.usd.usd_pipeline :    🗑️ Cleaned up 4646 reference nodes
+// src.services.usd.usd_pipeline : ✅ Complexity set to high
+// src.services.usd.usd_pipeline : ✅ Set USD time to 0.0
+// src.services.usd.usd_pipeline : ✅ Viewport refreshed with frame change
+// Error: Failed verification: ' UsdStageMap::getInstance().isDirty() '
+// Error: Failed verification: ' _stageListeners.empty() '
+// Warning: src.services.usd.usd_pipeline : ⚠️ Complex skeleton with skinned meshes detected
+// Warning: src.services.usd.usd_pipeline : ⚠️ Maya 2026 UsdSkelImaging may not display skinned meshes
+// Warning: src.services.usd.usd_pipeline : 💡 If meshes don't display correctly, try:
+// Warning: src.services.usd.usd_pipeline :    1. Select the USD proxy shape in Outliner
+// Warning: src.services.usd.usd_pipeline :    2. Right-click > Duplicate As > Maya Data
+// Warning: src.services.usd.usd_pipeline :    OR use Attribute Editor > mayaUsdProxyShape > Edit As Maya
+// src.services.usd.usd_pipeline : 💡 USD Animation Layers workflow complete:
+// src.services.usd.usd_pipeline :    ✅ 79 USD meshes in proxy
+// src.services.usd.usd_pipeline :    ✅ 121 skeleton joints available
+// src.services.usd.usd_pipeline :    ✅ Skeleton ready for animation
+// src.services.usd.usd_pipeline : 💡 NEXT STEPS: Create animation layer for skeleton:
+// src.services.usd.usd_pipeline :    1. Select USD proxy shape
+// src.services.usd.usd_pipeline :    2. USD > Layer Editor > New Anonymous Layer
+// src.services.usd.usd_pipeline :    3. Set as Edit Target
+// src.services.usd.usd_pipeline :    4. Animate skeleton joints directly in USD
+# [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
+# [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry saved: 700x1561

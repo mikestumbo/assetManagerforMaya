@@ -39,7 +39,7 @@ try:
     PLUGIN_VERSION = assetManager.PLUGIN_VERSION
 except ImportError:
     # Fallback for development/testing outside Maya
-    PLUGIN_VERSION = "1.4.1"
+    PLUGIN_VERSION = "1.5.0"
 
 # Robust import strategy for Maya compatibility
 try:
@@ -598,7 +598,7 @@ class AssetManagerWindow(QMainWindow):
             system_color = palette.color(QPalette.ColorRole.Window)
             bg_color = system_color.name()
             print(f"🎨 Using system background color: {bg_color}")  # Debug info
-        except Exception as _e:
+        except Exception:
             # Fallback to common Maya UI color
             bg_color = "#393939"  # Maya's default dark gray
             print(f"🎨 Using fallback Maya color: {bg_color}")  # Debug info
@@ -1043,7 +1043,7 @@ class AssetManagerWindow(QMainWindow):
                 "name": project_path.name,
                 "created": datetime.now().isoformat(),
                 "version": "1.0",
-                "asset_manager_version": "1.3.0",
+                "asset_manager_version": "1.5.0",
                 "description": f"Asset Manager project: {project_path.name}",
                 "directories": {
                     "assets": "assets",
@@ -1084,7 +1084,7 @@ Asset Manager Project created on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Usage
 
-This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface to:
+This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface to:
 - Browse and organize assets
 - Import assets into Maya
 - Create new assets from scenes
@@ -1212,9 +1212,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             # Count assets
             assets_dir = project_path / "assets"
             if assets_dir.exists():
-                asset_extensions = ['.ma', '.mb', '.obj', '.fbx', '.abc',
-                                  '.usd', '.usda', '.usdc', '.usdz',
-                                  '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr']
+                asset_extensions = [
+                    '.ma', '.mb', '.obj', '.fbx', '.abc',
+                    '.usd', '.usda', '.usdc', '.usdz',
+                    '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr'
+                ]
                 asset_count = 0
                 for ext in asset_extensions:
                     asset_count += len(list(assets_dir.rglob(f'*{ext}')))
@@ -1226,7 +1228,7 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
             return "\n".join(info_parts)
 
-        except Exception as _e:
+        except Exception:
             return f"Location: {project_path}"
 
     def _on_delete_project(self) -> None:
@@ -1320,12 +1322,14 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             # Check if we're deleting the current project
             current_project_path = None
             if (self._library_widget and
-                hasattr(self._library_widget, '_current_project_path') and
-                self._library_widget._current_project_path):
+                    hasattr(self._library_widget, '_current_project_path') and
+                    self._library_widget._current_project_path):
                 current_project_path = Path(self._library_widget._current_project_path)
 
-            is_current_project = (current_project_path and
-                                current_project_path.resolve() == project_dir.resolve())
+            is_current_project = (
+                current_project_path and
+                current_project_path.resolve() == project_dir.resolve()
+            )
 
             # Perform the deletion
             self._set_status("Deleting project...", show_progress=True)
@@ -1354,7 +1358,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 print(f"🗑️ Successfully deleted project: {project_dir}")
 
             except PermissionError as e:
-                error_msg = f"Permission denied: Cannot delete project.\n\nSome files may be in use or you may not have sufficient permissions.\n\nError: {str(e)}"
+                error_msg = (
+                    f"Permission denied: Cannot delete project.\n\n"
+                    f"Some files may be in use or you may not have "
+                    f"sufficient permissions.\n\nError: {str(e)}"
+                )
                 QMessageBox.critical(self, "Permission Error", error_msg)
                 self._set_status("Project deletion failed - permission error")
 
@@ -1399,8 +1407,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         try:
             # Check if we have a current project loaded
             if (not self._library_widget or
-                not hasattr(self._library_widget, '_current_project_path') or
-                not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, '_current_project_path') or
+                    not self._library_widget._current_project_path):
                 QMessageBox.information(
                     self,
                     "No Project Loaded",
@@ -1439,8 +1447,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         try:
             # Check if we have a current project loaded
             if (not self._library_widget or
-                not hasattr(self._library_widget, '_current_project_path') or
-                not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, '_current_project_path') or
+                    not self._library_widget._current_project_path):
                 QMessageBox.information(
                     self,
                     "No Project Loaded",
@@ -1554,8 +1562,10 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 "name": new_name or project_path.name,
                 "last_saved": datetime.now().isoformat(),
                 "version": project_config.get("version", "1.0"),
-                "asset_manager_version": "1.3.0",
-                "description": project_config.get("description", f"Asset Manager project: {new_name or project_path.name}"),
+                "asset_manager_version": "1.5.0",
+                "description": project_config.get(
+                    "description", f"Asset Manager project: {new_name or project_path.name}"
+                ),
                 "directories": {
                     "assets": "assets",
                     "exports": "exports",
@@ -1585,21 +1595,26 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
             # Check if we have a project loaded (optional warning)
             if (not self._library_widget or
-                not hasattr(self._library_widget, '_current_project_path') or
-                not self._library_widget._current_project_path):
-                reply = QMessageBox.question(self, "No Project Loaded",
-                                           "No project is currently loaded. Assets will be added to the default location.\n\n"
-                                           "Would you like to continue?",
-                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                           QMessageBox.StandardButton.Yes)
+                    not hasattr(self._library_widget, '_current_project_path') or
+                    not self._library_widget._current_project_path):
+                reply = QMessageBox.question(
+                    self,
+                    "No Project Loaded",
+                    "No project is currently loaded. Assets will be added to the "
+                    "default location.\n\nWould you like to continue?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes
+                )
                 if reply == QMessageBox.StandardButton.No:
                     return
 
             # Get supported file extensions for the dialog filter
-            supported_exts = ['.ma', '.mb', '.obj', '.fbx', '.abc',
-                            '.usd', '.usda', '.usdc', '.usdz',
-                            '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr',
-                            '.mov', '.mp4', '.avi', '.mtl', '.mat', '.zip', '.rar']
+            supported_exts = [
+                '.ma', '.mb', '.obj', '.fbx', '.abc',
+                '.usd', '.usda', '.usdc', '.usdz',
+                '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr',
+                '.mov', '.mp4', '.avi', '.mtl', '.mat', '.zip', '.rar'
+            ]
 
             # Create filter string
             filters = "Asset Files ("
@@ -1640,13 +1655,16 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
             # Check if we have a project loaded (optional warning)
             if (not self._library_widget or
-                not hasattr(self._library_widget, '_current_project_path') or
-                not self._library_widget._current_project_path):
-                reply = QMessageBox.question(self, "No Project Loaded",
-                                           "No project is currently loaded. Assets will be added to the default location.\n\n"
-                                           "Would you like to continue?",
-                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                           QMessageBox.StandardButton.Yes)
+                    not hasattr(self._library_widget, '_current_project_path') or
+                    not self._library_widget._current_project_path):
+                reply = QMessageBox.question(
+                    self,
+                    "No Project Loaded",
+                    "No project is currently loaded. Assets will be added to the "
+                    "default location.\n\nWould you like to continue?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes
+                )
                 if reply == QMessageBox.StandardButton.No:
                     return
 
@@ -1655,7 +1673,9 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 self,
                 "Add Multiple Assets to Library",
                 str(Path.home()),
-                "Asset Files (*.ma *.mb *.obj *.fbx *.abc *.usd *.usda *.usdc *.usdz *.png *.jpg *.jpeg *.tiff *.tga *.exr *.hdr *.mov *.mp4 *.avi *.mtl *.mat *.zip *.rar);;All Files (*)"
+                "Asset Files (*.ma *.mb *.obj *.fbx *.abc *.usd *.usda *.usdc *.usdz "
+                "*.png *.jpg *.jpeg *.tiff *.tga *.exr *.hdr *.mov *.mp4 *.avi "
+                "*.mtl *.mat *.zip *.rar);;All Files (*)"
             )
 
             if file_paths:
@@ -1692,8 +1712,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                         message += f"\n\n{failed_count} file(s) could not be added."
                     QMessageBox.information(self, "Assets Added", message)
                 else:
-                    QMessageBox.warning(self, "No Assets Added",
-                                       "No assets were successfully added to the library.")
+                    QMessageBox.warning(
+                        self,
+                        "No Assets Added",
+                        "No assets were successfully added to the library."
+                    )
 
         except Exception as e:
             error_msg = f"Error adding multiple assets: {str(e)}"
@@ -1707,8 +1730,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             # Get project path
             project_path = None
             if (self._library_widget and
-                hasattr(self._library_widget, '_current_project_path') and
-                self._library_widget._current_project_path):
+                    hasattr(self._library_widget, '_current_project_path') and
+                    self._library_widget._current_project_path):
                 project_path = self._library_widget._current_project_path
 
             if not project_path:
@@ -1779,14 +1802,16 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             if thumbnail_path:
                 print(f"🖼️ Generated large playblast thumbnail: {asset_path.name}")
                 # Also generate smaller thumbnail for list view
-                small_thumbnail_path = thumbnail_service.generate_thumbnail(asset_path, size=(64, 64), force_playblast=True)
+                small_thumbnail_path = thumbnail_service.generate_thumbnail(
+                    asset_path, size=(64, 64), force_playblast=True
+                )
                 if small_thumbnail_path:
                     print(f"🖼️ Generated small playblast thumbnail: {asset_path.name}")
 
                     # Trigger UI refresh for this specific asset
                     if (self._library_widget and
-                        hasattr(self._library_widget, 'refresh_thumbnails_for_assets') and
-                        callable(getattr(self._library_widget, 'refresh_thumbnails_for_assets'))):
+                            hasattr(self._library_widget, 'refresh_thumbnails_for_assets') and
+                            callable(getattr(self._library_widget, 'refresh_thumbnails_for_assets'))):
                         # Use QTimer to ensure this runs after thumbnails are saved
                         def refresh_thumbnail():
                             try:
@@ -1889,7 +1914,10 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
                                 # Also trigger library refresh
                                 if self._library_widget:
-                                    QTimer.singleShot(100, lambda: self._library_widget.refresh_library())  # type: ignore
+                                    QTimer.singleShot(
+                                        100,
+                                        lambda: self._library_widget.refresh_library()  # type: ignore
+                                    )
                             else:
                                 print("⚠️ Repository doesn't support update_asset()")
                         else:
@@ -1929,7 +1957,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     self._set_status(f"Library refreshed from: {project_path.name}")
                 else:
                     self._set_status("No project loaded - nothing to refresh")
-                    QMessageBox.information(self, "Info", "No project is currently loaded.\nPlease open a project first.")
+                    QMessageBox.information(
+                        self,
+                        "Info",
+                        "No project is currently loaded.\nPlease open a project first."
+                    )
             else:
                 self._set_status("Library refresh completed")
 
@@ -2050,12 +2082,15 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             from ..core.interfaces.thumbnail_service import IThumbnailService
 
             # Ask for confirmation
-            reply = QMessageBox.question(self, "Clear Thumbnail Cache",
-                                       "This will delete all cached thumbnails.\n"
-                                       "Thumbnails will be regenerated as needed.\n\n"
-                                       "Are you sure you want to continue?",
-                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                       QMessageBox.StandardButton.No)
+            reply = QMessageBox.question(
+                self,
+                "Clear Thumbnail Cache",
+                "This will delete all cached thumbnails.\n"
+                "Thumbnails will be regenerated as needed.\n\n"
+                "Are you sure you want to continue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
 
             if reply == QMessageBox.StandardButton.Yes:
                 # Clear the cache
@@ -2151,13 +2186,17 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             selection = cmds.ls(selection=True)
             if selection:
                 # Export selected objects
-                cmds.file(str(asset_file), force=True, options="v=0", type="mayaAscii",
-                         exportSelected=True)
+                cmds.file(
+                    str(asset_file), force=True, options="v=0",
+                    type="mayaAscii", exportSelected=True
+                )
                 self._set_status(f"Exported {len(selection)} selected objects to {safe_name}")
             else:
                 # Export whole scene
-                cmds.file(str(asset_file), force=True, options="v=0", type="mayaAscii",
-                         exportAll=True)
+                cmds.file(
+                    str(asset_file), force=True, options="v=0",
+                    type="mayaAscii", exportAll=True
+                )
                 self._set_status(f"Exported entire scene to {safe_name}")
 
             # Generate thumbnail
@@ -2183,10 +2222,12 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 cmds.refresh()  # Refresh viewport
 
                 # Capture image
-                cmds.playblast(frame=1, viewer=False, showOrnaments=False,
-                              compression="png", format="image",
-                              filename=thumbnail_path, widthHeight=(256, 256),
-                              percent=100, quality=100)
+                cmds.playblast(
+                    frame=1, viewer=False, showOrnaments=False,
+                    compression="png", format="image",
+                    filename=thumbnail_path, widthHeight=(256, 256),
+                    percent=100, quality=100
+                )
 
         except Exception as e:
             print(f"Thumbnail generation failed: {e}")
@@ -2362,14 +2403,14 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
             "Built with Clean Code & SOLID principles</p>"
             "<p><b>Author:</b> Mike Stumbo</p>"
             "<hr>"
-            "<h3>New in v1.4.1</h3>"
-            "<p><b>Dynamic Version Management</b><br>"
-            "Single source of truth for version display<br>"
-            "• Automatic version detection from plugin<br>"
-            "• Simplified maintenance and updates<br>"
-            "• DRY (Don't Repeat Yourself) principle applied</p>"
+            "<h3>New in v1.5.0</h3>"
+            "<p><b>USD Rig Creator - NURBS Controls Export</b><br>"
+            "Industry-first NURBS rig controls export to USD<br>"
+            "• Export rig controls as visible USD geometry<br>"
+            "• Automatic LOD for complex curves<br>"
+            "• Support for animation rigs in USD pipelines</p>"
             "<hr>"
-            "<h3>v1.4.0 Features</h3>"
+            "<h3>v1.4.x Features</h3>"
             "<p><b>USD Pipeline System</b><br>"
             "Complete Maya → USD export workflow<br>"
             "• Geometry, Materials, Rigging (UsdSkel)<br>"
@@ -2506,8 +2547,8 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
             # Save current project path
             if (hasattr(self, '_library_widget') and self._library_widget and
-                hasattr(self._library_widget, '_current_project_path') and
-                self._library_widget._current_project_path):
+                    hasattr(self._library_widget, '_current_project_path') and
+                    self._library_widget._current_project_path):
                 settings.setValue("lastProject", str(self._library_widget._current_project_path))
 
             # Ensure settings are written to disk immediately
@@ -2817,7 +2858,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     print(f"📍 Has update: {has_update}")
 
                     # Schedule UI update
-                    maya.utils.executeDeferred(functools.partial(safe_show_result, current_version, latest_version, has_update))
+                    maya.utils.executeDeferred(
+                        functools.partial(
+                            safe_show_result, current_version, latest_version, has_update
+                        )
+                    )
 
             except Exception as e:
                 print(f"❌ Background thread error: {e}")
@@ -2854,9 +2899,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 msg = QMessageBox(self)
                 msg.setWindowTitle("Update Available")
                 msg.setIcon(QMessageBox.Icon.Information)
-                msg.setText(f"<h3>New version available!</h3>"
-                           f"<p><b>Current:</b> v{current_version}<br>"
-                           f"<b>Latest:</b> v{latest_version}</p>")
+                msg.setText(
+                    f"<h3>New version available!</h3>"
+                    f"<p><b>Current:</b> v{current_version}<br>"
+                    f"<b>Latest:</b> v{latest_version}</p>"
+                )
 
                 install_btn = None
                 manual_btn = None
@@ -2882,25 +2929,34 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     webbrowser.open(release_url)
             else:
                 # Running latest version
-                QMessageBox.information(self, "Check for Updates",
-                                      f"Update Checker\n\n"
-                                      f"Asset Manager v{current_version}\n"
-                                      f"You are running the latest version.\n"
-                                      f"Check back later for updates.")
+                QMessageBox.information(
+                    self,
+                    "Check for Updates",
+                    f"Update Checker\n\n"
+                    f"Asset Manager v{current_version}\n"
+                    f"You are running the latest version.\n"
+                    f"Check back later for updates."
+                )
 
             self._set_status("Ready")
 
         except Exception as e:
-            QMessageBox.warning(self, "Update Check Error",
-                               f"Error displaying update information:\n{str(e)}")
+            QMessageBox.warning(
+                self,
+                "Update Check Error",
+                f"Error displaying update information:\n{str(e)}"
+            )
             self._set_status("Ready")
 
     def _show_update_error(self, error_msg: str) -> None:
         """Show update check error - runs on main thread"""
-        QMessageBox.warning(self, "Update Check Failed",
-                          f"Could not check for updates.\n\n"
-                          f"Error: {error_msg}\n\n"
-                          f"Please check your internet connection.")
+        QMessageBox.warning(
+            self,
+            "Update Check Failed",
+            f"Could not check for updates.\n\n"
+            f"Error: {error_msg}\n\n"
+            f"Please check your internet connection."
+        )
         self._set_status("Ready")
 
     def _download_and_install_update(self, zip_url: str, version: str) -> None:
@@ -2929,7 +2985,13 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 import maya.utils  # type: ignore
 
                 # Update status on main thread using Maya-specific method
-                maya.utils.executeDeferred(functools.partial(self._set_status, f"Downloading Asset Manager v{version}...", show_progress=True))
+                maya.utils.executeDeferred(
+                    functools.partial(
+                        self._set_status,
+                        f"Downloading Asset Manager v{version}...",
+                        show_progress=True
+                    )
+                )
 
                 # Download ZIP to temp folder
                 temp_dir = tempfile.mkdtemp(prefix='assetManager_update_')
@@ -2938,7 +3000,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                 urllib.request.urlretrieve(zip_url, zip_path)
 
                 # Update status using Maya-specific method
-                maya.utils.executeDeferred(functools.partial(self._set_status, "Extracting update...", show_progress=True))
+                maya.utils.executeDeferred(
+                    functools.partial(
+                        self._set_status, "Extracting update...", show_progress=True
+                    )
+                )
 
                 # Extract ZIP
                 extract_dir = os.path.join(temp_dir, 'extracted')
@@ -2946,10 +3012,17 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     zip_ref.extractall(extract_dir)
 
                 # Find Maya scripts folder
-                maya_scripts = os.path.join(os.path.expanduser('~'), 'Documents', 'maya', '2025', 'scripts', 'assetManager')
+                maya_scripts = os.path.join(
+                    os.path.expanduser('~'), 'Documents', 'maya',
+                    '2025', 'scripts', 'assetManager'
+                )
 
                 # Update status using Maya-specific method
-                maya.utils.executeDeferred(functools.partial(self._set_status, "Creating backup...", show_progress=True))
+                maya.utils.executeDeferred(
+                    functools.partial(
+                        self._set_status, "Creating backup...", show_progress=True
+                    )
+                )
 
                 # Backup current installation
                 if os.path.exists(maya_scripts):
@@ -2959,7 +3032,13 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     shutil.copytree(maya_scripts, backup_dir)
 
                 # Update status using Maya-specific method
-                maya.utils.executeDeferred(functools.partial(self._set_status, f"Installing Asset Manager v{version}...", show_progress=True))
+                maya.utils.executeDeferred(
+                    functools.partial(
+                        self._set_status,
+                        f"Installing Asset Manager v{version}...",
+                        show_progress=True
+                    )
+                )
 
                 # Install new version
                 if os.path.exists(maya_scripts):
@@ -3008,8 +3087,10 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         msg.setWindowTitle("Update Installed")
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setText(f"<h3>Asset Manager v{version} installed successfully!</h3>")
-        msg.setInformativeText("<p><b>Please restart Maya</b> to use the new version.</p>"
-                              f"<p><small>Backup saved to:<br>{backup_dir if backup_dir else 'N/A'}</small></p>")
+        msg.setInformativeText(
+            "<p><b>Please restart Maya</b> to use the new version.</p>"
+            f"<p><small>Backup saved to:<br>{backup_dir if backup_dir else 'N/A'}</small></p>"
+        )
         msg.addButton(QMessageBox.StandardButton.Ok)
         msg.exec()
 
@@ -3017,10 +3098,13 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         """Show installation error dialog - runs on main thread"""
         self._set_status("Ready")
 
-        QMessageBox.critical(self, "Installation Failed",
-                           f"<h3>Failed to install update</h3>"
-                           f"<p>Error: {error_msg}</p>"
-                           f"<p>Please try manual installation from GitHub.</p>")
+        QMessageBox.critical(
+            self,
+            "Installation Failed",
+            f"<h3>Failed to install update</h3>"
+            f"<p>Error: {error_msg}</p>"
+            f"<p>Please try manual installation from GitHub.</p>"
+        )
 
     # Missing toolbar and UI action handlers - Clean Code implementation
     def _on_remove_selected_asset(self) -> None:
@@ -3049,9 +3133,13 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         asset_names = [asset.display_name for asset in valid_assets]
         message = f"Are you sure you want to remove:\n{', '.join(asset_names)}?"
 
-        reply = QMessageBox.question(self, "Confirm Removal", message,
-                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                   QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            self,
+            "Confirm Removal",
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
 
         if reply == QMessageBox.StandardButton.Yes:
             removed_count = 0
@@ -3089,11 +3177,17 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     message += "\n".join([f"• {failure}" for failure in failed_removals])
                     QMessageBox.warning(self, "Partial Success", message)
                 else:
-                    QMessageBox.information(self, "Removal Complete",
-                                          f"Successfully removed {removed_count} asset(s) from library.")
+                    QMessageBox.information(
+                        self,
+                        "Removal Complete",
+                        f"Successfully removed {removed_count} asset(s) from library."
+                    )
             else:
-                QMessageBox.warning(self, "Removal Failed",
-                                  "No assets were removed. Check the console for error details.")
+                QMessageBox.warning(
+                    self,
+                    "Removal Failed",
+                    "No assets were removed. Check the console for error details."
+                )
 
             # Refresh library to reflect changes
             print("🔄 Refreshing library after removal...")
@@ -3106,8 +3200,11 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
 
         selected_assets = self._library_widget._selected_assets
         if not selected_assets:
-            QMessageBox.information(self, "No Selection",
-                                  "Please select one or more assets to delete from the project.")
+            QMessageBox.information(
+                self,
+                "No Selection",
+                "Please select one or more assets to delete from the project."
+            )
             return
 
         # Confirm deletion with stronger warning
@@ -3116,9 +3213,13 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
         message += f"{chr(10).join([f'• {asset.display_name} ({asset.file_path})' for asset in selected_assets])}\n\n"
         message += "This action cannot be undone. Are you sure you want to delete these files from the project?"
 
-        reply = QMessageBox.critical(self, "Confirm File Deletion", message,
-                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                   QMessageBox.StandardButton.No)
+        reply = QMessageBox.critical(
+            self,
+            "Confirm File Deletion",
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
 
         if reply == QMessageBox.StandardButton.Yes:
             deleted_count = 0
@@ -3154,18 +3255,25 @@ This project is managed by Asset Manager v1.4.0. Use the Asset Manager interface
                     message += "\n".join([f"• {failure}" for failure in failed_deletions])
                     QMessageBox.warning(self, "Partial Success", message)
                 else:
-                    QMessageBox.information(self, "Deletion Complete",
-                                          f"Successfully deleted {deleted_count} asset(s) from the project.")
+                    QMessageBox.information(
+                        self,
+                        "Deletion Complete",
+                        f"Successfully deleted {deleted_count} asset(s) from the project."
+                    )
             else:
-                QMessageBox.warning(self, "Deletion Failed",
-                                  "No assets were deleted. Check the console for error details.")
+                QMessageBox.warning(
+                    self,
+                    "Deletion Failed",
+                    "No assets were deleted. Check the console for error details."
+                )
 
             # Refresh library to reflect changes
             self._on_refresh_library()
 
     def _update_asset_info_display(self, asset: Asset) -> None:
         """Update asset information display in RIGHT_B metadata panel - Single Responsibility"""
-        print(f"📊 _update_asset_info_display called for: {asset.display_name if hasattr(asset, 'display_name') else 'Unknown'}")
+        name = asset.display_name if hasattr(asset, 'display_name') else 'Unknown'
+        print(f"📊 _update_asset_info_display called for: {name}")
         print(f"   Has _metadata_widget: {hasattr(self, '_metadata_widget')}")
 
         if hasattr(self, '_metadata_widget') and self._metadata_widget:

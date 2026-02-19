@@ -1,0 +1,636 @@
+================================================================================
+[INIT] USD_PIPELINE.PY LOADED - CLEAN ARCHITECTURE
+================================================================================
+================================================================================
+🎯🎯🎯 USD_PIPELINE_DIALOG.PY LOADING 🎯🎯🎯
+================================================================================
+✅ Pixar USD Python API available
+✅ USD Service initialized - Disney's Universal Scene Description support active
+// src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
+// Warning: src.services.usd.external_usd_bridge_impl : ⚠️ USD command-line tools not detected
+// src.services.usd.usd_import_service_impl : USD Import Service initialized with 2 methods: mayaUSD, Pure Python
+// src.services.usd.usd_pipeline : USD Pipeline initialized
+// src.services.usd.usd_pipeline :   Maya: True
+// src.services.usd.usd_pipeline :   USD Python: True
+// src.services.usd.usd_pipeline :   mayaUSD: True
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline initialized
+// src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry restored: 700x1561
+// src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Loading recent assets...
+🕒 Found 0 recent assets
+🕒 Recent tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+🕒 Populated recent assets tab with 0 items
+⭐ Loading favorite assets...
+⭐ Found 0 favorite assets
+⭐ Favorites tab widget: DragEnabledAssetList
+🔄 Populating asset list with 0 assets
+✅ Populated asset list with 0 unique assets
+⭐ Populated favorites tab with 0 items
+📤 USD export started...
+// src.services.usd.usd_pipeline : 📂 Opening source file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.mb
+requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
+requires "stereoCamera" "10.0";
+updateRenderOverride;
+requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.0 @ 2386582";
+requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144792: ':rmanGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144793: ':PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144794: ':rmanBakingGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
+# Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
+// Warning: line 1262: The default image may not be modified. Use the -i/image flag instead.
+# Read 2 files in  4.5 seconds.
+// Error: mirror: could not initialize vertex mapping
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: The PxrTexture 'PxrTexture5' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: The PxrNormalMap 'PxrNormalMap24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: The PxrTexture 'PxrTexture4' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: The PxrTexture 'PxrTexture1' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: The PxrTexture 'PxrTexture2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: The PxrTexture 'PxrTexture3' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: The PxrTexture 'PxrTexture15' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: The PxrNormalMap 'PxrNormalMap25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: The PxrTexture 'PxrTexture12' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: The PxrTexture 'PxrTexture14' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: The PxrTexture 'PxrTexture13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: The PxrTexture 'PxrTexture11' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: The PxrTexture 'PxrTexture49' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: The PxrNormalMap 'PxrNormalMap26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: The PxrTexture 'PxrTexture46' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: The PxrTexture 'PxrTexture48' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: The PxrTexture 'PxrTexture45' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: The PxrTexture 'PxrTexture47' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: The PxrTexture 'PxrTexture20' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: The PxrNormalMap 'PxrNormalMap27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: The PxrTexture 'PxrTexture17' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: The PxrTexture 'PxrTexture18' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: The PxrTexture 'PxrTexture19' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: The PxrTexture 'PxrTexture16' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: The PxrTexture 'PxrTexture21' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: The PxrNormalMap 'PxrNormalMap28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: The PxrTexture 'PxrTexture24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: The PxrTexture 'PxrTexture22' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: The PxrTexture 'PxrTexture23' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: The PxrTexture 'PxrTexture25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: The PxrTexture 'PxrTexture26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: The PxrNormalMap 'PxrNormalMap29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: The PxrTexture 'PxrTexture27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: The PxrTexture 'PxrTexture29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: The PxrTexture 'PxrTexture28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: The PxrTexture 'PxrTexture34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: The PxrNormalMap 'PxrNormalMap13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: The PxrTexture 'PxrTexture32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: The PxrTexture 'PxrTexture31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: The PxrTexture 'PxrTexture30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: The PxrTexture 'PxrTexture33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: The PxrTexture 'PxrTexture37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: The PxrTexture 'PxrTexture38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: The PxrNormalMap 'PxrNormalMap30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: The PxrTexture 'PxrTexture39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: The PxrTexture 'PxrTexture35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: The PxrTexture 'PxrTexture36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: The PxrTexture 'PxrTexture40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: The PxrTexture 'PxrTexture44' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: The PxrNormalMap 'PxrNormalMap2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: The PxrTexture 'PxrTexture42' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: The PxrTexture 'PxrTexture43' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: The PxrTexture 'PxrTexture41' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: The PxrTexture 'PxrTexture52' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: The PxrTexture 'PxrTexture54' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: The PxrNormalMap 'PxrNormalMap31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: The PxrTexture 'PxrTexture53' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: The PxrTexture 'PxrTexture51' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: The PxrTexture 'PxrTexture50' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: The PxrNormalMap 'PxrNormalMap32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: The PxrTexture 'PxrTexture58' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: The PxrTexture 'PxrTexture59' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: The PxrTexture 'PxrTexture56' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: The PxrTexture 'PxrTexture57' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: The PxrTexture 'PxrTexture55' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: The PxrTexture 'PxrTexture63' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: The PxrTexture 'PxrTexture64' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: The PxrTexture 'PxrTexture61' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: The PxrTexture 'PxrTexture62' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: The PxrTexture 'PxrTexture60' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: The PxrNormalMap 'PxrNormalMap33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: The PxrTexture 'PxrTexture65' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: The PxrTexture 'PxrTexture68' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: The PxrTexture 'PxrTexture69' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: The PxrTexture 'PxrTexture67' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: The PxrTexture 'PxrTexture66' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: The PxrNormalMap 'PxrNormalMap34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: The PxrTexture 'PxrTexture74' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: The PxrTexture 'PxrTexture72' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: The PxrTexture 'PxrTexture71' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: The PxrNormalMap 'PxrNormalMap6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: The PxrTexture 'PxrTexture73' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: The PxrTexture 'PxrTexture70' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: The PxrTexture 'PxrTexture75' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: The PxrTexture 'PxrTexture78' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: The PxrTexture 'PxrTexture77' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: The PxrTexture 'PxrTexture79' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: The PxrNormalMap 'PxrNormalMap35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: The PxrTexture 'PxrTexture76' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: The PxrNormalMap 'PxrNormalMap36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: The PxrTexture 'PxrTexture85' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: The PxrTexture 'PxrTexture89' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: The PxrTexture 'PxrTexture87' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: The PxrTexture 'PxrTexture86' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: The PxrTexture 'PxrTexture88' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: The PxrTexture 'PxrTexture91' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: The PxrTexture 'PxrTexture92' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: The PxrTexture 'PxrTexture93' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: The PxrNormalMap 'PxrNormalMap37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: The PxrTexture 'PxrTexture94' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: The PxrTexture 'PxrTexture95' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: The PxrNormalMap 'PxrNormalMap38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: The PxrTexture 'PxrTexture96' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: The PxrTexture 'PxrTexture97' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: The PxrTexture 'PxrTexture98' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: The PxrNormalMap 'PxrNormalMap39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: The PxrTexture 'PxrTexture99' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: The PxrTexture 'PxrTexture100' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: The PxrTexture 'PxrTexture101' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: The PxrNormalMap 'PxrNormalMap40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: The PxrTexture 'PxrTexture102' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143743: ':rmanBakingGlobals.displays[0]' already has an incoming connection from ':rmanDefaultBakeDisplay.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143838: ':rmanDefaultDisplay.displayType' already has an incoming connection from ':d_openexr.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143839: ':rmanDefaultDisplay.displayChannels[0]' already has an incoming connection from ':Ci.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143840: ':rmanDefaultDisplay.displayChannels[1]' already has an incoming connection from ':a.message'.
+// src.services.usd.usd_pipeline : [OK] Scene opened: Veteran_Rig.mb
+// src.services.usd.usd_pipeline : 📦 Rig backup: Veteran_Rig.rig.mb (25.0 MB)
+// src.services.usd.usd_pipeline : [OK] Rig backup exported: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline : [DEBUG] DEBUG: Total DAG nodes in scene: 4303
+// src.services.usd.usd_pipeline : [DEBUG] DEBUG: Found 135 mesh nodes
+// src.services.usd.usd_pipeline : [DEBUG] DEBUG: Found 45 nurbsSurface nodes
+// src.services.usd.usd_pipeline : [DEBUG] DEBUG: Found 548 joint nodes
+// src.services.usd.usd_pipeline : [BLEND] XGen filter: Excluded 7 meshes
+// src.services.usd.usd_pipeline :    └─ Beard_xgen
+// src.services.usd.usd_pipeline :    └─ Manbun_xgen
+// src.services.usd.usd_pipeline :    └─ L_Eyebrow_xgen
+// src.services.usd.usd_pipeline :    └─ Hair_xgen
+// src.services.usd.usd_pipeline :    └─ R_Eyelash_xgen
+// src.services.usd.usd_pipeline :    └─ ... and 2 more
+// src.services.usd.usd_pipeline : [SKEL] Found 52 skinClusters in scene
+// src.services.usd.usd_pipeline :    [DEBUG] DIAGNOSTIC: Found 23 meshes with blendShapes:
+// src.services.usd.usd_pipeline :       - lowerLidCurveBlink_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - lowerLidCurveBlink_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - lowerLidMainCurve_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - lowerLidMainCurve_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - lowerLidOuterCurve_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - lowerLidOuterCurve_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:Body_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - Body_GeoShapeDeformed (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:Jacket_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:L_Button_01_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:L_Button_02_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:L_Button_04_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:L_Zipper_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:R_Button_01_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:R_Button_02_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:R_Button_04_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - model:R_Zipper_GeoShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidCurveBlink_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidCurveBlink_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidMainCurve_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidMainCurve_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidOuterCurve_LShape (1 blendShapes)
+// src.services.usd.usd_pipeline :       - upperLidOuterCurve_RShape (1 blendShapes)
+// src.services.usd.usd_pipeline :    [BLEND] lowerLidMainCurve_LShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] lowerLidMainCurve_RShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] upperLidMainCurve_LShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] upperLidMainCurve_RShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:Body_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:Jacket_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_01_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_02_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_04_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Zipper_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_01_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_02_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_04_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Zipper_GeoShape: has blendShapes + skinCluster (will bake geometry)
+// src.services.usd.usd_pipeline : [FIX] MULTI-SKINCLUSTER MESHES DETECTED - Auto-fixing...
+// src.services.usd.usd_pipeline :    [FIX] Body_GeoShapeDeformed (5 skinClusters: CageSC, EyeLidSC, JawSC, LipSC, skinCluster1)
+// src.services.usd.usd_pipeline :    [FIX] L_InrEye_GeoShapeDeformed (2 skinClusters: EyeBallSC_L, skinCluster3)
+// src.services.usd.usd_pipeline :    [FIX] L_OutrEye_GeoShapeDeformed (2 skinClusters: EyeBallSC_L1, skinCluster4)
+// src.services.usd.usd_pipeline :    [FIX] R_InrEye_GeoShapeDeformed (2 skinClusters: EyeBallSC_R, skinCluster7)
+// src.services.usd.usd_pipeline :    [FIX] R_OutrEye_GeoShapeDeformed (2 skinClusters: EyeBallSC_R1, skinCluster8)
+// src.services.usd.usd_pipeline :    [FIX] lowerLidMainCurve_LShape (1 skinClusters: lowerLidMainSC_L)
+// src.services.usd.usd_pipeline :    [FIX] lowerLidMainCurve_RShape (1 skinClusters: lowerLidMainSC_R)
+// src.services.usd.usd_pipeline :    [FIX] upperLidMainCurve_LShape (1 skinClusters: upperLidMainSC_L)
+// src.services.usd.usd_pipeline :    [FIX] upperLidMainCurve_RShape (1 skinClusters: upperLidMainSC_R)
+// src.services.usd.usd_pipeline :    [FIX] model:Body_GeoShape (5 skinClusters: skinCluster1, EyeLidSC, LipSC, CageSC, JawSC)
+// src.services.usd.usd_pipeline :    [FIX] model:Jacket_GeoShape (1 skinClusters: skinCluster11)
+// src.services.usd.usd_pipeline :    [FIX] model:L_Button_01_GeoShape (1 skinClusters: skinCluster12)
+// src.services.usd.usd_pipeline :    [FIX] model:L_Button_02_GeoShape (1 skinClusters: skinCluster13)
+// src.services.usd.usd_pipeline :    [FIX] model:L_Button_04_GeoShape (1 skinClusters: skinCluster15)
+// src.services.usd.usd_pipeline :    [FIX] model:L_Zipper_GeoShape (1 skinClusters: skinCluster16)
+// src.services.usd.usd_pipeline :    [FIX] model:R_Button_01_GeoShape (1 skinClusters: skinCluster17)
+// src.services.usd.usd_pipeline :    [FIX] model:R_Button_02_GeoShape (1 skinClusters: skinCluster18)
+// src.services.usd.usd_pipeline :    [FIX] model:R_Button_04_GeoShape (1 skinClusters: skinCluster20)
+// src.services.usd.usd_pipeline :    [FIX] model:R_Zipper_GeoShape (1 skinClusters: skinCluster21)
+// src.services.usd.usd_pipeline :    [BLEND] Body_GeoShapeDeformed: has blendShapes + 5 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] Body_GeoShapeDeformed → model:Body_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [FIX] L_InrEye_GeoShapeDeformed: using skinCluster3 (ignoring 1 others)
+// src.services.usd.usd_pipeline :    [OK] L_InrEye_GeoShapeDeformed → model:L_InrEye_Geo_usdExport (single skinCluster)
+// src.services.usd.usd_pipeline :    [FIX] L_OutrEye_GeoShapeDeformed: using skinCluster4 (ignoring 1 others)
+// src.services.usd.usd_pipeline :    [OK] L_OutrEye_GeoShapeDeformed → model:L_OutrEye_Geo_usdExport (single skinCluster)
+// src.services.usd.usd_pipeline :    [FIX] R_InrEye_GeoShapeDeformed: using skinCluster7 (ignoring 1 others)
+// src.services.usd.usd_pipeline :    [OK] R_InrEye_GeoShapeDeformed → model:R_InrEye_Geo_usdExport (single skinCluster)
+// src.services.usd.usd_pipeline :    [FIX] R_OutrEye_GeoShapeDeformed: using skinCluster8 (ignoring 1 others)
+// src.services.usd.usd_pipeline :    [OK] R_OutrEye_GeoShapeDeformed → model:R_OutrEye_Geo_usdExport (single skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] lowerLidMainCurve_LShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] lowerLidMainCurve_LShape → lowerLidMainCurve_L_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] lowerLidMainCurve_RShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] lowerLidMainCurve_RShape → lowerLidMainCurve_R_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] upperLidMainCurve_LShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] upperLidMainCurve_LShape → upperLidMainCurve_L_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] upperLidMainCurve_RShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] upperLidMainCurve_RShape → upperLidMainCurve_R_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:Body_GeoShape: has blendShapes + 5 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:Body_GeoShape → model:Body_Geo_usdExport1 (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:Jacket_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:Jacket_GeoShape → model:Jacket_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_01_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:L_Button_01_GeoShape → model:L_Button_01_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_02_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:L_Button_02_GeoShape → model:L_Button_02_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Button_04_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:L_Button_04_GeoShape → model:L_Button_04_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:L_Zipper_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:L_Zipper_GeoShape → model:L_Zipper_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_01_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:R_Button_01_GeoShape → model:R_Button_01_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_02_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:R_Button_02_GeoShape → model:R_Button_02_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Button_04_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:R_Button_04_GeoShape → model:R_Button_04_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [BLEND] model:R_Zipper_GeoShape: has blendShapes + 1 skinClusters - baking geometry
+// src.services.usd.usd_pipeline :    [OK] model:R_Zipper_GeoShape → model:R_Zipper_Geo_usdExport (baked geometry, clean skinCluster)
+// src.services.usd.usd_pipeline :    [OK] Fixed 19 multi-skinCluster meshes
+// Warning: src.services.usd.usd_pipeline : [WARNING] Complex skeleton setup detected (52 skinClusters). USD viewport may have display issues. Consider viewport_friendly_skeleton=True
+// src.services.usd.usd_pipeline : 🎯 Found 802 objects to export
+// src.services.usd.usd_pipeline :    Meshes: 194
+// src.services.usd.usd_pipeline :    NURBS Curves: 654
+// src.services.usd.usd_pipeline :    Joints: 548
+// src.services.usd.usd_pipeline : [BLEND] RenderMan material export enabled
+// src.services.usd.usd_pipeline : mayaUSDExport args: {'file': 'D:\\Maya\\projects\\Athens_Sequence\\assets\\Character Models\\Veteran\\Veteran_Rig.usdc', 'selection': True, 'exportDisplayColor': True, 'exportUVs': True, 'exportMaterialCollections': False, 'exportSkels': 'auto', 'exportSkin': 'auto', 'exportBlendShapes': True, 'exportMaterials': True, 'shadingMode': 'useRegistry', 'convertMaterialsTo': ['UsdPreviewSurface', 'rendermanForMaya'], 'exportVisibility': True, 'exportInstances': True, 'exportStagesAsRefs': False, 'mergeTransformAndShape': True, 'stripNamespaces': False, 'filterTypes': ['nurbsCurve']}
+# Opening layer 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig.usdc' for writing
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster16_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster16_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
+# Warning: Blendshapes were requested to be exported for: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeBall|FitEyeBall|FitEyeSphere|FitEyeSphereShape, but none could be found.
+# Warning: Blendshapes were requested to be exported for: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape, but none could be found.
+# Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
+# Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
+# Warning: Blendshapes were requested to be exported for: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape, but none could be found.
+# Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape. Skipping...
+# Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape. Skipping...
+# Warning: Blendshapes were requested to be exported for: |Group|FaceGroup|FaceFitSkeleton|FaceFitLipInner|FaceFitLipInnerGeo|LipInnerAreaMesh|LipInnerAreaMeshShape, but none could be found.
+# Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitLipInner|FaceFitLipInnerGeo|LipInnerAreaMesh|LipInnerAreaMeshShape. Skipping...
+// src.services.usd.usd_pipeline : [CLEANUP] Cleaned up 19 baked mesh duplicates
+// src.services.usd.usd_pipeline : [FIX] Found 2 SkelRoots - creating unified wrapper...
+// src.services.usd.usd_pipeline :    📦 /Group
+// src.services.usd.usd_pipeline :    📦 /model_Veteran_Geo_Grp
+// src.services.usd.usd_pipeline :    [SKEL] Skeleton found at: /Group/FitSkeleton/Root
+// src.services.usd.usd_pipeline : [FIX] Creating wrapper: /SkelRoot
+// src.services.usd.usd_pipeline :    🔄 Re-parenting /Group → /SkelRoot/Group
+// src.services.usd.usd_pipeline :       [OK] Moved and demoted to Xform
+// src.services.usd.usd_pipeline :    🔄 Re-parenting /model_Veteran_Geo_Grp → /SkelRoot/model_Veteran_Geo_Grp
+// src.services.usd.usd_pipeline :       [OK] Moved and demoted to Xform
+// src.services.usd.usd_pipeline :    [SKEL] New skeleton path: /SkelRoot/Group/FitSkeleton/Root
+// src.services.usd.usd_pipeline :    [OK] Updated 19 skeleton bindings
+// src.services.usd.usd_pipeline :    [OK] Updated 121 animation source paths
+// src.services.usd.usd_pipeline :    [OK] Default prim set to: /SkelRoot
+// src.services.usd.usd_pipeline : [OK] SkelRoot scope fixed: All prims now under unified SkelRoot
+// src.services.usd.usd_pipeline :    🎯 Skeleton and meshes share same SkelRoot scope
+// src.services.usd.usd_pipeline : [FIX] Checking geomBindTransform on skinned meshes...
+// src.services.usd.usd_pipeline : [SUCCESS] All skinned meshes already have geomBindTransform
+// src.services.usd.usd_pipeline : [USD] Starting blendShape export to USD...
+// src.services.usd.usd_pipeline :    Found 22 Maya blendShape nodes
+// src.services.usd.usd_pipeline :    USD mesh name samples: model_MidFrown, model_FullFrown, model_Grin, model_Smile, model_Disgust, model_BtmLids_Up_, model_Eyes_Close_, model_Squint, model_LfBrow_Dwn_, model_Open_Close...
+// src.services.usd.usd_pipeline :    Processing model:Body_GeoShape: 34 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target LGrin: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_MidBrowRaise: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Eyes_Close: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Squint: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_MidBrowRaise: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_BtmLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_BtmLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Eyes_Close: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Brow_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Brow_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Eyes_Close: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Frown: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_TopLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Scowl: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_TopLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_TopLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_TopLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_BtmLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target TopLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target TopLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target BtmLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target M_BrowRaise: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Frown: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Brow_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_BtmLids_Dwn: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Brow_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target RGrin: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Frown: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Disgust: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Disgust: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Disgust: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Squint: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Squint: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target BtmLids_Up: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:Jacket_GeoShape: 13 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend1Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend12Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend13Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend11Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend2Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend3Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend4Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend5Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend6Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend7Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend8Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend9Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target Jacket_Blend10Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:L_Button_01_GeoShape: 1 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Button_01_Blend7Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:L_Button_02_GeoShape: 2 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Button_02_Blend2Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Button_02_Blend2Combo: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:L_Button_04_GeoShape: 1 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Button_04_Blend10Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:L_Zipper_GeoShape: 4 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Zipper_Blend4Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Zipper_Blend7Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Zipper_Blend8Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target L_Zipper_Blend4Combo: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:R_Button_01_GeoShape: 1 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Button_01_Blend6Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:R_Button_02_GeoShape: 2 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Button_02_Blend2Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Button_02_Blend2Combo: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:R_Button_04_GeoShape: 1 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Button_04_Blend11Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    Processing model:R_Zipper_GeoShape: 4 targets
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Zipper_Blend5Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Zipper_Blend6Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Zipper_Blend9Shape: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// Warning: src.services.usd.usd_pipeline :       [WARNING] Failed to export target R_Zipper_Blend5Combo: 'BindingAPI' object has no attribute 'CreateBlendShapesRel'
+// src.services.usd.usd_pipeline :    No blendShape targets exported
+// src.services.usd.usd_pipeline : [INFO] Starting USD validation for: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : [INFO] USD_AVAILABLE: True, file exists: True
+// src.services.usd.usd_pipeline : [INFO] Opening USD stage...
+// src.services.usd.usd_pipeline : [INFO] USD stage opened, counting prims...
+// src.services.usd.usd_pipeline : [INFO] Found 79 meshes in USD
+// src.services.usd.usd_pipeline : [INFO] Found 548 joints in 121 skeleton(s)
+// src.services.usd.usd_pipeline : [INFO] SkelRoot: /SkelRoot
+// src.services.usd.usd_pipeline :    Children: ['Group', 'model_Veteran_Geo_Grp']
+// src.services.usd.usd_pipeline : [INFO] Found 19 skin bindings in USD
+// src.services.usd.usd_pipeline : [INFO] Found 30 materials in USD
+// src.services.usd.usd_pipeline : [INFO] Found 0 blendshapes in USD
+// src.services.usd.usd_pipeline : [INFO] Found 121 SkelAnimation prims (rest pose only)
+// src.services.usd.usd_pipeline : [INFO] All prim types in USD: {'NurbsPatch', 'Material', 'NodeGraph', 'SkelRoot', 'SkelAnimation', 'Skeleton', 'Shader', 'Mesh', 'GeomSubset', 'Scope', 'Xform'}
+// src.services.usd.usd_pipeline : [INFO] USD validation complete
+// src.services.usd.usd_pipeline : [OK] USD exported: Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : 📦 Added rig backup to USDZ: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline : 🎁 USDZ package: Veteran_Rig.usdz (52.2 MB)
+// src.services.usd.usd_pipeline : [OK] USDZ package created: Veteran_Rig.usdz
+// src.services.usd.usd_pipeline : [CLEANUP] Cleaned up intermediate: Veteran_Rig.usdc
+// src.services.usd.usd_pipeline : [CLEANUP] Cleaned up intermediate: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline : [OK] Intermediate files cleaned up (bundled in USDZ)
+✅ USD export: Export successful
+# [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
+// Saving stage
+// Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitLipInner|FaceFitLipInnerGeo|LipInnerAreaMesh|LipInnerAreaMeshShape. Skipping... -- and 73 similar
+// Warning: Blendshapes were requested to be exported for: |Group|FaceGroup|FaceFitSkeleton|FaceFitLipInner|FaceFitLipInnerGeo|LipInnerAreaMeshExtrude|LipInnerAreaMeshExtrudeShape, but none could be found. -- and 74 similar
+// src.ui.dialogs.usd_pipeline_dialog : ✅ USD Pipeline geometry saved: 700x1561
+✅ Window state saved: 1493x808
+✅ Asset Manager singleton reference cleared

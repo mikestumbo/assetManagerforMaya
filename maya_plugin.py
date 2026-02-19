@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Asset Manager v1.4.3 - Maya 2025+ Exclusive (NO PLUGIN REGISTRATION)
+Asset Manager v1.5.0 - Maya 2025+ Exclusive (NO PLUGIN REGISTRATION)
 Pure UI Module - No Maya Node Registration to Avoid Unknown Data Issues
 
 Author: Mike Stumbo
-Version: 1.4.3
+Version: 1.5.0
 Maya Version: 2025.3+
 """
 
@@ -33,11 +33,9 @@ def _ensure_path_for_imports():
 
 
 def show_asset_manager():
-
-
     original_path = None
     try:
-        print("🎨 Launching Asset Manager v1.4.3 UI...")
+        print("🎨 Launching Asset Manager v1.5.0 UI...")
 
         # Safely add paths for import
         original_path = _ensure_path_for_imports()
@@ -116,7 +114,7 @@ def show_asset_manager():
             _asset_manager_window.raise_()
             _asset_manager_window.activateWindow()
 
-            print("🎉 Asset Manager v1.4.3 launched successfully!")
+            print("🎉 Asset Manager v1.5.0 launched successfully!")
             return _asset_manager_window
 
         except Exception as e:
@@ -134,5 +132,3 @@ def show_asset_manager():
         # Restore original path for security
         if original_path is not None:
             sys.path[:] = original_path
-
-

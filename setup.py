@@ -250,7 +250,7 @@ class AssetManagerInstaller:
         """
         hot_reload_content = '''#!/usr/bin/env python3
 """
-Asset Manager v1.4.3 - Development Hot Reload System
+Asset Manager v1.5.0 - Development Hot Reload System
 
 This system completely bypasses Maya's module caching issues by:
 1. Force-clearing all related modules from sys.modules
@@ -375,7 +375,7 @@ print("Usage: dev_hot_reload.r() or dev_hot_reload.reload_asset_manager()")
             True if installation successful, False otherwise
         """
         try:
-            self._log(" Asset Manager v1.4.3 Installation Starting...")
+            self._log(" Asset Manager v1.5.0 Installation Starting...")
             self._log("=" * 60)
 
             # Step 1: Create installation directory (like DRAG&DROP.mel)
@@ -436,7 +436,7 @@ print("Usage: dev_hot_reload.r() or dev_hot_reload.reload_asset_manager()")
 
             # Step 6: Installation complete
             self._log("\n" + "=" * 60)
-            self._log(" ASSET MANAGER v1.4.3 INSTALLATION COMPLETE!")
+            self._log(" ASSET MANAGER v1.5.0 INSTALLATION COMPLETE!")
             self._log("=" * 60)
 
             self._log(f" Installation Location: {self.install_dir}")
@@ -466,9 +466,7 @@ def install_asset_manager(source_dir: Optional[str] = None, verbose: bool = True
 
 
 def main():
-
-
-    print("Asset Manager v1.4.3 - Unified Installation System")
+    print("Asset Manager v1.5.0 - Unified Installation System")
     print("Multi-Version Maya Compatibility (2022-2025+)")
     print("=" * 60)
 
@@ -491,5 +489,3 @@ def main():
     except Exception as e:
         print(f"\n Unexpected error: {e}")
         return 1
-
-

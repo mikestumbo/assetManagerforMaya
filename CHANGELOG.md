@@ -124,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### 📦 **Supported USD Formats**
 
 | Format | Description | Support |
-|--------|-------------|---------|
+| ------ | ----------- | ------- |
 | `.usd` | Binary USD | ✅ Import |
 | `.usda` | ASCII USD | ✅ Import |
 | `.usdc` | Crate USD | ✅ Import |
