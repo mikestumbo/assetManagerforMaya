@@ -113,7 +113,7 @@ class PurePythonUsdReader:
             result['success'] = True
             mesh_count = len(result['meshes'])
             joint_count = len(result['joints'])
-            self.logger.info(f"✅ Pure Python import complete: {mesh_count} meshes, {joint_count} joints")
+            self.logger.info(f"[OK] Pure Python import complete: {mesh_count} meshes, {joint_count} joints")
 
             return result
 

@@ -84,18 +84,18 @@ class LibraryServiceImpl(ILibraryService):
             # This ensures recent assets list has correct path
             self._repository.update_access_time(new_asset)
 
-            print(f"✅ Asset added to library: {target_path.name}")
+            print(f"[OK] Asset added to library: {target_path.name}")
             print(f"📌 Library path: {target_path.relative_to(project_path)}")
             print(f"� Full path: {target_path}")
             print(f"📌 Asset ID: {new_asset.id}")
             print(f"📌 File exists: {target_path.exists()}")
-            print("🔄 Recent assets updated with library path")
+            print("[REFRESH] Recent assets updated with library path")
 
             return (True, target_path)
 
         except Exception as e:
             self.logger.error(f"Failed to add asset to library: {e}")
-            print(f"❌ Failed to add asset to library: {e}")
+            print(f"[ERROR] Failed to add asset to library: {e}")
             return (False, None)
 
     def remove_asset_from_library(self, asset: Asset) -> bool:
@@ -123,14 +123,14 @@ class LibraryServiceImpl(ILibraryService):
 
                 if custom_screenshot.exists():
                     custom_screenshot.unlink()
-                    print(f"🗑️ Deleted custom screenshot: {custom_screenshot.name}")
+                    print(f"[DELETE] Deleted custom screenshot: {custom_screenshot.name}")
             except Exception as screenshot_error:
                 self.logger.warning(f"Could not delete custom screenshot: {screenshot_error}")
 
             # Then remove asset file
             if asset.file_path.exists():
                 asset.file_path.unlink()
-                print(f"✅ Removed asset from library: {asset.name}")
+                print(f"[OK] Removed asset from library: {asset.name}")
                 return True
             else:
                 self.logger.warning(f"Asset file not found: {asset.file_path}")
@@ -138,7 +138,7 @@ class LibraryServiceImpl(ILibraryService):
 
         except Exception as e:
             self.logger.error(f"Failed to remove asset from library: {e}")
-            print(f"❌ Failed to remove asset: {e}")
+            print(f"[ERROR] Failed to remove asset: {e}")
             return False
 
     def get_library_path_for_asset(

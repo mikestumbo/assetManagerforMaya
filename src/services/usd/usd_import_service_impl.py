@@ -119,7 +119,7 @@ class UsdImportServiceImpl(IUsdImportService):
         if not is_valid:
             return ImportResult(success=False, error_message=error_msg)
 
-        self.logger.info(f"START: Starting USD import: {usd_path.name}")
+        self.logger.info(f"[IMPORT] Starting: {usd_path.name}")
 
         # Create result object
         result = ImportResult(success=False)
@@ -133,7 +133,7 @@ class UsdImportServiceImpl(IUsdImportService):
             namespace = self._import_with_mayausd(usd_path, options, result)
             if namespace:
                 import_method = 'mayaUSD'
-                self.logger.info("SUCCESS: MayaUSD import successful")
+                self.logger.info("[IMPORT] mayaUSD import successful")
 
             # Try Method 2: Pure Python USD Reader (no plugin dependencies)
             if not namespace:
@@ -141,7 +141,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 namespace = self._import_with_pure_python(usd_path, options, result)
                 if namespace:
                     import_method = 'Pure Python'
-                    self.logger.info("SUCCESS: Pure Python import successful")
+                    self.logger.info("[IMPORT] Pure Python import successful")
 
             # Try Method 3: USD View conversion (Pixar's official tools)
             if not namespace and self.usdview_bridge.is_available():
@@ -149,7 +149,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 namespace = self._import_with_usdview(usd_path, options, result)
                 if namespace:
                     import_method = 'USD View'
-                    self.logger.info("SUCCESS: USD View conversion successful")
+                    self.logger.info("[IMPORT] USD View conversion successful")
 
             # All methods failed
             if not namespace:
@@ -158,44 +158,34 @@ class UsdImportServiceImpl(IUsdImportService):
                 return result
 
             result.import_method = import_method
-            self.logger.info(f"RESULT: Successfully imported using: {import_method}")
+            self.logger.info(f"[IMPORT] Successfully imported using: {import_method}")
 
             # Step 2: Apply skin weights if requested
-            print("=" * 80)
-            print(f"CHECKING: CHECKING SKINNING: options.apply_skin_weights = {options.apply_skin_weights}")
-            print("=" * 80)
+            self.logger.info(
+                f"[SKINNING] apply_skin_weights={options.apply_skin_weights}, namespace={namespace}"
+            )
 
             if options.apply_skin_weights:
-                print(
-                    f"SUCCESS: Going to call _apply_skin_weights_from_usd "
-                    f"with namespace={namespace}"
-                )
-                self.logger.info(
-                    f"HOUDINI: apply_skin_weights=True, calling "
-                    f"_apply_skin_weights_from_usd with namespace={namespace}"
-                )
+                self.logger.info("[SKINNING] Calling _apply_skin_weights_from_usd...")
                 self._apply_skin_weights_from_usd(usd_path, namespace, options, result)
-                print(
-                    f"SUCCESS: Returned from _apply_skin_weights_from_usd, "
-                    f"created {result.skin_clusters_created} skinClusters"
-                )
                 self.logger.info(
-                    f"HOUDINI: Finished _apply_skin_weights_from_usd, "
-                    f"created {result.skin_clusters_created} skinClusters"
+                    f"[SKINNING] Created {result.skin_clusters_created} skinClusters"
                 )
             else:
-                print("SKIPPING: Skipping skinning because apply_skin_weights=False")
-                self.logger.info("SKIPPING: apply_skin_weights=False, skipping skin weight application")
+                self.logger.info("[SKINNING] Skipping — apply_skin_weights=False")
 
             # Step 4: Reconstruct rig connections for functional controllers - INDUSTRY FIRST!
             if options.import_nurbs_curves and options.import_rig_connections and result.imported_curves:
-                self.logger.info("🎯 Reconstructing rig connections for functional controllers...")
+                self.logger.info("[TARGET] Reconstructing rig connections for functional controllers...")
                 connections_restored = self._reconstruct_rig_connections(usd_path, namespace, options, result)
-                self.logger.info(f"✨ Restored {connections_restored} rig connections - controllers are now functional!")
+                self.logger.info(
+                    f"[NEW] Restored {connections_restored} rig connections "
+                    "— controllers are now functional!"
+                )
 
             # Mark as successful
             result.success = True
-            self.logger.info(f"SUCCESS: {result.get_summary()}")
+            self.logger.info(f"[IMPORT] {result.get_summary()}")
 
         except Exception as e:
             self.logger.error(f"USD import failed: {e}")
@@ -376,7 +366,7 @@ class UsdImportServiceImpl(IUsdImportService):
         Returns:
             Namespace used for import, or None if failed
         """
-        self.logger.info(f"START: _import_with_mayausd CALLED with usd_path={usd_path}, namespace={options.namespace}")
+        self.logger.info(f"[IMPORT] mayaUSD starting: {usd_path.name}, namespace={options.namespace}")
 
         if not MAYA_AVAILABLE:
             self.logger.error("ERROR: MAYA_AVAILABLE is False!")
@@ -404,7 +394,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 current_renderer = cmds.getAttr("defaultRenderGlobals.currentRenderer")
                 if current_renderer and "renderman" in current_renderer.lower():
                     use_renderman = True
-                    self.logger.info("🎨 RenderMan is active renderer")
+                    self.logger.info("[LOOKDEV] RenderMan is active renderer")
             except Exception:
                 pass
 
@@ -429,7 +419,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 if use_renderman:
                     # For RenderMan: try multiple approaches
                     import_args['shadingMode'] = [['pxrRis', 'default']]
-                    self.logger.info("🎨 Using pxrRis shading mode for RenderMan materials")
+                    self.logger.info("[LOOKDEV] Using pxrRis shading mode for RenderMan materials")
                 else:
                     import_args['shadingMode'] = [['useRegistry', 'UsdPreviewSurface']]
                     self.logger.info("Using useRegistry shading mode for standard materials")
@@ -591,12 +581,12 @@ class UsdImportServiceImpl(IUsdImportService):
 
             if renderman_materials:
                 self.logger.info(
-                    f"✅ RenderMan materials found: {len(set(renderman_materials))} "
+                    f"[OK] RenderMan materials found: {len(set(renderman_materials))} "
                     f"(e.g., {renderman_materials[0]})"
                 )
             elif standard_materials:
                 self.logger.warning(
-                    f"⚠️ Standard materials found instead of RenderMan: {len(set(standard_materials))}"
+                    f"[WARNING] Standard materials found instead of RenderMan: {len(set(standard_materials))}"
                 )
                 self.logger.info("   Tip: Set RenderMan as active renderer before import for full material support")
             else:
@@ -621,37 +611,17 @@ class UsdImportServiceImpl(IUsdImportService):
             options: Import options
             result: Result object to populate
         """
-        # AGGRESSIVE DEBUG: Prove function is called
-        print("=" * 80)
-        print(" _apply_skin_weights_from_usd() CALLED!")
-        print(f" usd_path: {usd_path}")
-        print(f" namespace: {namespace}")
-        print(f" USD_AVAILABLE: {USD_AVAILABLE}")
-        print(f" Usd module: {Usd}")
-        print(f" UsdSkel module: {UsdSkel}")
-        print("=" * 80)
-
         if not USD_AVAILABLE:
-            print(" USD not available - returning early")
-            self.logger.warning("USD not available - skipping skin weights")
+            self.logger.warning("[SKINNING] USD not available - skipping skin weights")
             return
 
         try:
-            print("SKELETON: Inside try block - about to log")
-            print(f"SKELETON: Logger object: {self.logger}")
-            print(f"SKELETON: Logger name: {self.logger.name}")
-            print(f"SKELETON: Logger level: {self.logger.level}")
-            print(f"SKELETON: Logger handlers: {self.logger.handlers}")
-            self.logger.info("SKELETON: Applying skin weights from USD...")
-            print("SKELETON: After logger.info call")
+            self.logger.info(f"[SKINNING] Applying skin weights from USD: {usd_path.name}")
 
             # Open USD stage
-            print(f"SKELETON: About to open USD stage: {usd_path}")
             stage = Usd.Stage.Open(str(usd_path))
-            print(f"SKELETON: Stage opened: {stage}")
             if not stage:
-                print("ERROR: Stage is None/False")
-                self.logger.error("Could not open USD stage")
+                self.logger.error("[SKINNING] Could not open USD stage")
                 return
 
             # Find skeletons
@@ -664,22 +634,17 @@ class UsdImportServiceImpl(IUsdImportService):
 
             # Process each skeleton
             for skel_path in skeletons:
-                self.logger.info(f"SKELETON: Processing skeleton: {skel_path}")
+                self.logger.info(f"[SKINNING] Processing skeleton: {skel_path}")
                 self._process_skeleton(stage, skel_path, namespace, result)
                 self.logger.info(
                     f"SKELETON: Finished skeleton {skel_path}, "
                     f"total skinClusters so far: {result.skin_clusters_created}"
                 )
 
-            self.logger.info(f"SUCCESS: Created {result.skin_clusters_created} skin clusters")
+            self.logger.info(f"[SKINNING] Created {result.skin_clusters_created} skin clusters")
 
         except Exception as e:
-            print("=" * 80)
-            print(" EXCEPTION CAUGHT IN _apply_skin_weights_from_usd!")
-            print(f" Exception type: {type(e).__name__}")
-            print(f" Exception message: {e}")
-            print("=" * 80)
-            self.logger.error(f"Failed to apply skin weights: {e}")
+            self.logger.error(f"[SKINNING] Failed to apply skin weights: {e}")
             import traceback
             traceback.print_exc()
             result.add_warning(f"Skin weight application error: {e}")
@@ -720,7 +685,7 @@ class UsdImportServiceImpl(IUsdImportService):
 
             # Process each mesh
             for i, mesh_path in enumerate(skinned_meshes, 1):
-                self.logger.info(f"HOUDINI: Processing mesh {i}/{len(skinned_meshes)}: {mesh_path}")
+                self.logger.info(f"[SKINNING] Processing mesh {i}/{len(skinned_meshes)}: {mesh_path}")
                 self._create_skin_cluster_for_mesh(
                     stage,
                     mesh_path,
@@ -810,7 +775,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 result.created_skin_clusters.append(skin_cluster)
                 result.skin_clusters_created += 1
                 result.total_vertices += weight_data.vertex_count
-                self.logger.info(f"SUCCESS: Created skinCluster: {skin_cluster}")
+                self.logger.info(f"[SKINNING] Created skinCluster: {skin_cluster}")
             else:
                 self.logger.warning(f"Failed to create skinCluster for: {maya_mesh_name}")
 
@@ -887,7 +852,7 @@ class UsdImportServiceImpl(IUsdImportService):
             return
 
         try:
-            self.logger.info("🔧 Positioning joints in bind pose from USD...")
+            self.logger.info("[TOOL] Positioning joints in bind pose from USD...")
 
             # Open USD stage
             stage = Usd.Stage.Open(str(usd_path))
@@ -953,7 +918,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 except Exception as skel_error:
                     self.logger.warning(f"Failed to position joints for skeleton {skel_path}: {skel_error}")
 
-            self.logger.info(f"✅ Positioned {joints_positioned} joints in bind pose")
+            self.logger.info(f"[OK] Positioned {joints_positioned} joints in bind pose")
 
         except Exception as e:
             self.logger.error(f"Failed to position joints in bind pose: {e}")

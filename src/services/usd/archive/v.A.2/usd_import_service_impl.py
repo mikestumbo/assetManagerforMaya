@@ -189,9 +189,9 @@ class UsdImportServiceImpl(IUsdImportService):
 
             # Step 4: Reconstruct rig connections for functional controllers - INDUSTRY FIRST!
             if options.import_nurbs_curves and options.import_rig_connections and result.imported_curves:
-                self.logger.info("🎯 Reconstructing rig connections for functional controllers...")
+                self.logger.info("[TARGET] Reconstructing rig connections for functional controllers...")
                 connections_restored = self._reconstruct_rig_connections(usd_path, namespace, options, result)
-                self.logger.info(f"✨ Restored {connections_restored} rig connections - controllers are now functional!")
+                self.logger.info(f"[NEW] Restored {connections_restored} rig connections - controllers are now functional!")
 
             # Mark as successful
             result.success = True
@@ -404,7 +404,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 current_renderer = cmds.getAttr("defaultRenderGlobals.currentRenderer")
                 if current_renderer and "renderman" in current_renderer.lower():
                     use_renderman = True
-                    self.logger.info("🎨 RenderMan is active renderer")
+                    self.logger.info("[LOOKDEV] RenderMan is active renderer")
             except Exception:
                 pass
 
@@ -429,7 +429,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 if use_renderman:
                     # For RenderMan: try multiple approaches
                     import_args['shadingMode'] = [['pxrRis', 'default']]
-                    self.logger.info("🎨 Using pxrRis shading mode for RenderMan materials")
+                    self.logger.info("[LOOKDEV] Using pxrRis shading mode for RenderMan materials")
                 else:
                     import_args['shadingMode'] = [['useRegistry', 'UsdPreviewSurface']]
                     self.logger.info("Using useRegistry shading mode for standard materials")
@@ -591,12 +591,12 @@ class UsdImportServiceImpl(IUsdImportService):
 
             if renderman_materials:
                 self.logger.info(
-                    f"✅ RenderMan materials found: {len(set(renderman_materials))} "
+                    f"[OK] RenderMan materials found: {len(set(renderman_materials))} "
                     f"(e.g., {renderman_materials[0]})"
                 )
             elif standard_materials:
                 self.logger.warning(
-                    f"⚠️ Standard materials found instead of RenderMan: {len(set(standard_materials))}"
+                    f"[WARNING] Standard materials found instead of RenderMan: {len(set(standard_materials))}"
                 )
                 self.logger.info("   Tip: Set RenderMan as active renderer before import for full material support")
             else:
@@ -887,7 +887,7 @@ class UsdImportServiceImpl(IUsdImportService):
             return
 
         try:
-            self.logger.info("🔧 Positioning joints in bind pose from USD...")
+            self.logger.info("[TOOL] Positioning joints in bind pose from USD...")
 
             # Open USD stage
             stage = Usd.Stage.Open(str(usd_path))
@@ -953,7 +953,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 except Exception as skel_error:
                     self.logger.warning(f"Failed to position joints for skeleton {skel_path}: {skel_error}")
 
-            self.logger.info(f"✅ Positioned {joints_positioned} joints in bind pose")
+            self.logger.info(f"[OK] Positioned {joints_positioned} joints in bind pose")
 
         except Exception as e:
             self.logger.error(f"Failed to position joints in bind pose: {e}")

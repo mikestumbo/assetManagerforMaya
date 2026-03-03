@@ -176,7 +176,7 @@ class USDExportServiceImpl(IUSDExportService):
             # Phase 0: Pre-export cleanup (blendshapes, duplicates) - NEW!
             self._update_progress(0.0, "Cleaning up blendshapes and duplicates...")
             cleanup_count = self._pre_export_cleanup()
-            self.logger.info(f"✨ Pre-export cleanup: {cleanup_count} objects hidden")
+            self.logger.info(f"[NEW] Pre-export cleanup: {cleanup_count} objects hidden")
 
             # Phase 1: Parse Maya scene (20%)
             self._update_progress(0.0, f"Parsing {source_desc}...")
@@ -210,11 +210,11 @@ class USDExportServiceImpl(IUSDExportService):
 
             # Phase 3: Export geometry (30%)
             self.logger.info(
-                f"🔥 Checking geometry export: export_meshes={options.export_meshes}, "
+                f"[DEBUG] Checking geometry export: export_meshes={options.export_meshes}, "
                 f"mesh_count={len(scene_data.meshes)}"
             )
             if options.export_meshes:
-                self.logger.info(f"🔥 Starting geometry export for {len(scene_data.meshes)} meshes")
+                self.logger.info(f"[DEBUG] Starting geometry export for {len(scene_data.meshes)} meshes")
                 self._update_progress(0.3, "Exporting geometry...")
                 if not self._export_geometry(stage, scene_data, options):
                     self._last_error = "Failed to export geometry"
@@ -222,7 +222,7 @@ class USDExportServiceImpl(IUSDExportService):
                 if self._check_cancel():
                     return False
             else:
-                self.logger.warning("🔥 GEOMETRY EXPORT SKIPPED - export_meshes is FALSE!")
+                self.logger.warning("[DEBUG] GEOMETRY EXPORT SKIPPED - export_meshes is FALSE!")
 
             self._update_progress(0.6, f"Exported {len(scene_data.meshes)} meshes")
 
@@ -239,21 +239,21 @@ class USDExportServiceImpl(IUSDExportService):
 
             # Phase 5: Export NURBS curves (rig controls) - INDUSTRY FIRST! (5%)
             self.logger.info(
-                f"🎯 NURBS EXPORT CHECK: options.export_nurbs_curves={options.export_nurbs_curves}, "
+                f"[TARGET] NURBS EXPORT CHECK: options.export_nurbs_curves={options.export_nurbs_curves}, "
                 f"scene_data.nurbs_curves count={len(scene_data.nurbs_curves)}"
             )
             if options.export_nurbs_curves and scene_data.nurbs_curves:
-                self.logger.info(f"🎯 STARTING NURBS EXPORT: {len(scene_data.nurbs_curves)} curves found")
+                self.logger.info(f"[TARGET] STARTING NURBS EXPORT: {len(scene_data.nurbs_curves)} curves found")
                 self._update_progress(0.8, "Exporting NURBS curves (rig controls)...")
                 if not self._export_nurbs_curves(stage, scene_data, options):
                     self._last_error = "Failed to export NURBS curves"
                     return False
                 if self._check_cancel():
                     return False
-                self.logger.info(f"✨ Exported {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
+                self.logger.info(f"[NEW] Exported {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
             else:
                 self.logger.warning(
-                    f"🎯 NURBS EXPORT SKIPPED: export_nurbs_curves="
+                    f"[TARGET] NURBS EXPORT SKIPPED: export_nurbs_curves="
                     f"{options.export_nurbs_curves}, curves found={len(scene_data.nurbs_curves)}"
                 )
 
@@ -274,7 +274,7 @@ class USDExportServiceImpl(IUSDExportService):
                 if self._check_cancel():
                     return False
                 self.logger.info(
-                    f"✨ Exported rig connections: {len(scene_data.rig_connections)} "
+                    f"[NEW] Exported rig connections: {len(scene_data.rig_connections)} "
                     f"connections, {len(scene_data.constraints)} constraints, "
                     f"{len(scene_data.set_driven_keys)} SDKs"
                 )
@@ -287,7 +287,7 @@ class USDExportServiceImpl(IUSDExportService):
             if options.export_skeleton and self.rig_converter:
                 if options.viewport_friendly_skeleton:
                     self.logger.info(
-                        "⚡ Viewport-friendly mode: Skipping skin weight export "
+                        "[HYBRID] Viewport-friendly mode: Skipping skin weight export "
                         "(skeleton hierarchy only)"
                     )
                 else:
@@ -337,17 +337,18 @@ class USDExportServiceImpl(IUSDExportService):
             scripts_dir = os.path.join(plugin_dir, "scripts")
             script_path = os.path.join(scripts_dir, "HIDE_BLENDSHAPE_TARGETS.py")
 
-            self.logger.info(f"🔧 PRE-EXPORT CLEANUP: plugin_dir = {plugin_dir}")
-            self.logger.info(f"🔧 PRE-EXPORT CLEANUP: scripts_dir = {scripts_dir}")
-            self.logger.info(f"🔧 PRE-EXPORT CLEANUP: script_path = {script_path}")
-            self.logger.info(f"🔧 PRE-EXPORT CLEANUP: script_path exists = {os.path.exists(script_path)}")
+            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: plugin_dir = {plugin_dir}")
+            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: scripts_dir = {scripts_dir}")
+            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path = {script_path}")
+            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path exists = {os.path.exists(script_path)}")
             is_file = os.path.isfile(script_path) if os.path.exists(script_path) else 'N/A'
-            self.logger.info(f"🔧 PRE-EXPORT CLEANUP: script_path is_file = {is_file}")
+            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path is_file = {is_file}")
 
             # Check if we're in development (workspace) vs installed
             # If the script doesn't exist at the calculated path, try to find workspace
             if not os.path.exists(script_path):
-                self.logger.info(f"🔧 PRE-EXPORT CLEANUP: Script not found at {script_path}, looking for workspace...")
+                msg = f"PRE-EXPORT CLEANUP: Script not found at {script_path}, looking for workspace..."
+                self.logger.info(f"[TOOL] {msg}")
                 # Look for workspace by checking parent directories for the script
                 current_dir = plugin_dir
                 for i in range(5):  # Check up to 5 levels up
@@ -357,17 +358,17 @@ class USDExportServiceImpl(IUSDExportService):
                     )
                     exists = os.path.exists(workspace_script)
                     self.logger.info(
-                        f"🔧 PRE-EXPORT CLEANUP: Checking level {i+1}: "
+                        f"[TOOL] PRE-EXPORT CLEANUP: Checking level {i+1}: "
                         f"{workspace_script} (exists: {exists})"
                     )
                     if os.path.exists(workspace_script):
                         scripts_dir = os.path.join(current_dir, "scripts")
                         script_path = workspace_script
-                        self.logger.info(f"🔧 PRE-EXPORT CLEANUP: Found workspace script at {script_path}")
+                        self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: Found workspace script at {script_path}")
                         break
                 else:
                     self.logger.warning(
-                        f"🔧 PRE-EXPORT CLEANUP: Could not find "
+                        f"[TOOL] PRE-EXPORT CLEANUP: Could not find "
                         f"HIDE_BLENDSHAPE_TARGETS.py, tried 5 levels up from {plugin_dir}"
                     )
                     return 0
@@ -377,7 +378,7 @@ class USDExportServiceImpl(IUSDExportService):
                 sys.path.insert(0, scripts_dir)
 
             try:
-                self.logger.info(f"🔧 PRE-EXPORT CLEANUP: Loading script from {scripts_dir}")
+                self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: Loading script from {scripts_dir}")
 
                 # Execute the cleanup script directly (avoids import issues with paths containing spaces)
                 with open(script_path, 'r') as f:
@@ -387,26 +388,26 @@ class USDExportServiceImpl(IUSDExportService):
                 cleanup_namespace = {}
                 exec(script_code, cleanup_namespace)
 
-                self.logger.info("🔧 PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS")
+                self.logger.info("[TOOL] PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS")
 
                 # Run cleanup for export
-                self.logger.info("🔧 PRE-EXPORT CLEANUP: Calling cleanup_blendshapes_for_export()")
+                self.logger.info("[TOOL] PRE-EXPORT CLEANUP: Calling cleanup_blendshapes_for_export()")
                 bs_count, dup_count = cleanup_namespace['cleanup_blendshapes_for_export']()
                 self.logger.info(
-                    f"🔧 PRE-EXPORT CLEANUP: cleanup_blendshapes_for_export() "
+                    f"[TOOL] PRE-EXPORT CLEANUP: cleanup_blendshapes_for_export() "
                     f"returned bs_count={bs_count}, dup_count={dup_count}"
                 )
 
                 total_hidden = bs_count + dup_count
                 self.logger.info(
-                    f"✅ Pre-export cleanup complete: {bs_count} blendshapes, "
+                    f"[OK] Pre-export cleanup complete: {bs_count} blendshapes, "
                     f"{dup_count} duplicates hidden (total: {total_hidden})"
                 )
 
                 return total_hidden
 
             except Exception as e:
-                self.logger.error(f"❌ Could not load blendshape cleanup script: {e}")
+                self.logger.error(f"[ERROR] Could not load blendshape cleanup script: {e}")
                 return 0
             finally:
                 # Clean up path
@@ -414,7 +415,7 @@ class USDExportServiceImpl(IUSDExportService):
                     sys.path.remove(scripts_dir)
 
         except Exception as e:
-            self.logger.error(f"❌ Error during pre-export cleanup: {e}")
+            self.logger.error(f"[ERROR] Error during pre-export cleanup: {e}")
             return 0
 
     def export_selected_objects(
@@ -716,15 +717,15 @@ class USDExportServiceImpl(IUSDExportService):
             True if successful
         """
         # CRITICAL DEBUG: Entry point
-        self.logger.info(f"🔥 _export_geometry CALLED with {len(scene_data.meshes)} meshes")
-        self.logger.info(f"🔥 export_meshes option: {options.export_meshes}")
+        self.logger.info(f"[DEBUG] _export_geometry CALLED with {len(scene_data.meshes)} meshes")
+        self.logger.info(f"[DEBUG] export_meshes option: {options.export_meshes}")
 
         try:
-            self.logger.info(f"🔥 Starting mesh loop for {len(scene_data.meshes)} meshes")
+            self.logger.info(f"[DEBUG] Starting mesh loop for {len(scene_data.meshes)} meshes")
             mesh_count = 0
             for mesh_data in scene_data.meshes:
                 mesh_count += 1
-                self.logger.debug(f"🔥 Processing mesh {mesh_count}/{len(scene_data.meshes)}: {mesh_data.name}")
+                self.logger.debug(f"[DEBUG] Processing mesh {mesh_count}/{len(scene_data.meshes)}: {mesh_data.name}")
                 if self._check_cancel():
                     return False
 
@@ -826,16 +827,16 @@ class USDExportServiceImpl(IUSDExportService):
                 mesh_names = [child.GetName() for child in mesh_children]
                 suffix = '...' if len(mesh_names) > 10 else ''
                 self.logger.info(
-                    f"🔥 Created {len(mesh_names)} mesh prims: {mesh_names[:10]}{suffix}"
+                    f"[DEBUG] Created {len(mesh_names)} mesh prims: {mesh_names[:10]}{suffix}"
                 )
             else:
-                self.logger.error("🔥 /root/meshes prim is NOT VALID after mesh export!")
+                self.logger.error("[DEBUG] /root/meshes prim is NOT VALID after mesh export!")
 
-            self.logger.info(f"🔥 _export_geometry RETURNING TRUE - processed {mesh_count} meshes")
+            self.logger.info(f"[DEBUG] _export_geometry RETURNING TRUE - processed {mesh_count} meshes")
             return True
 
         except Exception as e:
-            self.logger.error(f"🔥 EXCEPTION in _export_geometry: {e}", exc_info=True)
+            self.logger.error(f"[DEBUG] EXCEPTION in _export_geometry: {e}", exc_info=True)
             return False
 
     def _export_materials(
@@ -883,11 +884,11 @@ class USDExportServiceImpl(IUSDExportService):
                     )
                     if usd_material:
                         self.logger.info(
-                            f"✅ Exported RenderMan material: {material_name}"
+                            f"[OK] Exported RenderMan material: {material_name}"
                         )
                     else:
                         self.logger.warning(
-                            f"⚠️ Failed to export RenderMan material: {material_name}"
+                            f"[WARNING] Failed to export RenderMan material: {material_name}"
                         )
                 else:
                     # Convert standard material to Preview Surface
@@ -974,7 +975,7 @@ class USDExportServiceImpl(IUSDExportService):
             return True
 
         try:
-            self.logger.info(f"✨ Exporting {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
+            self.logger.info(f"[NEW] Exporting {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
 
             # Create a scope for curves (fallback for non-skeleton curves)
             UsdGeom.Scope.Define(stage, "/root/curves")
@@ -1101,7 +1102,7 @@ class USDExportServiceImpl(IUSDExportService):
 
                 self.logger.debug(f"Exported NURBS curve: {curve_name} ({len(curve_data.control_vertices)} CVs)")
 
-            self.logger.info(f"✅ Successfully exported {len(scene_data.nurbs_curves)} NURBS curves")
+            self.logger.info(f"[OK] Successfully exported {len(scene_data.nurbs_curves)} NURBS curves")
             return True
 
         except Exception as e:
@@ -1281,7 +1282,7 @@ class USDExportServiceImpl(IUSDExportService):
                 len(scene_data.constraints) +
                 len(scene_data.set_driven_keys)
             )
-            self.logger.info(f"✅ Successfully exported {total_connections} rig connections")
+            self.logger.info(f"[OK] Successfully exported {total_connections} rig connections")
             return True
 
         except Exception as e:

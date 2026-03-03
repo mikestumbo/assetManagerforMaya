@@ -53,12 +53,12 @@ class UsdViewBridge:
             )
             if result.returncode == 0:
                 self.usdcat_path = "usdcat"
-                self.logger.info("✅ USD command-line tools detected")
+                self.logger.info("[OK] USD command-line tools detected")
                 return True
         except Exception:
             pass
 
-        self.logger.warning("⚠️ USD command-line tools not detected")
+        self.logger.warning("[WARNING] USD command-line tools not detected")
         return False
 
     def is_available(self) -> bool:
@@ -124,7 +124,7 @@ class UsdViewBridge:
             )
 
             if result.returncode == 0 and output_path.exists():
-                self.logger.info(f"✅ Format conversion successful: {output_path}")
+                self.logger.info(f"[OK] Format conversion successful: {output_path}")
                 return output_path
             else:
                 self.logger.error(f"Format conversion failed: {result.stderr}")

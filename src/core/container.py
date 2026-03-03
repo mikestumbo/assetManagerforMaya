@@ -33,14 +33,14 @@ class EMSAContainer:
             self._configure_essential_services()
 
         except ImportError as e:
-            print(f"⚠️ Could not register some EMSA services: {e}")
+            print(f"[WARNING] Could not register some EMSA services: {e}")
             # Register minimal services for fallback
             try:
                 from .services.plugin_service import PluginService
                 from .interfaces.iplugin_service import IPluginService
                 self.register_singleton(IPluginService, PluginService)
             except ImportError:
-                print("⚠️ Could not register plugin service")
+                print("[WARNING] Could not register plugin service")
 
     def _configure_essential_services(self) -> None:
         # Configure essential services using the robust factory.
@@ -78,41 +78,41 @@ class EMSAContainer:
                     renderman_service = get_renderman_service()
                     self.register_instance(type(renderman_service), renderman_service)
                     if renderman_service.is_renderman_available():
-                        print("✅ RenderMan service registered and available")
+                        print("[OK] RenderMan service registered and available")
                     else:
-                        print("ℹ️ RenderMan service registered (RenderMan not detected)")
+                        print("[INFO] RenderMan service registered (RenderMan not detected)")
                 except Exception as rm_error:
-                    print(f"⚠️ RenderMan service registration failed: {rm_error}")
+                    print(f"[WARNING] RenderMan service registration failed: {rm_error}")
 
                 # Register USD service (always available, checks internally)
                 try:
                     usd_service = get_usd_service()
                     self.register_instance(type(usd_service), usd_service)
                     if usd_service.is_usd_available():
-                        print("✅ USD service registered and available")
+                        print("[OK] USD service registered and available")
                     else:
-                        print("ℹ️ USD service registered (USD not detected)")
+                        print("[INFO] USD service registered (USD not detected)")
                 except Exception as usd_error:
-                    print(f"⚠️ USD service registration failed: {usd_error}")
+                    print(f"[WARNING] USD service registration failed: {usd_error}")
 
                 # Register ngSkinTools2 service (always available, checks internally)
                 try:
                     ngskintools_service = get_ngskintools_service()
                     self.register_instance(type(ngskintools_service), ngskintools_service)
                     if ngskintools_service.is_available():
-                        print("✅ ngSkinTools2 service registered and available")
+                        print("[OK] ngSkinTools2 service registered and available")
                     else:
-                        print("ℹ️ ngSkinTools2 service registered (ngSkinTools2 not detected)")
+                        print("[INFO] ngSkinTools2 service registered (ngSkinTools2 not detected)")
                 except Exception as ngst_error:
-                    print(f"⚠️ ngSkinTools2 service registration failed: {ngst_error}")
+                    print(f"[WARNING] ngSkinTools2 service registration failed: {ngst_error}")
 
-                print("✅ Essential EMSA services registered")
+                print("[OK] Essential EMSA services registered")
 
             except ImportError:
                 # Direct registration as fallback
                 from .repositories.file_asset_repository import FileAssetRepository
                 self.register_singleton(IAssetRepository, FileAssetRepository)
-                print("✅ Core services registered (direct)")
+                print("[OK] Core services registered (direct)")
 
             # Register Library Service AFTER repository is registered (always runs)
             # This is outside the try-except to ensure it always executes
@@ -122,14 +122,14 @@ class EMSAContainer:
                 repo = self.resolve(IAssetRepository)
                 library_service = LibraryServiceImpl(repo)
                 self.register_instance(ILibraryService, library_service)
-                print("✅ Library service registered")
+                print("[OK] Library service registered")
             except Exception as lib_error:
-                print(f"⚠️ Library service registration failed: {lib_error}")
+                print(f"[WARNING] Library service registration failed: {lib_error}")
                 import traceback
                 traceback.print_exc()
 
         except Exception as e:
-            print(f"⚠️ Could not configure essential services: {e}")
+            print(f"[WARNING] Could not configure essential services: {e}")
 
     def register(self, interface: Type[T], implementation: Type[T]) -> None:
         # Register a service implementation for an interface.
@@ -301,7 +301,7 @@ def configure_services() -> ServiceContainer:
         from .service_factory import get_service_factory
         factory = get_service_factory()
 
-        print("🔧 Configuring services...")
+        print("[TOOL] Configuring services...")
 
         # Get all available services (skip validation to improve startup time)
         services = factory.get_all_services()
@@ -309,25 +309,25 @@ def configure_services() -> ServiceContainer:
         # Register available services as instances using actual interface classes
         if 'thumbnail_service' in services:
             container.register_instance(IThumbnailService, services['thumbnail_service'])
-            print("✅ Registered thumbnail service")
+            print("[OK] Registered thumbnail service")
         else:
-            print("⚠️ Creating fallback thumbnail service")
+            print("[WARNING] Creating fallback thumbnail service")
             fallback_service = _create_fallback_thumbnail_service()
             container.register_instance(IThumbnailService, fallback_service)
 
         if 'asset_repository' in services:
             container.register_instance(IAssetRepository, services['asset_repository'])
-            print("✅ Registered asset repository")
+            print("[OK] Registered asset repository")
 
         if 'event_publisher' in services:
             container.register_instance(IEventPublisher, services['event_publisher'])
-            print("✅ Registered event publisher")
+            print("[OK] Registered event publisher")
         else:
             # Ensure event publisher is always available - create fallback
-            print("⚠️ Event publisher not available from factory - creating fallback")
+            print("[WARNING] Event publisher not available from factory - creating fallback")
             fallback_event_publisher = _create_fallback_event_publisher()
             container.register_instance(IEventPublisher, fallback_event_publisher)
-            print("✅ Registered fallback event publisher")
+            print("[OK] Registered fallback event publisher")
 
         # Register Library Service (depends on asset repository)
         try:
@@ -336,18 +336,18 @@ def configure_services() -> ServiceContainer:
             repo = container.resolve(IAssetRepository)
             library_service = LibraryServiceImpl(repo)
             container.register_instance(ILibraryService, library_service)
-            print("✅ Registered library service")
+            print("[OK] Registered library service")
         except Exception as lib_error:
-            print(f"⚠️ Failed to register library service: {lib_error}")
+            print(f"[WARNING] Failed to register library service: {lib_error}")
             import traceback
             traceback.print_exc()
 
-        print(f"🎯 Successfully configured {len(services)} services")
+        print(f"[TARGET] Successfully configured {len(services)} services")
         return container
 
     except Exception as e:
-        print(f"❌ Error configuring services: {e}")
-        print("🔄 Creating minimal fallback container...")
+        print(f"[ERROR] Error configuring services: {e}")
+        print("[REFRESH] Creating minimal fallback container...")
 
         # Create minimal working container
         return _configure_fallback_services(container)
@@ -378,15 +378,15 @@ def _configure_fallback_services(container: ServiceContainer) -> ServiceContaine
             from ..services.library_service_impl import LibraryServiceImpl
             library_service = LibraryServiceImpl(asset_repository)
             container.register_instance(ILibraryService, library_service)
-            print("✅ Fallback library service configured")
+            print("[OK] Fallback library service configured")
         except Exception as lib_error:
-            print(f"⚠️ Failed to configure fallback library service: {lib_error}")
+            print(f"[WARNING] Failed to configure fallback library service: {lib_error}")
 
-        print("✅ Fallback services configured")
+        print("[OK] Fallback services configured")
         return container
 
     except Exception as e:
-        print(f"❌ Failed to configure fallback services: {e}")
+        print(f"[ERROR] Failed to configure fallback services: {e}")
         return container
 
 
@@ -394,7 +394,7 @@ def _create_fallback_thumbnail_service():
     # Create minimal fallback thumbnail service
     class FallbackThumbnailService:
         def generate_thumbnail(self, file_path, size=(64, 64)):
-            print(f"📁 Fallback: No thumbnail for {file_path}")
+            print(f"[FALLBACK] Fallback: No thumbnail for {file_path}")
             return None
 
         def get_cached_thumbnail(self, file_path, size=(64, 64)):
@@ -527,7 +527,7 @@ def _create_fallback_event_publisher():
                     try:
                         callback(event_data)
                     except Exception as e:
-                        print(f"⚠️ Fallback event subscriber error: {e}")
+                        print(f"[WARNING] Fallback event subscriber error: {e}")
 
         def subscribe(self, event_type, callback):
             # Subscribe to event - enhanced implementation

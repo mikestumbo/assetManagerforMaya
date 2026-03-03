@@ -87,7 +87,10 @@ class ColorCodingManagerDialog(QDialog):
         main_layout.addWidget(title_label)
 
         # Description
-        desc_label = QLabel("Assign colors to different asset types for better visual organization in the asset library.")
+        desc_label = QLabel(
+            "Assign colors to different asset types for better visual "
+            "organization in the asset library."
+        )
         desc_label.setWordWrap(True)
         desc_label.setProperty("description", True)  # Use theme styling
         main_layout.addWidget(desc_label)
@@ -217,7 +220,11 @@ class ColorCodingManagerDialog(QDialog):
 
             self._colors_list.addItem(item)
 
-    def _on_scheme_changed(self, current_item: Optional[QListWidgetItem], previous_item: Optional[QListWidgetItem]) -> None:
+    def _on_scheme_changed(
+        self,
+        current_item: Optional[QListWidgetItem],
+        previous_item: Optional[QListWidgetItem],
+    ) -> None:
         """Handle color scheme selection change - Single Responsibility"""
         if current_item:
             self._current_scheme = current_item.text()

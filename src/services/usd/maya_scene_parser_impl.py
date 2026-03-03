@@ -434,7 +434,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                         filtered_shapes.append(shape)
 
                 all_curve_shapes = filtered_shapes
-                self.logger.info(f"🎯 Filtered to {len(all_curve_shapes)} NURBS curves for extraction")
+                self.logger.info(f"[TARGET] Filtered to {len(all_curve_shapes)} NURBS curves for extraction")
             else:
                 # Get shape nodes for specified transforms
                 all_curve_shapes = []
@@ -445,7 +445,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             self.logger.info(f"Found {len(all_curve_shapes)} NURBS curves to extract")
 
             if not all_curve_shapes:
-                self.logger.warning("⚠️  No NURBS curves found in scene!")
+                self.logger.warning("[WARNING]  No NURBS curves found in scene!")
                 return []
 
             curves = []

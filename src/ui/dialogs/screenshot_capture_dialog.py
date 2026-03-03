@@ -24,7 +24,7 @@ try:
     from PySide6.QtCore import Qt
     PYSIDE_AVAILABLE = True
 except ImportError:
-    print("❌ PySide6 not available - Screenshot dialog disabled")
+    print("[ERROR] PySide6 not available - Screenshot dialog disabled")
     PYSIDE_AVAILABLE = False
     # Fallback definitions
     QDialog = QVBoxLayout = QHBoxLayout = QLabel = QComboBox = None
@@ -99,11 +99,11 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 if icon_path:
                     from PySide6.QtGui import QIcon
                     self.setWindowIcon(QIcon(icon_path))
-                    print(f"✅ Set custom screenshot dialog icon: {icon_path}")
+                    print(f"[OK] Set custom screenshot dialog icon: {icon_path}")
                 else:
-                    print("⚠️ Screenshot icon not found, using default")
+                    print("[WARNING] Screenshot icon not found, using default")
             except Exception as e:
-                print(f"⚠️ Could not set custom screenshot dialog icon: {e}")
+                print(f"[WARNING] Could not set custom screenshot dialog icon: {e}")
 
             # Center on parent
             if self.parent():
@@ -137,12 +137,15 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             """Create instructions section - Single Responsibility"""
             asset_name = Path(self._asset.file_path).name if self._asset.file_path else "Unknown Asset"
 
-            info_label = QLabel(f"📋 Capture Screenshot Instructions:\n\n"  # type: ignore
-                               f"🎯 Asset: {asset_name}\n"
-                               f"1. Position your asset in Maya's viewport\n"
-                               f"2. Choose resolution and quality settings\n"
-                               f"3. Click 'Capture Screenshot' to save as thumbnail\n"
-                               f"4. The new thumbnail will replace the current preview")
+            info_text = (
+                f"[SELECT] Capture Screenshot Instructions:\n\n"
+                f"[TARGET] Asset: {asset_name}\n"
+                f"1. Position your asset in Maya's viewport\n"
+                f"2. Choose resolution and quality settings\n"
+                f"3. Click 'Capture Screenshot' to save as thumbnail\n"
+                f"4. The new thumbnail will replace the current preview"
+            )
+            info_label = QLabel(info_text)  # type: ignore
 
             info_label.setWordWrap(True)  # type: ignore
             info_label.setStyleSheet("""
@@ -162,7 +165,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             """Create resolution options section - Single Responsibility"""
             res_group = QWidget()  # type: ignore
             res_layout = QVBoxLayout(res_group)  # type: ignore
-            res_layout.addWidget(QLabel("🖼️ Screenshot Resolution:"))  # type: ignore
+            res_layout.addWidget(QLabel("[THUMB] Screenshot Resolution:"))  # type: ignore
 
             self._res_combo = QComboBox()  # type: ignore
             resolution_options = [
@@ -193,7 +196,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             """Create quality options section - Single Responsibility"""
             quality_group = QWidget()  # type: ignore
             quality_layout = QVBoxLayout(quality_group)  # type: ignore
-            quality_layout.addWidget(QLabel("✨ Image Quality:"))  # type: ignore
+            quality_layout.addWidget(QLabel("[NEW] Image Quality:"))  # type: ignore
 
             self._quality_combo = QComboBox()  # type: ignore
             self._quality_combo.addItem("High Quality (PNG)", "png")  # type: ignore
@@ -216,7 +219,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             """Create viewport settings section - Single Responsibility"""
             viewport_group = QWidget()  # type: ignore
             viewport_layout = QVBoxLayout(viewport_group)  # type: ignore
-            viewport_layout.addWidget(QLabel("🔧 Viewport Settings:"))  # type: ignore
+            viewport_layout.addWidget(QLabel("[TOOL] Viewport Settings:"))  # type: ignore
 
             # Viewport options with professional defaults
             self._smooth_shading = QCheckBox("Smooth Shading")  # type: ignore
@@ -278,7 +281,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             preview_btn.clicked.connect(self._apply_viewport_settings)  # type: ignore
 
             # Capture screenshot button (primary action)
-            capture_btn = QPushButton("📸 Capture Screenshot")  # type: ignore
+            capture_btn = QPushButton("[CAMERA] Capture Screenshot")  # type: ignore
             capture_btn.setToolTip("Capture high-resolution screenshot and save as asset thumbnail")  # type: ignore
             capture_btn.setStyleSheet("""
                 QPushButton {
@@ -347,19 +350,23 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                     cmds.modelEditor(active_panel, edit=True, displayAppearance='wireframe')
 
                 if self._wireframe_on_shaded:  # type: ignore
-                    cmds.modelEditor(active_panel, edit=True,
-                                   wireframeOnShaded=self._wireframe_on_shaded.isChecked())  # type: ignore
+                    cmds.modelEditor(
+                        active_panel, edit=True,
+                        wireframeOnShaded=self._wireframe_on_shaded.isChecked()
+                    )  # type: ignore
 
                 if self._show_grid:  # type: ignore
-                    cmds.modelEditor(active_panel, edit=True,
-                                   grid=self._show_grid.isChecked())  # type: ignore
+                    cmds.modelEditor(
+                        active_panel, edit=True,
+                        grid=self._show_grid.isChecked()
+                    )  # type: ignore
 
-                print("✅ Viewport settings applied for screenshot preview")
+                print("[OK] Viewport settings applied for screenshot preview")
 
             except Exception as e:
                 print(f"Error applying viewport settings: {e}")
-                QMessageBox.warning(self, "Settings Error",   # type: ignore
-                                  f"Failed to apply viewport settings:\n{str(e)}")
+                error_msg = f"Failed to apply viewport settings:\n{str(e)}"
+                QMessageBox.warning(self, "Settings Error", error_msg)  # type: ignore
 
         def _capture_screenshot(self) -> None:
             """Capture screenshot using Maya playblast - Main Action"""
@@ -392,7 +399,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 temp_path = os.path.join(temp_dir, temp_filename)
 
                 # Capture screenshot with Maya playblast
-                print(f"📸 Capturing screenshot: {resolution}x{resolution} {file_format.upper()}")
+                print(f"[CAMERA] Capturing screenshot: {resolution}x{resolution} {file_format.upper()}")
 
                 _ = cmds.playblast(
                     filename=temp_path,
@@ -423,12 +430,14 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
                 # Success feedback
-                QMessageBox.information(self, "Screenshot Captured! 📸",   # type: ignore
-                                      f"High-resolution screenshot saved successfully!\n\n"
-                                      f"Resolution: {resolution}×{resolution}\n"
-                                      f"Format: {file_format.upper()}\n"
-                                      f"Asset: {Path(self._asset.file_path).name}\n\n"
-                                      f"The asset thumbnail has been updated automatically.")
+                success_msg = (
+                    f"High-resolution screenshot saved successfully!\n\n"
+                    f"Resolution: {resolution}×{resolution}\n"
+                    f"Format: {file_format.upper()}\n"
+                    f"Asset: {Path(self._asset.file_path).name}\n\n"
+                    f"The asset thumbnail has been updated automatically."
+                )
+                QMessageBox.information(self, "Screenshot Captured! [CAMERA]", success_msg)  # type: ignore
 
                 # Trigger refresh callback
                 if self._callback_refresh:
@@ -437,12 +446,12 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 # Close dialog
                 self.accept()  # type: ignore
 
-                print(f"✅ Screenshot captured successfully: {resolution}x{resolution} {file_format.upper()}")
+                print(f"[OK] Screenshot captured successfully: {resolution}x{resolution} {file_format.upper()}")
 
             except Exception as e:
-                print(f"❌ Screenshot capture error: {e}")
-                QMessageBox.warning(self, "Capture Failed",   # type: ignore
-                                  f"Failed to capture screenshot:\n{str(e)}")
+                print(f"[ERROR] Screenshot capture error: {e}")
+                error_msg = f"Failed to capture screenshot:\n{str(e)}"
+                QMessageBox.warning(self, "Capture Failed", error_msg)  # type: ignore
 
         def _save_screenshot_as_thumbnail(self, temp_path: str, file_format: str, resolution: int) -> None:
             """Save screenshot as asset thumbnail using EMSA service - Single Responsibility"""
@@ -467,17 +476,17 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                     try:
                         asset_path = Path(self._asset.file_path)
                         self._thumbnail_service.clear_cache_for_file(asset_path)  # type: ignore
-                        print(f"✅ EMSA thumbnail cache cleared for {asset_name}")
+                        print(f"[OK] EMSA thumbnail cache cleared for {asset_name}")
                     except AttributeError:
                         # Fallback: Assume cache will be invalidated automatically
-                        print("✅ Screenshot saved, cache will update automatically")
+                        print("[OK] Screenshot saved, cache will update automatically")
                     except Exception as cache_error:
                         print(f"Note: Cache clearing error: {cache_error}")
 
-                print(f"✅ Thumbnail saved: {thumbnail_path}")
+                print(f"[OK] Thumbnail saved: {thumbnail_path}")
 
             except Exception as e:
-                print(f"❌ Error saving thumbnail: {e}")
+                print(f"[ERROR] Error saving thumbnail: {e}")
                 raise Exception(f"Failed to save thumbnail: {str(e)}")
 
         def _get_screenshot_icon_path(self) -> Optional[str]:
@@ -523,7 +532,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 return None
 
             except Exception as e:
-                print(f"🔧 Could not resolve screenshot icon path: {e}")
+                print(f"[TOOL] Could not resolve screenshot icon path: {e}")
                 return None
 
 else:

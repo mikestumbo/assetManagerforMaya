@@ -395,7 +395,7 @@ class CollectionsDisplayWidget(QWidget):
 
         if not asset_names:
             # Add placeholder item
-            placeholder_item = QListWidgetItem("📦 No assets in this collection")
+            placeholder_item = QListWidgetItem("[PACKAGE] No assets in this collection")
             placeholder_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             placeholder_item.setFlags(Qt.ItemFlag.NoItemFlags)  # Not selectable
             self.asset_list.addItem(placeholder_item)
@@ -450,7 +450,7 @@ class CollectionsDisplayWidget(QWidget):
         self.asset_count_label.setText("0 assets")
 
         self.asset_list.clear()
-        placeholder_item = QListWidgetItem("📋 Select a collection from the dropdown above")
+        placeholder_item = QListWidgetItem("[SELECT] Select a collection from the dropdown above")
         placeholder_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         placeholder_item.setFlags(Qt.ItemFlag.NoItemFlags)
         self.asset_list.addItem(placeholder_item)

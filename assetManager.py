@@ -351,7 +351,7 @@ def show_asset_manager():
     original_path = sys.path[:]
 
     try:
-        print("🎨 Launching Asset Manager v1.5.0...")
+        print("[LAUNCH] Launching Asset Manager v1.5.0...")
 
         # Get current plugin directory using existing robust method
         plugin_dir = _get_current_plugin_directory()

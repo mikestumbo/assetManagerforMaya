@@ -353,7 +353,7 @@ class StandaloneAssetRepository(IAssetRepository):
             True if successful
         """
         try:
-            print(f"📦 Repository: Attempting to remove asset: {asset.name}")
+            print(f"[PACKAGE] Repository: Attempting to remove asset: {asset.name}")
             print(f"   Asset ID: {asset.id}")
             print(f"   Asset file_path: {asset.file_path}")
             print(f"   Current favorites count: {len(self._favorites)}")
@@ -381,7 +381,7 @@ class StandaloneAssetRepository(IAssetRepository):
             return True
 
         except Exception as e:
-            print(f"❌ Repository: Failed to remove asset {asset.name}: {e}")
+            print(f"[ERROR] Repository: Failed to remove asset {asset.name}: {e}")
             self.logger.error(f"Failed to remove asset {asset.name}: {e}")
             return False
 
@@ -663,7 +663,7 @@ class StandaloneAssetRepository(IAssetRepository):
 
                 poly_count = metadata['poly_count']
                 mat_count = metadata['material_count']
-                self.logger.info(f"✅ Metadata: {poly_count} polys, {mat_count} materials")
+                self.logger.info(f"[OK] Metadata: {poly_count} polys, {mat_count} materials")
 
             finally:
                 # CRITICAL: Clean up the imported namespace
@@ -720,7 +720,7 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # PHASE 6: AGGRESSIVE FINAL CLEANUP - Force remove everything from Outliner
             try:
-                self.logger.info(f"🔥 Phase 6: Aggressive final cleanup for: {namespace}")
+                self.logger.info(f"[DEBUG] Phase 6: Aggressive final cleanup for: {namespace}")
 
                 # Get all remaining nodes in namespace
                 remaining_nodes = []
@@ -767,7 +767,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     try:
                         cmds.delete(node)
                         if not cmds.objExists(node):
-                            self.logger.info(f"   ✅ Force-deleted: {node.split(':')[-1]}")
+                            self.logger.info(f"   [OK] Force-deleted: {node.split(':')[-1]}")
                             continue
                     except Exception:
                         pass
@@ -779,7 +779,7 @@ class StandaloneAssetRepository(IAssetRepository):
                             if cmds.objExists(parent) and namespace in parent:
                                 cmds.delete(parent)
                                 if not cmds.objExists(node):
-                                    self.logger.info(f"   ✅ Deleted via parent: {node.split(':')[-1]}")
+                                    self.logger.info(f"   [OK] Deleted via parent: {node.split(':')[-1]}")
                                     continue
                     except Exception:
                         pass
@@ -791,10 +791,10 @@ class StandaloneAssetRepository(IAssetRepository):
                         renamed = cmds.rename(node, temp_name)
                         cmds.delete(renamed)
                         if not cmds.objExists(renamed):
-                            self.logger.info(f"   ✅ Deleted after rename: {node.split(':')[-1]}")
+                            self.logger.info(f"   [OK] Deleted after rename: {node.split(':')[-1]}")
                     except Exception:
                         node_short = node.split(':')[-1]
-                        self.logger.warning(f"   ⚠️ Could not delete locked node: {node_short} (acceptable)")
+                        self.logger.warning(f"   [WARNING] Could not delete locked node: {node_short} (acceptable)")
 
                 # Final namespace removal attempt
                 try:
@@ -806,19 +806,19 @@ class StandaloneAssetRepository(IAssetRepository):
                     try:
                         cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True, force=True)
                     except Exception as ns_error:
-                        self.logger.warning(f"   ⚠️ Final namespace removal note: {ns_error}")
+                        self.logger.warning(f"   [WARNING] Final namespace removal note: {ns_error}")
 
                 # Verify final cleanup
                 final_cleanup = not cmds.namespace(exists=namespace)
                 if final_cleanup:
                     self.logger.info(f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner")
                 else:
-                    self.logger.info(f"ℹ️  Namespace {namespace} may have deeply nested references (acceptable)")
+                    self.logger.info(f"[INFO]  Namespace {namespace} may have deeply nested references (acceptable)")
 
                 return True  # Consider partial cleanup acceptable for production
 
             except Exception as aggressive_error:
-                self.logger.warning(f"⚠️ Phase 6 aggressive cleanup exception: {aggressive_error}")
+                self.logger.warning(f"[WARNING] Phase 6 aggressive cleanup exception: {aggressive_error}")
                 # Still try fallback as last resort
                 return self._fallback_cleanup(namespace, cmds)
 
@@ -829,7 +829,7 @@ class StandaloneAssetRepository(IAssetRepository):
             # Force Phase 6 execution even after exception
             try:
                 if cmds.namespace(exists=namespace):
-                    self.logger.info(f"🔥 Phase 6: Forced aggressive cleanup after exception for: {namespace}")
+                    self.logger.info(f"[DEBUG] Phase 6: Forced aggressive cleanup after exception for: {namespace}")
                     return self._force_aggressive_cleanup(namespace, cmds)
             except Exception:
                 pass
@@ -914,7 +914,7 @@ class StandaloneAssetRepository(IAssetRepository):
                                 except Exception:
                                     pass  # Attribute might not exist
                                 cmds.lockNode(vol_node, lock=False)
-                        self.logger.info(f"🔥 Force unlocked {len(volume_aggregates)} volume aggregates")
+                        self.logger.info(f"[DEBUG] Force unlocked {len(volume_aggregates)} volume aggregates")
                     except Exception as vol_error:
                         self.logger.warning(f"Volume aggregate unlock error: {vol_error}")
 
@@ -1215,7 +1215,7 @@ class StandaloneAssetRepository(IAssetRepository):
             if not cmds.namespace(exists=namespace):
                 return True
 
-            self.logger.info(f"🔥 Phase 6: Aggressive final cleanup for: {namespace}")
+            self.logger.info(f"[DEBUG] Phase 6: Aggressive final cleanup for: {namespace}")
 
             # Get all remaining nodes
             remaining_nodes = []
@@ -1302,12 +1302,12 @@ class StandaloneAssetRepository(IAssetRepository):
             if final_cleanup:
                 self.logger.info(f"🎉 Phase 6 successful: {namespace} completely removed")
             else:
-                self.logger.info(f"ℹ️  Phase 6 partial: {namespace} has nested references (acceptable)")
+                self.logger.info(f"[INFO]  Phase 6 partial: {namespace} has nested references (acceptable)")
 
             return True  # Acceptable
 
         except Exception as e:
-            self.logger.warning(f"⚠️ Phase 6 exception: {e}")
+            self.logger.warning(f"[WARNING] Phase 6 exception: {e}")
             return False
 
     def _fallback_cleanup(self, namespace: str, cmds) -> bool:

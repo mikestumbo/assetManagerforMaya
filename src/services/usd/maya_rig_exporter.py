@@ -319,7 +319,7 @@ class MayaRigExporter:
                 rig_data['source_scene'] = Path(scene_file).name
 
             # Collect rig components based on options
-            self.logger.info(f"🔧 Exporting rig data to: {output_path}")
+            self.logger.info(f"[TOOL] Exporting rig data to: {output_path}")
 
             # Extract controllers (NURBS curves, locators) with custom/proxy attrs
             self._report_progress("Extracting controllers", 15)
@@ -329,28 +329,28 @@ class MayaRigExporter:
                     include_proxy_attrs=options.get('export_proxy_attrs', True)
                 )
                 rig_data['controllers'] = controllers
-                self.logger.info(f"     ✅ {len(controllers)} controllers")
+                self.logger.info(f"     [OK] {len(controllers)} controllers")
 
             # Extract constraints
             self._report_progress("Extracting constraints", 30)
             if options.get('export_constraints', True):
                 constraints = self._extract_constraints()
                 rig_data['constraints'] = constraints
-                self.logger.info(f"     ✅ {len(constraints)} constraints")
+                self.logger.info(f"     [OK] {len(constraints)} constraints")
 
             # v1.5.0: Extract space switches
             self._report_progress("Extracting space switches", 40)
             if options.get('export_space_switches', True):
                 space_switches = self._extract_space_switches()
                 rig_data['space_switches'] = space_switches
-                self.logger.info(f"     ✅ {len(space_switches)} space switches")
+                self.logger.info(f"     [OK] {len(space_switches)} space switches")
 
             # Extract IK handles
             self._report_progress("Extracting IK handles", 55)
             if options.get('export_ik_handles', True):
                 ik_handles = self._extract_ik_handles()
                 rig_data['ik_handles'] = ik_handles
-                self.logger.info(f"     ✅ {len(ik_handles)} IK handles")
+                self.logger.info(f"     [OK] {len(ik_handles)} IK handles")
 
             # Extract blendshapes
             self._report_progress("Extracting blendshapes", 70)
@@ -359,7 +359,7 @@ class MayaRigExporter:
                 rig_data['blendshapes'] = blendshapes
                 rig_data['blendshape_connections'] = connections
                 self.logger.info(
-                    f"     ✅ {len(blendshapes)} blendshapes, {len(connections)} connections"
+                    f"     [OK] {len(blendshapes)} blendshapes, {len(connections)} connections"
                 )
 
             # Extract Set Driven Keys
@@ -367,7 +367,7 @@ class MayaRigExporter:
             if options.get('export_sdks', True):
                 sdks = self._extract_set_driven_keys()
                 rig_data['set_driven_keys'] = sdks
-                self.logger.info(f"     ✅ {len(sdks)} SDKs")
+                self.logger.info(f"     [OK] {len(sdks)} SDKs")
 
             # Write to JSON file
             self._report_progress("Writing file", 90)
@@ -377,7 +377,7 @@ class MayaRigExporter:
 
             # Log success
             file_size = output_path.stat().st_size / 1024  # KB
-            self.logger.info(f"✅ Rig data exported: {output_path} ({file_size:.1f} KB)")
+            self.logger.info(f"[OK] Rig data exported: {output_path} ({file_size:.1f} KB)")
 
             # v1.5.0: Export controllers to separate .ma file for referencing
             # This avoids trying to recreate NURBS curves from JSON
@@ -389,13 +389,13 @@ class MayaRigExporter:
                     # Re-write .mrig with the .ma reference added
                     with open(output_path, 'w') as f:
                         json.dump(rig_data, f, indent=2, default=self._json_encoder)
-                    self.logger.info(f"✅ Controllers .ma exported: {ma_path.name}")
+                    self.logger.info(f"[OK] Controllers .ma exported: {ma_path.name}")
 
             self._report_progress("Export complete", 100)
             return True, f"Exported rig data to {output_path.name}"
 
         except Exception as e:
-            self.logger.error(f"❌ Failed to export rig data: {e}")
+            self.logger.error(f"[ERROR] Failed to export rig data: {e}")
             return False, f"Export failed: {e}"
 
     def _export_maya_rig_file(
@@ -695,8 +695,8 @@ class MayaRigExporter:
             self.logger.info("🎮 UNIVERSAL RIG EXPORT - Collecting rig components:")
             for category, count in node_counts.items():
                 if count > 0:
-                    self.logger.info(f"     ✅ {category}: {count}")
-            self.logger.info(f"     📦 TOTAL: {len(unique_nodes)} nodes to export")
+                    self.logger.info(f"     [OK] {category}: {count}")
+            self.logger.info(f"     [PACKAGE] TOTAL: {len(unique_nodes)} nodes to export")
 
             # Select nodes for export
             self._report_progress("Exporting rig file", 85)
@@ -732,7 +732,7 @@ class MayaRigExporter:
             # Report success with breakdown
             file_size = output_path.stat().st_size / 1024
             self._report_progress("Export complete", 100)
-            self.logger.info(f"✅ Rig file exported: {output_path.name} ({file_size:.1f} KB)")
+            self.logger.info(f"[OK] Rig file exported: {output_path.name} ({file_size:.1f} KB)")
 
             # Build summary message
             summary_parts = []
@@ -746,7 +746,7 @@ class MayaRigExporter:
             return True, f"Exported {len(unique_nodes)} nodes ({summary}) to {output_path.name}"
 
         except Exception as e:
-            self.logger.error(f"❌ Failed to export Maya rig file: {e}")
+            self.logger.error(f"[ERROR] Failed to export Maya rig file: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False, f"Maya rig export failed: {e}"

@@ -146,7 +146,7 @@ class EnhancedAssetInfoWidget(QLabel):
             self._original_text = self.text()
 
         self._showing_feedback = True
-        hint_text = "💡 Tip: Ctrl + Scroll Wheel to adjust font size\n\n" + self._original_text
+        hint_text = "[TIP] Tip: Ctrl + Scroll Wheel to adjust font size\n\n" + self._original_text
         self.setText(hint_text)
 
         # Hide hint after 2 seconds

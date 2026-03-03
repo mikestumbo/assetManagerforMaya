@@ -153,9 +153,11 @@ class AssetRepositoryImpl(IAssetRepository):
         try:
             # Recursive file discovery
             for file_path in directory.rglob('*'):
-                if (file_path.is_file() and
+                if (
+                    file_path.is_file() and
                     self._is_supported_file(file_path) and
-                    not self._is_asset_removed(file_path)):  # Filter out removed assets
+                    not self._is_asset_removed(file_path)  # Filter out removed assets
+                ):
                     asset = self._create_asset_from_path(file_path)
                     if asset:
                         assets.append(asset)
@@ -540,9 +542,9 @@ class AssetRepositoryImpl(IAssetRepository):
 
             # Note: In a full database implementation, this would save to persistent storage
             # For now, the cache serves as temporary storage until next refresh
-            print(f"✅ Asset updated in repository: {asset.display_name}")
+            print(f"[OK] Asset updated in repository: {asset.display_name}")
             return True
 
         except Exception as e:
-            print(f"❌ Error updating asset {asset.display_name}: {e}")
+            print(f"[ERROR] Error updating asset {asset.display_name}: {e}")
             return False

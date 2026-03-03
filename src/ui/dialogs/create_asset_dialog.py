@@ -15,7 +15,7 @@ try:
         QMessageBox, QGroupBox, QSpacerItem, QSizePolicy
     )
 except ImportError as e:
-    print(f"❌ PySide6 import failed: {e}")
+    print(f"[ERROR] PySide6 import failed: {e}")
     raise
 
 

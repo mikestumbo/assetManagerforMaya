@@ -29,9 +29,9 @@ class UsdService:
         self._check_usd_availability()
 
         if self._usd_available:
-            print("✅ USD Service initialized - Disney's Universal Scene Description support active")
+            print("[OK] USD Service initialized - Disney's Universal Scene Description support active")
         else:
-            print("ℹ️ USD Service initialized - USD API not available (optional)")
+            print("[INFO] USD Service initialized - USD API not available (optional)")
 
     def _check_usd_availability(self) -> bool:
         """Check if USD is available in Maya"""
@@ -43,9 +43,9 @@ class UsdService:
             if not cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True):
                 try:
                     cmds.loadPlugin('mayaUsdPlugin', quiet=True)
-                    print("✅ mayaUsdPlugin loaded successfully")
+                    print("[OK] mayaUsdPlugin loaded successfully")
                 except Exception as e:
-                    print(f"ℹ️ mayaUsdPlugin not available: {e}")
+                    print(f"[INFO] mayaUsdPlugin not available: {e}")
 
             self._mayausd_available = cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True)
 
@@ -53,19 +53,19 @@ class UsdService:
             try:
                 from pxr import Usd  # type: ignore  # noqa: F401
                 self._pxr_available = True
-                print("✅ Pixar USD Python API available")
+                print("[OK] Pixar USD Python API available")
             except ImportError:
-                print("ℹ️ Pixar USD Python API not available")
+                print("[INFO] Pixar USD Python API not available")
                 self._pxr_available = False
 
             self._usd_available = self._mayausd_available or self._pxr_available
             return self._usd_available
 
         except ImportError:
-            print("ℹ️ Maya not available - USD service in limited mode")
+            print("[INFO] Maya not available - USD service in limited mode")
             return False
         except Exception as e:
-            print(f"⚠️ Error checking USD availability: {e}")
+            print(f"[WARNING] Error checking USD availability: {e}")
             return False
 
     def is_usd_available(self) -> bool:
@@ -316,7 +316,7 @@ class UsdService:
             True if successful
         """
         if not self._mayausd_available:
-            print("ℹ️ mayaUSD not available, falling back to standard import")
+            print("[INFO] mayaUSD not available, falling back to standard import")
             return False
 
         try:
@@ -331,7 +331,7 @@ class UsdService:
 
             try:
                 # Import USD file
-                print(f"📸 Importing USD file: {file_path.name}")
+                print(f"[CAMERA] Importing USD file: {file_path.name}")
 
                 # Use mayaUSD import
                 imported_nodes = cmds.file(
@@ -344,10 +344,10 @@ class UsdService:
                 )
 
                 if not imported_nodes:
-                    print("⚠️ No nodes imported from USD file")
+                    print("[WARNING] No nodes imported from USD file")
                     return False
 
-                print(f"✅ Imported {len(imported_nodes)} nodes from USD")
+                print(f"[OK] Imported {len(imported_nodes)} nodes from USD")
 
                 # Find geometry
                 meshes = cmds.ls(f"{namespace}:*", type='mesh', long=True) or []
@@ -356,7 +356,7 @@ class UsdService:
                     meshes = cmds.ls(imported_nodes, type='mesh', long=True) or []
 
                 if not meshes:
-                    print("⚠️ No geometry found in USD file")
+                    print("[WARNING] No geometry found in USD file")
                     return False
 
                 # Frame geometry
@@ -410,7 +410,7 @@ class UsdService:
 
                 if generated_files:
                     shutil.copy2(generated_files[0], str(output_path))
-                    print(f"✅ USD thumbnail generated: {output_path}")
+                    print(f"[OK] USD thumbnail generated: {output_path}")
 
                     # Cleanup temp directory
                     try:
@@ -420,7 +420,7 @@ class UsdService:
 
                     return True
                 else:
-                    print("❌ No thumbnail file generated")
+                    print("[ERROR] No thumbnail file generated")
                     return False
 
             finally:
@@ -429,7 +429,7 @@ class UsdService:
                     if cmds.namespace(exists=namespace):
                         cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True)
                 except Exception as e:
-                    print(f"⚠️ Cleanup warning: {e}")
+                    print(f"[WARNING] Cleanup warning: {e}")
 
                 # Restore selection
                 if original_selection:
@@ -440,7 +440,7 @@ class UsdService:
 
         except Exception as e:
             logger.error(f"Error generating USD thumbnail: {e}")
-            print(f"❌ USD thumbnail generation failed: {e}")
+            print(f"[ERROR] USD thumbnail generation failed: {e}")
             return False
 
     def import_usd_file(self, file_path: Path, namespace: Optional[str] = None,
@@ -457,7 +457,7 @@ class UsdService:
             List of imported node names
         """
         if not self._mayausd_available:
-            print("ℹ️ mayaUSD not available, using standard import")
+            print("[INFO] mayaUSD not available, using standard import")
             return []
 
         try:
@@ -477,12 +477,12 @@ class UsdService:
                 type="USD Import"
             )
 
-            print(f"✅ Imported USD file: {file_path.name} ({len(imported_nodes)} nodes)")
+            print(f"[OK] Imported USD file: {file_path.name} ({len(imported_nodes)} nodes)")
             return imported_nodes or []
 
         except Exception as e:
             logger.error(f"Error importing USD file: {e}")
-            print(f"❌ USD import failed: {e}")
+            print(f"[ERROR] USD import failed: {e}")
             return []
 
     def get_usd_stage_info(self, file_path: Path) -> Dict[str, Any]:

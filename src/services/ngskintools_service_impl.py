@@ -56,12 +56,12 @@ class NgSkinToolsService:
                     except Exception:
                         self._plugin_version = "Unknown"
 
-                    self.logger.info(f"# {__name__} : ✅ ngSkinTools2 plugin detected (v{self._plugin_version})")
+                    self.logger.info(f"# {__name__} : [OK] ngSkinTools2 plugin detected (v{self._plugin_version})")
                 else:
-                    self.logger.info(f"# {__name__} : ⚠️ ngSkinTools2 plugin not loaded")
+                    self.logger.info(f"# {__name__} : [WARNING] ngSkinTools2 plugin not loaded")
                     return
             except Exception:
-                self.logger.info(f"# {__name__} : ⚠️ ngSkinTools2 plugin not available")
+                self.logger.info(f"# {__name__} : [WARNING] ngSkinTools2 plugin not available")
                 return
 
             # Check if ngSkinTools2 API is available
@@ -71,9 +71,9 @@ class NgSkinToolsService:
                     Layers, init_layers, target_info
                 )  # type: ignore[import-not-found]
                 self._api_available = True
-                self.logger.info(f"# {__name__} : ✅ ngSkinTools2 Python API available")
+                self.logger.info(f"# {__name__} : [OK] ngSkinTools2 Python API available")
             except ImportError:
-                self.logger.info(f"# {__name__} : ⚠️ ngSkinTools2 Python API not available")
+                self.logger.info(f"# {__name__} : [WARNING] ngSkinTools2 Python API not available")
                 return
 
         except Exception as e:

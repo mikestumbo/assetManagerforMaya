@@ -90,13 +90,13 @@ class UsdzPackager:
             if rig_file and rig_file.exists():
                 rig_name = rig_file.name
                 files_to_package.append((rig_file, rig_name))
-                self.logger.info(f"📦 Including rig file: {rig_name}")
+                self.logger.info(f"[PACKAGE] Including rig file: {rig_name}")
 
             # 3. Legacy MRIG file (companion rig data) - optional
             if mrig_file and mrig_file.exists():
                 mrig_name = mrig_file.name
                 files_to_package.append((mrig_file, mrig_name))
-                self.logger.info(f"📦 Including .mrig file: {mrig_name}")
+                self.logger.info(f"[PACKAGE] Including .mrig file: {mrig_name}")
 
                 # 3b. Controllers file - check .mb first (faster), then .ma for backwards compat
                 # Use parent/stem to get base path without .mrig suffix
@@ -105,10 +105,10 @@ class UsdzPackager:
                 controllers_ma = base_path.with_suffix('.controllers.ma')
                 if controllers_mb.exists():
                     files_to_package.append((controllers_mb, controllers_mb.name))
-                    self.logger.info(f"📦 Including controllers .mb file: {controllers_mb.name}")
+                    self.logger.info(f"[PACKAGE] Including controllers .mb file: {controllers_mb.name}")
                 elif controllers_ma.exists():
                     files_to_package.append((controllers_ma, controllers_ma.name))
-                    self.logger.info(f"📦 Including controllers .ma file: {controllers_ma.name}")
+                    self.logger.info(f"[PACKAGE] Including controllers .ma file: {controllers_ma.name}")
 
             # 3. Additional files (textures, etc.)
             if additional_files:
@@ -140,7 +140,7 @@ class UsdzPackager:
             size_kb = output_path.stat().st_size / 1024
 
             self.logger.info(
-                f"✅ USDZ package created: {output_path.name} "
+                f"[OK] USDZ package created: {output_path.name} "
                 f"({file_count} files, {size_kb:.1f} KB)"
             )
 
@@ -225,10 +225,10 @@ class UsdzPackager:
             }
 
             self.logger.info(
-                f"✅ USDZ extracted: {len(file_list)} files to {output_dir}"
+                f"[OK] USDZ extracted: {len(file_list)} files to {output_dir}"
             )
             if mrig_file:
-                self.logger.info(f"   📋 Found .mrig file: {mrig_file.name}")
+                self.logger.info(f"   [SELECT] Found .mrig file: {mrig_file.name}")
             if rig_file:
                 self.logger.info(f"   🎮 Found rig file (v2.0): {rig_file.name}")
             elif controllers_file:

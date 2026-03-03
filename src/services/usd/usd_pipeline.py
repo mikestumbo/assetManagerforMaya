@@ -51,10 +51,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Callable
 from enum import Enum, auto
 
-print("=" * 80)
-print("[INIT] USD_PIPELINE.PY LOADED - CLEAN ARCHITECTURE")
-print("=" * 80)
-
 # Maya imports (conditional)
 try:
     import maya.cmds as cmds  # type: ignore
@@ -115,11 +111,11 @@ class ExportResult:
         lines = [f"{'[OK]' if self.success else '[ERROR]'} USD Export Summary"]
 
         if self.usd_path:
-            lines.append(f"  📄 USD: {self.usd_path.name}")
+            lines.append(f"  [FILE] USD: {self.usd_path.name}")
         if self.rig_mb_path:
-            lines.append(f"  📦 Rig Backup: {self.rig_mb_path.name}")
+            lines.append(f"  [PACKAGE] Rig Backup: {self.rig_mb_path.name}")
         if self.usdz_path:
-            lines.append(f"  🎁 Package: {self.usdz_path.name}")
+            lines.append(f"  [BUNDLE] Package: {self.usdz_path.name}")
 
         lines.append("")
         lines.append("  Conversions:")
@@ -127,7 +123,7 @@ class ExportResult:
             status_icon = {
                 ConversionStatus.SUCCESS: "[OK]",
                 ConversionStatus.PARTIAL: "[WARNING]",
-                ConversionStatus.FALLBACK: "📦",
+                ConversionStatus.FALLBACK: "[PACKAGE]",
                 ConversionStatus.SKIPPED: "⏭️",
                 ConversionStatus.FAILED: "[ERROR]"
             }.get(result.status, "?")
@@ -200,19 +196,19 @@ class ImportResult:
             lines.append(f"  {'Constraints':<14} {'N/A':<6} {consts:<10} {consts}")
 
             lines.append("")
-            lines.append(f"  📦 Fallback used for: {', '.join(self.fallback_components)}")
+            lines.append(f"  [PACKAGE] Fallback used for: {', '.join(self.fallback_components)}")
         else:
             # All from USD - show prim counts
             lines.append("")
-            lines.append("📦 USD Prims Loaded (in proxy shape):")
+            lines.append("[PACKAGE] USD Prims Loaded (in proxy shape):")
             lines.append(f"  Mesh Prims: {self.usd_meshes}")
-            lines.append(f"  Skeleton Prims: {self.usd_joints}")
+            lines.append(f"  Joints: {self.usd_joints}")
             lines.append(f"  Curve Prims: {self.usd_curves}")
             lines.append(f"  Material Prims: {self.usd_materials}")
             lines.append(f"  BlendShape Prims: {self.usd_blendshapes}")
             lines.append(f"  SkinBinding Prims: {self.usd_skin_clusters}")
             lines.append("")
-            lines.append("  ✨ USD content loaded successfully!")
+            lines.append("  [NEW] USD content loaded successfully!")
             lines.append("  [TIP] View in viewport or convert via USD > Edit as Maya Data")
 
         return "\n".join(lines)
@@ -328,6 +324,7 @@ class ImportOptions:
     # Workflow modes
     usd_proxy_mode: bool = False  # Keep USD as proxy (experimental, Maya 2026 bugs)
     hybrid_mode: bool = False  # Convert USD→Maya + import controllers (recommended)
+    convert_skeleton_to_maya: bool = False  # Convert UsdSkel to Maya joints (opt-in; proxy mode uses UsdSkelImaging)
 
     # Skin weight extraction (Phase 3.2)
     extract_full_weights: bool = False  # Load references for full skinCluster data (slower)
@@ -345,6 +342,7 @@ class ImportOptions:
     import_all_layers: bool = True    # Import all USD layers
     flatten_layers: bool = False      # Flatten layers on import (combine into one)
     create_edit_layer: bool = True    # Create editable layer for local edits
+    open_layer_editor: bool = False   # Open mayaUSD Layer Editor after proxy import (Option B)
 
 
 class UsdPipeline:
@@ -428,14 +426,14 @@ class UsdPipeline:
             if cmds is not None and source_path and str(source_path) != "current_scene":
                 source_path = Path(source_path)
                 if source_path.exists():
-                    self.logger.info(f"📂 Opening source file: {source_path}")
+                    self.logger.info(f"[FILE] Opening source file: {source_path}")
                     self._report_progress("Opening Maya scene", 2)
                     cmds.file(str(source_path), open=True, force=True)
                     self.logger.info(f"[OK] Scene opened: {source_path.name}")
                 else:
                     self.logger.warning(f"[WARNING] Source file not found: {source_path}")
             else:
-                self.logger.info("📂 Exporting from current scene")
+                self.logger.info("[FILE] Exporting from current scene")
 
             # Determine output paths
             output_path = Path(output_path)
@@ -447,7 +445,7 @@ class UsdPipeline:
                 subfolder = base_path.parent / f"{asset_name}_USD"
                 subfolder.mkdir(parents=True, exist_ok=True)
                 base_path = subfolder / asset_name
-                self.logger.info(f"📁 Organizing files in: {subfolder.name}/")
+                self.logger.info(f"[FOLDER] Organizing files in: {subfolder.name}/")
 
             # USD file path (always create this)
             usd_ext = ".usdc"  # Binary for efficiency
@@ -514,7 +512,7 @@ class UsdPipeline:
                     usdz_path, usd_path, rig_mb_path, zip_path, options
                 )
                 if zip_success:
-                    self.logger.info(f"📦 ZIP archive created: {zip_path.name}")
+                    self.logger.info(f"[PACKAGE] ZIP archive created: {zip_path.name}")
 
             # Calculate totals
             for conv in result.conversions.values():
@@ -931,7 +929,7 @@ class UsdPipeline:
             )
 
             file_size = output_path.stat().st_size / (1024 * 1024)
-            self.logger.info(f"📦 Rig backup: {output_path.name} ({file_size:.1f} MB)")
+            self.logger.info(f"[PACKAGE] Rig backup: {output_path.name} ({file_size:.1f} MB)")
             return True
 
         except Exception as e:
@@ -969,7 +967,7 @@ class UsdPipeline:
 
             # Debug: What's in the scene?
             all_dag = cmds.ls(dag=True, long=True) or []
-            self.logger.info(f"[DEBUG] DEBUG: Total DAG nodes in scene: {len(all_dag)}")
+            self.logger.info(f"[EXPORT] Scene has {len(all_dag)} DAG nodes")
 
             # Select all exportable content
             # CRITICAL: Use dag=True to get ALL nodes including referenced ones
@@ -984,13 +982,13 @@ class UsdPipeline:
             for shape_type in export_types:
                 # dag=True ensures we get referenced nodes too
                 shapes = cmds.ls(type=shape_type, dag=True, long=True) or []
-                self.logger.info(f"[DEBUG] DEBUG: Found {len(shapes)} {shape_type} nodes")
+                self.logger.info(f"[EXPORT] Found {len(shapes)} {shape_type} nodes")
                 all_shapes.extend(shapes)
 
             if not all_shapes:
                 # More debugging - what IS in the scene?
                 self.logger.error("[ERROR] No exportable content found in scene!")
-                self.logger.info("[DEBUG] DEBUG: All node types in scene:")
+                self.logger.info("[EXPORT] Node types in scene:")
                 node_types = set()
                 for node in all_dag[:100]:  # First 100 nodes
                     try:
@@ -1121,7 +1119,7 @@ class UsdPipeline:
             # Log viewport-friendly mode status
             if options.viewport_friendly_skeleton and num_skin_clusters > 0:
                 self.logger.info(
-                    f"🖥️ Viewport-friendly mode: Skeleton hierarchy exported, "
+                    f"[VIEWPORT] Viewport-friendly mode: Skeleton hierarchy exported, "
                     f"skin bindings skipped ({num_skin_clusters} skinClusters)"
                 )
                 self.logger.info("   └─ Baking skinned meshes to static geometry...")
@@ -1176,7 +1174,7 @@ class UsdPipeline:
                     "USD viewport may have display issues. Consider viewport_friendly_skeleton=True"
                 )
 
-            self.logger.info(f"🎯 Found {len(export_transforms)} objects to export")
+            self.logger.info(f"[TARGET] Found {len(export_transforms)} objects to export")
             self.logger.info(f"   Meshes: {len(cmds.ls(type='mesh', dag=True) or [])}")
             self.logger.info(f"   NURBS Curves: {len(cmds.ls(type='nurbsCurve', dag=True) or [])}")
             self.logger.info(f"   Joints: {len(joints)}")
@@ -1221,6 +1219,9 @@ class UsdPipeline:
                 'exportMaterials': options.export_materials,
                 'shadingMode': 'useRegistry',
                 'convertMaterialsTo': ['UsdPreviewSurface'],
+                # Support RenderMan PxrSurface/PxrShader conversion
+                'materialsScopeName': 'Looks',  # Standard USD materials scope
+                'exportDisplayColor': True,  # Fallback for unconverted materials
 
                 # ============ GENERAL ============
                 'exportVisibility': True,
@@ -1269,7 +1270,7 @@ class UsdPipeline:
             except TypeError as te:
                 # Handle invalid flag errors - try with minimal flags
                 self.logger.warning(f"mayaUSD export with full flags failed: {te}")
-                self.logger.info("🔄 Retrying with minimal flags...")
+                self.logger.info("[REFRESH] Retrying with minimal flags...")
 
                 # Minimal export args that should work
                 # Note: NURBS export automatically with scene geometry
@@ -1337,6 +1338,11 @@ class UsdPipeline:
                     result.usd_blendshapes = blend_targets_exported
                     self.logger.info(f"[USD] Exported {blend_targets_exported} blendShape targets to USD")
 
+            # POST-PROCESS: Convert RenderMan materials to UsdPreviewSurface
+            # Ensure PxrShader + Lambert combinations are properly converted
+            if options.export_materials:
+                self._convert_renderman_materials_to_usd_preview(output_path)
+
             # Phase 3.3: USD-native animation workflow
             if options.merge_skeletons and not options.usd_layers_for_animation:
                 # Legacy: destructive merge
@@ -1399,28 +1405,28 @@ class UsdPipeline:
                 geom_path = base_dir / f"{base_name}.geometry.usdc"
                 if self._extract_geometry_layer(source_stage, geom_path):
                     layer_paths.append(geom_path)
-                    self.logger.info(f"📦 Created geometry layer: {geom_path.name}")
+                    self.logger.info(f"[PACKAGE] Created geometry layer: {geom_path.name}")
 
             # Create skeleton layer
             if options.skeleton_layer:
                 skel_path = base_dir / f"{base_name}.skeleton.usdc"
                 if self._extract_skeleton_layer(source_stage, skel_path):
                     layer_paths.append(skel_path)
-                    self.logger.info(f"📦 Created skeleton layer: {skel_path.name}")
+                    self.logger.info(f"[PACKAGE] Created skeleton layer: {skel_path.name}")
 
             # Create materials layer
             if options.materials_layer:
                 mtl_path = base_dir / f"{base_name}.materials.usdc"
                 if self._extract_materials_layer(source_stage, mtl_path):
                     layer_paths.append(mtl_path)
-                    self.logger.info(f"📦 Created materials layer: {mtl_path.name}")
+                    self.logger.info(f"[PACKAGE] Created materials layer: {mtl_path.name}")
 
             # Create animation layer (if animation was exported)
             if options.animation_layer and options.export_animation:
                 anim_path = base_dir / f"{base_name}.animation.usdc"
                 if self._extract_animation_layer(source_stage, anim_path):
                     layer_paths.append(anim_path)
-                    self.logger.info(f"📦 Created animation layer: {anim_path.name}")
+                    self.logger.info(f"[PACKAGE] Created animation layer: {anim_path.name}")
 
             # Create root layer that references sublayers
             if layer_paths:
@@ -1565,7 +1571,10 @@ class UsdPipeline:
             UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
             stage.SetDefaultPrim(stage.DefinePrim(f"/{asset_name}", "Xform"))
 
-            # Add sublayers (order matters - later layers override earlier)
+            # Add sublayers.  In USD, subLayerPaths[0] is the **strongest** opinion
+            # (LIFO order): the first entry wins attribute conflicts.  We append in
+            # the order [geometry, skeleton, materials, animation] so that geometry
+            # bindings (material:binding relationships on meshes) take precedence.
             root_layer = stage.GetRootLayer()
             for sublayer_path in sublayer_paths:
                 # Use relative paths for portability
@@ -1580,7 +1589,7 @@ class UsdPipeline:
             )
 
             stage.Save()
-            self.logger.info(f"📄 Root layer references {len(sublayer_paths)} sublayers")
+            self.logger.info(f"[FILE] Root layer references {len(sublayer_paths)} sublayers")
             return True
 
         except Exception as e:
@@ -1633,7 +1642,7 @@ class UsdPipeline:
 
             self.logger.info(f"[FIX] Found {len(skel_roots)} SkelRoots - creating unified wrapper...")
             for sr in skel_roots:
-                self.logger.info(f"   📦 {sr.GetPath()}")
+                self.logger.info(f"   [PACKAGE] {sr.GetPath()}")
 
             # Find which SkelRoot has the skeleton (this will be our reference for bindings)
             skeleton_root = None
@@ -1676,7 +1685,7 @@ class UsdPipeline:
                 prim_name = old_path.name
                 new_path = wrapper_path.AppendChild(prim_name)
 
-                self.logger.info(f"   🔄 Re-parenting {old_path} → {new_path}")
+                self.logger.info(f"   [REFRESH] Re-parenting {old_path} → {new_path}")
 
                 # Use namespace edit to move the prim
                 edit = Sdf.BatchNamespaceEdit()
@@ -1769,7 +1778,7 @@ class UsdPipeline:
             # Save changes
             root_layer.Save()
             self.logger.info("[OK] SkelRoot scope fixed: All prims now under unified SkelRoot")
-            self.logger.info("   🎯 Skeleton and meshes share same SkelRoot scope")
+            self.logger.info("   [TARGET] Skeleton and meshes share same SkelRoot scope")
 
             return True
 
@@ -1836,7 +1845,7 @@ class UsdPipeline:
                 bind_transforms = skel.GetBindTransformsAttr().Get() or []
                 rest_transforms = skel.GetRestTransformsAttr().Get() or []
 
-                self.logger.debug(f"   📦 {skel_prim.GetPath()}: {len(joints)} joints")
+                self.logger.debug(f"   [PACKAGE] {skel_prim.GetPath()}: {len(joints)} joints")
 
                 for i, joint in enumerate(joints):
                     # Get the short name (last part of path)
@@ -2088,7 +2097,7 @@ class UsdPipeline:
                         if len(joints) >= 50:
                             deform_animation = prim
                             deform_animation_path = prim.GetPath()
-                            self.logger.info(f"   🎬 Found deformation animation: {anim_path_str}")
+                            self.logger.info(f"   [ANIMATION] Found deformation animation: {anim_path_str}")
                             break
 
             # If no animation found, look for one with matching joint count
@@ -2103,7 +2112,7 @@ class UsdPipeline:
                         if len(anim_joints) == len(skel_joints):
                             deform_animation = prim
                             deform_animation_path = prim.GetPath()
-                            self.logger.info(f"   🎬 Found matching animation: {prim.GetPath()}")
+                            self.logger.info(f"   [ANIMATION] Found matching animation: {prim.GetPath()}")
                             break
 
             # ================================================================
@@ -2166,7 +2175,7 @@ class UsdPipeline:
                         del parent_spec.nameChildren[prim_spec.name]
                         deleted_count += 1
 
-            self.logger.info(f"   🗑️  Deleted {deleted_count} unused skeleton/animation prims")
+            self.logger.info(f"   [DELETE]  Deleted {deleted_count} unused skeleton/animation prims")
 
             # ================================================================
             # Step 5: Save the cleaned USD
@@ -2179,10 +2188,10 @@ class UsdPipeline:
             final_animations = [p for p in verify_stage.Traverse() if p.IsA(UsdSkel.Animation)]
 
             self.logger.info("[OK] USD Skeleton Cleanup Complete!")
-            self.logger.info(f"   📦 Output: {base_usd_path.name}")
+            self.logger.info(f"   [PACKAGE] Output: {base_usd_path.name}")
             self.logger.info(f"   [SKEL] Skeletons: {len(all_skeletons)} → {len(final_skeletons)}")
-            self.logger.info(f"   🎬 Animations: {len(final_animations)}")
-            self.logger.info(f"   🎯 Skin bindings: {binding_updates} updated")
+            self.logger.info(f"   [ANIMATION] Animations: {len(final_animations)}")
+            self.logger.info(f"   [TARGET] Skin bindings: {binding_updates} updated")
 
             result.usd_path = base_usd_path
             return True
@@ -2709,6 +2718,924 @@ class UsdPipeline:
             import traceback
             self.logger.warning(f"USD validation traceback: {traceback.format_exc()}")
 
+    def _sample_pxr_texture_color(
+        self, rfm_node: str, color_attr: str
+    ):
+        """
+        Follow a PxrTexture connection on *rfm_node.color_attr* and return
+        an average Gf.Vec3f sampled from that texture file, or None on failure.
+
+        Connection traversal (most reliable first):
+          1. connectionInfo(sourceFromDestination) — direct single-source lookup
+          2. listConnections on compound attr  e.g. .baseColor
+          3. listConnections on first child    e.g. .baseColorR
+          4. One level deeper for each candidate found above
+
+        File sampling (first available library wins):
+          1. PIL / Pillow
+          2. OpenImageIO (ships with RenderMan for Maya 24+)
+        """
+        try:
+            from pxr import Gf  # type: ignore
+            import re
+            import os
+
+            if cmds is None:
+                return None
+
+            # ── Step 1: Collect upstream candidate nodes ─────────────────────
+            candidates: list = []
+
+            # 1a. Direct source plug via connectionInfo (most reliable)
+            try:
+                src = cmds.connectionInfo(
+                    f"{rfm_node}.{color_attr}", sourceFromDestination=True
+                )
+                if src:
+                    # "PxrTexture1.resultRGB" → "PxrTexture1"
+                    src_node = src.split(".")[0]
+                    if src_node:
+                        candidates.append(src_node)
+            except Exception:
+                pass
+
+            # 1b. listConnections on compound attr (colour compound), no skip
+            try:
+                lc = (
+                    cmds.listConnections(
+                        f"{rfm_node}.{color_attr}",
+                        source=True,
+                        destination=False,
+                    )
+                    or []
+                )
+                candidates.extend(lc)
+            except Exception:
+                pass
+
+            # 1c. listConnections on the first scalar child (".baseColorR")
+            #     Maya sometimes connects at component level
+            try:
+                lc_r = (
+                    cmds.listConnections(
+                        f"{rfm_node}.{color_attr}R",
+                        source=True,
+                        destination=False,
+                    )
+                    or []
+                )
+                candidates.extend(lc_r)
+            except Exception:
+                pass
+
+            # 1d. Walk one level deeper for each candidate so far
+            first_pass = list(candidates)
+            for node in first_pass:
+                try:
+                    deeper = (
+                        cmds.listConnections(
+                            node,
+                            source=True,
+                            destination=False,
+                        )
+                        or []
+                    )
+                    candidates.extend(deeper)
+                except Exception:
+                    pass
+
+            # De-duplicate while preserving insertion order
+            seen: set = set()
+            unique_candidates: list = []
+            for c in candidates:
+                if c not in seen:
+                    seen.add(c)
+                    unique_candidates.append(c)
+
+            if not unique_candidates:
+                self.logger.info(
+                    f"   [TEX-DIAG] {rfm_node}.{color_attr}: no upstream nodes found "
+                    f"via connectionInfo or listConnections"
+                )
+                return None
+
+            self.logger.info(
+                f"   [TEX-DIAG] {rfm_node}.{color_attr}: candidates = "
+                f"{unique_candidates[:6]}"  # cap at 6 to keep log tidy
+            )
+
+            # ── Step 2: Find texture file path ──────────────────────────────
+            FILENAME_ATTRS = (
+                "filename",         # PxrTexture (RenderMan for Maya)
+                "textureName",      # some RfM variants
+                "fileTextureName",  # Maya file node
+                "imageName",        # misc
+            )
+
+            tex_path = None
+            for node in unique_candidates:
+                for attr in FILENAME_ATTRS:
+                    try:
+                        val = cmds.getAttr(f"{node}.{attr}")
+                        if val and isinstance(val, str) and len(val) > 4:
+                            tex_path = val
+                            self.logger.info(
+                                f"   [TEX-DIAG] Found path on {node}.{attr}: {val}"
+                            )
+                            break
+                    except Exception:
+                        continue
+                if tex_path:
+                    break
+
+            if not tex_path:
+                # Log all attrs on the first candidate to help future diagnosis
+                if unique_candidates:
+                    try:
+                        attrs = cmds.listAttr(unique_candidates[0], scalar=True) or []
+                        str_attrs = [a for a in attrs if 'file' in a.lower()
+                                     or 'tex' in a.lower() or 'image' in a.lower()
+                                     or 'name' in a.lower()]
+                        self.logger.info(
+                            f"   [TEX-DIAG] No filename attr on {unique_candidates[0]}. "
+                            f"Likely attrs: {str_attrs[:10]}"
+                        )
+                    except Exception:
+                        pass
+                return None
+
+            # ── Step 3: Resolve UDIM / tile tokens ──────────────────────────
+            tex_path = re.sub(r'<[Uu][Dd][Ii][Mm]>', '1001', tex_path)
+            tex_path = re.sub(r'#{4}', '1001', tex_path)
+            tex_path = re.sub(r'%04d', '1001', tex_path)
+
+            # ── Step 4: Verify file exists, try alt extensions ───────────────
+            if not os.path.exists(tex_path):
+                base, _ext = os.path.splitext(tex_path)
+                for alt_ext in ('.tx', '.exr', '.tif', '.tiff', '.png', '.jpg', '.jpeg'):
+                    candidate = base + alt_ext
+                    if os.path.exists(candidate):
+                        tex_path = candidate
+                        break
+                else:
+                    self.logger.info(
+                        f"   [TEX-DIAG] Texture file not found on disk: {tex_path}"
+                    )
+                    return None
+
+            self.logger.info(
+                f"   [TEX-DIAG] Sampling texture: {os.path.basename(tex_path)}"
+            )
+
+            # ── Resolve RenderMan .tex → source image ────────────────────────
+            # RenderMan compiles source textures (PNG/EXR/TIFF) to a binary .tex
+            # format that PIL and most image libs cannot read.  The convention is
+            # "source.png.tex" — stripping the trailing ".tex" gets us back to the
+            # original source file.  Try that first; if it doesn't exist on disk,
+            # fall through and let PIL/OIIO try the .tex directly.
+            if tex_path.lower().endswith('.tex'):
+                source_candidate = tex_path[:-4]   # "body.png.tex" → "body.png"
+                if os.path.exists(source_candidate):
+                    self.logger.info(
+                        f"   [TEX-DIAG] RenderMan .tex → source: "
+                        f"{os.path.basename(source_candidate)}"
+                    )
+                    tex_path = source_candidate
+                else:
+                    self.logger.info(
+                        f"   [TEX-DIAG] .tex source not on disk "
+                        f"({os.path.basename(source_candidate)}), trying .tex directly"
+                    )
+
+            # ── Attempt 1: PIL/Pillow ────────────────────────────────────────
+            try:
+                from PIL import Image  # type: ignore
+                import numpy as np     # type: ignore
+
+                with Image.open(tex_path).convert('RGB') as img:
+                    thumb = img.resize((32, 32), Image.LANCZOS)
+                    arr = np.array(thumb, dtype=float) / 255.0
+                    r = float(arr[:, :, 0].mean())
+                    g = float(arr[:, :, 1].mean())
+                    b = float(arr[:, :, 2].mean())
+                    if r + g + b > 0.02:
+                        self.logger.info(
+                            f"   [TEX] {os.path.basename(tex_path)}: "
+                            f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL"
+                        )
+                        return Gf.Vec3f(
+                            max(0.0, min(1.0, r)),
+                            max(0.0, min(1.0, g)),
+                            max(0.0, min(1.0, b)),
+                        )
+            except ImportError:
+                self.logger.info("   [TEX-DIAG] PIL not available")
+            except Exception as pil_err:
+                self.logger.info(f"   [TEX-DIAG] PIL failed: {pil_err}")
+
+            # ── Attempt 2: OpenImageIO (ships with RfM 24+) ──────────────────
+            try:
+                import OpenImageIO as oiio  # type: ignore
+
+                inp = oiio.ImageInput.open(tex_path)
+                if inp:
+                    pixels = inp.read_image('float')
+                    inp.close()
+                    if pixels is not None:
+                        import numpy as np  # type: ignore
+                        arr = np.array(pixels)
+                        if arr.ndim == 3 and arr.shape[2] >= 3:
+                            r = float(arr[:, :, 0].mean())
+                            g = float(arr[:, :, 1].mean())
+                            b = float(arr[:, :, 2].mean())
+                            if r + g + b > 0.02:
+                                self.logger.info(
+                                    f"   [TEX] {os.path.basename(tex_path)}: "
+                                    f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO"
+                                )
+                                return Gf.Vec3f(
+                                    max(0.0, min(1.0, r)),
+                                    max(0.0, min(1.0, g)),
+                                    max(0.0, min(1.0, b)),
+                                )
+            except ImportError:
+                self.logger.info("   [TEX-DIAG] OpenImageIO not available")
+            except Exception as oiio_err:
+                self.logger.info(f"   [TEX-DIAG] OIIO failed: {oiio_err}")
+
+            # ── Last resort: scan the .rma package dir for any preview / source image ──
+            # RenderMan Material Archives sometimes ship a preview PNG alongside the
+            # .tex files.  Even if the original source PNG is gone, a thumbnail can
+            # supply a representative color.  We look at the folder that holds the
+            # .tex file and try every .png/.jpg/.jpeg we find there.
+            try:
+                rma_dir = os.path.dirname(tex_path)
+                if os.path.isdir(rma_dir):
+                    for fname in sorted(os.listdir(rma_dir)):
+                        if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                            candidate = os.path.join(rma_dir, fname)
+                            try:
+                                from PIL import Image  # type: ignore
+                                import numpy as np     # type: ignore
+                                with Image.open(candidate).convert('RGB') as img:
+                                    thumb = img.resize((32, 32), Image.LANCZOS)
+                                    arr = np.array(thumb, dtype=float) / 255.0
+                                    r = float(arr[:, :, 0].mean())
+                                    g = float(arr[:, :, 1].mean())
+                                    b = float(arr[:, :, 2].mean())
+                                    if r + g + b > 0.02:
+                                        self.logger.info(
+                                            f"   [TEX] {fname} (rma-scan): "
+                                            f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL"
+                                        )
+                                        return Gf.Vec3f(
+                                            max(0.0, min(1.0, r)),
+                                            max(0.0, min(1.0, g)),
+                                            max(0.0, min(1.0, b)),
+                                        )
+                            except Exception:
+                                continue  # try next file
+            except Exception as scan_err:
+                self.logger.info(f"   [TEX-DIAG] rma-dir scan error: {scan_err}")
+
+            self.logger.info(
+                f"   [TEX-DIAG] Sampling failed for {os.path.basename(tex_path)} — "
+                f"no supported image library could read it"
+            )
+            return None
+
+        except Exception as outer_err:
+            self.logger.info(f"   [TEX-DIAG] Unexpected error: {outer_err}")
+            return None
+
+    def _rfm_name_color(self, name: str) -> "Gf.Vec3f":
+        """Generate a unique, visually distinct color from a material name.
+
+        Uses MD5 hash → hue so that every material gets a consistent, spread-out
+        hue regardless of alphabetical ordering.  Saturation and value are fixed
+        at mid-range so colors are clearly visible in VP2 without being garish.
+        This is used as a last-resort fallback when RenderMan .tex textures cannot
+        be read by the available image libraries.
+        """
+        import hashlib
+        import colorsys
+        h = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)  # 0–4 294 967 295
+        hue = h / 4294967296.0   # uniformly spread 0.0–1.0
+        r, g, b = colorsys.hsv_to_rgb(hue, 0.55, 0.70)
+        return Gf.Vec3f(float(r), float(g), float(b))
+
+    def _convert_renderman_materials_to_usd_preview(self, usd_path: Path) -> None:
+        """
+        Convert RenderMan PxrShader materials to UsdPreviewSurface.
+
+        Maya's RenderMan typically uses Lambert nodes with PxrSurface/PxrShader connections.
+        This method reads the Lambert diffuse colors and converts to UsdPreviewSurface materials.
+        """
+        if not USD_AVAILABLE:
+            self.logger.warning("[WARNING] USD Python API not available for material conversion")
+            return
+
+        try:
+            from pxr import Usd, UsdShade, Sdf, Gf
+
+            stage = Usd.Stage.Open(str(usd_path))
+            if not stage:
+                self.logger.warning("[WARNING] Could not open USD stage for material conversion")
+                return
+
+            self.logger.info("[LOOKDEV] Converting RenderMan materials to UsdPreviewSurface...")
+
+            materials_converted = 0
+
+            # ----------------------------------------------------------------
+            # Step 1: Build sg_to_color from Maya — keyed by shading group name.
+            # This is more reliable than mesh→material because skinned mesh
+            # bindings in USD may not be authored on the mesh prim itself.
+            # mayaUSD names USD Material prims after the Maya shading group.
+            # ----------------------------------------------------------------
+            sg_to_color = {}
+            if cmds is not None:
+                try:
+                    # ----------------------------------------------------------
+                    # Phase A: Lambert → SG (non-proxy Lamberts only).
+                    # Skip lambert1 (Maya default) and any Lambert whose name
+                    # contains "pxr" (RFM occasionally names proxies that way).
+                    # ----------------------------------------------------------
+                    lambert_colors = {}
+                    for lambert in (cmds.ls(type="lambert") or []):
+                        try:
+                            if lambert == "lambert1" or "pxr" in lambert.lower():
+                                continue
+                            c = cmds.getAttr(f"{lambert}.color")[0]
+                            r, g, b = float(c[0]), float(c[1]), float(c[2])
+                            # Skip near-black lamberts — RfM creates placeholder
+                            # lambert nodes with color (0,0,0) for every Pxr shader.
+                            # Storing them in Phase A would poison the SG lookup with
+                            # black before Phase B can mark it None (texture-driven).
+                            if r + g + b <= 0.01:
+                                continue
+                            lambert_colors[lambert] = Gf.Vec3f(r, g, b)
+                        except Exception:
+                            pass
+
+                    for lambert, color in lambert_colors.items():
+                        try:
+                            for sg in (cmds.listConnections(lambert, type="shadingEngine") or []):
+                                sg_to_color[sg] = color
+                        except Exception:
+                            pass
+
+                    # ----------------------------------------------------------
+                    # Phase B: RenderMan PxrSurface / PxrDisney / PxrUnified.
+                    # RfM connects shaders to shadingEngine.rmanSurface (not
+                    # .surfaceShader), so Phase C misses them entirely.
+                    # PxrSurface final color = diffuseGain * diffuseColor.
+                    # PxrDisney / PxrUnified use baseColor directly.
+                    # ----------------------------------------------------------
+                    # ── PHASE B CODE VERSION: v5 ─────────────────────────
+                    self.logger.info("   [PHASE-B] v5 — scanning RfM SGs for texture colors")
+                    RFM_SHADER_TYPES = {
+                        # node_type: (color_attr, gain_attr_or_None)
+                        "PxrSurface":      ("diffuseColor", "diffuseGain"),
+                        # RfM 26+: "PxrDisney" was later registered as "PxrDisneyBsdf"
+                        "PxrDisney":       ("baseColor",    None),
+                        "PxrDisneyBsdf":   ("baseColor",    None),
+                        # Some RfM 27 builds register it without the 'Bsdf' suffix
+                        "PxrDisneyBSDF":   ("baseColor",    None),
+                        "PxrUnified":      ("diffuseColor", "diffuseGain"),
+                        "PxrLayer":        ("diffuseColor", None),
+                        "PxrLMDiffuse":    ("transmissionColor", None),
+                    }
+                    # Pre-collect ALL Pxr* shader nodes in the scene, keyed by
+                    # their SHORT name (namespace stripped).  This lets the
+                    # name-derivation fallback below find nodes even when they
+                    # live inside a Maya reference namespace.
+                    # e.g. "SomeRef:PxrDisneyBsdf1" is stored under key "PxrDisneyBsdf1".
+                    _pxr_short_to_full: dict = {}
+                    try:
+                        for _pxr_type in RFM_SHADER_TYPES:
+                            for _n in (cmds.ls(type=_pxr_type) or []):
+                                _short = _n.split(":")[-1]
+                                _pxr_short_to_full.setdefault(_short, _n)
+                        # Broad sweep: catch any Pxr* node regardless of type name
+                        # (handles unknown RfM versions or non-standard registrations).
+                        for _n in (cmds.ls("Pxr*") or []) + (cmds.ls("*:Pxr*") or []):
+                            _short = _n.split(":")[-1]
+                            _pxr_short_to_full.setdefault(_short, _n)
+                    except Exception:
+                        pass
+                    self.logger.info(
+                        f"   [PHASE-B] pre-collected {len(_pxr_short_to_full)} "
+                        f"Pxr* nodes: {list(_pxr_short_to_full.keys())[:6]}..."
+                    )
+
+                    # Build reverse map: Pxr surface shader → its connected SG(s).
+                    # In RfM 27 the PxrDisneyBsdf shader may not appear in the SG's
+                    # incoming connections at all; instead the SG appears in the shader's
+                    # *outgoing* connections.  Querying "what SGs does Veteran_Body_Bsdf
+                    # output to?" gives us the link even when the SG refuses to list it.
+                    _sg_to_pxr_map: dict = {}
+                    for _full in _pxr_short_to_full.values():
+                        try:
+                            if cmds.nodeType(_full) not in RFM_SHADER_TYPES:
+                                continue
+                        except Exception:
+                            continue
+                        try:
+                            for _sg_name in (
+                                cmds.listConnections(
+                                    _full,
+                                    source=False,
+                                    destination=True,
+                                    type="shadingEngine",
+                                ) or []
+                            ):
+                                _sg_to_pxr_map.setdefault(_sg_name, [])
+                                if _full not in _sg_to_pxr_map[_sg_name]:
+                                    _sg_to_pxr_map[_sg_name].append(_full)
+                        except Exception:
+                            pass
+                    if _sg_to_pxr_map:
+                        self.logger.info(
+                            f"   [PHASE-B] reverse Pxr→SG map: "
+                            f"{len(_sg_to_pxr_map)} SGs have Pxr shader linkage. "
+                            f"Sample: {dict(list(_sg_to_pxr_map.items())[:3])}"
+                        )
+                    else:
+                        self.logger.info(
+                            "   [PHASE-B] reverse map: no outgoing Pxr→SG connections found"
+                        )
+
+                    # Also check .rmanSurface on every SG.
+                    # Each SG is isolated in its own try/except so a missing
+                    # .rmanSurface attribute on one SG never aborts the loop.
+                    for sg in (cmds.ls(type="shadingEngine") or []):
+                        if sg in sg_to_color:
+                            continue
+                        try:
+                            # RfM primary connection point (.rmanSurface may not
+                            # exist on non-RfM SGs — catch the Maya error per-SG)
+                            try:
+                                rfm_nodes = (
+                                    cmds.listConnections(
+                                        f"{sg}.rmanSurface", source=True, destination=False
+                                    ) or []
+                                )
+                            except Exception:
+                                rfm_nodes = []
+                            # Fallback: .surfaceShader may hold a PxrSurface in some RfM setups
+                            try:
+                                rfm_nodes += (
+                                    cmds.listConnections(
+                                        f"{sg}.surfaceShader", source=True, destination=False
+                                    ) or []
+                                )
+                            except Exception:
+                                pass
+                            # RfM 27 name-derived fallback: the SG is named after
+                            # its shader node (e.g. PxrDisneyBsdf1SG → PxrDisneyBsdf1).
+                            # In RfM 27 the Pxr shader is NOT wired to .rmanSurface or
+                            # .surfaceShader — only a lambert placeholder is.  Stripping
+                            # the trailing "SG" gives us the shader's short name; we then
+                            # look it up in _pxr_short_to_full (handles reference namespaces).
+                            if sg.endswith("SG"):
+                                derived_short = sg.split(":")[-1][:-2]  # "NS:PxrDisneyBsdf1SG" → "PxrDisneyBsdf1"
+                                full_name = _pxr_short_to_full.get(derived_short)
+                                if full_name and full_name not in rfm_nodes:
+                                    rfm_nodes.append(full_name)
+                                    self.logger.info(
+                                        f"   [PHASE-B] {sg}: name-derived fallback found {full_name!r}"
+                                    )
+                            # Broad incoming-connection scan: check ALL source connections
+                            # on this SG for any Pxr* node (catches undocumented RfM attrs).
+                            try:
+                                for _c in (
+                                    cmds.listConnections(
+                                        sg, source=True, destination=False
+                                    ) or []
+                                ):
+                                    try:
+                                        if (
+                                            cmds.nodeType(_c).startswith("Pxr")
+                                            and _c not in rfm_nodes
+                                        ):
+                                            rfm_nodes.append(_c)
+                                            self.logger.info(
+                                                f"   [PHASE-B] {sg}: broad-scan found {_c!r}"
+                                            )
+                                    except Exception:
+                                        pass
+                            except Exception:
+                                pass
+                            # Reverse map: Pxr shader declared THIS SG as its output.
+                            for _p in _sg_to_pxr_map.get(sg, []):
+                                if _p not in rfm_nodes:
+                                    rfm_nodes.append(_p)
+                                    self.logger.info(
+                                        f"   [PHASE-B] {sg}: reverse-map found {_p!r}"
+                                    )
+                            has_pxr_node = False
+                            for rfm_node in rfm_nodes:
+                                try:
+                                    node_type = cmds.nodeType(rfm_node)
+                                except Exception:
+                                    continue
+                                # Any Pxr* node is a RenderMan shader — mark
+                                # the SG as RfM-owned even if we can't read
+                                # a meaningful color from it.
+                                if node_type.startswith("Pxr"):
+                                    has_pxr_node = True
+                                if node_type not in RFM_SHADER_TYPES:
+                                    # RenderMan wires a Lambert placeholder to the SG
+                                    # so Maya's own VP2 can show a preview color — that
+                                    # Lambert.color IS the intended display color.  Read
+                                    # it here before falling through to texture sampling.
+                                    if node_type == "lambert" and sg not in sg_to_color:
+                                        try:
+                                            raw_lc = cmds.getAttr(f"{rfm_node}.color")
+                                            if raw_lc:
+                                                lc = raw_lc[0] if isinstance(raw_lc, list) else raw_lc
+                                                lr, lg, lb = float(lc[0]), float(lc[1]), float(lc[2])
+                                                # Skip pure default grey (0.5, 0.5, 0.5) — that's
+                                                # an unset placeholder, not a real preview color.
+                                                is_default_grey = (
+                                                    abs(lr - 0.5) < 0.01
+                                                    and abs(lg - 0.5) < 0.01
+                                                    and abs(lb - 0.5) < 0.01
+                                                )
+                                                if not is_default_grey and lr + lg + lb > 0.02:
+                                                    sg_to_color[sg] = Gf.Vec3f(
+                                                        max(0.0, min(1.0, lr)),
+                                                        max(0.0, min(1.0, lg)),
+                                                        max(0.0, min(1.0, lb)),
+                                                    )
+                                                    self.logger.info(
+                                                        f"   [PHASE-B] {sg}: Lambert VP2 color "
+                                                        f"({lr:.3f}, {lg:.3f}, {lb:.3f}) from {rfm_node}"
+                                                    )
+                                        except Exception:
+                                            pass
+                                    else:
+                                        self.logger.info(
+                                            f"   [PHASE-B] {sg}: found {rfm_node} "
+                                            f"type={node_type!r} — not in RFM_SHADER_TYPES, skipping"
+                                        )
+                                    continue
+                                color_attr, gain_attr = RFM_SHADER_TYPES[node_type]
+                                try:
+                                    raw = cmds.getAttr(f"{rfm_node}.{color_attr}")
+                                    # A compound color attribute that has an
+                                    # upstream connection returns None from
+                                    # getAttr (Maya can't evaluate it outside
+                                    # the DG).  Treat that as (0,0,0) so we
+                                    # fall through to the texture sampler below.
+                                    if raw is None:
+                                        r, g, b = 0.0, 0.0, 0.0
+                                    else:
+                                        c = raw[0] if isinstance(raw, list) else raw
+                                        r, g, b = float(c[0]), float(c[1]), float(c[2])
+                                    self.logger.info(
+                                        f"   [B-DIAG] {rfm_node}.{color_attr}: "
+                                        f"raw={raw!r}  r+g+b={r+g+b:.4f}"
+                                    )
+                                    if gain_attr:
+                                        try:
+                                            gain = float(cmds.getAttr(f"{rfm_node}.{gain_attr}"))
+                                            r, g, b = r * gain, g * gain, b * gain
+                                        except Exception:
+                                            pass
+                                    # Only use if meaningfully non-zero
+                                    if r + g + b > 0.01:
+                                        sg_to_color[sg] = Gf.Vec3f(
+                                            max(0.0, min(1.0, r)),
+                                            max(0.0, min(1.0, g)),
+                                            max(0.0, min(1.0, b)),
+                                        )
+                                        break
+                                    else:
+                                        # baseColor is near-zero — this shader is
+                                        # texture-driven. Follow the connection to
+                                        # the PxrTexture and sample the actual file
+                                        # so VP2 shows a meaningful preview color
+                                        # instead of uniform mid-grey.
+                                        self.logger.info(
+                                            f"   [B-DIAG] {rfm_node}: near-zero, "
+                                            f"calling texture sampler..."
+                                        )
+                                        tex_color = self._sample_pxr_texture_color(
+                                            rfm_node, color_attr
+                                        )
+                                        if tex_color is not None:
+                                            sg_to_color[sg] = tex_color
+                                            self.logger.info(
+                                                f"   [TEX] {sg} — sampled texture color: {tex_color}"
+                                            )
+                                            break
+                                except Exception as _b_exc:
+                                    self.logger.info(
+                                        f"   [B-DIAG] EXCEPTION for {rfm_node}.{color_attr}: "
+                                        f"{type(_b_exc).__name__}: {_b_exc}"
+                                    )
+                                    continue
+                            # If ANY Pxr* node was found on this SG but no
+                            # usable color was extracted, mark it with None
+                            # so Phase C can't pick it up with black.
+                            if has_pxr_node and sg not in sg_to_color:
+                                sg_to_color[sg] = None
+                        except Exception:
+                            continue
+
+                    # ----------------------------------------------------------
+                    # Phase C: Generic surface shader fallback for non-Lambert,
+                    # non-RFM SGs (e.g. aiStandardSurface, blinn, phong, etc.).
+                    # Tries common color attribute names on whatever node is
+                    # connected to .surfaceShader.
+                    # ----------------------------------------------------------
+                    # outColor covers Maya's built-in surfaceShader node type
+                    # (used by utility shaders like asRedSG, asGreenSG, etc.).
+                    # NOTE: outColor MUST be last.  On lambert nodes it is
+                    # a computed output that returns (0,0,0) without a DG
+                    # evaluation context.  Reading 'color' first yields the
+                    # authored diffuse color (correct for lamberts).
+                    GENERIC_COLOR_ATTRS = ("color", "baseColor", "diffuseColor", "Kd", "outColor")
+                    for sg in (cmds.ls(type="shadingEngine") or []):
+                        if sg in sg_to_color:
+                            continue  # already resolved
+                        try:
+                            nodes = cmds.listConnections(f"{sg}.surfaceShader") or []
+                        except Exception:
+                            nodes = []
+                        for node in nodes:
+                            # Any Pxr* node is a RenderMan shader. Reading
+                            # outColor/baseColor from an unevaluated Pxr node
+                            # returns (0,0,0) and would corrupt the USD.
+                            # Use startswith("Pxr") to catch every variant
+                            # (PxrDisney, PxrDisneyBsdf, PxrSurface, etc.).
+                            try:
+                                if cmds.nodeType(node).startswith("Pxr"):
+                                    sg_to_color[sg] = None
+                                    break
+                            except Exception:
+                                pass
+                            for ca in GENERIC_COLOR_ATTRS:
+                                try:
+                                    # Skip texture-driven attributes: if the color
+                                    # input is connected to a PxrTexture or similar
+                                    # upstream node, getAttr only returns the scalar
+                                    # fallback (usually 0,0,0) which is misleading.
+                                    # Using the black fallback would overwrite any
+                                    # correct texture wiring already in USD.
+                                    if cmds.listConnections(
+                                        f"{node}.{ca}",
+                                        source=True,
+                                        destination=False,
+                                    ):
+                                        continue
+                                    c = cmds.getAttr(f"{node}.{ca}")[0]
+                                    sg_to_color[sg] = Gf.Vec3f(c[0], c[1], c[2])
+                                    break
+                                except Exception:
+                                    pass
+                            if sg in sg_to_color:
+                                break
+
+                    self.logger.info(f"[LOOKDEV] Found {len(lambert_colors)} Lambert materials in Maya")
+                    color_count = sum(1 for v in sg_to_color.values() if v is not None)
+                    skip_count = sum(1 for v in sg_to_color.values() if v is None)
+                    skipped_sgs = [k for k, v in sg_to_color.items() if v is None]
+                    self.logger.info(
+                        f"[LOOKDEV] Mapped {color_count} shading groups to colors "
+                        f"(A=Lambert, B=RfM Pxr*, C=generic)"
+                        + (f", {skip_count} RfM texture-driven skipped" if skip_count else "")
+                    )
+                    if skipped_sgs:
+                        self.logger.info(f"[LOOKDEV] Skipped RfM SGs: {skipped_sgs[:10]}")
+                    self.logger.info(f"[LOOKDEV] Sample SG keys: {list(sg_to_color.keys())[:8]}")
+                except Exception as e:
+                    self.logger.warning(f"[WARNING] Could not query Maya materials: {e}")
+
+            # ----------------------------------------------------------------
+            # Step 2: Walk all USD Material prims and inject UsdPreviewSurface.
+            # Match USD material prim name → Maya SG name using variations.
+            # This avoids relying on mesh binding relationships entirely.
+            # ----------------------------------------------------------------
+            self.logger.info("[LOOKDEV] Scanning USD material prims for name→SG matches...")
+            usd_mat_count = 0
+            usd_mat_name_samples = []
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != "Material":
+                    continue
+                usd_mat_count += 1
+                usd_mat_name = prim.GetName()
+                if len(usd_mat_name_samples) < 5:
+                    usd_mat_name_samples.append(usd_mat_name)
+                material = UsdShade.Material(prim)
+
+                # Build name variations to match against Maya SG names
+                # mayaUSD may strip trailing 'SG' or append it, clean namespaces, etc.
+                name_vars = [
+                    usd_mat_name,
+                    usd_mat_name + "SG",
+                    usd_mat_name + "1SG",
+                    usd_mat_name.rstrip("SG"),
+                    usd_mat_name.replace("_mat", "SG"),
+                    usd_mat_name.replace("_mat", "1SG"),
+                ]
+
+                lambert_color = None
+                matched_sg = None
+                for var in name_vars:
+                    if var in sg_to_color:
+                        lambert_color = sg_to_color[var]
+                        matched_sg = var
+                        break
+
+                if lambert_color is None:
+                    # Last resort: infer color from the USD material prim name.
+                    # Rig control shaders like asRedSG, asGreenSG, asBlueSG may
+                    # not exist in the current Maya session (e.g. if the model
+                    # file had a partial load error) but their names encode the
+                    # intended color unambiguously.
+                    name_lower = usd_mat_name.lower()
+                    NAME_COLOR_MAP = [
+                        ("red",     Gf.Vec3f(0.8, 0.1, 0.1)),
+                        ("green",   Gf.Vec3f(0.1, 0.7, 0.1)),
+                        ("blue",    Gf.Vec3f(0.1, 0.3, 0.9)),
+                        ("yellow",  Gf.Vec3f(0.9, 0.85, 0.1)),
+                        ("orange",  Gf.Vec3f(0.9, 0.5, 0.1)),
+                        ("purple",  Gf.Vec3f(0.5, 0.1, 0.8)),
+                        ("cyan",    Gf.Vec3f(0.1, 0.8, 0.8)),
+                        ("pink",    Gf.Vec3f(0.9, 0.4, 0.6)),
+                        ("brown",   Gf.Vec3f(0.45, 0.25, 0.1)),
+                        ("white",   Gf.Vec3f(0.95, 0.95, 0.95)),
+                        ("black",   Gf.Vec3f(0.02, 0.02, 0.02)),
+                        ("gray",    Gf.Vec3f(0.5, 0.5, 0.5)),
+                        ("grey",    Gf.Vec3f(0.5, 0.5, 0.5)),
+                        ("gold",    Gf.Vec3f(0.85, 0.7, 0.1)),
+                        ("silver",  Gf.Vec3f(0.75, 0.75, 0.78)),
+                    ]
+                    for keyword, inferred in NAME_COLOR_MAP:
+                        if keyword in name_lower:
+                            lambert_color = inferred
+                            matched_sg = f"[name:{keyword}]"
+                            break
+
+                is_rfm_name = usd_mat_name.startswith(
+                    ("PxrDisney", "PxrSurface", "PxrUnified", "PxrLayer", "PxrLM")
+                )
+                # Also treat near-black Gf.Vec3f as missing for RfM materials —
+                # Phase B stores None for texture-driven Pxr nodes, but due to
+                # exception-swallowing or phantom lambert connections the dict may
+                # hold Gf.Vec3f(0,0,0) instead of Python None.  Either way the
+                # mesh would render invisible without this guard.
+                is_near_black = (
+                    lambert_color is not None
+                    and isinstance(lambert_color, Gf.Vec3f)
+                    and (lambert_color[0] + lambert_color[1] + lambert_color[2]) <= 0.01
+                )
+
+                if lambert_color is None or (is_rfm_name and is_near_black):
+                    # For RfM texture-driven materials use a mid-grey fallback so
+                    # the mesh is at least visible in VP2.  Without a surface output
+                    # VP2 renders the mesh as white/unshaded; without a non-black
+                    # diffuseColor VP2 renders it as solid black.
+                    if is_rfm_name:
+                        # Texture sampling failed — generate a unique, deterministic
+                        # color from the material name so each part of the rig is
+                        # visually distinct in VP2 rather than uniform mid-grey.
+                        lambert_color = self._rfm_name_color(usd_mat_name)
+                        matched_sg = "[fallback:RfM-name-hash]"
+                        self.logger.info(
+                            f"   [FALLBACK] {usd_mat_name} — texture unreadable, "
+                            f"using name-hash color: {lambert_color}"
+                        )
+                    else:
+                        continue  # Non-RfM material with no color source — skip
+
+                # RfM auto-names SGs after the shader node (e.g. PxrDisneyBsdf1SG).
+                if is_rfm_name:
+                    self.logger.info(
+                        f"   [RFM] {usd_mat_name} — writing Phase B color: {lambert_color}"
+                    )
+
+                # Check if we already injected a PreviewSurface (re-export).
+                # Use path-prefix traversal — GetAllDescendants() not available
+                # in Maya's embedded USD Python build.
+                preview_shader = None
+                mat_path_prefix = str(prim.GetPath()) + "/"
+                for desc_prim in stage.Traverse():
+                    if not str(desc_prim.GetPath()).startswith(mat_path_prefix):
+                        continue
+                    if desc_prim.GetTypeName() == "Shader":
+                        s = UsdShade.Shader(desc_prim)
+                        if s and s.GetShaderId() == "UsdPreviewSurface":
+                            preview_shader = s
+                            break
+
+                if preview_shader:
+                    # Never overwrite a diffuseColor that already has a texture
+                    # connection wired by mayaUSD (e.g. PxrDisney with PxrTexture).
+                    # Reading the static color from the Lambert placeholder would
+                    # replace the real texture with solid black.
+                    dc_input = preview_shader.GetInput("diffuseColor")
+                    if dc_input and dc_input.HasConnectedSource():
+                        materials_converted += 1
+                        self.logger.debug(
+                            f"   [SKIP] {usd_mat_name} — diffuseColor already has texture connection"
+                        )
+                    else:
+                        preview_shader.CreateInput(
+                            "diffuseColor", Sdf.ValueTypeNames.Color3f
+                        ).Set(lambert_color)
+                        materials_converted += 1
+                        self.logger.info(f"   [UPDATE] {usd_mat_name} ← {matched_sg} = {lambert_color}")
+
+                    # Ensure material's universal 'surface' output is connected.
+                    # The RenderMan exporter only creates ri:surface — VP2 needs
+                    # the renderContext-free 'surface' output to find the shader.
+                    surface_out = material.GetSurfaceOutput()
+                    if not surface_out or not surface_out.HasConnectedSource():
+                        material.CreateSurfaceOutput().ConnectToSource(
+                            preview_shader.ConnectableAPI(), "surface"
+                        )
+                        self.logger.debug(
+                            f"   [FIX] {usd_mat_name} — wired surface output for VP2"
+                        )
+                else:
+                    # Inject PreviewSurface into the existing RenderMan material.
+                    # universal 'surface' output leaves ri:surface connection untouched.
+                    shader_path = f"{str(prim.GetPath())}/PreviewSurface"
+                    shader = UsdShade.Shader.Define(stage, shader_path)
+                    shader.CreateIdAttr("UsdPreviewSurface")
+                    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(lambert_color)
+                    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
+                    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                    material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+                    materials_converted += 1
+                    self.logger.info(f"   [INJECT] {usd_mat_name} ← {matched_sg} = {lambert_color}")
+
+            self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
+            self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
+            unmatched = usd_mat_count - materials_converted
+            if unmatched > 0:
+                self.logger.info(f"[LOOKDEV] {unmatched} USD materials had no SG color match — check SG keys above")
+            if materials_converted > 0:
+                stage.Save()
+                self.logger.info(f"[OK] Created/updated {materials_converted} UsdPreviewSurface materials with colors")
+            else:
+                self.logger.info(
+                    f"[OK] No SG name matches found in {usd_mat_count} USD materials"
+                    " — check SG name samples above"
+                )
+
+        except Exception as e:
+            self.logger.warning(f"[WARNING] Material conversion error: {e}")
+            import traceback
+            self.logger.warning(traceback.format_exc())
+
+    def _create_usd_preview_material(
+        self,
+        stage,
+        materials_scope,
+        mesh_name: str,
+        diffuse_color: 'Gf.Vec3f',
+        mesh_prim
+    ) -> None:
+        """Create a UsdPreviewSurface material and bind it to a mesh"""
+        try:
+            from pxr import UsdShade, Sdf, Gf
+
+            # Create material prim
+            material_path = f"{materials_scope.GetPath()}/{mesh_name}_mat"
+            material = UsdShade.Material.Define(stage, material_path)
+
+            # Create UsdPreviewSurface shader
+            shader_path = f"{material_path}/PreviewSurface"
+            shader = UsdShade.Shader.Define(stage, shader_path)
+            shader.CreateIdAttr("UsdPreviewSurface")
+
+            # Set diffuse color from Lambert
+            if diffuse_color:
+                shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(diffuse_color)
+            else:
+                # Default to white if no color found
+                shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.8, 0.8, 0.8))
+
+            # Set reasonable default PBR values
+            shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
+            shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+
+            # Connect shader to material surface
+            material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+
+            # Bind material to mesh
+            UsdShade.MaterialBindingAPI(mesh_prim).Bind(material)
+
+            self.logger.debug(f"   [OK] Created UsdPreviewSurface for {mesh_name}")
+
+        except Exception as e:
+            self.logger.warning(f"[WARNING] Failed to create material for {mesh_name}: {e}")
+
     def _create_usdz_package(
         self,
         usd_path: Path,
@@ -2728,10 +3655,10 @@ class UsdPipeline:
                 # Add .rig.mb backup if exists
                 if rig_mb_path and rig_mb_path.exists():
                     zf.write(str(rig_mb_path), rig_mb_path.name)
-                    self.logger.info(f"📦 Added rig backup to USDZ: {rig_mb_path.name}")
+                    self.logger.info(f"[PACKAGE] Added rig backup to USDZ: {rig_mb_path.name}")
 
             file_size = usdz_path.stat().st_size / (1024 * 1024)
-            self.logger.info(f"🎁 USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
+            self.logger.info(f"[BUNDLE] USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
             return True
 
         except Exception as e:
@@ -2790,21 +3717,21 @@ class UsdPipeline:
                             # Store with folder structure: AssetName_USD/filename
                             arcname = f"{subfolder.name}/{file.name}"
                             zf.write(str(file), arcname)
-                            self.logger.info(f"📦 Added to ZIP: {arcname}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {arcname}")
                 else:
                     # Add individual files
                     if usdz_path and usdz_path.exists():
                         zf.write(str(usdz_path), usdz_path.name)
-                        self.logger.info(f"📦 Added to ZIP: {usdz_path.name}")
+                        self.logger.info(f"[PACKAGE] Added to ZIP: {usdz_path.name}")
 
                     if not options.cleanup_intermediate_files:
                         if usd_path.exists():
                             zf.write(str(usd_path), usd_path.name)
-                            self.logger.info(f"📦 Added to ZIP: {usd_path.name}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {usd_path.name}")
 
                         if rig_mb_path and rig_mb_path.exists():
                             zf.write(str(rig_mb_path), rig_mb_path.name)
-                            self.logger.info(f"📦 Added to ZIP: {rig_mb_path.name}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {rig_mb_path.name}")
 
             file_size = zip_path.stat().st_size / (1024 * 1024)
             self.logger.info(f"🗜️ ZIP archive: {zip_path.name} ({file_size:.1f} MB)")
@@ -2859,7 +3786,22 @@ class UsdPipeline:
             # Keep USD as proxy for pipeline integration
             if options.usd_proxy_mode:
                 self.logger.info("[USD] USD PROXY MODE ACTIVATED (Experimental)")
-                self.logger.warning("[WARNING] Known issue: Maya 2026 has viewport bugs with complex skeletons")
+
+                # Build layered stage: decompose monolithic .usdc into
+                # root.usda → animation / controllers / materials / skeleton / geometry / base
+                self._report_progress("[LAYER] Building layered USD stage", 10)
+                layered_root = self._build_layered_stage(actual_usd_path, rig_mb_path)
+                if layered_root:
+                    self.logger.info(
+                        f"[OK] Proxy will load layered stage: {layered_root.name}"
+                    )
+                    actual_usd_path = layered_root
+                else:
+                    self.logger.warning(
+                        "[WARNING] Layered stage creation failed — "
+                        "falling back to monolithic USD"
+                    )
+
                 self._report_progress("[USD] Creating USD Proxy Shape", 20)
                 usd_success = self._import_with_mayausd(actual_usd_path, options, result)
 
@@ -2871,7 +3813,21 @@ class UsdPipeline:
                         f"[OK] USD Proxy created: {result.usd_meshes} meshes, "
                         f"{result.usd_joints} joints in USD"
                     )
-                    self.logger.info("[TIP] Animate USD skeleton via mayaUSD layer system")
+                    # Materials live inside the USD stage — rendered by VP2, not Maya Hypershade
+                    if result.usd_materials > 0:
+                        self.logger.info(
+                            f"[LOOKDEV] {result.usd_materials} USD materials rendered via VP2 "
+                            f"(UsdPreviewSurface — these are USD-native, not Maya Hypershade shaders)"
+                        )
+                    if options.open_layer_editor:
+                        self.logger.info(
+                            "[TIP] USD Layer Editor opened — author animation as a non-destructive layer (Option B)"
+                        )
+                    else:
+                        self.logger.info(
+                            "[TIP] Animate via USD > Edit As Maya Data (Option A) "
+                            "or reopen with 'USD Layer Editor' selected (Option B)"
+                        )
                 else:
                     result.error_message = "USD proxy creation failed or no content"
 
@@ -2881,7 +3837,7 @@ class UsdPipeline:
             # ========== HYBRID WORKFLOW (RECOMMENDED) ==========
             rig_exists = rig_mb_path.exists() if rig_mb_path else False
             self.logger.info(
-                f"[DEBUG] Hybrid check: hybrid_mode={options.hybrid_mode}, "
+                f"[IMPORT] Hybrid check: hybrid_mode={options.hybrid_mode}, "
                 f"rig_mb_path={rig_mb_path}, exists={rig_exists}"
             )
             if options.hybrid_mode and rig_mb_path and rig_mb_path.exists():
@@ -2893,6 +3849,11 @@ class UsdPipeline:
                 return result
 
             # ========== STANDARD WORKFLOWS ==========
+            # Build layered stage for standard proxy import too
+            layered_root = self._build_layered_stage(actual_usd_path, rig_mb_path)
+            if layered_root:
+                actual_usd_path = layered_root
+
             # Import USD using mayaUSD - creates a proxy shape with USD prims
             self._report_progress("Importing USD via mayaUSD", 20)
             usd_success = self._import_with_mayausd(actual_usd_path, options, result)
@@ -2939,7 +3900,7 @@ class UsdPipeline:
             if temp_dir and temp_dir.exists():
                 if has_usd_content:
                     # Keep the temp dir - proxy shape needs the USD file
-                    self.logger.info(f"💾 USD files preserved in: {temp_dir}")
+                    self.logger.info(f"[SAVE] USD files preserved in: {temp_dir}")
                     self.logger.info(
                         "[TIP] To make permanent: File > Archive Scene or re-export USDZ"
                     )
@@ -2985,10 +3946,10 @@ class UsdPipeline:
 
                     if name.endswith(('.usd', '.usdc', '.usda')):
                         usd_path = extracted_path
-                        self.logger.info(f"📄 Extracted USD: {name}")
+                        self.logger.info(f"[FILE] Extracted USD: {name}")
                     elif name.endswith('.rig.mb') or name.endswith('.rig.ma'):
                         rig_mb_path = extracted_path
-                        self.logger.info(f"📦 Extracted rig backup: {name}")
+                        self.logger.info(f"[PACKAGE] Extracted rig backup: {name}")
 
             return usd_path, rig_mb_path, temp_dir
 
@@ -3020,6 +3981,8 @@ class UsdPipeline:
             material_count = 0
             has_skeleton_bindings = False
 
+            joint_count = 0
+
             if USD_AVAILABLE:
                 try:
                     from pxr import Usd, UsdSkel  # type: ignore
@@ -3028,7 +3991,7 @@ class UsdPipeline:
                         # Find the default prim or root
                         default_prim = stage.GetDefaultPrim()
                         default_path = default_prim.GetPath() if default_prim else None
-                        self.logger.info(f"📂 USD default prim: {default_path}")
+                        self.logger.info(f"[FILE] USD default prim: {default_path}")
 
                         # Count prims
                         for prim in stage.Traverse():
@@ -3040,14 +4003,18 @@ class UsdPipeline:
                                     has_skeleton_bindings = True
                             elif prim_type == 'Skeleton':
                                 skel_count += 1
+                                # Sum actual joints defined in this Skeleton
+                                joints_attr = UsdSkel.Skeleton(prim).GetJointsAttr().Get()
+                                if joints_attr:
+                                    joint_count += len(joints_attr)
                             elif prim_type in ('NurbsCurves', 'BasisCurves'):
                                 curve_count += 1
                             elif prim_type == 'Material':
                                 material_count += 1
 
                         self.logger.info(
-                            f"[INFO] USD contains: {mesh_count} meshes, {skel_count} skeletons, "
-                            f"{curve_count} curves, {material_count} materials"
+                            f"[INFO] USD contains: {mesh_count} meshes, {skel_count} skeleton rig(s) "
+                            f"({joint_count} joints), {curve_count} curves, {material_count} materials"
                         )
                         if has_skeleton_bindings:
                             self.logger.info("[INFO] USD has skeleton-bound meshes (skinned)")
@@ -3060,7 +4027,7 @@ class UsdPipeline:
 
             # Create a USD proxy shape that loads the USD file natively
             # This is the proper Disney/Pixar workflow - USD prims displayed through proxy
-            self.logger.info("🎬 Creating USD Stage (mayaUsdProxyShape)...")
+            self.logger.info("[ANIMATION] Creating USD Stage (mayaUsdProxyShape)...")
 
             try:
                 # Create the proxy shape
@@ -3085,9 +4052,23 @@ class UsdPipeline:
                 except Exception:
                     pass  # Attribute may not exist in all Maya versions
 
-                # WORKAROUND: Force stage reload to fix UsdSkelImaging path resolution
-                # Maya 2026 has a bug where skeleton bindings don't resolve correctly
-                # on first load. Toggling the file path forces a clean reload.
+                # IMPORTANT: Tell VP2 to resolve UsdPreviewSurface materials via the
+                # shader registry.  Without this the proxy shape defaults to displayColor
+                # (flat grey) regardless of what shaders are authored in the USD stage.
+                try:
+                    cmds.setAttr(f"{proxy_shape}.shadingMode", "useRegistry", type='string')
+                    self.logger.info("[SHADING] Set proxy shadingMode=useRegistry for VP2 material display")
+                except Exception:
+                    pass  # Attribute name differs across mayaUSD versions — try alternatives
+                try:
+                    # Belt-and-suspenders: the global optionVar is also consulted by some
+                    # mayaUSD builds when the per-node attribute is not available.
+                    cmds.optionVar(stringValue=('mayaUsd_ShadingModeImport', 'useRegistry'))
+                except Exception:
+                    pass
+
+                # WORKAROUND: Force stage reload to ensure skeleton bindings resolve correctly
+                # Toggling the file path forces a clean reload.
                 try:
                     # Store the path
                     file_path = cmds.getAttr(f"{proxy_shape}.filePath")
@@ -3096,12 +4077,76 @@ class UsdPipeline:
                     cmds.refresh()
                     cmds.setAttr(f"{proxy_shape}.filePath", file_path, type='string')
                     cmds.refresh()
-                    self.logger.info("🔄 Forced stage reload for skeleton imaging")
+                    self.logger.info("[REFRESH] Forced stage reload for skeleton imaging")
                 except Exception:
                     pass
 
                 self.logger.info(f"[OK] Created USD proxy shape: {proxy_shape}")
-                self.logger.info(f"📂 Loading USD file: {usd_path}")
+                self.logger.info(f"[FILE] Loading USD file: {usd_path}")
+
+                # Select and frame the proxy transform for visibility
+                try:
+                    cmds.select(proxy_transform, replace=True)
+                    cmds.viewFit(allObjects=False)  # Frame selection in viewport
+                    self.logger.info("[CAMERA] Selected and framed USD proxy in viewport")
+                except Exception as frame_err:
+                    self.logger.warning(f"[WARNING] Could not frame proxy: {frame_err}")
+
+                # Ensure VP2.0 is active for USD display with materials.
+                # getPanel(withFocus=True) returns the dialog when the asset manager
+                # UI has focus — fall back to all model panels so material display
+                # is always configured regardless of which window is focused.
+                try:
+                    focused = cmds.getPanel(withFocus=True)
+                    if focused and 'modelPanel' in focused:
+                        panels_to_configure = [focused]
+                    else:
+                        panels_to_configure = cmds.getPanel(type='modelPanel') or []
+
+                    configured = 0
+                    for panel in panels_to_configure:
+                        try:
+                            # Switch to VP2.0 if needed
+                            renderer = cmds.modelEditor(panel, query=True, rendererName=True)
+                            if renderer != 'vp2Renderer':
+                                cmds.modelEditor(panel, edit=True, rendererName='vp2Renderer')
+
+                            # Enable shaded+material display.
+                            # useDefaultMaterial=False is the critical flag —
+                            # without it VP2 shows solid white ("default material") on
+                            # USD proxy shapes even when UsdPreviewSurface shaders exist.
+                            cmds.modelEditor(
+                                panel,
+                                edit=True,
+                                displayTextures=True,
+                                displayAppearance='smoothShaded',
+                                displayLights='default',
+                                useDefaultMaterial=False,
+                            )
+                            configured += 1
+                        except Exception:
+                            pass  # Skip any panel that doesn't support these flags
+
+                    if configured:
+                        self.logger.info(
+                            f"[LOOKDEV] Enabled material display in {configured} viewport(s) "
+                            f"(VP2, smoothShaded, useDefaultMaterial=False)"
+                        )
+                    else:
+                        self.logger.warning("[WARNING] Could not configure any model panel for material display")
+
+                    cmds.refresh(force=True)
+                except Exception as vp_err:
+                    self.logger.warning(f"[WARNING] Could not configure viewport: {vp_err}")
+
+                # Convert USD Skeleton to Maya Joints if requested
+                if options.convert_skeleton_to_maya:
+                    self._convert_usd_skeleton_to_maya(proxy_shape, usd_path)
+                else:
+                    self.logger.info(
+                        "[SKEL] Skeleton managed by UsdSkelImaging inside proxy shape "
+                        "(set convert_skeleton_to_maya=True to extract as Maya joints)"
+                    )
 
             except Exception as proxy_err:
                 self.logger.error(f"mayaUsdProxyShape creation failed: {proxy_err}")
@@ -3110,14 +4155,15 @@ class UsdPipeline:
             # Check for proxy shapes
             proxy_shapes = cmds.ls(type='mayaUsdProxyShape') or []
             if proxy_shapes:
-                self.logger.info(f"📦 USD proxy shape(s) created: {len(proxy_shapes)}")
+                self.logger.info(f"[PACKAGE] USD proxy shape(s) created: {len(proxy_shapes)}")
 
                 # Count USD prims inside the proxy shape(s)
                 self._count_usd_prims_in_proxy(proxy_shapes, result)
 
                 # Mark as successful USD import
                 result.usd_meshes = mesh_count if mesh_count > 0 else result.usd_meshes
-                result.usd_joints = skel_count if skel_count > 0 else result.usd_joints
+                # Use real joint count; skel_count is kept for threshold checks below
+                result.usd_joints = joint_count if joint_count > 0 else skel_count
                 result.usd_curves = curve_count if curve_count > 0 else result.usd_curves
                 result.usd_materials = material_count if material_count > 0 else result.usd_materials
 
@@ -3129,16 +4175,19 @@ class UsdPipeline:
 
                 self.logger.info(
                     f"[OK] USD Stage loaded - {result.usd_meshes} meshes, "
-                    f"{result.usd_joints} skeletons, {result.usd_curves} curves, "
-                    f"{result.usd_materials} materials"
+                    f"{skel_count} skeleton rig(s) / {result.usd_joints} joints, "
+                    f"{result.usd_curves} curves, {result.usd_materials} materials"
                 )
 
-                # Warn about potential UsdSkel display issues
+                # Info about USD workflow
                 if has_skeleton_bindings and skel_count > 10:
-                    self.logger.warning(
-                        "[WARNING] Complex skeleton setup detected - if meshes don't display, "
-                        "try: Right-click USD proxy > Duplicate As > Maya Data"
+                    self.logger.info(
+                        "[INFO] Complex skeleton detected - USD proxy will display skinned meshes via UsdSkelImaging"
                     )
+
+                # Open USD Layer Editor if requested (Option B animation authoring)
+                if options.open_layer_editor:
+                    self._open_usd_layer_editor(proxy_shape)
 
                 return True
             else:
@@ -3150,6 +4199,931 @@ class UsdPipeline:
             import traceback
             self.logger.error(traceback.format_exc())
             return False
+
+    def _open_usd_layer_editor(self, proxy_shape: str) -> None:
+        """
+        Open the mayaUSD Layer Editor and create an editable animation sublayer.
+
+        This is Option B — author animation non-destructively as a USD layer
+        on top of the stage rather than converting prims to Maya joints.
+        """
+        try:
+            # Select the proxy transform so the Layer Editor shows its stage
+            if cmds is not None:
+                parents = cmds.listRelatives(proxy_shape, parent=True) or []
+                if parents:
+                    cmds.select(parents[0], replace=True)
+
+            # Create an anonymous edit sublayer BEFORE opening the editor
+            # so the user sees a writable layer immediately
+            self._create_animation_edit_layer(proxy_shape)
+
+            # Open the mayaUSD Layer Editor
+            try:
+                mel.eval('mayaUsdLayerEditorWindow')
+                self.logger.info(
+                    "[LAYER] Opened mayaUSD Layer Editor — author animation as USD layers (Option B)"
+                )
+                return
+            except Exception:
+                pass
+
+            # Fall back to Maya's built-in Animation Layer Editor
+            try:
+                mel.eval('LayerEditorWindow')
+                self.logger.info("[LAYER] Opened Animation Layer Editor (fallback)")
+            except Exception as fallback_err:
+                self.logger.warning(f"[WARNING] Could not open Layer Editor: {fallback_err}")
+
+        except Exception as e:
+            self.logger.warning(f"[WARNING] _open_usd_layer_editor failed: {e}")
+
+    def _create_animation_edit_layer(self, proxy_shape: str) -> None:
+        """
+        Set the animation sublayer as the edit target on the proxy's live stage.
+
+        The layered stage already contains editorial sublayers (animation, materials,
+        skeleton, geometry) built by _build_layered_stage.  This method finds the
+        animation layer and makes it the active edit target so keyframes land there.
+        """
+        if cmds is None:
+            return
+
+        try:
+            from pxr import Usd  # pyright: ignore[reportMissingImports]
+
+            # ── Get the live stage from the proxy shape ──
+            stage = None
+
+            try:
+                import mayaUsd.ufe as mayaUsdUfe  # type: ignore[import-unresolved]
+                try:
+                    stage = mayaUsdUfe.getStage(proxy_shape)
+                except RuntimeError:
+                    proxy_long = (cmds.ls(proxy_shape, long=True) or [proxy_shape])[0]
+                    stage = mayaUsdUfe.getStage(proxy_long)
+            except (ImportError, RuntimeError) as e:
+                self.logger.debug(f"[LAYER] mayaUsd.ufe.getStage unavailable: {e}")
+
+            if stage is None:
+                file_path = cmds.getAttr(f"{proxy_shape}.filePath")
+                if file_path:
+                    stage = Usd.Stage.Open(file_path)
+
+            if stage is None:
+                self.logger.warning(
+                    "[LAYER] Could not access proxy stage — "
+                    "select the animation sublayer manually in the Layer Editor"
+                )
+                return
+
+            # ── Find the animation sublayer and set it as edit target ──
+            root_layer = stage.GetRootLayer()
+            for sublayer_path in root_layer.subLayerPaths:
+                if "animation" in sublayer_path.lower():
+                    from pxr import Sdf  # pyright: ignore[reportMissingImports]
+                    anim_layer = Sdf.Layer.FindOrOpen(
+                        root_layer.ComputeAbsolutePath(sublayer_path)
+                    )
+                    if anim_layer:
+                        stage.SetEditTarget(Usd.EditTarget(anim_layer))
+                        self.logger.info(
+                            "[LAYER] Edit target set to 'animation' sublayer — "
+                            "keyframes will be authored here"
+                        )
+                        self.logger.info(
+                            "[TIP] Select USD prims in viewport → "
+                            "press S to set keyframes on the animation layer"
+                        )
+                        return
+
+            self.logger.warning(
+                "[LAYER] animation sublayer not found — "
+                "select an edit layer manually in the Layer Editor"
+            )
+
+        except Exception as e:
+            self.logger.warning(f"[LAYER] Could not set animation edit target: {e}")
+            self.logger.warning(
+                "[TIP] In the Layer Editor, click the animation sublayer to make it the edit target"
+            )
+
+    # ─── Layered USD Stage Builder ───────────────────────────────────────
+
+    def _build_layered_stage(
+        self,
+        base_usd_path: Path,
+        rig_mb_path: Optional[Path] = None
+    ) -> Optional[Path]:
+        """
+        Build a layered USD stage from a monolithic .usdc file.
+
+        If a .rig.mb path is provided, its NURBS controllers and
+        controller→joint mappings are extracted and written into
+        a controllers sublayer, giving users visual animation guides
+        inside the USD stage.
+
+        Creates a root .usda whose sublayer stack looks like:
+
+            root.usda  (this file — loaded by the proxy shape)
+              ├── animation.usda      ← empty, editable: keyframes
+              ├── controllers.usda    ← NURBS curves from .rig.mb (guide)
+              ├── materials.usda      ← empty, editable: shader overrides
+              ├── skeleton.usda       ← joint→controller metadata
+              ├── geometry.usda       ← empty, editable: geo overrides
+              └── <base>.usdc         ← original monolithic data (read-only)
+
+        Returns:
+            Path to root .usda on success, None on failure.
+        """
+        try:
+            from pxr import Usd, Sdf, UsdGeom  # pyright: ignore[reportMissingImports]
+
+            base_dir = base_usd_path.parent
+            asset_name = base_usd_path.stem  # e.g. "Veteran_Rig"
+
+            self.logger.info("[LAYER] Building layered USD stage from base asset...")
+
+            # ── Extract rig data from .rig.mb if available ──
+            rig_data = None
+            if rig_mb_path and rig_mb_path.exists():
+                self.logger.info(
+                    f"[LAYER] Extracting controller data from: {rig_mb_path.name}"
+                )
+                rig_data = self._extract_rig_controllers(rig_mb_path)
+
+            # ── Create editorial sublayers ──
+            # Controllers layer is only created when we have rig data
+            layer_names = ["animation", "controllers", "materials", "skeleton", "geometry"]
+            created_layers: list[Path] = []
+
+            for name in layer_names:
+                layer_path = base_dir / f"{asset_name}.{name}.usda"
+                layer = Sdf.Layer.CreateNew(str(layer_path))
+                if layer is None:
+                    self.logger.warning(f"[LAYER] Could not create {name} sublayer")
+                    continue
+
+                sub_stage = Usd.Stage.Open(layer)
+                UsdGeom.SetStageUpAxis(sub_stage, UsdGeom.Tokens.y)
+                layer.documentation = (
+                    f"USD {name.title()} Override Layer — {asset_name}\n"
+                    f"Author {name} edits here. Opinions in this layer "
+                    f"override the base asset."
+                )
+
+                # Populate controllers sublayer from .rig.mb data
+                if name == "controllers" and rig_data:
+                    self._populate_controllers_sublayer(sub_stage, rig_data)
+
+                # Populate skeleton sublayer with controller→joint metadata
+                if name == "skeleton" and rig_data:
+                    self._populate_skeleton_metadata(
+                        sub_stage, base_usd_path, rig_data
+                    )
+
+                sub_stage.Save()
+                created_layers.append(layer_path)
+                self.logger.info(f"   [LAYER] {layer_path.name}")
+
+            # ── Create root .usda that composes everything ──
+            root_path = base_dir / f"{asset_name}.root.usda"
+            root_layer = Sdf.Layer.CreateNew(str(root_path))
+            if root_layer is None:
+                self.logger.error("[LAYER] Could not create root layer")
+                return None
+
+            root_stage = Usd.Stage.Open(root_layer)
+            UsdGeom.SetStageUpAxis(root_stage, UsdGeom.Tokens.y)
+
+            # Read the default prim from the base stage so the root inherits it
+            base_stage = Usd.Stage.Open(str(base_usd_path))
+            default_prim = base_stage.GetDefaultPrim() if base_stage else None
+            default_prim_name = (
+                default_prim.GetName() if default_prim else asset_name
+            )
+
+            root_stage.DefinePrim(f"/{default_prim_name}", "Xform")
+            root_stage.SetDefaultPrim(
+                root_stage.GetPrimAtPath(f"/{default_prim_name}")
+            )
+
+            # ── Build sublayer stack (strongest on top) ──
+            for layer_path in created_layers:
+                root_layer.subLayerPaths.append(f"./{layer_path.name}")
+
+            # Base monolithic file is the weakest (bottom) sublayer
+            root_layer.subLayerPaths.append(f"./{base_usd_path.name}")
+
+            has_controllers = rig_data is not None
+            ctrl_line = (
+                "  controllers.usda  — NURBS controllers from .rig.mb\n"
+                if has_controllers
+                else "  controllers.usda  — empty (no .rig.mb available)\n"
+            )
+            root_layer.documentation = (
+                f"USD Layered Rig: {asset_name}\n"
+                f"Generated by Asset Manager USD Pipeline\n\n"
+                f"Sublayer stack (strongest → weakest):\n"
+                f"  animation.usda    — keyframes & motion\n"
+                f"{ctrl_line}"
+                f"  materials.usda    — shader overrides\n"
+                f"  skeleton.usda     — skeleton edits & controller mappings\n"
+                f"  geometry.usda     — geo overrides\n"
+                f"  {base_usd_path.name}  — base asset (read-only)\n\n"
+                f"Edit the sublayer you need; the base asset is never modified."
+            )
+
+            root_stage.Save()
+
+            total_sublayers = len(created_layers) + 1  # editorial + base
+            ctrl_msg = ""
+            if rig_data:
+                ctrl_count = len(rig_data.get("controllers", []))
+                mapping_count = len(rig_data.get("mappings", {}))
+                ctrl_msg = (
+                    f" ({ctrl_count} controllers, "
+                    f"{mapping_count} joint mappings from .rig.mb)"
+                )
+            self.logger.info(
+                f"[OK] Layered stage: {root_path.name} → "
+                f"{total_sublayers} sublayers{ctrl_msg}"
+            )
+
+            return root_path
+
+        except Exception as e:
+            self.logger.error(f"[LAYER] Failed to build layered stage: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return None
+
+    # ─── .rig.mb Controller Extraction ────────────────────────────────────
+
+    def _extract_rig_controllers(
+        self, rig_mb_path: Path
+    ) -> Optional[dict]:
+        """
+        Temporarily reference .rig.mb and extract NURBS controller data.
+
+        Returns a dict:
+            {
+                "controllers": [
+                    {
+                        "name": "L_Arm_CTRL",
+                        "cvs": [(x,y,z), ...],
+                        "degree": 3,
+                        "form": 0,           # 0=open, 1=closed, 2=periodic
+                        "knots": [0.0, ...],
+                        "translate": (tx, ty, tz),
+                        "rotate": (rx, ry, rz),
+                        "color": (r, g, b) or None,
+                    },
+                    ...
+                ],
+                "mappings": {
+                    "L_Arm_CTRL": ["L_Arm_JNT"],  # controller → driven joints
+                    ...
+                },
+                "joint_names": ["Root", "Spine1", ...],  # all joint names
+            }
+        """
+        if cmds is None:
+            return None
+
+        try:
+            # ── Reference the .rig.mb temporarily ──
+            namespace = "_rigExtract_"
+            try:
+                cmds.file(
+                    str(rig_mb_path),
+                    reference=True,
+                    namespace=namespace,
+                    returnNewNodes=False,
+                    loadReferenceDepth="all"
+                )
+                self.logger.info("[RIG] Referenced .rig.mb for controller extraction")
+            except Exception as ref_err:
+                self.logger.warning(
+                    f"[RIG] Could not reference .rig.mb: {ref_err}"
+                )
+                return None
+
+            controllers = []
+            mappings: dict[str, list[str]] = {}
+            joint_names: list[str] = []
+
+            try:
+                # ── Find all joints ──
+                all_joints = cmds.ls(
+                    f"{namespace}:*", type="joint", long=False
+                ) or []
+                # Strip namespace for clean names
+                joint_names = [
+                    j.replace(f"{namespace}:", "") for j in all_joints
+                ]
+
+                # ── Find NURBS curves (controllers) ──
+                all_curves = cmds.ls(
+                    f"{namespace}:*", type="nurbsCurve", long=True
+                ) or []
+                self.logger.info(
+                    f"[RIG] Found {len(all_curves)} NURBS curves, "
+                    f"{len(all_joints)} joints"
+                )
+
+                for curve_shape in all_curves:
+                    # Get transform parent
+                    parents = cmds.listRelatives(
+                        curve_shape, parent=True, fullPath=True
+                    )
+                    if not parents:
+                        continue
+                    transform = parents[0]
+                    short_name = transform.split("|")[-1].split(":")[-1]
+
+                    # Skip non-controller curves (construction history, etc.)
+                    # Controllers typically have "ctrl" or "CTRL" or known
+                    # prefixes, but we'll be inclusive and grab everything
+                    try:
+                        # Get curve CVs
+                        num_cvs = cmds.getAttr(
+                            f"{curve_shape}.controlPoints", size=True
+                        )
+                        cvs = []
+                        for i in range(num_cvs):
+                            pt = cmds.getAttr(
+                                f"{curve_shape}.controlPoints[{i}]"
+                            )
+                            if pt:
+                                cvs.append(pt[0])  # [(x,y,z)]
+
+                        if not cvs:
+                            continue
+
+                        # Curve properties
+                        degree = cmds.getAttr(f"{curve_shape}.degree")
+                        form = cmds.getAttr(f"{curve_shape}.form")
+                        spans = cmds.getAttr(f"{curve_shape}.spans")
+
+                        # Knot vector
+                        num_knots = spans + 2 * degree - 1
+                        knots = []
+                        try:
+                            knots_raw = cmds.getAttr(
+                                f"{curve_shape}.knots[0:{num_knots - 1}]"
+                            )
+                            if knots_raw:
+                                knots = list(knots_raw)
+                        except Exception:
+                            pass
+
+                        # Transform
+                        tx = cmds.getAttr(f"{transform}.translateX")
+                        ty = cmds.getAttr(f"{transform}.translateY")
+                        tz = cmds.getAttr(f"{transform}.translateZ")
+                        rx = cmds.getAttr(f"{transform}.rotateX")
+                        ry = cmds.getAttr(f"{transform}.rotateY")
+                        rz = cmds.getAttr(f"{transform}.rotateZ")
+
+                        # Override color (if set)
+                        color = None
+                        try:
+                            if cmds.getAttr(
+                                f"{transform}.overrideEnabled"
+                            ):
+                                if cmds.getAttr(
+                                    f"{transform}.overrideRGBColors"
+                                ):
+                                    cr = cmds.getAttr(
+                                        f"{transform}.overrideColorR"
+                                    )
+                                    cg = cmds.getAttr(
+                                        f"{transform}.overrideColorG"
+                                    )
+                                    cb = cmds.getAttr(
+                                        f"{transform}.overrideColorB"
+                                    )
+                                    color = (cr, cg, cb)
+                        except Exception:
+                            pass
+
+                        controllers.append({
+                            "name": short_name,
+                            "cvs": cvs,
+                            "degree": degree,
+                            "form": form,
+                            "knots": knots,
+                            "translate": (tx, ty, tz),
+                            "rotate": (rx, ry, rz),
+                            "color": color,
+                        })
+
+                    except Exception as cv_err:
+                        self.logger.debug(
+                            f"[RIG] Skipped {short_name}: {cv_err}"
+                        )
+                        continue
+
+                # ── Find controller → joint mappings via constraints ──
+                constraint_types = [
+                    "parentConstraint", "orientConstraint",
+                    "pointConstraint", "aimConstraint",
+                    "scaleConstraint"
+                ]
+                for joint in all_joints:
+                    joint_short = joint.replace(f"{namespace}:", "")
+                    for ctype in constraint_types:
+                        try:
+                            constraints = cmds.listConnections(
+                                joint,
+                                type=ctype,
+                                source=True,
+                                destination=False
+                            ) or []
+                            for con in constraints:
+                                # Find what drives this constraint
+                                drivers = cmds.listConnections(
+                                    f"{con}.target",
+                                    source=True,
+                                    destination=False
+                                ) or []
+                                for driver in drivers:
+                                    drv_short = driver.split(
+                                        ":"
+                                    )[-1].split("|")[-1]
+                                    if drv_short not in mappings:
+                                        mappings[drv_short] = []
+                                    if joint_short not in mappings[drv_short]:
+                                        mappings[drv_short].append(
+                                            joint_short
+                                        )
+                        except Exception:
+                            continue
+
+                # Also check direct connections (no constraints)
+                for joint in all_joints:
+                    joint_short = joint.replace(f"{namespace}:", "")
+                    for attr in ["rotate", "translate"]:
+                        try:
+                            conns = cmds.listConnections(
+                                f"{joint}.{attr}",
+                                source=True,
+                                destination=False,
+                                skipConversionNodes=True
+                            ) or []
+                            for conn in conns:
+                                conn_short = conn.split(
+                                    ":"
+                                )[-1].split("|")[-1]
+                                # Only map if it looks like a controller
+                                node_type = cmds.nodeType(conn)
+                                if node_type == "transform":
+                                    shapes = cmds.listRelatives(
+                                        conn, shapes=True, type="nurbsCurve"
+                                    )
+                                    if shapes:
+                                        if conn_short not in mappings:
+                                            mappings[conn_short] = []
+                                        if (
+                                            joint_short
+                                            not in mappings[conn_short]
+                                        ):
+                                            mappings[conn_short].append(
+                                                joint_short
+                                            )
+                        except Exception:
+                            continue
+
+                self.logger.info(
+                    f"[RIG] Extracted {len(controllers)} controllers, "
+                    f"{len(mappings)} controller→joint mappings"
+                )
+
+            finally:
+                # ── Remove the reference ──
+                try:
+                    # Get the reference node created by file -reference
+                    ref_nodes = cmds.ls(
+                        f"{namespace}*", type="reference"
+                    ) or []
+                    for rn in ref_nodes:
+                        try:
+                            cmds.file(
+                                removeReference=True, referenceNode=rn
+                            )
+                        except Exception:
+                            pass
+                    self.logger.info("[RIG] Removed .rig.mb reference")
+                except Exception as rm_err:
+                    self.logger.warning(
+                        f"[RIG] Could not remove reference: {rm_err}"
+                    )
+
+            if not controllers:
+                self.logger.warning("[RIG] No controllers extracted")
+                return None
+
+            return {
+                "controllers": controllers,
+                "mappings": mappings,
+                "joint_names": joint_names,
+            }
+
+        except Exception as e:
+            self.logger.error(f"[RIG] Controller extraction failed: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return None
+
+    def _populate_controllers_sublayer(
+        self, stage, rig_data: dict
+    ) -> None:
+        """
+        Write NURBS controllers from .rig.mb as NurbsCurves prims
+        in the controllers sublayer.
+
+        Each controller becomes a USD NurbsCurves prim with:
+        - Curve points (CVs)
+        - Display color (from Maya override color)
+        - Purpose = "guide" (visible in viewport, not rendered)
+        - Custom attribute: assetManager:drivenJoints
+        """
+        try:
+            from pxr import (  # pyright: ignore[reportMissingImports]
+                Gf, Sdf, UsdGeom, Vt
+            )
+
+            controllers = rig_data.get("controllers", [])
+            mappings = rig_data.get("mappings", {})
+
+            # Create a /Controllers scope to organize them
+            ctrl_scope = stage.DefinePrim("/Controllers", "Scope")
+            UsdGeom.Imageable(ctrl_scope).CreatePurposeAttr(
+                UsdGeom.Tokens.guide
+            )
+
+            written = 0
+            skipped = 0
+            seen_names: dict[str, int] = {}  # track name collisions
+
+            for ctrl in controllers:
+                name = ctrl["name"]
+                cvs = ctrl["cvs"]
+                if not cvs:
+                    continue
+
+                # Sanitize name for USD prim path
+                safe_name = name.replace("|", "_").replace(":", "_")
+
+                # Deduplicate: append suffix for collisions
+                if safe_name in seen_names:
+                    seen_names[safe_name] += 1
+                    safe_name = f"{safe_name}_{seen_names[safe_name]}"
+                else:
+                    seen_names[safe_name] = 0
+
+                prim_path = f"/Controllers/{safe_name}"
+
+                try:
+                    # Create NurbsCurves prim
+                    prim = stage.DefinePrim(prim_path, "NurbsCurves")
+                    curves = UsdGeom.NurbsCurves(prim)
+
+                    # Set curve data
+                    points = Vt.Vec3fArray(
+                        [Gf.Vec3f(p[0], p[1], p[2]) for p in cvs]
+                    )
+                    curves.CreatePointsAttr(points)
+                    curves.CreateCurveVertexCountsAttr(
+                        Vt.IntArray([len(cvs)])
+                    )
+
+                    # Degree and order
+                    degree = ctrl.get("degree", 3)
+                    curves.CreateOrderAttr(Vt.IntArray([degree + 1]))
+
+                    # Knots
+                    knots = ctrl.get("knots", [])
+                    if knots:
+                        curves.CreateKnotsAttr(
+                            Vt.DoubleArray(knots)
+                        )
+
+                    # Set purpose to "guide" so it's visible but not rendered
+                    UsdGeom.Imageable(prim).CreatePurposeAttr(
+                        UsdGeom.Tokens.guide
+                    )
+
+                    # Display color from Maya override
+                    color = ctrl.get("color")
+                    if color:
+                        curves.CreateDisplayColorAttr(
+                            Vt.Vec3fArray(
+                                [Gf.Vec3f(color[0], color[1], color[2])]
+                            )
+                        )
+
+                    # Transform — only add ops if non-zero
+                    tx, ty, tz = ctrl.get("translate", (0, 0, 0))
+                    rx, ry, rz = ctrl.get("rotate", (0, 0, 0))
+                    has_translate = any(v != 0 for v in (tx, ty, tz))
+                    has_rotate = any(v != 0 for v in (rx, ry, rz))
+
+                    if has_translate or has_rotate:
+                        xform = UsdGeom.Xformable(prim)
+                        if has_translate:
+                            xform.AddTranslateOp().Set(
+                                Gf.Vec3d(tx, ty, tz)
+                            )
+                        if has_rotate:
+                            xform.AddRotateXYZOp().Set(
+                                Gf.Vec3f(rx, ry, rz)
+                            )
+
+                    # Custom attribute: which joints this controller drives
+                    driven = mappings.get(name, [])
+                    if driven:
+                        driven_attr = prim.CreateAttribute(
+                            "assetManager:drivenJoints",
+                            Sdf.ValueTypeNames.StringArray
+                        )
+                        driven_attr.Set(driven)
+
+                    written += 1
+
+                except Exception as ctrl_err:
+                    skipped += 1
+                    self.logger.debug(
+                        f"[LAYER] Skipped controller {safe_name}: {ctrl_err}"
+                    )
+
+            skip_msg = f", {skipped} skipped" if skipped else ""
+            self.logger.info(
+                f"[LAYER] Wrote {written} NURBS controllers "
+                f"to controllers sublayer{skip_msg}"
+            )
+
+        except Exception as e:
+            self.logger.warning(
+                f"[LAYER] Could not populate controllers sublayer: {e}"
+            )
+            import traceback
+            self.logger.debug(traceback.format_exc())
+
+    def _populate_skeleton_metadata(
+        self, stage, base_usd_path: Path, rig_data: dict
+    ) -> None:
+        """
+        Write controller→joint mapping metadata into the skeleton sublayer.
+
+        For each Skeleton prim in the base USD, adds custom attributes:
+        - assetManager:controllerMap — JSON mapping of joint→controller names
+
+        This lets tools and scripts know which controller drives which joint
+        without needing the .rig.mb at runtime.
+        """
+        try:
+            import json
+            from pxr import Usd, Sdf, UsdSkel  # pyright: ignore[reportMissingImports]
+
+            mappings = rig_data.get("mappings", {})
+            if not mappings:
+                return
+
+            # Invert: controller→joints  →  joint→controllers
+            joint_to_ctrl: dict[str, list[str]] = {}
+            for ctrl_name, joints in mappings.items():
+                for joint_name in joints:
+                    if joint_name not in joint_to_ctrl:
+                        joint_to_ctrl[joint_name] = []
+                    joint_to_ctrl[joint_name].append(ctrl_name)
+
+            # Open the base stage read-only to find skeleton paths
+            base_stage = Usd.Stage.Open(str(base_usd_path))
+            if not base_stage:
+                return
+
+            # Find all Skeleton prims and write metadata
+            skeletons_found = 0
+            for prim in base_stage.Traverse():
+                if not prim.IsA(UsdSkel.Skeleton):
+                    continue
+
+                skel = UsdSkel.Skeleton(prim)
+                joints_attr = skel.GetJointsAttr().Get()
+                if not joints_attr:
+                    continue
+
+                # Build the mapping for joints in this skeleton
+                skel_map = {}
+                for joint_path in joints_attr:
+                    # Joint path like "Root/Spine1/L_Arm"
+                    joint_leaf = str(joint_path).split("/")[-1]
+                    if joint_leaf in joint_to_ctrl:
+                        skel_map[str(joint_path)] = joint_to_ctrl[joint_leaf]
+
+                if skel_map:
+                    # Write onto the same prim path in the skeleton sublayer
+                    over_prim = stage.OverridePrim(prim.GetPath())
+                    map_attr = over_prim.CreateAttribute(
+                        "assetManager:controllerMap",
+                        Sdf.ValueTypeNames.String
+                    )
+                    map_attr.Set(json.dumps(skel_map, indent=2))
+                    skeletons_found += 1
+
+            if skeletons_found:
+                self.logger.info(
+                    f"[LAYER] Wrote controller→joint mappings "
+                    f"for {skeletons_found} skeleton(s) — "
+                    f"{len(joint_to_ctrl)} joints mapped"
+                )
+
+        except Exception as e:
+            self.logger.warning(
+                f"[LAYER] Could not populate skeleton metadata: {e}"
+            )
+            import traceback
+            self.logger.debug(traceback.format_exc())
+
+    def _convert_usd_skeleton_to_maya(self, proxy_shape: str, usd_path: Path) -> None:
+        """Convert USD skeleton to Maya joints while keeping meshes as USD proxy"""
+        if cmds is None:
+            self.logger.warning("[WARNING] Maya not available for skeleton conversion")
+            return
+
+        try:
+            self.logger.info("[SKEL] Converting USD Skeleton to Maya joints...")
+
+            # Use mayaUSD duplicate command to extract skeleton as Maya data
+            # This is equivalent to right-click > "Duplicate as Maya Data" on skeleton
+            # We'll use selectPrim to target only skeleton prims
+
+            # Import mayaUSD if available
+            try:
+                import mayaUsd.lib as mayaUsdLib  # pyright: ignore
+                has_mayausd = True
+            except ImportError:
+                has_mayausd = False
+                self.logger.warning("[WARNING] mayaUSD library not available")
+
+            if has_mayausd:
+                # Get the proxy transform
+                proxy_transform = cmds.listRelatives(proxy_shape, parent=True)[0]
+
+                # Try method 1: mayaUSD duplicate command (Maya 2023+)
+                try:
+                    import maya.mel as mel
+
+                    # Select the proxy transform for the command
+                    cmds.select(proxy_transform, replace=True)
+
+                    # Try MEL-based duplicate (this is what the UI uses)
+                    # This command converts selected USD prims to Maya data
+                    mel.eval('mayaUsdMenu_duplicateAsBase()')
+
+                    # Check if skeleton joints were created (look for joint nodes under proxy)
+                    children = cmds.listRelatives(proxy_transform, children=True, type='joint')
+                    if children:
+                        self.logger.info(f"[OK] Converted USD Skeleton to Maya joints: {len(children)} root joint(s)")
+                    else:
+                        # MEL command didn't create joints - try Python fallback
+                        self.logger.info(
+                            "[INFO] MEL command succeeded but no joints created, "
+                            "trying Python fallback..."
+                        )
+                        self._extract_skeleton_via_python(proxy_shape, usd_path)
+
+                except AttributeError:
+                    # mayaUSD commands not available in this version
+                    self.logger.warning("[WARNING] Skeleton conversion not available in mayaUSD v0.35.0")
+                    self.logger.info("[TIP] Upgrade to mayaUSD v0.27+ for automatic skeleton conversion")
+                    # Try Python fallback
+                    self._extract_skeleton_via_python(proxy_shape, usd_path)
+
+                except Exception as dup_err:
+                    # Command failed for other reasons
+                    self.logger.warning(f"[WARNING] Skeleton conversion failed: {dup_err}")
+                    # Try Python fallback
+                    self._extract_skeleton_via_python(proxy_shape, usd_path)
+            else:
+                # No mayaUSD available at all
+                self.logger.warning("[WARNING] mayaUSD plugin not available - cannot convert skeleton")
+                self.logger.info("[TIP] Load mayaUSD plugin: Window > Settings/Preferences > Plug-in Manager")
+
+        except Exception as e:
+            self.logger.warning(f"[WARNING] Could not convert skeleton: {e}")
+            # Non-fatal - user can still work with USD proxy
+
+    def _extract_skeleton_via_python(self, proxy_shape: str, usd_path: Path) -> None:
+        """Fallback: Extract skeleton using pure Python USD API"""
+        self.logger.info("[SKEL] Attempting Python USD API skeleton extraction...")
+
+        if not USD_AVAILABLE:
+            self.logger.warning("[WARNING] Pixar USD Python API not available")
+            return
+
+        try:
+            from pxr import Usd, UsdSkel, Gf  # pyright: ignore[reportMissingImports]
+
+            # Open the USD stage
+            stage = Usd.Stage.Open(str(usd_path))
+            if not stage:
+                self.logger.warning("[WARNING] Could not open USD stage")
+                return
+
+            # Find all skeleton prims
+            skeleton_prims = []
+            for prim in stage.Traverse():
+                if prim.IsA(UsdSkel.Skeleton):
+                    skeleton_prims.append(prim)
+
+            if not skeleton_prims:
+                self.logger.warning("[WARNING] No skeleton prims found in USD")
+                return
+
+            self.logger.info(f"[SKEL] Found {len(skeleton_prims)} skeleton(s) in USD")
+
+            # Get proxy transform for parenting
+            proxy_transform = cmds.listRelatives(proxy_shape, parent=True)[0]
+            created_joints = []
+
+            # Extract each skeleton
+            for skel_prim in skeleton_prims:
+                skel = UsdSkel.Skeleton(skel_prim)
+
+                # Get joint data
+                joints_attr = skel.GetJointsAttr()
+                if not joints_attr:
+                    continue
+
+                joint_names = joints_attr.Get()
+                if not joint_names:
+                    continue
+
+                # Get bind transforms (rest pose)
+                bind_transforms_attr = skel.GetBindTransformsAttr()
+                bind_transforms = bind_transforms_attr.Get() if bind_transforms_attr else None
+
+                if not bind_transforms or len(bind_transforms) != len(joint_names):
+                    self.logger.warning(f"[WARNING] Skeleton {skel_prim.GetPath()} missing valid bind transforms")
+                    continue
+
+                self.logger.debug(f"[SKEL] Creating {len(joint_names)} Maya joints from {skel_prim.GetPath()}")
+
+                # Create Maya joints from USD skeleton data
+                joint_map = {}
+                for i, (joint_token, bind_xform) in enumerate(zip(joint_names, bind_transforms)):
+                    joint_name = str(joint_token)
+
+                    # Parse hierarchy (joint names use "/" as separator)
+                    parts = joint_name.split('/')
+                    clean_name = parts[-1]  # Use last part as joint name
+                    parent_path = '/'.join(parts[:-1]) if len(parts) > 1 else None
+
+                    # Extract transform from matrix
+                    matrix = bind_xform
+                    translation = matrix.ExtractTranslation()
+                    rotation = matrix.ExtractRotation().GetQuaternion()
+
+                    # Create Maya joint
+                    cmds.select(clear=True)
+                    maya_joint = cmds.joint(name=clean_name)
+
+                    # Set position
+                    cmds.xform(
+                        maya_joint,
+                        translation=[translation[0], translation[1], translation[2]],
+                        worldSpace=True
+                    )
+
+                    # Set rotation from quaternion
+                    euler = rotation.GetImaginary()  # Simplified - proper conversion needed
+                    cmds.xform(maya_joint, rotation=[euler[0], euler[1], euler[2]], worldSpace=True)
+
+                    # Store in map for hierarchy building
+                    joint_map[joint_name] = maya_joint
+
+                    # Parent to USD hierarchy parent if exists
+                    if parent_path and parent_path in joint_map:
+                        cmds.parent(maya_joint, joint_map[parent_path])
+
+                    created_joints.append(maya_joint)
+
+                # Parent root joint(s) under proxy transform
+                for joint_name, maya_joint in joint_map.items():
+                    if '/' not in joint_name:  # Root joint
+                        cmds.parent(maya_joint, proxy_transform)
+
+            if created_joints:
+                self.logger.info(f"[OK] Created {len(created_joints)} Maya joints from USD skeletons")
+            else:
+                self.logger.warning("[WARNING] No joints created from USD skeleton data")
+
+        except Exception as e:
+            self.logger.warning(f"[WARNING] Python USD skeleton extraction failed: {e}")
+            self.logger.info("[TIP] Right-click USD proxy > 'Duplicate As Maya Data' to convert manually")
 
     def _count_usd_prims_in_proxy(
         self,
@@ -3221,6 +5195,9 @@ class UsdPipeline:
                         if prim.HasAPI(UsdSkel.BindingAPI):
                             total_skinbindings += 1
 
+                    # Verify material colors are correctly written
+                    self._verify_material_colors(stage, total_materials)
+
                 except Exception as proxy_err:
                     self.logger.debug(f"Could not read proxy {proxy}: {proxy_err}")
 
@@ -3247,6 +5224,42 @@ class UsdPipeline:
 
         except Exception as e:
             self.logger.error(f"Error counting USD prims: {e}")
+
+    def _verify_material_colors(self, stage, total_materials: int = 0) -> None:
+        """Verify UsdPreviewSurface diffuseColor values are present on all injected materials."""
+        try:
+            from pxr import UsdShade  # pyright: ignore[reportMissingImports]
+
+            self.logger.info("[LOOKDEV] Verifying USD material colors...")
+
+            # Directly count UsdPreviewSurface shaders — more reliable than ComputeSurfaceSource
+            preview_shaders = []
+            colored_shaders = []
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != 'Shader':
+                    continue
+                shader = UsdShade.Shader(prim)
+                if shader.GetShaderId() != 'UsdPreviewSurface':
+                    continue
+                diffuse_input = shader.GetInput("diffuseColor")
+                if diffuse_input:
+                    color = diffuse_input.Get()
+                    preview_shaders.append(prim.GetName())
+                    if color and (color[0] > 0 or color[1] > 0 or color[2] > 0):
+                        colored_shaders.append((prim.GetParent().GetParent().GetName(), color))
+                        self.logger.debug(
+                            f"   [LOOKDEV] {prim.GetParent().GetParent().GetName()}: "
+                            f"diffuseColor = ({color[0]:.3f}, {color[1]:.3f}, {color[2]:.3f})"
+                        )
+
+            total = total_materials or len(preview_shaders)
+            self.logger.info(
+                f"[LOOKDEV] {len(preview_shaders)}/{total} materials have UsdPreviewSurface, "
+                f"{len(colored_shaders)} with non-black diffuseColor"
+            )
+
+        except Exception as e:
+            self.logger.warning(f"[LOOKDEV] Material color verification failed: {e}")
 
     def _count_imported_components(
         self,
@@ -3331,7 +5344,7 @@ class UsdPipeline:
             )
 
             if imported_nodes:
-                self.logger.info(f"📦 Imported {len(imported_nodes)} nodes from rig backup")
+                self.logger.info(f"[PACKAGE] Imported {len(imported_nodes)} nodes from rig backup")
                 result.used_rig_mb_fallback = True
                 result.fallback_components.append("Full rig")
                 self._count_imported_components(imported_nodes, result)
@@ -3371,7 +5384,7 @@ class UsdPipeline:
             # =================================================================
             # PHASE 1: Convert USD to Native Maya Data
             # =================================================================
-            self.logger.info("🔄 Phase 1: Converting USD to native Maya...")
+            self.logger.info("[REFRESH] Phase 1: Converting USD to native Maya...")
             self.logger.info("   • UsdGeomMesh → Maya meshes")
             self.logger.info("   • UsdSkel → Maya joints + skinClusters")
             self.logger.info("   • RenderMeshVisual → Maya blendShapes")
@@ -3484,7 +5497,7 @@ class UsdPipeline:
             self.logger.info("=" * 70)
             self.logger.info("[OK] HYBRID IMPORT COMPLETE")
             self.logger.info("=" * 70)
-            self.logger.info(f"📦 Geometry: {result.meshes_imported} meshes (native Maya)")
+            self.logger.info(f"[PACKAGE] Geometry: {result.meshes_imported} meshes (native Maya)")
             self.logger.info(f"[SKEL] Skeleton: {result.joints_imported} joints (native Maya)")
             self.logger.info(
                 f"[BLEND] Deformers: {result.skin_clusters_imported} skinClusters, "
@@ -3526,7 +5539,7 @@ class UsdPipeline:
             return False
 
         try:
-            self.logger.info("🔄 Converting USD prims to native Maya meshes...")
+            self.logger.info("[REFRESH] Converting USD prims to native Maya meshes...")
 
             # Get the proxy transform
             proxy_parent = cmds.listRelatives(proxy_shape, parent=True)
@@ -3635,7 +5648,7 @@ class UsdPipeline:
                 self.logger.info("[OK] No skinned meshes found - nothing to convert")
                 return True
 
-            self.logger.info(f"🔄 Converting {len(skinned_mesh_paths)} skinned meshes to Maya...")
+            self.logger.info(f"[REFRESH] Converting {len(skinned_mesh_paths)} skinned meshes to Maya...")
 
             # Get proxy parent transform
             proxy_parent = cmds.listRelatives(proxy_shape, parent=True)
@@ -3670,7 +5683,7 @@ class UsdPipeline:
 
             # Method 2: Try bulk conversion via MEL if Method 1 failed
             if converted_count == 0:
-                self.logger.info("🔄 Trying bulk import method...")
+                self.logger.info("[REFRESH] Trying bulk import method...")
                 try:
                     # Select the proxy transform (not shape)
                     cmds.select(proxy_parent, replace=True)
@@ -3686,7 +5699,7 @@ class UsdPipeline:
 
             # Method 3: Direct mayaUSDImport command
             if converted_count == 0:
-                self.logger.info("🔄 Trying direct mayaUSDImport...")
+                self.logger.info("[REFRESH] Trying direct mayaUSDImport...")
                 try:
                     # Use mayaUSDImport command directly
                     import_result = cmds.mayaUSDImport(
@@ -3702,7 +5715,7 @@ class UsdPipeline:
 
             # Method 4: Delete proxy and re-import with native conversion
             if converted_count == 0:
-                self.logger.info("🔄 Trying re-import as native Maya...")
+                self.logger.info("[REFRESH] Trying re-import as native Maya...")
                 try:
                     # Delete the USD proxy
                     cmds.delete(proxy_parent)
@@ -3731,7 +5744,7 @@ class UsdPipeline:
                 result.meshes_imported = len(native_meshes)
                 result.skin_clusters_imported = len(native_skins)
 
-                self.logger.info(f"   📦 Maya meshes: {len(native_meshes)}")
+                self.logger.info(f"   [PACKAGE] Maya meshes: {len(native_meshes)}")
                 self.logger.info(f"   [SKEL] SkinClusters: {len(native_skins)}")
             else:
                 self.logger.warning("[WARNING] Could not auto-convert meshes")
@@ -3793,7 +5806,7 @@ class UsdPipeline:
 
             skeleton = skeletons[0]
             self.logger.info(f"[SKEL] Found skeleton: {skeleton.GetPath()}")
-            self.logger.info(f"📦 Found {len(meshes)} meshes")
+            self.logger.info(f"[PACKAGE] Found {len(meshes)} meshes")
 
             # Check if meshes already have bindings - if so, skip Phase 1
             meshes_with_binding = 0
@@ -3857,7 +5870,7 @@ class UsdPipeline:
 
             # Create bindings for first mesh (Phase 1 test)
             test_mesh = meshes[0]
-            self.logger.info(f"🧪 Phase 1: Testing binding on {test_mesh.GetPath()}")
+            self.logger.info(f"[TEST] Phase 1: Testing binding on {test_mesh.GetPath()}")
 
             # Apply UsdSkel binding API
             binding_api = UsdSkel.BindingAPI.Apply(test_mesh.GetPrim())
@@ -3954,7 +5967,7 @@ class UsdPipeline:
                 self.logger.error(f"[ERROR] Rig file not found: {rig_mb_path}")
                 return False
 
-            self.logger.info(f"📦 Found Maya rig file: {rig_mb_path}")
+            self.logger.info(f"[PACKAGE] Found Maya rig file: {rig_mb_path}")
 
             # Import the Maya rig to query joint positions
             if cmds is None:
@@ -3967,7 +5980,7 @@ class UsdPipeline:
             namespace = "RIG_REFERENCE"
 
             # Import the rig file with references deferred (avoids RenderMan callback blocking)
-            self.logger.info("🔄 Importing Maya rig file...")
+            self.logger.info("[REFRESH] Importing Maya rig file...")
 
             # Disable undo during import for performance
             undo_state = cmds.undoInfo(query=True, state=True)
@@ -4123,12 +6136,12 @@ class UsdPipeline:
                 self.logger.info(f"   Maya has {len(all_maya_joints)} joints, USD expects {len(usd_joint_names)}")
                 return False
 
-            self.logger.info(f"🎯 Filtered to {len(all_joints)} joints matching USD skeleton")
+            self.logger.info(f"[TARGET] Filtered to {len(all_joints)} joints matching USD skeleton")
 
             # Log joints that will be mirrored (unsided foot/limb joints)
             if joints_to_mirror:
                 mirror_names = [j.split(":")[-1] for j in joints_to_mirror]
-                self.logger.info(f"🔄 Unsided joints to mirror: {mirror_names}")
+                self.logger.info(f"[REFRESH] Unsided joints to mirror: {mirror_names}")
 
             # Count left/right/center joints for diagnostics
             left_count = sum(
@@ -4294,7 +6307,7 @@ class UsdPipeline:
                 })
 
                 self.logger.info(
-                    f"🔄 Mirroring {mirror_name}: L@{left_pos[0]:.3f}, R@{right_pos[0]:.3f}"
+                    f"[REFRESH] Mirroring {mirror_name}: L@{left_pos[0]:.3f}, R@{right_pos[0]:.3f}"
                 )
 
             # Create proxy joints by querying positions from imported rig
@@ -4441,7 +6454,7 @@ class UsdPipeline:
             self.logger.info(f"\n[OK] Phase 3.1 Complete: Created {total_joints} joint hierarchy")
             if mirrored_proxy_joints:
                 self.logger.info(
-                    f"🔄 Includes {len(mirrored_proxy_joints)} mirrored foot joints"
+                    f"[REFRESH] Includes {len(mirrored_proxy_joints)} mirrored foot joints"
                 )
             self.logger.info(f"🔗 Hierarchy: {len(root_joints)} root joint(s)")
             self.logger.info("[TIP] Joint orientations preserved from source rig")
@@ -5128,7 +7141,7 @@ class UsdPipeline:
                     continue
 
                 mesh_name = geometry[0].split('|')[-1].split(':')[-1]
-                self.logger.info(f"📦 Processing weights for: {mesh_name}")
+                self.logger.info(f"[PACKAGE] Processing weights for: {mesh_name}")
 
                 # Get influence joints
                 influences = cmds.skinCluster(skin_cluster, query=True, influence=True)
@@ -5220,7 +7233,7 @@ class UsdPipeline:
         imported_joints = getattr(result, '_imported_joints', None)
         if imported_joints:
             try:
-                self.logger.info("🗑️ Removing imported rig (kept proxy hierarchy)...")
+                self.logger.info("[DELETE] Removing imported rig (kept proxy hierarchy)...")
 
                 # First, remove any reference nodes that were created
                 # These have RIG_REFERENCE: prefix from the deferred reference load
@@ -5245,7 +7258,7 @@ class UsdPipeline:
                         except Exception:
                             pass
 
-                    self.logger.info(f"   🗑️ Cleaned up {len(ref_roots)} reference nodes")
+                    self.logger.info(f"   [DELETE] Cleaned up {len(ref_roots)} reference nodes")
 
                 # Delete the imported rig hierarchy (not the proxy joints we created)
                 # Find root nodes to delete (imported joints have namespaces)
@@ -5270,7 +7283,7 @@ class UsdPipeline:
                             pass
 
                 if deleted_count > 0:
-                    self.logger.info(f"   🗑️ Cleaned up {deleted_count} rig hierarchy nodes")
+                    self.logger.info(f"   [DELETE] Cleaned up {deleted_count} rig hierarchy nodes")
 
                 result._imported_joints = None
             except Exception as e:
@@ -5292,7 +7305,7 @@ class UsdPipeline:
             return 0
 
         try:
-            self.logger.info(f"📦 Importing controllers from: {rig_mb_path.name}")
+            self.logger.info(f"[PACKAGE] Importing controllers from: {rig_mb_path.name}")
 
             # Count NURBS curves before import
             before_curves = set(cmds.ls(type='nurbsCurve', long=True) or [])
@@ -5382,7 +7395,7 @@ class UsdPipeline:
                         pass
 
             if nodes_to_delete:
-                self.logger.info(f"   🗑️ Cleaned up {len(nodes_to_delete)} non-controller nodes")
+                self.logger.info(f"   [DELETE] Cleaned up {len(nodes_to_delete)} non-controller nodes")
 
             return len(controller_transforms)
 
@@ -5528,7 +7541,7 @@ class UsdPipeline:
         self.logger.warning("[WARNING] USD import created no proxy content - using .rig.mb fallback")
 
         try:
-            self.logger.info("🔄 Importing .rig.mb as fallback...")
+            self.logger.info("[REFRESH] Importing .rig.mb as fallback...")
             cmds.file(new=True, force=True)  # Clear scene
 
             imported_nodes = cmds.file(

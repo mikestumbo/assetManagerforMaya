@@ -54,14 +54,14 @@ class ServiceFactory:
                 # Create the full-featured service
                 service = thumbnail_service_module.ThumbnailServiceImpl()
                 self._service_cache['thumbnail_service'] = service
-                print("✅ Full-featured thumbnail service created via direct import")
+                print("[OK] Full-featured thumbnail service created via direct import")
                 return service
             else:
-                print("❌ Could not load thumbnail service implementation module")
+                print("[ERROR] Could not load thumbnail service implementation module")
                 return None
 
         except Exception as e:
-            print(f"❌ Failed to create thumbnail service: {e}")
+            print(f"[ERROR] Failed to create thumbnail service: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -93,14 +93,14 @@ class ServiceFactory:
                 # Create repository
                 repository = standalone_services.StandaloneAssetRepository()
                 self._service_cache['asset_repository'] = repository
-                print("✅ Standalone asset repository created via direct import")
+                print("[OK] Standalone asset repository created via direct import")
                 return repository
             else:
-                print("❌ Could not load standalone services module")
+                print("[ERROR] Could not load standalone services module")
                 return None
 
         except Exception as e:
-            print(f"❌ Failed to create asset repository: {e}")
+            print(f"[ERROR] Failed to create asset repository: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -124,14 +124,14 @@ class ServiceFactory:
             if extractor_class:
                 extractor = extractor_class()
                 self._service_cache['metadata_extractor'] = extractor
-                print("✅ Metadata extractor created successfully")
+                print("[OK] Metadata extractor created successfully")
                 return extractor
             else:
-                print("❌ Could not find MetadataExtractorImpl class")
+                print("[ERROR] Could not find MetadataExtractorImpl class")
                 return None
 
         except Exception as e:
-            print(f"❌ Failed to create metadata extractor: {e}")
+            print(f"[ERROR] Failed to create metadata extractor: {e}")
             return None
 
     def create_event_publisher(self) -> Optional[Any]:
@@ -150,7 +150,7 @@ class ServiceFactory:
                 from ..services.event_system_impl import EventSystemImpl
                 publisher = EventSystemImpl()
                 self._service_cache['event_publisher'] = publisher
-                print("✅ Event publisher created via relative import")
+                print("[OK] Event publisher created via relative import")
                 return publisher
             except ImportError:
                 pass
@@ -173,17 +173,17 @@ class ServiceFactory:
                         # Create standalone event publisher
                         publisher = standalone_module.StandaloneEventPublisher()
                         self._service_cache['event_publisher'] = publisher
-                        print("✅ Event publisher created using standalone service")
+                        print("[OK] Event publisher created using standalone service")
                         return publisher
 
             except Exception as standalone_error:
-                print(f"⚠️ Standalone event publisher failed: {standalone_error}")
+                print(f"[WARNING] Standalone event publisher failed: {standalone_error}")
 
-            print("❌ Event publisher creation failed")
+            print("[ERROR] Event publisher creation failed")
             return None
 
         except Exception as e:
-            print(f"❌ Failed to create event publisher: {e}")
+            print(f"[ERROR] Failed to create event publisher: {e}")
             return None
 
     def get_all_services(self) -> Dict[str, Any]:
@@ -223,11 +223,12 @@ class ServiceFactory:
         available_services = [name for name in core_services if name in services]
         missing_services = [name for name in core_services if name not in services]
 
-        print(f"✅ Available services: {', '.join(available_services)}")
+        print(f"[OK] Available services: {', '.join(available_services)}")
         if missing_services:
-            print(f"❌ Missing services: {', '.join(missing_services)}")
+            print(f"[ERROR] Missing services: {', '.join(missing_services)}")
 
         return len(missing_services) == 0
+
 
 # Global service factory instance
 _service_factory: Optional[ServiceFactory] = None

@@ -240,7 +240,7 @@ class BlendshapeTargetCleaner:
         """
         if self.verbose:
             print("\n" + "="*70)
-            print("🔧 BLENDSHAPE TARGET & DUPLICATE MESH CLEANUP")
+            print("[TOOL] BLENDSHAPE TARGET & DUPLICATE MESH CLEANUP")
             print("="*70)
 
         # Find all blendshape targets
@@ -260,10 +260,10 @@ class BlendshapeTargetCleaner:
         dup_hidden = self.hide_targets(self.duplicate_meshes)
 
         if self.verbose:
-            print(f"\n✅ Hidden {bs_hidden} blendShape targets")
-            print(f"✅ Hidden {dup_hidden} duplicate/FK/IK meshes")
+            print(f"\n[OK] Hidden {bs_hidden} blendShape targets")
+            print(f"[OK] Hidden {dup_hidden} duplicate/FK/IK meshes")
             print("\n" + "="*70)
-            print(f"✅ TOTAL HIDDEN: {bs_hidden + dup_hidden} meshes")
+            print(f"[OK] TOTAL HIDDEN: {bs_hidden + dup_hidden} meshes")
             print("="*70 + "\n")
 
         return bs_hidden, dup_hidden
@@ -277,10 +277,10 @@ def cleanup_blendshapes_for_export() -> Tuple[int, int]:
     Returns:
         Tuple of (blendshape_count, duplicate_count)
     """
-    print("🔧 BLENDSHAPE CLEANUP: Starting cleanup_blendshapes_for_export()")
+    print("[TOOL] BLENDSHAPE CLEANUP: Starting cleanup_blendshapes_for_export()")
     cleaner = BlendshapeTargetCleaner(verbose=True)
     result = cleaner.cleanup()
-    print(f"🔧 BLENDSHAPE CLEANUP: cleanup_blendshapes_for_export() completed with result: {result}")
+    print(f"[TOOL] BLENDSHAPE CLEANUP: cleanup_blendshapes_for_export() completed with result: {result}")
     return result
 
 
@@ -299,6 +299,7 @@ def cleanup_blendshapes_for_import() -> Tuple[int, int]:
 def hide_blendshape_targets():
     """Legacy function name for backward compatibility"""
     return cleanup_blendshapes_for_export()
+
 
 # Run cleanup if executed directly
 if __name__ == "__main__":

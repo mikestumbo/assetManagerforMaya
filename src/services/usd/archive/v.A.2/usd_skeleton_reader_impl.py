@@ -320,7 +320,7 @@ class UsdSkeletonReaderImpl:
                     if points:
                         for point in points:
                             vertex_positions.append((float(point[0]), float(point[1]), float(point[2])))
-                        self.logger.info(f"✅ Read {len(vertex_positions)} vertex positions for matching")
+                        self.logger.info(f"[OK] Read {len(vertex_positions)} vertex positions for matching")
             except Exception as pos_error:
                 self.logger.warning(f"Could not read vertex positions: {pos_error}")
                 vertex_positions = None
@@ -352,7 +352,7 @@ class UsdSkeletonReaderImpl:
                         for col in range(4):
                             flat_matrix.append(float(geom_bind_value[row][col]))
                     geom_bind_transform = flat_matrix
-                    self.logger.info(f"✅ Read skel:geomBindTransform from {mesh_path}")
+                    self.logger.info(f"[OK] Read skel:geomBindTransform from {mesh_path}")
                 else:
                     # This is not an error - Maya will use joint bind matrices instead
                     self.logger.debug(f"No skel:geomBindTransform on {mesh_path} (will use joint bind matrices)")

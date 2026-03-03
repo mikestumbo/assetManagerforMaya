@@ -35,7 +35,7 @@ def _ensure_path_for_imports():
 def show_asset_manager():
     original_path = None
     try:
-        print("🎨 Launching Asset Manager v1.5.0 UI...")
+        print("[LAUNCH] Launching Asset Manager v1.5.0 UI...")
 
         # Safely add paths for import
         original_path = _ensure_path_for_imports()
@@ -43,16 +43,16 @@ def show_asset_manager():
         # Check PySide6 availability
         try:
             from PySide6.QtWidgets import QApplication
-            print("✅ Using PySide6 (Maya 2025+)")
+            print("[OK] Using PySide6 (Maya 2025+)")
         except ImportError:
-            print("❌ PySide6 is not available")
-            print("💡 Asset Manager requires PySide6 (Maya 2025+)")
+            print("[ERROR] PySide6 is not available")
+            print("[INFO] Asset Manager requires PySide6 (Maya 2025+)")
             return None
 
         # Create Qt application if needed
         app = QApplication.instance()
         if app is None:
-            print("⚠️ Creating QApplication outside Maya - may cause issues")
+            print("[WARNING] Creating QApplication outside Maya - may cause issues")
             app = QApplication(sys.argv)
 
         # Launch with Maya parent for proper Z-order while maintaining safety
@@ -66,22 +66,22 @@ def show_asset_manager():
             maya_main_window_ptr = omui.MQtUtil.mainWindow()
             if maya_main_window_ptr:
                 parent = shiboken6.wrapInstance(int(maya_main_window_ptr), QWidget)
-                print("✅ Maya parent window obtained for proper Z-order")
+                print("[OK] Maya parent window obtained for proper Z-order")
             else:
                 parent = None
-                print("⚠️ Maya main window not available - using standalone")
+                print("[WARNING] Maya main window not available - using standalone")
 
         except Exception as e:
-            print(f"⚠️ Maya parent window error: {e}")
+            print(f"[WARNING] Maya parent window error: {e}")
             parent = None
 
         # Configure services
         try:
             from src.core.container import configure_services
             configure_services()
-            print("✅ Services configured")
+            print("[OK] Services configured")
         except Exception as e:
-            print(f"⚠️ Service configuration failed: {e}")
+            print(f"[WARNING] Service configuration failed: {e}")
 
         # Import and show UI with singleton management
         try:
@@ -100,7 +100,7 @@ def show_asset_manager():
                         _asset_manager_window.raise_()
                         _asset_manager_window.activateWindow()
                         _asset_manager_window.showNormal()
-                        print("✅ Brought existing Asset Manager to front")
+                        print("[OK] Brought existing Asset Manager to front")
                         return _asset_manager_window
                 except RuntimeError:
                     # Window was deleted - clear reference
@@ -114,17 +114,17 @@ def show_asset_manager():
             _asset_manager_window.raise_()
             _asset_manager_window.activateWindow()
 
-            print("🎉 Asset Manager v1.5.0 launched successfully!")
+            print("[SUCCESS] Asset Manager v1.5.0 launched successfully!")
             return _asset_manager_window
 
         except Exception as e:
-            print(f"❌ Failed to create Asset Manager window: {e}")
+            print(f"[ERROR] Failed to create Asset Manager window: {e}")
             import traceback
             traceback.print_exc()
             return None
 
     except Exception as e:
-        print(f"❌ Failed to launch Asset Manager: {e}")
+        print(f"[ERROR] Failed to launch Asset Manager: {e}")
         import traceback
         traceback.print_exc()
         return None

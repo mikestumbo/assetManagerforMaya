@@ -277,14 +277,14 @@ class MayaIntegrationImpl(IMayaIntegration):
 
             # Log results
             if result.success:
-                print(f"✅ USD Import Success: {result.get_summary()}")
+                print(f"[OK] USD Import Success: {result.get_summary()}")
                 if result.skin_clusters_created > 0:
                     print(f"   Created {result.skin_clusters_created} skin clusters")
                     print(f"   Processed {result.total_vertices} vertices")
                 if result.warnings:
-                    print(f"   ⚠️ Warnings: {', '.join(result.warnings)}")
+                    print(f"   [WARNING] Warnings: {', '.join(result.warnings)}")
             else:
-                print(f"❌ USD Import Failed: {result.error_message}")
+                print(f"[ERROR] USD Import Failed: {result.error_message}")
 
             return result.success
 

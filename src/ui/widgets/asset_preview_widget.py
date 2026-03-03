@@ -18,8 +18,8 @@ try:
     PYSIDE_AVAILABLE = True
     PYSIDE_VERSION = "PySide6"
 except ImportError as e:
-    print(f"❌ PySide6 import failed: {e}")
-    print("🔧 Maya 2025+ requires PySide6. Please ensure it's properly installed.")
+    print(f"[ERROR] PySide6 import failed: {e}")
+    print("[TOOL] Maya 2025+ requires PySide6. Please ensure it's properly installed.")
     PYSIDE_AVAILABLE = False
     PYSIDE_VERSION = None
     # Add these to prevent "possibly unbound" errors
@@ -85,9 +85,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             try:
                 container = get_container()  # type: ignore
                 self._thumbnail_service = container.resolve(IThumbnailService)  # type: ignore
-                print("✅ Asset preview widget - container services resolved")
+                print("[OK] Asset preview widget - container services resolved")
             except Exception as container_error:
-                print(f"⚠️ Asset preview container error: {container_error}")
+                print(f"[WARNING] Asset preview container error: {container_error}")
 
                 # Try service factory as backup
                 try:
@@ -95,13 +95,13 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     factory = get_service_factory()
                     self._thumbnail_service = factory.create_thumbnail_service()
                     if self._thumbnail_service:
-                        print("✅ Asset preview widget - factory service resolved")
+                        print("[OK] Asset preview widget - factory service resolved")
                     else:
                         raise Exception("Factory returned None")
                 except Exception as factory_error:
-                    print(f"⚠️ Asset preview factory error: {factory_error}")
+                    print(f"[WARNING] Asset preview factory error: {factory_error}")
                     self._thumbnail_service = self._create_fallback_thumbnail_service()
-                    print("✅ Asset preview widget - using fallback service")
+                    print("[OK] Asset preview widget - using fallback service")
 
             # State
             self._current_asset: Optional[Asset] = None
@@ -162,7 +162,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                             return str(cache_file)
 
                     except Exception as e:
-                        print(f"⚠️ Fallback thumbnail creation error: {e}")
+                        print(f"[WARNING] Fallback thumbnail creation error: {e}")
                     return None
 
                 def clear_cache_for_file(self, file_path):
@@ -214,7 +214,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 return None
 
             except Exception as e:
-                print(f"🔧 Could not resolve screenshot icon path: {e}")
+                print(f"[TOOL] Could not resolve screenshot icon path: {e}")
                 return None
 
         def _create_ui(self) -> None:
@@ -238,7 +238,8 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             self._scroll_area.setWidget(self._preview_label)  # type: ignore
             self._scroll_area.setWidgetResizable(True)  # type: ignore
             self._scroll_area.setAlignment(Qt.AlignCenter)  # type: ignore
-            self._scroll_area.setStyleSheet("QScrollArea { border: 1px solid gray; background: #2b2b2b; }")  # type: ignore
+            scroll_style = "QScrollArea { border: 1px solid gray; background: #2b2b2b; }"
+            self._scroll_area.setStyleSheet(scroll_style)  # type: ignore
             layout.addWidget(self._scroll_area)  # type: ignore
 
             # Zoom controls
@@ -277,11 +278,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 icon = QIcon(screenshot_icon_path)  # type: ignore
                 screenshot_btn.setIcon(icon)  # type: ignore
                 screenshot_btn.setIconSize(screenshot_btn.size())  # type: ignore
-                print(f"📸 Using custom screenshot icon: {Path(screenshot_icon_path).name}")
+                print(f"[CAMERA] Using custom screenshot icon: {Path(screenshot_icon_path).name}")
             else:
                 # Fallback to emoji if custom icon not found
-                screenshot_btn = QPushButton("📸")  # type: ignore
-                print("📸 Using emoji fallback for screenshot button")
+                screenshot_btn = QPushButton("[CAMERA]")  # type: ignore
+                print("[CAMERA] Using emoji fallback for screenshot button")
 
             screenshot_btn.setToolTip("Capture Maya viewport screenshot as asset thumbnail")  # type: ignore
             screenshot_btn.setFixedSize(28, 28)  # type: ignore
@@ -354,7 +355,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             self.clear_preview()
             # Update zoom label
             self._update_zoom_label()
-            print("✅ Preview cleared - zoom and pan reset")
+            print("[OK] Preview cleared - zoom and pan reset")
 
         def _update_preview(self) -> None:
             """Update preview image - Single Responsibility"""
@@ -476,8 +477,8 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 if hasattr(self, 'parent') and self.parent():
                     try:
                         from PySide6.QtWidgets import QMessageBox  # type: ignore
-                        QMessageBox.information(self.parent(), "No Asset Selected",   # type: ignore
-                                              "Please select an asset first to capture a screenshot thumbnail.")
+                        msg = "Please select an asset first to capture a screenshot thumbnail."
+                        QMessageBox.information(self.parent(), "No Asset Selected", msg)  # type: ignore
                     except ImportError:
                         print("Please select an asset first to capture a screenshot")
                 return
@@ -485,7 +486,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             try:
                 # Validate current asset before opening dialog
                 if not hasattr(self._current_asset, 'file_path'):
-                    raise TypeError(f"Cannot open screenshot dialog: asset is type {type(self._current_asset)}, not Asset object")
+                    asset_type = type(self._current_asset)
+                    raise TypeError(
+                        f"Cannot open screenshot dialog: asset is type {asset_type}, "
+                        f"not Asset object"
+                    )
 
                 # Create and show screenshot capture dialog
                 dialog = ScreenshotCaptureDialog(self._current_asset, self)  # type: ignore
@@ -505,8 +510,8 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 if hasattr(self, 'parent') and self.parent():
                     try:
                         from PySide6.QtWidgets import QMessageBox  # type: ignore
-                        QMessageBox.warning(self.parent(), "Screenshot Error",   # type: ignore
-                                          f"Failed to open screenshot capture:\n{str(e)}")
+                        error_msg = f"Failed to open screenshot capture:\n{str(e)}"
+                        QMessageBox.warning(self.parent(), "Screenshot Error", error_msg)  # type: ignore
                     except ImportError:
                         print(f"Screenshot capture error: {e}")
 
@@ -519,14 +524,14 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     try:
                         asset_path = Path(self._current_asset.file_path)
                         self._thumbnail_service.clear_cache_for_file(asset_path)  # type: ignore
-                        print(f"✅ EMSA thumbnail cache cleared for {asset_path.name}")
+                        print(f"[OK] EMSA thumbnail cache cleared for {asset_path.name}")
                     except Exception as cache_error:
                         print(f"Note: Could not clear thumbnail cache: {cache_error}")
 
                 # Update preview with new thumbnail
                 self._update_preview()
 
-                print("✅ Preview refreshed after screenshot capture")
+                print("[OK] Preview refreshed after screenshot capture")
 
             except Exception as e:
                 print(f"Error refreshing preview after screenshot: {e}")

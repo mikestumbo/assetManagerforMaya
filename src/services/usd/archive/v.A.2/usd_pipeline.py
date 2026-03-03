@@ -52,7 +52,7 @@ from typing import Dict, List, Optional, Tuple, Callable
 from enum import Enum, auto
 
 print("=" * 80)
-print("🚀 USD_PIPELINE.PY LOADED - CLEAN ARCHITECTURE")
+print("[START] USD_PIPELINE.PY LOADED - CLEAN ARCHITECTURE")
 print("=" * 80)
 
 # Maya imports (conditional)
@@ -112,24 +112,24 @@ class ExportResult:
 
     def get_summary(self) -> str:
         """Get human-readable summary"""
-        lines = [f"{'✅' if self.success else '❌'} USD Export Summary"]
+        lines = [f"{'[OK]' if self.success else '[ERROR]'} USD Export Summary"]
 
         if self.usd_path:
             lines.append(f"  📄 USD: {self.usd_path.name}")
         if self.rig_mb_path:
-            lines.append(f"  📦 Rig Backup: {self.rig_mb_path.name}")
+            lines.append(f"  [PACKAGE] Rig Backup: {self.rig_mb_path.name}")
         if self.usdz_path:
-            lines.append(f"  🎁 Package: {self.usdz_path.name}")
+            lines.append(f"  [BUNDLE] Package: {self.usdz_path.name}")
 
         lines.append("")
         lines.append("  Conversions:")
         for comp_type, result in self.conversions.items():
             status_icon = {
-                ConversionStatus.SUCCESS: "✅",
-                ConversionStatus.PARTIAL: "⚠️",
-                ConversionStatus.FALLBACK: "📦",
+                ConversionStatus.SUCCESS: "[OK]",
+                ConversionStatus.PARTIAL: "[WARNING]",
+                ConversionStatus.FALLBACK: "[PACKAGE]",
                 ConversionStatus.SKIPPED: "⏭️",
-                ConversionStatus.FAILED: "❌"
+                ConversionStatus.FAILED: "[ERROR]"
             }.get(result.status, "?")
             lines.append(f"    {status_icon} {comp_type}: {result.usd_count} USD, {result.fallback_count} fallback")
 
@@ -172,7 +172,7 @@ class ImportResult:
 
     def get_summary(self) -> str:
         """Get human-readable summary with USD vs Fallback breakdown"""
-        lines = [f"{'✅' if self.success else '❌'} USD Import Summary"]
+        lines = [f"{'[OK]' if self.success else '[ERROR]'} USD Import Summary"]
 
         # Show breakdown: USD native vs Fallback
         if self.used_rig_mb_fallback:
@@ -200,11 +200,11 @@ class ImportResult:
             lines.append(f"  {'Constraints':<14} {'N/A':<6} {consts:<10} {consts}")
 
             lines.append("")
-            lines.append(f"  📦 Fallback used for: {', '.join(self.fallback_components)}")
+            lines.append(f"  [PACKAGE] Fallback used for: {', '.join(self.fallback_components)}")
         else:
             # All from USD - show prim counts
             lines.append("")
-            lines.append("📦 USD Prims Loaded (in proxy shape):")
+            lines.append("[PACKAGE] USD Prims Loaded (in proxy shape):")
             lines.append(f"  Mesh Prims: {self.usd_meshes}")
             lines.append(f"  Skeleton Prims: {self.usd_joints}")
             lines.append(f"  Curve Prims: {self.usd_curves}")
@@ -212,8 +212,8 @@ class ImportResult:
             lines.append(f"  BlendShape Prims: {self.usd_blendshapes}")
             lines.append(f"  SkinBinding Prims: {self.usd_skin_clusters}")
             lines.append("")
-            lines.append("  ✨ USD content loaded successfully!")
-            lines.append("  💡 View in viewport or convert via USD > Edit as Maya Data")
+            lines.append("  [NEW] USD content loaded successfully!")
+            lines.append("  [TIP] View in viewport or convert via USD > Edit as Maya Data")
 
         return "\n".join(lines)
 
@@ -415,9 +415,9 @@ class UsdPipeline:
                     self.logger.info(f"📂 Opening source file: {source_path}")
                     self._report_progress("Opening Maya scene", 2)
                     cmds.file(str(source_path), open=True, force=True)
-                    self.logger.info(f"✅ Scene opened: {source_path.name}")
+                    self.logger.info(f"[OK] Scene opened: {source_path.name}")
                 else:
-                    self.logger.warning(f"⚠️ Source file not found: {source_path}")
+                    self.logger.warning(f"[WARNING] Source file not found: {source_path}")
             else:
                 self.logger.info("📂 Exporting from current scene")
 
@@ -452,9 +452,9 @@ class UsdPipeline:
                 rig_success = self._export_rig_mb_backup(rig_mb_path)
                 if rig_success:
                     result.rig_mb_path = rig_mb_path
-                    self.logger.info(f"✅ Rig backup exported: {rig_mb_path.name}")
+                    self.logger.info(f"[OK] Rig backup exported: {rig_mb_path.name}")
                 else:
-                    self.logger.warning("⚠️ Rig backup export failed")
+                    self.logger.warning("[WARNING] Rig backup export failed")
 
             # Step 2: Export to USD using mayaUSD
             self._report_progress("Exporting to USD via mayaUSD", 20)
@@ -462,7 +462,7 @@ class UsdPipeline:
 
             if usd_success:
                 result.usd_path = usd_path
-                self.logger.info(f"✅ USD exported: {usd_path.name}")
+                self.logger.info(f"[OK] USD exported: {usd_path.name}")
             else:
                 result.error_message = "USD export failed"
                 return result
@@ -472,9 +472,9 @@ class UsdPipeline:
                 self._report_progress("Creating USD layers", 60)
                 layered_success = self._create_layered_usd(usd_path, options, result)
                 if layered_success:
-                    self.logger.info("✅ USD layers created for non-destructive workflow")
+                    self.logger.info("[OK] USD layers created for non-destructive workflow")
                 else:
-                    self.logger.warning("⚠️ Layered export failed, using single-file USD")
+                    self.logger.warning("[WARNING] Layered export failed, using single-file USD")
 
             # Step 3: Create USDZ package if requested
             if usdz_path and usd_path.exists():
@@ -484,7 +484,7 @@ class UsdPipeline:
                 )
                 if usdz_success:
                     result.usdz_path = usdz_path
-                    self.logger.info(f"✅ USDZ package created: {usdz_path.name}")
+                    self.logger.info(f"[OK] USDZ package created: {usdz_path.name}")
 
                     # Step 4: Clean up intermediate files if requested
                     if options.cleanup_intermediate_files:
@@ -498,7 +498,7 @@ class UsdPipeline:
                     usdz_path, usd_path, rig_mb_path, zip_path, options
                 )
                 if zip_success:
-                    self.logger.info(f"📦 ZIP archive created: {zip_path.name}")
+                    self.logger.info(f"[PACKAGE] ZIP archive created: {zip_path.name}")
 
             # Calculate totals
             for conv in result.conversions.values():
@@ -629,7 +629,7 @@ class UsdPipeline:
             )
 
             file_size = output_path.stat().st_size / (1024 * 1024)
-            self.logger.info(f"📦 Rig backup: {output_path.name} ({file_size:.1f} MB)")
+            self.logger.info(f"[PACKAGE] Rig backup: {output_path.name} ({file_size:.1f} MB)")
             return True
 
         except Exception as e:
@@ -687,7 +687,7 @@ class UsdPipeline:
 
             if not all_shapes:
                 # More debugging - what IS in the scene?
-                self.logger.error("❌ No exportable content found in scene!")
+                self.logger.error("[ERROR] No exportable content found in scene!")
                 self.logger.info("🔍 DEBUG: All node types in scene:")
                 node_types = set()
                 for node in all_dag[:100]:  # First 100 nodes
@@ -712,7 +712,7 @@ class UsdPipeline:
                 deform_joints = self._get_deformation_joint_hierarchy()
                 all_joints = cmds.ls(type='joint', dag=True, long=True) or []
 
-                self.logger.info("🦴 Simplified skeleton export enabled:")
+                self.logger.info("[SKELETON] Simplified skeleton export enabled:")
                 self.logger.info(f"   └─ Total joints in scene: {len(all_joints)}")
                 self.logger.info(f"   └─ Deformation joints (with parents): {len(deform_joints)}")
                 self.logger.info(f"   └─ Joints excluded: {len(all_joints) - len(deform_joints)}")
@@ -743,7 +743,7 @@ class UsdPipeline:
                         export_transforms.discard(transform)
 
                 if xgen_filtered:
-                    self.logger.info(f"🎨 XGen filter: Excluded {len(xgen_filtered)} meshes")
+                    self.logger.info(f"[LOOKDEV] XGen filter: Excluded {len(xgen_filtered)} meshes")
                     for name in xgen_filtered[:5]:  # Show first 5
                         self.logger.info(f"   └─ {name}")
                     if len(xgen_filtered) > 5:
@@ -752,7 +752,7 @@ class UsdPipeline:
             # Check for complex skeleton setup (multiple skinClusters = potential UsdSkel issues)
             skin_clusters = cmds.ls(type='skinCluster') or []
             num_skin_clusters = len(skin_clusters)
-            self.logger.info(f"🦴 Found {num_skin_clusters} skinClusters in scene")
+            self.logger.info(f"[SKELETON] Found {num_skin_clusters} skinClusters in scene")
 
             # Track duplicates for cleanup
             baked_meshes = []
@@ -761,7 +761,7 @@ class UsdPipeline:
             # Log viewport-friendly mode status
             if options.viewport_friendly_skeleton and num_skin_clusters > 0:
                 self.logger.info(
-                    f"🖥️ Viewport-friendly mode: Skeleton hierarchy exported, "
+                    f"[VIEWPORT] Viewport-friendly mode: Skeleton hierarchy exported, "
                     f"skin bindings skipped ({num_skin_clusters} skinClusters)"
                 )
                 self.logger.info("   └─ Baking skinned meshes to static geometry...")
@@ -812,11 +812,11 @@ class UsdPipeline:
                 self.logger.info("   └─ Full skinning preserved in .rig.mb backup")
             elif num_skin_clusters > 5:
                 self.logger.warning(
-                    f"⚠️ Complex skeleton setup detected ({num_skin_clusters} skinClusters). "
+                    f"[WARNING] Complex skeleton setup detected ({num_skin_clusters} skinClusters). "
                     "USD viewport may have display issues. Consider viewport_friendly_skeleton=True"
                 )
 
-            self.logger.info(f"🎯 Found {len(export_transforms)} objects to export")
+            self.logger.info(f"[TARGET] Found {len(export_transforms)} objects to export")
             self.logger.info(f"   Meshes: {len(cmds.ls(type='mesh', dag=True) or [])}")
             self.logger.info(f"   NURBS Curves: {len(cmds.ls(type='nurbsCurve', dag=True) or [])}")
             self.logger.info(f"   Joints: {len(joints)}")
@@ -881,7 +881,7 @@ class UsdPipeline:
                     if cmds.pluginInfo('RenderMan_for_Maya', query=True, loaded=True):
                         # Add RenderMan material conversion
                         export_args['convertMaterialsTo'].append('rendermanForMaya')
-                        self.logger.info("🎨 RenderMan material export enabled")
+                        self.logger.info("[LOOKDEV] RenderMan material export enabled")
                 except Exception:
                     pass
 
@@ -896,7 +896,7 @@ class UsdPipeline:
 
             # Log if skipping skeleton export due to simplified mode
             if options.simplified_skeleton_export and options.viewport_friendly_skeleton:
-                self.logger.info("🦴 Simplified mode: Skipping skeleton export (meshes are baked)")
+                self.logger.info("[SKELETON] Simplified mode: Skipping skeleton export (meshes are baked)")
                 self.logger.info("   └─ Full rigging preserved in .rig.mb backup")
 
             # Execute export
@@ -909,7 +909,7 @@ class UsdPipeline:
             except TypeError as te:
                 # Handle invalid flag errors - try with minimal flags
                 self.logger.warning(f"mayaUSD export with full flags failed: {te}")
-                self.logger.info("🔄 Retrying with minimal flags...")
+                self.logger.info("[REFRESH] Retrying with minimal flags...")
 
                 # Minimal export args that should work
                 # Note: NURBS export automatically with scene geometry
@@ -948,7 +948,7 @@ class UsdPipeline:
                 if baked_meshes:
                     try:
                         cmds.delete(baked_meshes)
-                        self.logger.info(f"🧹 Cleaned up {len(baked_meshes)} baked mesh duplicates")
+                        self.logger.info(f"[CLEANUP] Cleaned up {len(baked_meshes)} baked mesh duplicates")
                     except Exception as cleanup_error:
                         self.logger.warning(f"Failed to cleanup baked meshes: {cleanup_error}")
 
@@ -973,11 +973,11 @@ class UsdPipeline:
             # Instead of destructive merge, use USD layers composition
             if options.merge_skeletons:
                 if options.usd_layers_for_animation:
-                    self.logger.info("🦴 Creating USD layers for animation workflow...")
+                    self.logger.info("[SKELETON] Creating USD layers for animation workflow...")
                     self._create_animation_layers(output_path, options, result)
                 else:
                     # Legacy: destructive merge (may corrupt mesh data)
-                    self.logger.info("🦴 Merging skeletons (legacy mode)...")
+                    self.logger.info("[SKELETON] Merging skeletons (legacy mode)...")
                     self._merge_skeleton_prims(output_path)
 
             # Validate and count what was exported
@@ -1036,34 +1036,34 @@ class UsdPipeline:
                 geom_path = base_dir / f"{base_name}.geometry.usdc"
                 if self._extract_geometry_layer(source_stage, geom_path):
                     layer_paths.append(geom_path)
-                    self.logger.info(f"📦 Created geometry layer: {geom_path.name}")
+                    self.logger.info(f"[PACKAGE] Created geometry layer: {geom_path.name}")
 
             # Create skeleton layer
             if options.skeleton_layer:
                 skel_path = base_dir / f"{base_name}.skeleton.usdc"
                 if self._extract_skeleton_layer(source_stage, skel_path):
                     layer_paths.append(skel_path)
-                    self.logger.info(f"📦 Created skeleton layer: {skel_path.name}")
+                    self.logger.info(f"[PACKAGE] Created skeleton layer: {skel_path.name}")
 
             # Create materials layer
             if options.materials_layer:
                 mtl_path = base_dir / f"{base_name}.materials.usdc"
                 if self._extract_materials_layer(source_stage, mtl_path):
                     layer_paths.append(mtl_path)
-                    self.logger.info(f"📦 Created materials layer: {mtl_path.name}")
+                    self.logger.info(f"[PACKAGE] Created materials layer: {mtl_path.name}")
 
             # Create animation layer (if animation was exported)
             if options.animation_layer and options.export_animation:
                 anim_path = base_dir / f"{base_name}.animation.usdc"
                 if self._extract_animation_layer(source_stage, anim_path):
                     layer_paths.append(anim_path)
-                    self.logger.info(f"📦 Created animation layer: {anim_path.name}")
+                    self.logger.info(f"[PACKAGE] Created animation layer: {anim_path.name}")
 
             # Create root layer that references sublayers
             if layer_paths:
                 root_path = base_dir / f"{base_name}.layered.usda"
                 self._create_root_layer(root_path, layer_paths, base_name)
-                self.logger.info(f"✅ Created layered USD structure: {root_path.name}")
+                self.logger.info(f"[OK] Created layered USD structure: {root_path.name}")
                 return True
 
             return False
@@ -1265,12 +1265,12 @@ class UsdPipeline:
             skel_roots = [p for p in root_prims if p and p.IsA(UsdSkel.Root)]
 
             if len(skel_roots) <= 1:
-                self.logger.info("✅ Single SkelRoot - no scope fix needed")
+                self.logger.info("[OK] Single SkelRoot - no scope fix needed")
                 return True
 
-            self.logger.info(f"🔧 Found {len(skel_roots)} SkelRoots - creating unified wrapper...")
+            self.logger.info(f"[TOOL] Found {len(skel_roots)} SkelRoots - creating unified wrapper...")
             for sr in skel_roots:
-                self.logger.info(f"   📦 {sr.GetPath()}")
+                self.logger.info(f"   [PACKAGE] {sr.GetPath()}")
 
             # Find which SkelRoot has the skeleton (this will be our reference for bindings)
             skeleton_root = None
@@ -1285,10 +1285,10 @@ class UsdPipeline:
                     break
 
             if not skeleton_root:
-                self.logger.warning("⚠️ No skeleton found in any SkelRoot")
+                self.logger.warning("[WARNING] No skeleton found in any SkelRoot")
                 return True
 
-            self.logger.info(f"   🦴 Skeleton found at: {main_skeleton_path}")
+            self.logger.info(f"   [SKELETON] Skeleton found at: {main_skeleton_path}")
 
             # APPROACH: Create wrapper SkelRoot and demote children
             # We'll create "/SkelRoot" as the new parent containing everything
@@ -1297,11 +1297,11 @@ class UsdPipeline:
 
             # Check if wrapper already exists
             if stage.GetPrimAtPath(wrapper_path):
-                self.logger.info("✅ Wrapper SkelRoot already exists")
+                self.logger.info("[OK] Wrapper SkelRoot already exists")
                 return True
 
             # Step 1: Create the wrapper SkelRoot prim
-            self.logger.info(f"🔧 Creating wrapper: {wrapper_path}")
+            self.logger.info(f"[TOOL] Creating wrapper: {wrapper_path}")
             wrapper_spec = Sdf.CreatePrimInLayer(root_layer, wrapper_path)
             wrapper_spec.typeName = "SkelRoot"
             wrapper_spec.specifier = Sdf.SpecifierDef
@@ -1313,7 +1313,7 @@ class UsdPipeline:
                 prim_name = old_path.name
                 new_path = wrapper_path.AppendChild(prim_name)
 
-                self.logger.info(f"   🔄 Re-parenting {old_path} → {new_path}")
+                self.logger.info(f"   [REFRESH] Re-parenting {old_path} → {new_path}")
 
                 # Use namespace edit to move the prim
                 edit = Sdf.BatchNamespaceEdit()
@@ -1324,9 +1324,9 @@ class UsdPipeline:
                     moved_spec = root_layer.GetPrimAtPath(new_path)
                     if moved_spec and moved_spec.typeName == "SkelRoot":
                         moved_spec.typeName = "Xform"
-                        self.logger.info("      ✅ Moved and demoted to Xform")
+                        self.logger.info("      [OK] Moved and demoted to Xform")
                 else:
-                    self.logger.warning(f"      ⚠️ Failed to move {old_path}")
+                    self.logger.warning(f"      [WARNING] Failed to move {old_path}")
 
             # Step 3: Update skeleton binding paths
             # The skeleton path changed from /Group/... to /SkelRoot/Group/...
@@ -1343,7 +1343,7 @@ class UsdPipeline:
                         break
 
             if new_main_skeleton_path:
-                self.logger.info(f"   🦴 New skeleton path: {new_main_skeleton_path}")
+                self.logger.info(f"   [SKELETON] New skeleton path: {new_main_skeleton_path}")
 
                 # Update all mesh bindings to point to the new skeleton path
                 binding_count = 0
@@ -1361,7 +1361,7 @@ class UsdPipeline:
                             binding_count += 1
 
                 if binding_count > 0:
-                    self.logger.info(f"   ✅ Updated {binding_count} skeleton bindings")
+                    self.logger.info(f"   [OK] Updated {binding_count} skeleton bindings")
 
             # Step 4: Update ALL skel:animationSource paths
             # These point to Animation prims that moved with their parent skeletons
@@ -1397,21 +1397,21 @@ class UsdPipeline:
                             anim_source_count += 1
 
             if anim_source_count > 0:
-                self.logger.info(f"   ✅ Updated {anim_source_count} animation source paths")
+                self.logger.info(f"   [OK] Updated {anim_source_count} animation source paths")
 
             # Set default prim to the wrapper
             stage.SetDefaultPrim(wrapper_prim)
-            self.logger.info(f"   ✅ Default prim set to: {wrapper_path}")
+            self.logger.info(f"   [OK] Default prim set to: {wrapper_path}")
 
             # Save changes
             root_layer.Save()
-            self.logger.info("✅ SkelRoot scope fixed: All prims now under unified SkelRoot")
-            self.logger.info("   🎯 Skeleton and meshes share same SkelRoot scope")
+            self.logger.info("[OK] SkelRoot scope fixed: All prims now under unified SkelRoot")
+            self.logger.info("   [TARGET] Skeleton and meshes share same SkelRoot scope")
 
             return True
 
         except Exception as e:
-            self.logger.warning(f"⚠️ SkelRoot scope fix failed (non-fatal): {e}")
+            self.logger.warning(f"[WARNING] SkelRoot scope fix failed (non-fatal): {e}")
             import traceback
             self.logger.debug(traceback.format_exc())
             return True  # Non-fatal - continue anyway
@@ -1455,10 +1455,10 @@ class UsdPipeline:
             all_skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
 
             if len(all_skeletons) <= 1:
-                self.logger.info("✅ Single or no skeleton - merge not needed")
+                self.logger.info("[OK] Single or no skeleton - merge not needed")
                 return True
 
-            self.logger.info(f"🦴 Merging {len(all_skeletons)} Skeleton prims into unified skeleton...")
+            self.logger.info(f"[SKELETON] Merging {len(all_skeletons)} Skeleton prims into unified skeleton...")
 
             # Collect all joint data from all skeletons
             all_joints = []  # List of joint paths (relative to skeleton)
@@ -1473,7 +1473,7 @@ class UsdPipeline:
                 bind_transforms = skel.GetBindTransformsAttr().Get() or []
                 rest_transforms = skel.GetRestTransformsAttr().Get() or []
 
-                self.logger.debug(f"   📦 {skel_prim.GetPath()}: {len(joints)} joints")
+                self.logger.debug(f"   [PACKAGE] {skel_prim.GetPath()}: {len(joints)} joints")
 
                 for i, joint in enumerate(joints):
                     # Get the short name (last part of path)
@@ -1506,7 +1506,7 @@ class UsdPipeline:
             else:
                 # Create a SkelRoot at the top level
                 skel_root = UsdSkel.Root.Define(stage, Sdf.Path("/SkelRoot"))
-                self.logger.info("   🔧 Created /SkelRoot")
+                self.logger.info("   [TOOL] Created /SkelRoot")
 
             skel_root_path = skel_root.GetPath()
 
@@ -1516,7 +1516,7 @@ class UsdPipeline:
             # Check if unified skeleton already exists
             existing = stage.GetPrimAtPath(unified_skel_path)
             if existing:
-                self.logger.info("✅ Unified skeleton already exists")
+                self.logger.info("[OK] Unified skeleton already exists")
                 return True
 
             unified_skel = UsdSkel.Skeleton.Define(stage, unified_skel_path)
@@ -1532,7 +1532,7 @@ class UsdPipeline:
             if all_rest_transforms:
                 unified_skel.GetRestTransformsAttr().Set(Vt.Matrix4dArray(all_rest_transforms))
 
-            self.logger.info(f"   ✅ Created unified skeleton: {unified_skel_path}")
+            self.logger.info(f"   [OK] Created unified skeleton: {unified_skel_path}")
             self.logger.info(f"      Joints: {len(all_joints)}")
 
             # Create unified SkelAnimation prim
@@ -1573,7 +1573,7 @@ class UsdPipeline:
                 unified_anim.GetRotationsAttr().Set(Vt.QuatfArray(rotations))
                 unified_anim.GetScalesAttr().Set(Vt.Vec3hArray(scales))
 
-            self.logger.info(f"   ✅ Created unified animation: {unified_anim_path}")
+            self.logger.info(f"   [OK] Created unified animation: {unified_anim_path}")
 
             # Update all skin bindings to reference unified skeleton
             binding_count = 0
@@ -1594,7 +1594,7 @@ class UsdPipeline:
                             # Update to unified animation
                             anim_source.SetTargets([unified_anim_path])
 
-            self.logger.info(f"   ✅ Updated {binding_count} skin bindings")
+            self.logger.info(f"   [OK] Updated {binding_count} skin bindings")
 
             # Remove old skeleton prims (this will also remove their animation children)
             for old_skel in all_skeletons:
@@ -1603,14 +1603,14 @@ class UsdPipeline:
             # Save the stage
             stage.GetRootLayer().Save()
 
-            self.logger.info("✅ Skeleton merge complete!")
-            self.logger.info(f"   🦴 {len(all_skeletons)} skeletons → 1 unified skeleton")
+            self.logger.info("[OK] Skeleton merge complete!")
+            self.logger.info(f"   [SKELETON] {len(all_skeletons)} skeletons → 1 unified skeleton")
             self.logger.info(f"   📊 {len(all_joints)} joints preserved")
 
             return True
 
         except Exception as e:
-            self.logger.warning(f"⚠️ Skeleton merge failed: {e}")
+            self.logger.warning(f"[WARNING] Skeleton merge failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
@@ -1716,7 +1716,7 @@ class UsdPipeline:
             if all_rest_transforms:
                 unified_skel.GetRestTransformsAttr().Set(Vt.Matrix4dArray(all_rest_transforms))
 
-            self.logger.info(f"   ✅ Created unified skeleton: {unified_skel_path}")
+            self.logger.info(f"   [OK] Created unified skeleton: {unified_skel_path}")
 
             # Create unified animation prim
             unified_anim_path = skel_root_path.AppendChild("UnifiedAnimation")
@@ -1745,7 +1745,7 @@ class UsdPipeline:
                 unified_anim.GetRotationsAttr().Set(Vt.QuatfArray(rotations))
                 unified_anim.GetScalesAttr().Set(Vt.Vec3hArray(scales))
 
-            self.logger.info(f"   ✅ Created unified animation: {unified_anim_path}")
+            self.logger.info(f"   [OK] Created unified animation: {unified_anim_path}")
 
             # ================================================================
             # Step 3: Add skeleton binding overrides using Sdf API
@@ -1755,7 +1755,7 @@ class UsdPipeline:
             # We need to create proper "over" specs for the ENTIRE parent hierarchy
             # ================================================================
             binding_count = 0
-            
+
             # Collect paths of meshes that need binding overrides
             mesh_paths_to_override = []
             for prim in source_stage.Traverse():
@@ -1764,7 +1764,7 @@ class UsdPipeline:
                     skel_rel = binding_api.GetSkeletonRel()
                     if skel_rel.GetTargets():
                         mesh_paths_to_override.append(prim.GetPath())
-            
+
             def ensure_over_prim_hierarchy(layer, path):
                 """Create 'over' prim specs for entire path hierarchy."""
                 # Build list of ancestors from root to leaf
@@ -1773,7 +1773,7 @@ class UsdPipeline:
                 while current != Sdf.Path.absoluteRootPath:
                     ancestors.insert(0, current)
                     current = current.GetParentPath()
-                
+
                 # Create each ancestor as 'over' if it doesn't exist
                 for ancestor_path in ancestors:
                     existing = layer.GetPrimAtPath(ancestor_path)
@@ -1785,28 +1785,28 @@ class UsdPipeline:
                             Sdf.SpecifierOver  # "over" not "def"
                         )
                 return layer.GetPrimAtPath(path)
-            
+
             # Create binding overrides for each skinned mesh
             for mesh_path in mesh_paths_to_override:
                 # Create the "over" prim hierarchy (no type, just override)
                 prim_spec = ensure_over_prim_hierarchy(anim_layer, mesh_path)
-                
+
                 if prim_spec:
                     # Add skeleton relationship using Sdf API
                     skel_rel_spec = Sdf.RelationshipSpec(
                         prim_spec, "skel:skeleton", False
                     )
                     skel_rel_spec.targetPathList.explicitItems = [unified_skel_path]
-                    
+
                     # Add animation source relationship
                     anim_rel_spec = Sdf.RelationshipSpec(
                         prim_spec, "skel:animationSource", False
                     )
                     anim_rel_spec.targetPathList.explicitItems = [unified_anim_path]
-                    
+
                     binding_count += 1
 
-            self.logger.info(f"   ✅ Created {binding_count} binding overrides (pure 'over' specs)")
+            self.logger.info(f"   [OK] Created {binding_count} binding overrides (pure 'over' specs)")
 
             # Save the animation layer directly (not through stage)
             anim_layer.Save()
@@ -1828,11 +1828,11 @@ class UsdPipeline:
 
             root_layer.Save()
 
-            self.logger.info("✅ USD Animation Layers created!")
-            self.logger.info(f"   📦 Geometry: {base_usd_path.name}")
-            self.logger.info(f"   📦 Animation: {anim_layer_path.name}")
-            self.logger.info(f"   📦 Character: {root_layer_path.name}")
-            self.logger.info(f"   🎯 Open {root_layer_path.name} for USD-native animation")
+            self.logger.info("[OK] USD Animation Layers created!")
+            self.logger.info(f"   [PACKAGE] Geometry: {base_usd_path.name}")
+            self.logger.info(f"   [PACKAGE] Animation: {anim_layer_path.name}")
+            self.logger.info(f"   [PACKAGE] Character: {root_layer_path.name}")
+            self.logger.info(f"   [TARGET] Open {root_layer_path.name} for USD-native animation")
 
             # Update result to point to the character layer
             result.usd_path = root_layer_path
@@ -1872,7 +1872,7 @@ class UsdPipeline:
             if not stage:
                 return True
 
-            self.logger.info("🔧 Checking geomBindTransform on skinned meshes...")
+            self.logger.info("[TOOL] Checking geomBindTransform on skinned meshes...")
 
             fixed_count = 0
 
@@ -1898,7 +1898,7 @@ class UsdPipeline:
                 # Need to add geomBindTransform - use identity matrix
                 # This assumes the mesh is already in the correct bind pose position
                 mesh_path = prim.GetPath()
-                self.logger.info(f"   🔧 Adding geomBindTransform to: {mesh_path.name}")
+                self.logger.info(f"   [TOOL] Adding geomBindTransform to: {mesh_path.name}")
 
                 # Apply BindingAPI if not already applied
                 if not prim.HasAPI(UsdSkel.BindingAPI):
@@ -1912,14 +1912,14 @@ class UsdPipeline:
 
             if fixed_count > 0:
                 stage.GetRootLayer().Save()
-                self.logger.info(f"✅ Added geomBindTransform to {fixed_count} skinned meshes")
+                self.logger.info(f"[OK] Added geomBindTransform to {fixed_count} skinned meshes")
             else:
-                self.logger.info("✅ All skinned meshes already have geomBindTransform")
+                self.logger.info("[OK] All skinned meshes already have geomBindTransform")
 
             return True
 
         except Exception as e:
-            self.logger.warning(f"⚠️ geomBindTransform fix failed (non-fatal): {e}")
+            self.logger.warning(f"[WARNING] geomBindTransform fix failed (non-fatal): {e}")
             import traceback
             self.logger.debug(traceback.format_exc())
             return True  # Non-fatal
@@ -2143,10 +2143,10 @@ class UsdPipeline:
                 # Add .rig.mb backup if exists
                 if rig_mb_path and rig_mb_path.exists():
                     zf.write(str(rig_mb_path), rig_mb_path.name)
-                    self.logger.info(f"📦 Added rig backup to USDZ: {rig_mb_path.name}")
+                    self.logger.info(f"[PACKAGE] Added rig backup to USDZ: {rig_mb_path.name}")
 
             file_size = usdz_path.stat().st_size / (1024 * 1024)
-            self.logger.info(f"🎁 USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
+            self.logger.info(f"[BUNDLE] USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
             return True
 
         except Exception as e:
@@ -2168,17 +2168,17 @@ class UsdPipeline:
             # Delete .usdc file
             if usd_path.exists():
                 usd_path.unlink()
-                self.logger.info(f"🧹 Cleaned up intermediate: {usd_path.name}")
+                self.logger.info(f"[CLEANUP] Cleaned up intermediate: {usd_path.name}")
 
             # Delete .rig.mb file
             if rig_mb_path and rig_mb_path.exists():
                 rig_mb_path.unlink()
-                self.logger.info(f"🧹 Cleaned up intermediate: {rig_mb_path.name}")
+                self.logger.info(f"[CLEANUP] Cleaned up intermediate: {rig_mb_path.name}")
 
-            self.logger.info("✅ Intermediate files cleaned up (bundled in USDZ)")
+            self.logger.info("[OK] Intermediate files cleaned up (bundled in USDZ)")
 
         except Exception as e:
-            self.logger.warning(f"⚠️ Cleanup warning: {e}")
+            self.logger.warning(f"[WARNING] Cleanup warning: {e}")
 
     def _create_zip_archive(
         self,
@@ -2205,21 +2205,21 @@ class UsdPipeline:
                             # Store with folder structure: AssetName_USD/filename
                             arcname = f"{subfolder.name}/{file.name}"
                             zf.write(str(file), arcname)
-                            self.logger.info(f"📦 Added to ZIP: {arcname}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {arcname}")
                 else:
                     # Add individual files
                     if usdz_path and usdz_path.exists():
                         zf.write(str(usdz_path), usdz_path.name)
-                        self.logger.info(f"📦 Added to ZIP: {usdz_path.name}")
+                        self.logger.info(f"[PACKAGE] Added to ZIP: {usdz_path.name}")
 
                     if not options.cleanup_intermediate_files:
                         if usd_path.exists():
                             zf.write(str(usd_path), usd_path.name)
-                            self.logger.info(f"📦 Added to ZIP: {usd_path.name}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {usd_path.name}")
 
                         if rig_mb_path and rig_mb_path.exists():
                             zf.write(str(rig_mb_path), rig_mb_path.name)
-                            self.logger.info(f"📦 Added to ZIP: {rig_mb_path.name}")
+                            self.logger.info(f"[PACKAGE] Added to ZIP: {rig_mb_path.name}")
 
             file_size = zip_path.stat().st_size / (1024 * 1024)
             self.logger.info(f"🗜️ ZIP archive: {zip_path.name} ({file_size:.1f} MB)")
@@ -2277,8 +2277,8 @@ class UsdPipeline:
                 f"rig_mb_path={rig_mb_path}, exists={rig_exists}"
             )
             if options.hybrid_mode and rig_mb_path and rig_mb_path.exists():
-                self.logger.info("✅ HYBRID MODE ACTIVATED")
-                self._report_progress("⚡ Hybrid Mode: Loading USD meshes + Maya rig", 20)
+                self.logger.info("[OK] HYBRID MODE ACTIVATED")
+                self._report_progress("[HYBRID] Hybrid Mode: Loading USD meshes + Maya rig", 20)
                 success = self._import_hybrid(actual_usd_path, rig_mb_path, options, result)
                 result.success = success
                 self._report_progress("Hybrid import complete", 100)
@@ -2295,11 +2295,11 @@ class UsdPipeline:
             if has_usd_content:
                 # SUCCESS! USD prims loaded in proxy shape - this is the Disney workflow
                 self.logger.info(
-                    f"✅ USD import successful: {result.usd_meshes} mesh prims, "
+                    f"[OK] USD import successful: {result.usd_meshes} mesh prims, "
                     f"{result.usd_joints} skeleton prims in USD proxy shape"
                 )
-                self.logger.info("💡 USD prims are viewable in Maya viewport via proxy shape")
-                self.logger.info("💡 To convert to native Maya: Right-click proxy > Duplicate As > Maya Data")
+                self.logger.info("[TIP] USD prims are viewable in Maya viewport via proxy shape")
+                self.logger.info("[TIP] To convert to native Maya: Right-click proxy > Duplicate As > Maya Data")
 
                 result.success = True
                 self._report_progress("USD import complete", 100)
@@ -2333,14 +2333,14 @@ class UsdPipeline:
                     # Keep the temp dir - proxy shape needs the USD file
                     self.logger.info(f"💾 USD files preserved in: {temp_dir}")
                     self.logger.info(
-                        "💡 To make permanent: File > Archive Scene or re-export USDZ"
+                        "[TIP] To make permanent: File > Archive Scene or re-export USDZ"
                     )
                     result.temp_usd_path = actual_usd_path  # Store for reference
                 else:
                     # Used .rig.mb fallback - safe to cleanup temp files
                     import shutil
                     shutil.rmtree(temp_dir, ignore_errors=True)
-                    self.logger.info("🧹 Cleaned up temp USDZ extraction")
+                    self.logger.info("[CLEANUP] Cleaned up temp USDZ extraction")
 
         except Exception as e:
             self.logger.error(f"Import failed: {e}")
@@ -2380,7 +2380,7 @@ class UsdPipeline:
                         self.logger.info(f"📄 Extracted USD: {name}")
                     elif name.endswith('.rig.mb') or name.endswith('.rig.ma'):
                         rig_mb_path = extracted_path
-                        self.logger.info(f"📦 Extracted rig backup: {name}")
+                        self.logger.info(f"[PACKAGE] Extracted rig backup: {name}")
 
             return usd_path, rig_mb_path, temp_dir
 
@@ -2488,11 +2488,11 @@ class UsdPipeline:
                     cmds.refresh()
                     cmds.setAttr(f"{proxy_shape}.filePath", file_path, type='string')
                     cmds.refresh()
-                    self.logger.info("🔄 Forced stage reload for skeleton imaging")
+                    self.logger.info("[REFRESH] Forced stage reload for skeleton imaging")
                 except Exception:
                     pass
 
-                self.logger.info(f"✅ Created USD proxy shape: {proxy_shape}")
+                self.logger.info(f"[OK] Created USD proxy shape: {proxy_shape}")
                 self.logger.info(f"📂 Loading USD file: {usd_path}")
 
             except Exception as proxy_err:
@@ -2502,7 +2502,7 @@ class UsdPipeline:
             # Check for proxy shapes
             proxy_shapes = cmds.ls(type='mayaUsdProxyShape') or []
             if proxy_shapes:
-                self.logger.info(f"📦 USD proxy shape(s) created: {len(proxy_shapes)}")
+                self.logger.info(f"[PACKAGE] USD proxy shape(s) created: {len(proxy_shapes)}")
 
                 # Count USD prims inside the proxy shape(s)
                 self._count_usd_prims_in_proxy(proxy_shapes, result)
@@ -2520,7 +2520,7 @@ class UsdPipeline:
                 result.materials_imported = result.usd_materials
 
                 self.logger.info(
-                    f"✅ USD Stage loaded - {result.usd_meshes} meshes, "
+                    f"[OK] USD Stage loaded - {result.usd_meshes} meshes, "
                     f"{result.usd_joints} skeletons, {result.usd_curves} curves, "
                     f"{result.usd_materials} materials"
                 )
@@ -2528,13 +2528,13 @@ class UsdPipeline:
                 # Warn about potential UsdSkel display issues
                 if has_skeleton_bindings and skel_count > 10:
                     self.logger.warning(
-                        "⚠️ Complex skeleton setup detected - if meshes don't display, "
+                        "[WARNING] Complex skeleton setup detected - if meshes don't display, "
                         "try: Right-click USD proxy > Duplicate As > Maya Data"
                     )
 
                 return True
             else:
-                self.logger.warning("❌ No USD proxy shapes found after import")
+                self.logger.warning("[ERROR] No USD proxy shapes found after import")
                 return False
 
         except Exception as e:
@@ -2723,7 +2723,7 @@ class UsdPipeline:
             )
 
             if imported_nodes:
-                self.logger.info(f"📦 Imported {len(imported_nodes)} nodes from rig backup")
+                self.logger.info(f"[PACKAGE] Imported {len(imported_nodes)} nodes from rig backup")
                 result.used_rig_mb_fallback = True
                 result.fallback_components.append("Full rig")
                 self._count_imported_components(imported_nodes, result)
@@ -2748,24 +2748,24 @@ class UsdPipeline:
             return False
 
         try:
-            self.logger.info("🎭 USD ANIMATION LAYERS: USD meshes + animatable skeleton")
-            self.logger.info("📦 Loading USD proxy with meshes and skeleton...")
+            self.logger.info("[ANIMATION] USD ANIMATION LAYERS: USD meshes + animatable skeleton")
+            self.logger.info("[PACKAGE] Loading USD proxy with meshes and skeleton...")
             usd_success = self._import_with_mayausd(usd_path, options, result)
 
             if not usd_success or not cmds.ls(type='mayaUsdProxyShape'):
-                self.logger.error("❌ USD import failed")
+                self.logger.error("[ERROR] USD import failed")
                 return False
 
-            self.logger.info(f"✅ USD proxy loaded: {result.usd_meshes} meshes, {result.usd_joints} skeleton joints")
+            self.logger.info(f"[OK] USD proxy loaded: {result.usd_meshes} meshes, {result.usd_joints} skeleton joints")
 
             # Get the USD proxy shape
             proxy_shapes = cmds.ls(type='mayaUsdProxyShape')
             if not proxy_shapes:
-                self.logger.error("❌ No USD proxy shape found")
+                self.logger.error("[ERROR] No USD proxy shape found")
                 return False
 
             proxy_shape = proxy_shapes[0]
-            self.logger.info(f"📦 USD Proxy Shape: {proxy_shape}")
+            self.logger.info(f"[PACKAGE] USD Proxy Shape: {proxy_shape}")
 
             # Phase 1: Create USD skeleton bindings
             self.logger.info("🔗 Phase 1: Creating USD skeleton bindings...")
@@ -2774,16 +2774,16 @@ class UsdPipeline:
             )
 
             if not binding_success:
-                self.logger.warning("⚠️ Skeleton bindings failed, continuing without deformations")
+                self.logger.warning("[WARNING] Skeleton bindings failed, continuing without deformations")
 
             # Phase 2: Create Maya joint proxies for animation
-            self.logger.info("🦴 Phase 2: Creating Maya joint proxies...")
+            self.logger.info("[SKELETON] Phase 2: Creating Maya joint proxies...")
             joints_success = self._create_maya_joint_proxies(
                 usd_path, proxy_shape, result
             )
 
             if not joints_success:
-                self.logger.warning("⚠️ Joint proxy creation failed, skeleton not directly animatable")
+                self.logger.warning("[WARNING] Joint proxy creation failed, skeleton not directly animatable")
 
             # Phase 3.2: Connect proxy joints to USD skeleton (default)
             # or verify/repair skin weights (alternate option)
@@ -2792,19 +2792,19 @@ class UsdPipeline:
                 full_extraction = getattr(options, 'extract_full_weights', False)
 
                 if full_extraction:
-                    self.logger.info("🎨 Phase 3.2: Verifying USD skin bindings...")
+                    self.logger.info("[LOOKDEV] Phase 3.2: Verifying USD skin bindings...")
                     weights_success = self._transfer_skin_weights_full(usd_path, result)
 
                     if weights_success:
                         # Check if binding repairs are needed
                         binding_info = getattr(result, '_usd_binding_info', {})
                         if binding_info.get('binding_issues'):
-                            self.logger.info("🔧 Attempting binding repairs...")
+                            self.logger.info("[TOOL] Attempting binding repairs...")
                             self._repair_usd_skin_bindings(usd_path, result)
                         # Clean up imported rig AFTER verification (keep proxy joints)
                         self._cleanup_imported_rig(result)
                     else:
-                        self.logger.info("💡 Falling back to proxy connection...")
+                        self.logger.info("[TIP] Falling back to proxy connection...")
                         self._connect_proxy_to_usd_skeleton(proxy_shape, result)
                 else:
                     # Default: Connect proxy joints to USD skeleton
@@ -2818,29 +2818,29 @@ class UsdPipeline:
                 # Method 1: Enable skeleton display on USD proxy shape
                 if cmds.objExists(f"{proxy_shape}.displaySkeleton"):
                     cmds.setAttr(f"{proxy_shape}.displaySkeleton", True)
-                    self.logger.info("✅ Skeleton display enabled via displaySkeleton")
+                    self.logger.info("[OK] Skeleton display enabled via displaySkeleton")
 
                 # Method 2: Enable complexity (skeleton detail level)
                 if cmds.objExists(f"{proxy_shape}.complexity"):
                     cmds.setAttr(f"{proxy_shape}.complexity", 4)  # High detail
-                    self.logger.info("✅ Complexity set to high")
+                    self.logger.info("[OK] Complexity set to high")
 
                 # Method 3: Show all prims in viewport
                 if cmds.objExists(f"{proxy_shape}.displayGuide"):
                     cmds.setAttr(f"{proxy_shape}.displayGuide", True)
-                    self.logger.info("✅ Display guides enabled")
+                    self.logger.info("[OK] Display guides enabled")
 
                 # Method 4: Enable USD prim selection
                 if cmds.objExists(f"{proxy_shape}.proxyAccessor"):
                     cmds.setAttr(f"{proxy_shape}.proxyAccessor", True)
-                    self.logger.info("✅ USD prim selection enabled")
+                    self.logger.info("[OK] USD prim selection enabled")
 
                 # Method 5: Force skeleton imaging via time attribute
                 # Setting the time attribute explicitly can help with skeleton evaluation
                 if cmds.objExists(f"{proxy_shape}.time"):
                     current_time = cmds.currentTime(query=True)
                     cmds.setAttr(f"{proxy_shape}.time", current_time)
-                    self.logger.info(f"✅ Set USD time to {current_time}")
+                    self.logger.info(f"[OK] Set USD time to {current_time}")
 
                 # Method 6: Force viewport refresh with frame change
                 parent_transform = cmds.listRelatives(proxy_shape, parent=True)
@@ -2852,7 +2852,7 @@ class UsdPipeline:
                 cmds.currentTime(current_frame + 1, edit=True)
                 cmds.currentTime(current_frame, edit=True)
                 cmds.refresh(force=True)
-                self.logger.info("✅ Viewport refreshed with frame change")
+                self.logger.info("[OK] Viewport refreshed with frame change")
 
                 # Method 7: Try toggling the proxy visibility to force redraw
                 if parent_transform:
@@ -2878,7 +2878,7 @@ class UsdPipeline:
                     self.logger.info(f"🔍 Skeleton-related attrs: {skeleton_attrs}")
 
             except Exception as e:
-                self.logger.warning(f"⚠️ Could not enable skeleton display: {e}")
+                self.logger.warning(f"[WARNING] Could not enable skeleton display: {e}")
 
             # WORKAROUND: Convert to native Maya ONLY if explicitly requested
             # Auto-conversion destroys the USD Animation Layers workflow
@@ -2896,37 +2896,37 @@ class UsdPipeline:
             is_complex_skeleton = result.usd_joints > 50
 
             if convert_to_native:
-                self.logger.info("🔄 Converting USD to native Maya data (user requested)...")
+                self.logger.info("[REFRESH] Converting USD to native Maya data (user requested)...")
                 self._convert_proxy_to_maya(proxy_shape, result)
             elif has_skinned_meshes and is_complex_skeleton and auto_convert_skinned:
                 # Auto-convert skinned meshes for complex skeletons
                 # Maya's UsdSkelImaging has bugs with complex skeletons
-                self.logger.warning("⚠️ Complex skeleton with skinned meshes detected")
-                self.logger.warning("⚠️ Maya 2026 UsdSkelImaging cannot display these meshes")
-                self.logger.info("🔄 Auto-converting skinned meshes to native Maya...")
+                self.logger.warning("[WARNING] Complex skeleton with skinned meshes detected")
+                self.logger.warning("[WARNING] Maya 2026 UsdSkelImaging cannot display these meshes")
+                self.logger.info("[REFRESH] Auto-converting skinned meshes to native Maya...")
                 self._convert_skinned_meshes_to_maya(proxy_shape, result)
             elif has_skinned_meshes and is_complex_skeleton:
                 # Complex skeleton with skinned meshes - warn user
-                self.logger.warning("⚠️ Complex skeleton with skinned meshes detected")
-                self.logger.warning("⚠️ Maya 2026 UsdSkelImaging may not display skinned meshes")
-                self.logger.warning("💡 If meshes don't display correctly, try:")
+                self.logger.warning("[WARNING] Complex skeleton with skinned meshes detected")
+                self.logger.warning("[WARNING] Maya 2026 UsdSkelImaging may not display skinned meshes")
+                self.logger.warning("[TIP] If meshes don't display correctly, try:")
                 self.logger.warning("   1. Select the USD proxy shape in Outliner")
                 self.logger.warning("   2. Right-click > Duplicate As > Maya Data")
                 self.logger.warning("   OR use Attribute Editor > mayaUsdProxyShape > Edit As Maya")
             elif result.usd_joints > 50:
                 # Complex skeleton - warn about potential viewport bugs
-                self.logger.warning("⚠️ Complex skeleton detected (>50 joints)")
-                self.logger.warning("⚠️ Maya 2026 may have viewport issues with UsdSkelImaging")
-                self.logger.warning("💡 If meshes don't display, try:")
+                self.logger.warning("[WARNING] Complex skeleton detected (>50 joints)")
+                self.logger.warning("[WARNING] Maya 2026 may have viewport issues with UsdSkelImaging")
+                self.logger.warning("[TIP] If meshes don't display, try:")
                 self.logger.warning("   1. Select the USD proxy shape")
                 self.logger.warning("   2. Right-click > Duplicate As > Maya Data")
                 self.logger.warning("   OR re-import with 'Convert to Maya' option enabled")
 
-            self.logger.info("💡 USD Animation Layers workflow complete:")
-            self.logger.info(f"   ✅ {result.usd_meshes} USD meshes in proxy")
-            self.logger.info(f"   ✅ {result.usd_joints} skeleton joints available")
-            self.logger.info("   ✅ Skeleton ready for animation")
-            self.logger.info("💡 NEXT STEPS: Create animation layer for skeleton:")
+            self.logger.info("[TIP] USD Animation Layers workflow complete:")
+            self.logger.info(f"   [OK] {result.usd_meshes} USD meshes in proxy")
+            self.logger.info(f"   [OK] {result.usd_joints} skeleton joints available")
+            self.logger.info("   [OK] Skeleton ready for animation")
+            self.logger.info("[TIP] NEXT STEPS: Create animation layer for skeleton:")
             self.logger.info("   1. Select USD proxy shape")
             self.logger.info("   2. USD > Layer Editor > New Anonymous Layer")
             self.logger.info("   3. Set as Edit Target")
@@ -2964,12 +2964,12 @@ class UsdPipeline:
             return False
 
         try:
-            self.logger.info("🔄 Converting USD prims to native Maya meshes...")
+            self.logger.info("[REFRESH] Converting USD prims to native Maya meshes...")
 
             # Get the proxy transform
             proxy_parent = cmds.listRelatives(proxy_shape, parent=True)
             if not proxy_parent:
-                self.logger.error("❌ Could not find proxy parent transform")
+                self.logger.error("[ERROR] Could not find proxy parent transform")
                 return False
 
             # Select the proxy shape
@@ -2983,19 +2983,19 @@ class UsdPipeline:
                 if hasattr(mayaUsdLib, 'PrimUpdater'):
                     # Modern mayaUSD API
                     mel.eval('mayaUsdEditAsMaya')
-                    self.logger.info("✅ Converted via mayaUsdEditAsMaya")
+                    self.logger.info("[OK] Converted via mayaUsdEditAsMaya")
                 else:
                     # Fallback to MEL
                     mel.eval('mayaUsdMenu_editAsMaya()')
-                    self.logger.info("✅ Converted via MEL command")
+                    self.logger.info("[OK] Converted via MEL command")
             except Exception as mel_err:
                 # Try alternative MEL commands
                 try:
                     mel.eval('mayaUsdDuplicate -importMaya')
-                    self.logger.info("✅ Converted via mayaUsdDuplicate")
+                    self.logger.info("[OK] Converted via mayaUsdDuplicate")
                 except Exception:
-                    self.logger.warning(f"⚠️ MEL conversion failed: {mel_err}")
-                    self.logger.info("💡 Try: Right-click proxy > Duplicate As > Maya Data")
+                    self.logger.warning(f"[WARNING] MEL conversion failed: {mel_err}")
+                    self.logger.info("[TIP] Try: Right-click proxy > Duplicate As > Maya Data")
                     return False
 
             # Count what was converted
@@ -3005,7 +3005,7 @@ class UsdPipeline:
             native_skins = cmds.ls(type='skinCluster') or []
 
             self.logger.info(
-                f"✅ Converted to Maya: {len(native_meshes)} meshes, "
+                f"[OK] Converted to Maya: {len(native_meshes)} meshes, "
                 f"{len(native_joints)} joints, {len(native_skins)} skinClusters"
             )
 
@@ -3016,7 +3016,7 @@ class UsdPipeline:
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Conversion to Maya failed: {e}")
+            self.logger.error(f"[ERROR] Conversion to Maya failed: {e}")
             return False
 
     def _convert_skinned_meshes_to_maya(
@@ -3047,17 +3047,17 @@ class UsdPipeline:
             # Get the USD stage from the proxy
             stage_attr = f"{proxy_shape}.filePath"
             if not cmds.objExists(stage_attr):
-                self.logger.error("❌ Could not get USD file path from proxy")
+                self.logger.error("[ERROR] Could not get USD file path from proxy")
                 return False
 
             usd_path = cmds.getAttr(stage_attr)
             if not usd_path:
-                self.logger.error("❌ USD file path is empty")
+                self.logger.error("[ERROR] USD file path is empty")
                 return False
 
             stage = Usd.Stage.Open(usd_path)
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
             # Find all skinned mesh paths
@@ -3070,15 +3070,15 @@ class UsdPipeline:
                         skinned_mesh_paths.append(str(prim.GetPath()))
 
             if not skinned_mesh_paths:
-                self.logger.info("✅ No skinned meshes found - nothing to convert")
+                self.logger.info("[OK] No skinned meshes found - nothing to convert")
                 return True
 
-            self.logger.info(f"🔄 Converting {len(skinned_mesh_paths)} skinned meshes to Maya...")
+            self.logger.info(f"[REFRESH] Converting {len(skinned_mesh_paths)} skinned meshes to Maya...")
 
             # Get proxy parent transform
             proxy_parent = cmds.listRelatives(proxy_shape, parent=True)
             if not proxy_parent:
-                self.logger.error("❌ Could not find proxy parent")
+                self.logger.error("[ERROR] Could not find proxy parent")
                 return False
             proxy_parent = proxy_parent[0]
 
@@ -3100,7 +3100,7 @@ class UsdPipeline:
                             mel.eval('mayaUsdDuplicate -importMaya')
                             converted_count += 1
                             mesh_name = mesh_path.split("/")[-1]
-                            self.logger.info(f"   ✅ {mesh_name}")
+                            self.logger.info(f"   [OK] {mesh_name}")
                         except Exception as prim_err:
                             self.logger.debug(f"   Prim conversion failed: {prim_err}")
             except ImportError:
@@ -3108,7 +3108,7 @@ class UsdPipeline:
 
             # Method 2: Try bulk conversion via MEL if Method 1 failed
             if converted_count == 0:
-                self.logger.info("🔄 Trying bulk import method...")
+                self.logger.info("[REFRESH] Trying bulk import method...")
                 try:
                     # Select the proxy transform (not shape)
                     cmds.select(proxy_parent, replace=True)
@@ -3118,13 +3118,13 @@ class UsdPipeline:
                     mel_cmd = f'file -import -type "USD Import" -options "{import_opts}" "{usd_path}"'
                     mel.eval(mel_cmd)
                     converted_count = len(skinned_mesh_paths)
-                    self.logger.info("   ✅ Bulk import successful")
+                    self.logger.info("   [OK] Bulk import successful")
                 except Exception as bulk_err:
                     self.logger.debug(f"   Bulk import failed: {bulk_err}")
 
             # Method 3: Direct mayaUSDImport command
             if converted_count == 0:
-                self.logger.info("🔄 Trying direct mayaUSDImport...")
+                self.logger.info("[REFRESH] Trying direct mayaUSDImport...")
                 try:
                     # Use mayaUSDImport command directly
                     import_result = cmds.mayaUSDImport(
@@ -3134,13 +3134,13 @@ class UsdPipeline:
                     )
                     if import_result:
                         converted_count = len(skinned_mesh_paths)
-                        self.logger.info("   ✅ Direct import successful")
+                        self.logger.info("   [OK] Direct import successful")
                 except Exception as direct_err:
                     self.logger.debug(f"   Direct import failed: {direct_err}")
 
             # Method 4: Delete proxy and re-import with native conversion
             if converted_count == 0:
-                self.logger.info("🔄 Trying re-import as native Maya...")
+                self.logger.info("[REFRESH] Trying re-import as native Maya...")
                 try:
                     # Delete the USD proxy
                     cmds.delete(proxy_parent)
@@ -3153,12 +3153,12 @@ class UsdPipeline:
                         importInstances=True
                     )
                     converted_count = len(skinned_mesh_paths)
-                    self.logger.info("   ✅ Re-import as native Maya successful")
+                    self.logger.info("   [OK] Re-import as native Maya successful")
                 except Exception as reimport_err:
-                    self.logger.warning(f"⚠️ Re-import failed: {reimport_err}")
+                    self.logger.warning(f"[WARNING] Re-import failed: {reimport_err}")
 
             if converted_count > 0:
-                self.logger.info(f"✅ Converted {converted_count} skinned meshes to Maya")
+                self.logger.info(f"[OK] Converted {converted_count} skinned meshes to Maya")
 
                 # Count native Maya objects created
                 cmds.refresh()
@@ -3169,17 +3169,17 @@ class UsdPipeline:
                 result.meshes_imported = len(native_meshes)
                 result.skin_clusters_imported = len(native_skins)
 
-                self.logger.info(f"   📦 Maya meshes: {len(native_meshes)}")
-                self.logger.info(f"   🦴 SkinClusters: {len(native_skins)}")
+                self.logger.info(f"   [PACKAGE] Maya meshes: {len(native_meshes)}")
+                self.logger.info(f"   [SKELETON] SkinClusters: {len(native_skins)}")
             else:
-                self.logger.warning("⚠️ Could not auto-convert meshes")
-                self.logger.warning("💡 Try: Right-click proxy > Duplicate As > Maya Data")
+                self.logger.warning("[WARNING] Could not auto-convert meshes")
+                self.logger.warning("[TIP] Try: Right-click proxy > Duplicate As > Maya Data")
                 return False
 
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Skinned mesh conversion failed: {e}")
+            self.logger.error(f"[ERROR] Skinned mesh conversion failed: {e}")
             import traceback
             self.logger.debug(traceback.format_exc())
             return False
@@ -3212,26 +3212,26 @@ class UsdPipeline:
             # Open USD stage (read-only check first)
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
-            self.logger.info(f"✅ Opened USD stage: {stage.GetRootLayer().identifier}")
+            self.logger.info(f"[OK] Opened USD stage: {stage.GetRootLayer().identifier}")
 
             # Find skeleton and meshes
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
             meshes = [p for p in stage.Traverse() if p.IsA(UsdGeom.Mesh)]
 
             if not skeletons:
-                self.logger.warning("⚠️ No skeletons found in USD")
+                self.logger.warning("[WARNING] No skeletons found in USD")
                 return False
 
             if not meshes:
-                self.logger.warning("⚠️ No meshes found in USD")
+                self.logger.warning("[WARNING] No meshes found in USD")
                 return False
 
             skeleton = skeletons[0]
-            self.logger.info(f"🦴 Found skeleton: {skeleton.GetPath()}")
-            self.logger.info(f"📦 Found {len(meshes)} meshes")
+            self.logger.info(f"[SKELETON] Found skeleton: {skeleton.GetPath()}")
+            self.logger.info(f"[PACKAGE] Found {len(meshes)} meshes")
 
             # Check if meshes already have bindings - if so, skip Phase 1
             meshes_with_binding = 0
@@ -3252,10 +3252,10 @@ class UsdPipeline:
                         meshes_with_weights += 1
 
             if meshes_with_binding > 0 or meshes_with_weights > 0:
-                self.logger.info("✅ USD already has skeleton bindings:")
+                self.logger.info("[OK] USD already has skeleton bindings:")
                 self.logger.info(f"   📊 Meshes with binding: {meshes_with_binding}")
                 self.logger.info(f"   📊 Meshes with weights: {meshes_with_weights}")
-                self.logger.info("💡 Skipping Phase 1 - using existing bindings")
+                self.logger.info("[TIP] Skipping Phase 1 - using existing bindings")
                 return True
 
             # Only create bindings if none exist
@@ -3270,14 +3270,14 @@ class UsdPipeline:
 
             # Create bindings for first mesh (Phase 1 test)
             test_mesh = meshes[0]
-            self.logger.info(f"🧪 Phase 1: Testing binding on {test_mesh.GetPath()}")
+            self.logger.info(f"[TEST] Phase 1: Testing binding on {test_mesh.GetPath()}")
 
             # Apply UsdSkel binding API
             binding_api = UsdSkel.BindingAPI.Apply(test_mesh.GetPrim())
 
             # Link mesh to skeleton
             binding_api.CreateSkeletonRel().SetTargets([skeleton.GetPath()])
-            self.logger.info("✅ Linked mesh to skeleton")
+            self.logger.info("[OK] Linked mesh to skeleton")
 
             # Get skeleton joints
             skel_api = UsdSkel.Skeleton(skeleton)
@@ -3285,21 +3285,21 @@ class UsdPipeline:
 
             if joints_attr:
                 joints = joints_attr.Get()
-                self.logger.info(f"🦴 Skeleton has {len(joints) if joints else 0} joints")
-                self.logger.info("💡 Phase 1 complete: Basic binding structure created")
-                self.logger.warning("⚠️ Weight transfer not yet implemented (Phase 2)")
+                self.logger.info(f"[SKELETON] Skeleton has {len(joints) if joints else 0} joints")
+                self.logger.info("[TIP] Phase 1 complete: Basic binding structure created")
+                self.logger.warning("[WARNING] Weight transfer not yet implemented (Phase 2)")
             else:
-                self.logger.warning("⚠️ Could not read skeleton joints")
+                self.logger.warning("[WARNING] Could not read skeleton joints")
 
-            self.logger.info("💡 Binding layer active in stage (in-memory)")
+            self.logger.info("[TIP] Binding layer active in stage (in-memory)")
 
             return True
 
         except ImportError:
-            self.logger.error("❌ USD Python API (pxr) not available")
+            self.logger.error("[ERROR] USD Python API (pxr) not available")
             return False
         except Exception as e:
-            self.logger.error(f"❌ Binding creation failed: {e}")
+            self.logger.error(f"[ERROR] Binding creation failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
@@ -3327,17 +3327,17 @@ class UsdPipeline:
         try:
             from pxr import Usd, UsdSkel
 
-            self.logger.info("🦴 Phase 2: Creating Maya joint proxies from .rig.mb file...")
+            self.logger.info("[SKELETON] Phase 2: Creating Maya joint proxies from .rig.mb file...")
 
             # First, get USD skeleton joint names to filter Maya joints
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
             if not skeletons:
-                self.logger.warning("⚠️ No skeleton found in USD")
+                self.logger.warning("[WARNING] No skeleton found in USD")
                 return False
 
             skeleton_prim = skeletons[0]
@@ -3345,17 +3345,17 @@ class UsdPipeline:
             joints_attr = skel.GetJointsAttr()
 
             if not joints_attr:
-                self.logger.error("❌ No joints in USD skeleton")
+                self.logger.error("[ERROR] No joints in USD skeleton")
                 return False
 
             usd_joint_paths = joints_attr.Get()
             if not usd_joint_paths:
-                self.logger.error("❌ Empty USD joints list")
+                self.logger.error("[ERROR] Empty USD joints list")
                 return False
 
             # Extract just the joint names (last component of path)
             usd_joint_names = set(str(jp).split('/')[-1] for jp in usd_joint_paths)
-            self.logger.info(f"🦴 USD skeleton has {len(usd_joint_names)} joints")
+            self.logger.info(f"[SKELETON] USD skeleton has {len(usd_joint_names)} joints")
 
             # Check for left/right naming patterns to detect if mirroring is needed
             sample_joints = list(usd_joint_names)[:10]
@@ -3364,14 +3364,14 @@ class UsdPipeline:
             # Get the .rig.mb file path from the same directory as USD file
             rig_mb_path = usd_path.parent / f"{usd_path.stem}.rig.mb"
             if not rig_mb_path.exists():
-                self.logger.error(f"❌ Rig file not found: {rig_mb_path}")
+                self.logger.error(f"[ERROR] Rig file not found: {rig_mb_path}")
                 return False
 
-            self.logger.info(f"📦 Found Maya rig file: {rig_mb_path}")
+            self.logger.info(f"[PACKAGE] Found Maya rig file: {rig_mb_path}")
 
             # Import the Maya rig to query joint positions
             if cmds is None:
-                self.logger.error("❌ Maya cmds not available")
+                self.logger.error("[ERROR] Maya cmds not available")
                 return False
 
             self.logger.info("📥 Importing Maya rig to query skeleton positions...")
@@ -3380,7 +3380,7 @@ class UsdPipeline:
             namespace = "RIG_REFERENCE"
 
             # Import the rig file with references deferred (avoids RenderMan callback blocking)
-            self.logger.info("🔄 Importing Maya rig file...")
+            self.logger.info("[REFRESH] Importing Maya rig file...")
 
             # Disable undo during import for performance
             undo_state = cmds.undoInfo(query=True, state=True)
@@ -3399,10 +3399,10 @@ class UsdPipeline:
                     namespace=namespace,
                     loadReferenceDepth="none"  # Skip referenced file (RenderMan shader issues)
                 )
-                self.logger.info("✅ Maya rig imported (references deferred)")
+                self.logger.info("[OK] Maya rig imported (references deferred)")
             except Exception as import_error:
                 # Import may have worked despite errors - check for joints anyway
-                self.logger.warning(f"⚠️ Import warnings: {str(import_error)[:80]}")
+                self.logger.warning(f"[WARNING] Import warnings: {str(import_error)[:80]}")
             finally:
                 # Restore undo state
                 cmds.undoInfo(stateWithoutFlush=undo_state)
@@ -3412,10 +3412,10 @@ class UsdPipeline:
             all_maya_joints = cmds.ls(f"{namespace}:*", type="joint")
 
             if not all_maya_joints:
-                self.logger.error(f"❌ No joints found in {rig_mb_path}")
+                self.logger.error(f"[ERROR] No joints found in {rig_mb_path}")
                 return False
 
-            self.logger.info(f"🦴 Found {len(all_maya_joints)} total joints in Maya rig")
+            self.logger.info(f"[SKELETON] Found {len(all_maya_joints)} total joints in Maya rig")
 
             # Create case-insensitive mapping for joint names
             usd_joint_names_lower = {name.lower(): name for name in usd_joint_names}
@@ -3532,16 +3532,16 @@ class UsdPipeline:
                         filtered_out.append(maya_joint_name)
 
             if not all_joints:
-                self.logger.error("❌ No matching joints found between Maya rig and USD skeleton")
+                self.logger.error("[ERROR] No matching joints found between Maya rig and USD skeleton")
                 self.logger.info(f"   Maya has {len(all_maya_joints)} joints, USD expects {len(usd_joint_names)}")
                 return False
 
-            self.logger.info(f"🎯 Filtered to {len(all_joints)} joints matching USD skeleton")
+            self.logger.info(f"[TARGET] Filtered to {len(all_joints)} joints matching USD skeleton")
 
             # Log joints that will be mirrored (unsided foot/limb joints)
             if joints_to_mirror:
                 mirror_names = [j.split(":")[-1] for j in joints_to_mirror]
-                self.logger.info(f"🔄 Unsided joints to mirror: {mirror_names}")
+                self.logger.info(f"[REFRESH] Unsided joints to mirror: {mirror_names}")
 
             # Count left/right/center joints for diagnostics
             left_count = sum(
@@ -3671,7 +3671,7 @@ class UsdPipeline:
 
             # Log root joints for debugging
             root_joints = [j.split(":")[-1] for j, p in hierarchy_map.items() if p is None]
-            self.logger.info(f"✅ Built hierarchy map for {len(all_joints)} joints ({root_count} roots)")
+            self.logger.info(f"[OK] Built hierarchy map for {len(all_joints)} joints ({root_count} roots)")
             self.logger.info(f"🔍 Root joints: {root_joints[:10]}")
 
             # Create mirrored joints for unsided foot/limb joints
@@ -3707,7 +3707,7 @@ class UsdPipeline:
                 })
 
                 self.logger.info(
-                    f"🔄 Mirroring {mirror_name}: L@{left_pos[0]:.3f}, R@{right_pos[0]:.3f}"
+                    f"[REFRESH] Mirroring {mirror_name}: L@{left_pos[0]:.3f}, R@{right_pos[0]:.3f}"
                 )
 
             # Create proxy joints by querying positions from imported rig
@@ -3775,10 +3775,10 @@ class UsdPipeline:
 
             if mirrored_proxy_joints:
                 self.logger.info(
-                    f"✅ Created {len(mirrored_proxy_joints)} mirrored proxy joints"
+                    f"[OK] Created {len(mirrored_proxy_joints)} mirrored proxy joints"
                 )
 
-            self.logger.info(f"✅ Created {len(maya_joints)} proxy joints")
+            self.logger.info(f"[OK] Created {len(maya_joints)} proxy joints")
 
             # Build hierarchy for proxy joints
             self.logger.info("🔗 Building proxy joint hierarchy...")
@@ -3816,13 +3816,13 @@ class UsdPipeline:
                         cmds.parent(mirror_proxy, sided_parent)
                     else:
                         self.logger.warning(
-                            f"⚠️ Could not find sided parent for {mirror_proxy}"
+                            f"[WARNING] Could not find sided parent for {mirror_proxy}"
                         )
                         root_joints.append(mirror_proxy)
                 else:
                     root_joints.append(mirror_proxy)
 
-            self.logger.info(f"✅ Created hierarchy: {len(root_joints)} root joints")
+            self.logger.info(f"[OK] Created hierarchy: {len(root_joints)} root joints")
 
             # Store imported joints for weight extraction (Phase 3.2)
             # We'll delete them after extracting skinCluster weights
@@ -3835,20 +3835,20 @@ class UsdPipeline:
                 cmds.select(root_joints, replace=True)
 
             total_joints = len(maya_joints) + len(mirrored_proxy_joints)
-            self.logger.info(f"\n✅ Phase 3.1 Complete: Created {total_joints} joint hierarchy")
+            self.logger.info(f"\n[OK] Phase 3.1 Complete: Created {total_joints} joint hierarchy")
             if mirrored_proxy_joints:
                 self.logger.info(
-                    f"🔄 Includes {len(mirrored_proxy_joints)} mirrored foot joints"
+                    f"[REFRESH] Includes {len(mirrored_proxy_joints)} mirrored foot joints"
                 )
             self.logger.info(f"🔗 Hierarchy: {len(root_joints)} root joint(s)")
-            self.logger.info("💡 Joint orientations preserved from source rig")
-            self.logger.info("💡 Positions extracted from native Maya rig")
+            self.logger.info("[TIP] Joint orientations preserved from source rig")
+            self.logger.info("[TIP] Positions extracted from native Maya rig")
 
             result.joints_imported = total_joints
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Joint proxy creation failed: {e}")
+            self.logger.error(f"[ERROR] Joint proxy creation failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
@@ -3876,29 +3876,29 @@ class UsdPipeline:
 
             proxy_joints = getattr(result, '_proxy_joints', None)
             if not proxy_joints:
-                self.logger.warning("⚠️ No proxy joints found")
+                self.logger.warning("[WARNING] No proxy joints found")
                 return False
 
-            self.logger.info(f"🦴 Found {len(proxy_joints)} proxy joints to connect")
+            self.logger.info(f"[SKELETON] Found {len(proxy_joints)} proxy joints to connect")
 
             # Get USD stage via mayaUsd (live stage, not file-based)
             try:
                 import mayaUsd.ufe as mayaUsdUfe
                 stage = mayaUsdUfe.getStage(proxy_shape)
             except ImportError:
-                self.logger.warning("⚠️ mayaUsd.ufe not available, using file-based stage")
+                self.logger.warning("[WARNING] mayaUsd.ufe not available, using file-based stage")
                 stage = None
 
             if not stage:
                 stage_path = cmds.getAttr(f"{proxy_shape}.filePath")
                 if not stage_path:
-                    self.logger.error("❌ Could not get USD stage")
+                    self.logger.error("[ERROR] Could not get USD stage")
                     return False
                 from pxr import Usd
                 stage = Usd.Stage.Open(stage_path)
 
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
             from pxr import Usd, UsdSkel, UsdGeom, Sdf, Gf
@@ -3906,7 +3906,7 @@ class UsdPipeline:
             # Find USD skeleton
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
             if not skeletons:
-                self.logger.warning("⚠️ No skeleton found in USD")
+                self.logger.warning("[WARNING] No skeleton found in USD")
                 return False
 
             skeleton_prim = skeletons[0]
@@ -3914,7 +3914,7 @@ class UsdPipeline:
             usd_joints = skel.GetJointsAttr().Get() or []
 
             if not usd_joints:
-                self.logger.warning("⚠️ USD skeleton has no joints")
+                self.logger.warning("[WARNING] USD skeleton has no joints")
                 return False
 
             # Build USD joint mappings (name → path, name → index)
@@ -3959,7 +3959,7 @@ class UsdPipeline:
                     joint_mapping[proxy_joint] = (usd_joint_path, usd_joint_idx)
                     connections_made += 1
 
-            self.logger.info(f"✅ Mapped {connections_made}/{len(proxy_joints)} joints")
+            self.logger.info(f"[OK] Mapped {connections_made}/{len(proxy_joints)} joints")
 
             # Store mapping for animation callback system
             result._joint_mapping = joint_mapping
@@ -3973,15 +3973,15 @@ class UsdPipeline:
             # Clean up imported rig (keep proxy joints)
             self._cleanup_imported_rig(result)
 
-            self.logger.info("\n✅ Phase 3.2 Complete: Live proxy-to-USD connections")
+            self.logger.info("\n[OK] Phase 3.2 Complete: Live proxy-to-USD connections")
             self.logger.info(f"🔗 {connections_made} proxy joints driving USD skeleton")
-            self.logger.info("💡 Animate proxy joints → USD skeleton deforms meshes")
-            self.logger.info("💡 Keyframe proxy joints for animation export")
+            self.logger.info("[TIP] Animate proxy joints → USD skeleton deforms meshes")
+            self.logger.info("[TIP] Keyframe proxy joints for animation export")
 
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Proxy connection failed: {e}")
+            self.logger.error(f"[ERROR] Proxy connection failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
@@ -4019,7 +4019,7 @@ class UsdPipeline:
             )
 
             if use_attr_proxy:
-                self.logger.info("✅ Using mayaUsd attribute proxy connections")
+                self.logger.info("[OK] Using mayaUsd attribute proxy connections")
                 return len(joint_mapping)
 
             # Fallback: Create expression-based driver for batch updates
@@ -4054,7 +4054,7 @@ class UsdPipeline:
                             pass
 
             if drivers_created > 0:
-                self.logger.info(f"✅ Created {drivers_created} driver connections")
+                self.logger.info(f"[OK] Created {drivers_created} driver connections")
 
                 # Add callback to sync transforms on frame change
                 self._register_skeleton_sync_callback(driver_grp, joint_mapping, proxy_shape)
@@ -4062,7 +4062,7 @@ class UsdPipeline:
             return drivers_created
 
         except Exception as e:
-            self.logger.warning(f"⚠️ Expression driver creation failed: {e}")
+            self.logger.warning(f"[WARNING] Expression driver creation failed: {e}")
             return 0
 
     def _try_mayausd_attr_proxy(
@@ -4112,7 +4112,7 @@ class UsdPipeline:
                     continue
 
             if connections_made > 0:
-                self.logger.info(f"✅ Created {connections_made} UFE attribute proxies")
+                self.logger.info(f"[OK] Created {connections_made} UFE attribute proxies")
                 return True
 
             return False
@@ -4187,10 +4187,10 @@ class UsdPipeline:
                 parent=driver_grp
             )
 
-            self.logger.info("✅ Registered skeleton sync callback")
+            self.logger.info("[OK] Registered skeleton sync callback")
 
         except Exception as e:
-            self.logger.warning(f"⚠️ Could not register sync callback: {e}")
+            self.logger.warning(f"[WARNING] Could not register sync callback: {e}")
 
     def _transfer_skin_weights_full(
         self,
@@ -4216,7 +4216,7 @@ class UsdPipeline:
         try:
             from pxr import Usd, UsdSkel, UsdGeom  # type: ignore
 
-            self.logger.info("🎨 Phase 3.2: Verifying USD skin bindings...")
+            self.logger.info("[LOOKDEV] Phase 3.2: Verifying USD skin bindings...")
 
             # NOTE: Do NOT cleanup imported rig here - this is read-only verification
             # Cleanup happens after the full workflow completes in _import_hybrid()
@@ -4224,41 +4224,41 @@ class UsdPipeline:
             # Open USD stage
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
             # Find SkelRoot (required for proper deformation)
             skel_roots = [p for p in stage.Traverse() if p.IsA(UsdSkel.Root)]
             if not skel_roots:
-                self.logger.warning("⚠️ No SkelRoot found - deformation may not work")
-                self.logger.info("💡 USD requires SkelRoot prim to scope skeleton influence")
+                self.logger.warning("[WARNING] No SkelRoot found - deformation may not work")
+                self.logger.info("[TIP] USD requires SkelRoot prim to scope skeleton influence")
 
             # Find USD skeleton
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
             if not skeletons:
-                self.logger.warning("⚠️ No skeleton found in USD")
+                self.logger.warning("[WARNING] No skeleton found in USD")
                 return False
 
             skeleton_prim = skeletons[0]
             skel = UsdSkel.Skeleton(skeleton_prim)
             usd_joints = skel.GetJointsAttr().Get() or []
 
-            self.logger.info(f"🦴 USD skeleton: {skeleton_prim.GetPath()}")
-            self.logger.info(f"🦴 Skeleton joints: {len(usd_joints)}")
+            self.logger.info(f"[SKELETON] USD skeleton: {skeleton_prim.GetPath()}")
+            self.logger.info(f"[SKELETON] Skeleton joints: {len(usd_joints)}")
 
             # Verify skeleton has required attributes
             bind_transforms = skel.GetBindTransformsAttr().Get()
             rest_transforms = skel.GetRestTransformsAttr().Get()
 
             if not bind_transforms:
-                self.logger.warning("⚠️ Skeleton missing bindTransforms")
+                self.logger.warning("[WARNING] Skeleton missing bindTransforms")
             else:
-                self.logger.info(f"✅ bindTransforms: {len(bind_transforms)} matrices")
+                self.logger.info(f"[OK] bindTransforms: {len(bind_transforms)} matrices")
 
             if not rest_transforms:
-                self.logger.warning("⚠️ Skeleton missing restTransforms")
+                self.logger.warning("[WARNING] Skeleton missing restTransforms")
             else:
-                self.logger.info(f"✅ restTransforms: {len(rest_transforms)} matrices")
+                self.logger.info(f"[OK] restTransforms: {len(rest_transforms)} matrices")
 
             # Find meshes with skin binding data
             meshes_with_weights = 0
@@ -4294,7 +4294,7 @@ class UsdPipeline:
 
                         if meshes_with_weights <= 5:
                             self.logger.info(
-                                f"   ✅ {mesh_name}: {len(weights)} weights"
+                                f"   [OK] {mesh_name}: {len(weights)} weights"
                             )
 
                 # Check for geomBindTransform (required for proper deformation)
@@ -4314,14 +4314,14 @@ class UsdPipeline:
 
             # Report binding status
             if binding_issues:
-                self.logger.warning(f"⚠️ {len(binding_issues)} meshes need binding fixes:")
+                self.logger.warning(f"[WARNING] {len(binding_issues)} meshes need binding fixes:")
                 for issue in binding_issues[:5]:
                     self.logger.warning(f"   - {issue}")
 
             if meshes_with_weights == 0:
-                self.logger.warning("⚠️ No meshes with skin weights found in USD")
-                self.logger.info("💡 Was USDZ exported with 'Viewport-friendly skeleton' UNCHECKED?")
-                self.logger.info("💡 Falling back to proxy joint connection...")
+                self.logger.warning("[WARNING] No meshes with skin weights found in USD")
+                self.logger.info("[TIP] Was USDZ exported with 'Viewport-friendly skeleton' UNCHECKED?")
+                self.logger.info("[TIP] Falling back to proxy joint connection...")
                 return False
 
             # Store binding info for potential repair
@@ -4333,27 +4333,27 @@ class UsdPipeline:
                 'skel_root': str(skel_roots[0].GetPath()) if skel_roots else None
             }
 
-            self.logger.info("\n✅ Phase 3.2 Complete: USD skin bindings verified")
+            self.logger.info("\n[OK] Phase 3.2 Complete: USD skin bindings verified")
             self.logger.info(f"📊 Meshes with weights: {meshes_with_weights}")
             self.logger.info(f"📊 Meshes with binding: {meshes_with_binding}")
-            self.logger.info(f"🎨 Total weight values: {total_weight_values}")
+            self.logger.info(f"[LOOKDEV] Total weight values: {total_weight_values}")
 
             if meshes_with_binding == meshes_with_weights:
-                self.logger.info("✅ All skinned meshes have proper skeleton binding")
-                self.logger.info("💡 USD meshes will deform when skeleton animates")
+                self.logger.info("[OK] All skinned meshes have proper skeleton binding")
+                self.logger.info("[TIP] USD meshes will deform when skeleton animates")
             else:
                 self.logger.warning(
-                    f"⚠️ {meshes_with_weights - meshes_with_binding} meshes may not deform"
+                    f"[WARNING] {meshes_with_weights - meshes_with_binding} meshes may not deform"
                 )
-                self.logger.info("💡 Use _repair_usd_skin_bindings() to fix")
+                self.logger.info("[TIP] Use _repair_usd_skin_bindings() to fix")
 
             return True
 
         except ImportError as e:
-            self.logger.error(f"❌ USD Python API error: {e}")
+            self.logger.error(f"[ERROR] USD Python API error: {e}")
             return False
         except Exception as e:
-            self.logger.error(f"❌ Binding verification failed: {e}")
+            self.logger.error(f"[ERROR] Binding verification failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             return False
@@ -4381,20 +4381,20 @@ class UsdPipeline:
 
             binding_info = getattr(result, '_usd_binding_info', None)
             if not binding_info or not binding_info.get('binding_issues'):
-                self.logger.info("✅ No binding repairs needed")
+                self.logger.info("[OK] No binding repairs needed")
                 return True
 
-            self.logger.info("🔧 Repairing USD skin bindings...")
+            self.logger.info("[TOOL] Repairing USD skin bindings...")
 
             # Open stage for editing
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
             skeleton_path = binding_info.get('skeleton_path')
             if not skeleton_path:
-                self.logger.error("❌ No skeleton path for binding")
+                self.logger.error("[ERROR] No skeleton path for binding")
                 return False
 
             repairs_made = 0
@@ -4422,19 +4422,19 @@ class UsdPipeline:
                 binding_api.CreateSkeletonRel().SetTargets([Sdf.Path(skeleton_path)])
 
                 repairs_made += 1
-                self.logger.info(f"   🔧 Fixed binding: {prim.GetName()}")
+                self.logger.info(f"   [TOOL] Fixed binding: {prim.GetName()}")
 
             if repairs_made > 0:
                 # Save changes
                 stage.GetRootLayer().Save()
-                self.logger.info(f"✅ Repaired {repairs_made} mesh bindings")
+                self.logger.info(f"[OK] Repaired {repairs_made} mesh bindings")
             else:
-                self.logger.info("✅ No repairs needed")
+                self.logger.info("[OK] No repairs needed")
 
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Binding repair failed: {e}")
+            self.logger.error(f"[ERROR] Binding repair failed: {e}")
             return False
 
     def _transfer_skin_weights(
@@ -4458,18 +4458,18 @@ class UsdPipeline:
         try:
             from pxr import Usd, UsdSkel, UsdGeom, Sdf, Vt, Gf  # type: ignore
 
-            self.logger.info("🎨 Phase 3.2: Transferring skin weights...")
+            self.logger.info("[LOOKDEV] Phase 3.2: Transferring skin weights...")
 
             # Check if we have imported joints to extract from
             imported_joints = getattr(result, '_imported_joints', None)
             if not imported_joints:
-                self.logger.warning("⚠️ No imported joints found for weight extraction")
+                self.logger.warning("[WARNING] No imported joints found for weight extraction")
                 return False
 
             # Find all skinClusters in the scene (from the imported rig)
             skin_clusters = cmds.ls(type='skinCluster') or []
             if not skin_clusters:
-                self.logger.warning("⚠️ No skinClusters found in imported rig")
+                self.logger.warning("[WARNING] No skinClusters found in imported rig")
                 self._cleanup_imported_rig(result)
                 return False
 
@@ -4478,14 +4478,14 @@ class UsdPipeline:
             # Open USD stage for writing
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
-                self.logger.error("❌ Could not open USD stage")
+                self.logger.error("[ERROR] Could not open USD stage")
                 self._cleanup_imported_rig(result)
                 return False
 
             # Find USD skeleton
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
             if not skeletons:
-                self.logger.warning("⚠️ No skeleton found in USD")
+                self.logger.warning("[WARNING] No skeleton found in USD")
                 self._cleanup_imported_rig(result)
                 return False
 
@@ -4494,7 +4494,7 @@ class UsdPipeline:
             usd_joints = skel.GetJointsAttr().Get() or []
 
             if not usd_joints:
-                self.logger.error("❌ USD skeleton has no joints")
+                self.logger.error("[ERROR] USD skeleton has no joints")
                 self._cleanup_imported_rig(result)
                 return False
 
@@ -4503,7 +4503,7 @@ class UsdPipeline:
             usd_joint_names = [str(j).split('/')[-1].lower() for j in usd_joints]
             usd_joint_index = {name: i for i, name in enumerate(usd_joint_names)}
 
-            self.logger.info(f"🦴 USD skeleton has {len(usd_joints)} joints")
+            self.logger.info(f"[SKELETON] USD skeleton has {len(usd_joints)} joints")
 
             # Process each skinCluster
             weights_transferred = 0
@@ -4516,7 +4516,7 @@ class UsdPipeline:
                     continue
 
                 mesh_name = geometry[0].split('|')[-1].split(':')[-1]
-                self.logger.info(f"📦 Processing weights for: {mesh_name}")
+                self.logger.info(f"[PACKAGE] Processing weights for: {mesh_name}")
 
                 # Get influence joints
                 influences = cmds.skinCluster(skin_cluster, query=True, influence=True)
@@ -4570,26 +4570,26 @@ class UsdPipeline:
                     weights_transferred += len(mesh_weights)
                     meshes_processed += 1
                     self.logger.info(
-                        f"   ✅ Extracted {len(mesh_weights)} weight values"
+                        f"   [OK] Extracted {len(mesh_weights)} weight values"
                     )
 
             # Clean up imported rig now that we've extracted weights
             self._cleanup_imported_rig(result)
 
-            self.logger.info("\n✅ Phase 3.2 Complete: Weight extraction finished")
+            self.logger.info("\n[OK] Phase 3.2 Complete: Weight extraction finished")
             self.logger.info(f"📊 Processed {meshes_processed} meshes")
-            self.logger.info(f"🎨 Extracted {weights_transferred} weight values")
-            self.logger.info("💡 Note: USD weight application requires file-backed layer")
-            self.logger.info("💡 Weights ready for animation - use Maya proxy joints")
+            self.logger.info(f"[LOOKDEV] Extracted {weights_transferred} weight values")
+            self.logger.info("[TIP] Note: USD weight application requires file-backed layer")
+            self.logger.info("[TIP] Weights ready for animation - use Maya proxy joints")
 
             return True
 
         except ImportError as e:
-            self.logger.error(f"❌ USD Python API error: {e}")
+            self.logger.error(f"[ERROR] USD Python API error: {e}")
             self._cleanup_imported_rig(result)
             return False
         except Exception as e:
-            self.logger.error(f"❌ Weight transfer failed: {e}")
+            self.logger.error(f"[ERROR] Weight transfer failed: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
@@ -4608,7 +4608,7 @@ class UsdPipeline:
         imported_joints = getattr(result, '_imported_joints', None)
         if imported_joints:
             try:
-                self.logger.info("🗑️ Removing imported rig (kept proxy hierarchy)...")
+                self.logger.info("[DELETE] Removing imported rig (kept proxy hierarchy)...")
 
                 # First, remove any reference nodes that were created
                 # These have RIG_REFERENCE: prefix from the deferred reference load
@@ -4633,7 +4633,7 @@ class UsdPipeline:
                         except Exception:
                             pass
 
-                    self.logger.info(f"   🗑️ Cleaned up {len(ref_roots)} reference nodes")
+                    self.logger.info(f"   [DELETE] Cleaned up {len(ref_roots)} reference nodes")
 
                 # Delete the imported rig hierarchy (not the proxy joints we created)
                 # Find root nodes to delete (imported joints have namespaces)
@@ -4658,11 +4658,11 @@ class UsdPipeline:
                             pass
 
                 if deleted_count > 0:
-                    self.logger.info(f"   🗑️ Cleaned up {deleted_count} rig hierarchy nodes")
+                    self.logger.info(f"   [DELETE] Cleaned up {deleted_count} rig hierarchy nodes")
 
                 result._imported_joints = None
             except Exception as e:
-                self.logger.warning(f"⚠️ Cleanup warning: {e}")
+                self.logger.warning(f"[WARNING] Cleanup warning: {e}")
 
     def _supplement_from_rig_mb(
         self,
@@ -4689,19 +4689,19 @@ class UsdPipeline:
         if has_usd_content:
             # USD import succeeded! Prims are in the proxy shape
             self.logger.info(
-                f"✅ USD import successful: {result.usd_meshes} mesh prims, "
+                f"[OK] USD import successful: {result.usd_meshes} mesh prims, "
                 f"{result.usd_joints} skeleton prims in proxy shape"
             )
-            self.logger.info("💡 USD prims are viewable in Maya viewport")
-            self.logger.info("💡 To convert: Right-click proxy > Duplicate As > Maya Data")
+            self.logger.info("[TIP] USD prims are viewable in Maya viewport")
+            self.logger.info("[TIP] To convert: Right-click proxy > Duplicate As > Maya Data")
             # Don't use fallback - USD content is valid!
             return True
 
         # USD import failed or created no content - use .rig.mb fallback
-        self.logger.warning("⚠️ USD import created no proxy content - using .rig.mb fallback")
+        self.logger.warning("[WARNING] USD import created no proxy content - using .rig.mb fallback")
 
         try:
-            self.logger.info("🔄 Importing .rig.mb as fallback...")
+            self.logger.info("[REFRESH] Importing .rig.mb as fallback...")
             cmds.file(new=True, force=True)  # Clear scene
 
             imported_nodes = cmds.file(
@@ -4714,7 +4714,7 @@ class UsdPipeline:
             )
 
             if imported_nodes:
-                self.logger.info(f"✅ Imported {len(imported_nodes)} nodes from rig backup")
+                self.logger.info(f"[OK] Imported {len(imported_nodes)} nodes from rig backup")
                 result.used_rig_mb_fallback = True
                 result.fallback_components = ['Full rig']
 

@@ -52,7 +52,7 @@ from ..maya_rig_importer import MayaRigImporter
 from ..usdz_packager import UsdzPackager
 
 print("=" * 80)
-print("🎯🎯🎯 USD_PIPELINE_DIALOG.PY LOADING - VERSION 3 🎯🎯🎯")
+print("[TARGET][TARGET][TARGET] USD_PIPELINE_DIALOG.PY LOADING - VERSION 3 [TARGET][TARGET][TARGET]")
 print("=" * 80)
 
 logger = logging.getLogger(__name__)
@@ -298,7 +298,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
         self._usdz_radio = QRadioButton(".usdz (Package)")
         self._usdz_radio.setToolTip(
-            "📦 USDZ Package Format\n\n"
+            "[PACKAGE] USDZ Package Format\n\n"
             "Creates a single .usdz file containing:\n"
             "• USD geometry and materials\n"
             "• .mrig rig data (bundled automatically)\n"
@@ -585,44 +585,44 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
         if use_current_scene:
             # Validate current scene mode
-            self._validation_text.append("✅ Using current Maya scene")
+            self._validation_text.append("[OK] Using current Maya scene")
             source_file = None
         else:
             # Validate file mode
             source_file = Path(self._source_file_edit.text())
             if not source_file.exists():
-                self._validation_text.append("❌ Source file does not exist")
+                self._validation_text.append("[ERROR] Source file does not exist")
                 return
-            self._validation_text.append(f"✅ Source file: {source_file.name}")
+            self._validation_text.append(f"[OK] Source file: {source_file.name}")
 
         # Validate with export service
         if self._export_service:
             is_valid, error_msg = self._export_service.validate_export_options(options)  # type: ignore
 
             if is_valid:
-                self._validation_text.append("✅ Export options are valid")
+                self._validation_text.append("[OK] Export options are valid")
 
                 # Try to parse scene for additional info
                 try:
                     scene_data = self._scene_parser.parse_maya_file(source_file)  # type: ignore
-                    self._validation_text.append(f"✅ Meshes found: {len(scene_data.meshes)}")
-                    self._validation_text.append(f"✅ Materials found: {len(scene_data.materials)}")
+                    self._validation_text.append(f"[OK] Meshes found: {len(scene_data.meshes)}")
+                    self._validation_text.append(f"[OK] Materials found: {len(scene_data.materials)}")
 
                     if scene_data.joints:
-                        self._validation_text.append(f"✅ Joints found: {len(scene_data.joints)}")
+                        self._validation_text.append(f"[OK] Joints found: {len(scene_data.joints)}")
 
                     if scene_data.skin_clusters:
-                        self._validation_text.append(f"✅ Skin clusters detected: {len(scene_data.skin_clusters)}")
+                        self._validation_text.append(f"[OK] Skin clusters detected: {len(scene_data.skin_clusters)}")
 
                     if not scene_data.meshes:
-                        self._validation_text.append("⚠️ Warning: No meshes found in scene")
+                        self._validation_text.append("[WARNING] Warning: No meshes found in scene")
 
                 except Exception as e:
-                    self._validation_text.append(f"⚠️ Warning: Could not parse scene: {e}")
+                    self._validation_text.append(f"[WARNING] Warning: Could not parse scene: {e}")
             else:
-                self._validation_text.append(f"❌ Validation failed: {error_msg}")
+                self._validation_text.append(f"[ERROR] Validation failed: {error_msg}")
         else:
-            self._validation_text.append("❌ Export service not available")
+            self._validation_text.append("[ERROR] Export service not available")
 
     def _on_export(self) -> None:
         """Start USD export"""
@@ -811,11 +811,11 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     if pkg_success:
                         usdz_packaged = True
                         if rig_path and rig_success:
-                            logger.info(f"📦 Created USDZ package with rig file: {usdz_path}")
+                            logger.info(f"[PACKAGE] Created USDZ package with rig file: {usdz_path}")
                         elif mrig_path and mrig_success:
-                            logger.info(f"📦 Created USDZ package with .mrig: {usdz_path}")
+                            logger.info(f"[PACKAGE] Created USDZ package with .mrig: {usdz_path}")
                         else:
-                            logger.info(f"📦 Created USDZ package: {usdz_path}")
+                            logger.info(f"[PACKAGE] Created USDZ package: {usdz_path}")
 
                         # Clean up separate files (they're now in the package)
                         if temp_usd_path.exists():
@@ -840,13 +840,13 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 if usdz_packaged and usdz_path:
                     if mrig_success and mrig_path:
                         message_parts = [
-                            f"📦 USDZ package created:\n{usdz_path}",
-                            "\n✅ Contains USD geometry + .mrig rig data in one file!"
+                            f"[PACKAGE] USDZ package created:\n{usdz_path}",
+                            "\n[OK] Contains USD geometry + .mrig rig data in one file!"
                         ]
                     else:
                         message_parts = [
-                            f"📦 USDZ package created:\n{usdz_path}",
-                            "\n✅ Contains USD geometry in a single portable package."
+                            f"[PACKAGE] USDZ package created:\n{usdz_path}",
+                            "\n[OK] Contains USD geometry in a single portable package."
                         ]
                 else:
                     message_parts = [f"USD file exported successfully:\n{options.output_path}"]
@@ -1156,7 +1156,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     if pkg_info.get('has_mrig'):
                         self._usd_info_label.setText(
                             self._usd_info_label.text() +
-                            "\n📦 Package contains .mrig rig data!"
+                            "\n[PACKAGE] Package contains .mrig rig data!"
                         )
                         # Store info for import - the import will extract it
                         self._mrig_file_edit.setText(f"[bundled in {usd_path.name}]")
@@ -1173,7 +1173,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 if mrig_path.exists():
                     self._mrig_file_edit.setText(str(mrig_path))
                     self._usd_info_label.setText(
-                        self._usd_info_label.text() + f"\n✅ Auto-detected .mrig: {mrig_path.name}"
+                        self._usd_info_label.text() + f"\n[OK] Auto-detected .mrig: {mrig_path.name}"
                     )
 
     def _browse_mrig_file(self) -> None:
@@ -1213,16 +1213,16 @@ class USDPipelineDialog(QDialog):  # type: ignore
             from pathlib import Path
             path = Path(usd_path)
             if not path.exists():
-                self._usd_info_label.setText(f"❌ File does not exist: {usd_path}")
+                self._usd_info_label.setText(f"[ERROR] File does not exist: {usd_path}")
                 return
 
             # Basic validation
-            self._usd_info_label.setText(f"✅ USD file found: {path.name}\nValidating contents...")
+            self._usd_info_label.setText(f"[OK] USD file found: {path.name}\nValidating contents...")
 
             # TODO: Add more detailed USD validation
 
         except Exception as e:
-            self._usd_info_label.setText(f"❌ Error validating USD file: {e}")
+            self._usd_info_label.setText(f"[ERROR] Error validating USD file: {e}")
 
     def _perform_import(self) -> None:
         """Perform unified USD + rig file import operation"""
@@ -1244,7 +1244,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Step 0: If USDZ package, extract it first
             if actual_usd_path.suffix.lower() == '.usdz':
-                self._import_status_label.setText("📦 Extracting USDZ package...")
+                self._import_status_label.setText("[PACKAGE] Extracting USDZ package...")
 
                 try:
                     packager = UsdzPackager()
@@ -1265,7 +1265,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                             extracted_controllers_file = info.get('controllers_file')  # Legacy
 
                             if extracted_mrig_path:
-                                logger.info(f"📦 Extracted .mrig from package: {extracted_mrig_path.name}")
+                                logger.info(f"[PACKAGE] Extracted .mrig from package: {extracted_mrig_path.name}")
                             if extracted_rig_file:
                                 logger.info(f"🎮 v2.0: Found rig file: {extracted_rig_file.name}")
                             elif extracted_controllers_file:
@@ -1319,12 +1319,12 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if not usd_result.success:
                 self._import_progress_bar.setVisible(False)
                 error_msg = usd_result.error_message or "Unknown error"
-                self._import_status_label.setText(f"❌ USD import failed: {error_msg}")
+                self._import_status_label.setText(f"[ERROR] USD import failed: {error_msg}")
                 QMessageBox.warning(self, "Import Failed", f"Failed to import USD file:\n{error_msg}")
                 return
 
             self._import_progress_bar.setValue(50)
-            self._import_status_label.setText("✅ USD imported, checking for rig file...")
+            self._import_status_label.setText("[OK] USD imported, checking for rig file...")
 
             # Get the USD root node for rig import
             usd_root = getattr(usd_result, 'root_node', None)
@@ -1342,7 +1342,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             # Legacy: Use extracted .mrig from USDZ package
             elif extracted_mrig_path and extracted_mrig_path.exists():
                 mrig_path_str = str(extracted_mrig_path)
-                logger.info(f"📦 Using .mrig extracted from USDZ: {extracted_mrig_path.name}")
+                logger.info(f"[PACKAGE] Using .mrig extracted from USDZ: {extracted_mrig_path.name}")
             else:
                 # Check manual selection (ignore bundled placeholder)
                 manual_mrig = self._mrig_file_edit.text().strip()
@@ -1410,25 +1410,25 @@ class USDPipelineDialog(QDialog):  # type: ignore
             self._import_progress_bar.setVisible(False)
 
             # Build result message
-            message_parts = ["✅ USD file imported successfully!"]
+            message_parts = ["[OK] USD file imported successfully!"]
 
             if mrig_path_str:
                 if mrig_imported:
-                    message_parts.append("\n✅ Rig data (.mrig) imported!")
+                    message_parts.append("\n[OK] Rig data (.mrig) imported!")
                     # v1.5.0: Show health report summary
                     if 'rig_importer' in dir() and hasattr(rig_importer, 'get_health_report'):
                         health = rig_importer.get_health_report()
                         if health:
                             message_parts.append(f"\n{health.get_summary()}")
                             if health.warnings:
-                                message_parts.append(f"\n⚠️ {len(health.warnings)} warnings")
+                                message_parts.append(f"\n[WARNING] {len(health.warnings)} warnings")
                             if health.auto_repairs:
-                                message_parts.append(f"\n🔧 {len(health.auto_repairs)} auto-repairs")
+                                message_parts.append(f"\n[TOOL] {len(health.auto_repairs)} auto-repairs")
                 else:
-                    message_parts.append(f"\n⚠️ Rig import issue: {mrig_message}")
+                    message_parts.append(f"\n[WARNING] Rig import issue: {mrig_message}")
 
             if unified_created:
-                message_parts.append("\n✅ Unified rig structure created!")
+                message_parts.append("\n[OK] Unified rig structure created!")
                 message_parts.append("\n\n🎬 Your rig is ready for animation!")
 
             self._import_status_label.setText("\n".join(message_parts))
@@ -1436,7 +1436,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
         except Exception as e:
             self._import_progress_bar.setVisible(False)
-            self._import_status_label.setText(f"❌ Import error: {e}")
+            self._import_status_label.setText(f"[ERROR] Import error: {e}")
             QMessageBox.critical(self, "Import Error", f"An error occurred during import:\n{e}")
 
         finally:
@@ -1520,7 +1520,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 for attr in ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']:
                     cmds.setAttr(f"{grp}.{attr}", lock=True, keyable=False)
 
-            logger.info(f"✅ Created unified rig structure: {rig_grp}")
+            logger.info(f"[OK] Created unified rig structure: {rig_grp}")
             return True
 
         except Exception as e:
@@ -1557,14 +1557,14 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if geometry:
                 success = self.restoreGeometry(geometry)
                 if success:
-                    logger.info(f"✅ USD Pipeline geometry restored: {self.size().width()}x{self.size().height()}")
+                    logger.info(f"[OK] USD Pipeline geometry restored: {self.size().width()}x{self.size().height()}")
                 else:
-                    logger.warning("⚠️ Failed to restore USD Pipeline geometry, using defaults")
+                    logger.warning("[WARNING] Failed to restore USD Pipeline geometry, using defaults")
             else:
-                logger.info("ℹ️ No saved USD Pipeline geometry found, using defaults")
+                logger.info("[INFO] No saved USD Pipeline geometry found, using defaults")
 
         except Exception as e:
-            logger.warning(f"⚠️ Error restoring USD Pipeline geometry: {e}")
+            logger.warning(f"[WARNING] Error restoring USD Pipeline geometry: {e}")
 
     def closeEvent(self, event) -> None:
         """Handle dialog close event - save geometry"""
@@ -1573,10 +1573,10 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             settings = QSettings("MikeStumbo", "USDPipeline")
             settings.setValue("geometry", self.saveGeometry())
-            logger.info(f"✅ USD Pipeline geometry saved: {self.size().width()}x{self.size().height()}")
+            logger.info(f"[OK] USD Pipeline geometry saved: {self.size().width()}x{self.size().height()}")
 
         except Exception as e:
-            logger.warning(f"⚠️ Error saving USD Pipeline geometry: {e}")
+            logger.warning(f"[WARNING] Error saving USD Pipeline geometry: {e}")
 
         # Call parent close event
         super().closeEvent(event)

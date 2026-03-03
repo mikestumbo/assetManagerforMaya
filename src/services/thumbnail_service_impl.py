@@ -73,7 +73,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             self._cache_dir = temp_dir / "assetmanager_thumbnails"
             self._cache_dir.mkdir(exist_ok=True)
         except Exception as e:
-            print(f"❌ Error setting up cache directory: {e}")
+            print(f"[ERROR] Error setting up cache directory: {e}")
             # Fallback to a simple temp directory
             self._cache_dir = Path(tempfile.gettempdir()) / "thumbnails"
             self._cache_dir.mkdir(exist_ok=True)
@@ -87,7 +87,7 @@ class ThumbnailServiceImpl(IThumbnailService):
         }
         self._cache_stats: Dict[str, int] = {}  # Track cache usage
         self._master_capture_cache: Dict[str, Dict[str, Any]] = {}  # Store high-res playblast captures
-        print("📸 ThumbnailServiceImpl initialized - RESTORED Maya playblast system")
+        print("[CAMERA] ThumbnailServiceImpl initialized - RESTORED Maya playblast system")
 
     def _generate_cache_key(self, file_path: Path, size: Tuple[int, int]) -> str:
         """Generate unique cache key for file and size combination"""
@@ -99,7 +99,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             try:
                 mtime = file_path.stat().st_mtime
             except Exception as e:
-                print(f"⚠️ Could not get file stat for {file_path}: {e}, using 0")
+                print(f"[WARNING] Could not get file stat for {file_path}: {e}, using 0")
                 mtime = 0
 
             key_data = f"{path_str}_{size_str}_{mtime}"
@@ -107,7 +107,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             return cache_key
 
         except Exception as e:
-            print(f"❌ Error generating cache key for {file_path}: {e}")
+            print(f"[ERROR] Error generating cache key for {file_path}: {e}")
             # Fallback to simple hash
             fallback_data = f"{file_path.name}_{size[0]}x{size[1]}"
             return hashlib.md5(fallback_data.encode()).hexdigest()
@@ -138,7 +138,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             # Custom screenshots should always be used if they exist
             custom_screenshot = self._check_custom_screenshot(file_path)
             if custom_screenshot:
-                print(f"✅ Using custom screenshot: {file_path.name}")
+                print(f"[OK] Using custom screenshot: {file_path.name}")
                 return custom_screenshot
 
             # CRITICAL FIX: Skip cache check if force_playblast=True
@@ -149,7 +149,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 cache_path = self._get_cache_path(cache_key)
 
                 if cache_path.exists():
-                    print(f"📁 Using cached thumbnail: {file_path.name}")
+                    print(f"[CACHE] Using cached thumbnail: {file_path.name}")
                     return str(cache_path)
 
             extension = file_path.suffix.lower()
@@ -161,7 +161,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             if extension in {'.ma', '.mb'}:
                 if force_playblast:
                     # Generate high-quality playblast (isolated namespace - no scene pollution!)
-                    print(f"📸 Generating Maya playblast thumbnail for {file_path.name}")
+                    print(f"[CAMERA] Generating Maya playblast thumbnail for {file_path.name}")
                     requested_dimension = max(size[0], size[1])
                     base_capture = self._ensure_playblast_capture(file_path, requested_dimension)
                     if base_capture and Path(base_capture).exists():
@@ -178,25 +178,25 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 Qt.SmoothTransformation  # type: ignore
                             )
                             if scaled_pixmap.save(str(cache_path)):
-                                print(f"✅ Generated playblast thumbnail: {file_path.name} ({size[0]}x{size[1]})")
+                                print(f"[OK] Generated playblast thumbnail: {file_path.name} ({size[0]}x{size[1]})")
                                 return str(cache_path)
                             else:
-                                print(f"⚠️ Failed to save scaled thumbnail for {file_path.name}")
+                                print(f"[WARNING] Failed to save scaled thumbnail for {file_path.name}")
                         else:
-                            print(f"⚠️ Base playblast capture invalid for {file_path.name}")
+                            print(f"[WARNING] Base playblast capture invalid for {file_path.name}")
                     else:
-                        print(f"⚠️ Unable to capture playblast for {file_path.name}")
+                        print(f"[WARNING] Unable to capture playblast for {file_path.name}")
                     # Fallback to file-type icon if playblast fails
-                    print(f"📄 Falling back to file-type icon for {file_path.name}")
+                    print(f"[FILE] Falling back to file-type icon for {file_path.name}")
                 else:
                     # Library browsing - use simple icon (no Maya import!)
-                    print(f"📄 Using file-type icon for library browsing: {file_path.name}")
+                    print(f"[FILE] Using file-type icon for library browsing: {file_path.name}")
 
             # USD files - generate playblast thumbnails using UsdService
             elif extension in {'.usd', '.usda', '.usdc', '.usdz'}:
                 if force_playblast:
                     # Generate USD playblast thumbnail
-                    print(f"📸 Generating USD playblast thumbnail for {file_path.name}")
+                    print(f"[CAMERA] Generating USD playblast thumbnail for {file_path.name}")
                     try:
                         from src.services.usd_service_impl import get_usd_service
                         usd_service = get_usd_service()
@@ -206,7 +206,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                         # Generate USD thumbnail
                         if usd_service.generate_usd_thumbnail(file_path, cache_path, size):
-                            print(f"✅ Generated USD playblast thumbnail: {file_path.name}")
+                            print(f"[OK] Generated USD playblast thumbnail: {file_path.name}")
 
                             # Also save as custom screenshot for persistence
                             try:
@@ -217,33 +217,33 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                                 import shutil
                                 shutil.copy2(str(cache_path), str(custom_screenshot_path))
-                                print(f"📸 Saved USD playblast as custom screenshot: {custom_screenshot_path}")
+                                print(f"[CAMERA] Saved USD playblast as custom screenshot: {custom_screenshot_path}")
                             except Exception as e:
-                                print(f"⚠️ Could not save custom screenshot: {e}")
+                                print(f"[WARNING] Could not save custom screenshot: {e}")
 
                             return str(cache_path)
                         else:
-                            print("⚠️ USD playblast generation failed, using file-type icon")
+                            print("[WARNING] USD playblast generation failed, using file-type icon")
                     except Exception as e:
-                        print(f"❌ USD thumbnail error: {e}")
-                        print(f"📄 Falling back to file-type icon for {file_path.name}")
+                        print(f"[ERROR] USD thumbnail error: {e}")
+                        print(f"[FILE] Falling back to file-type icon for {file_path.name}")
                 else:
                     # Library browsing - use simple icon (no Maya import!)
-                    print(f"📄 Using file-type icon for library browsing: {file_path.name}")
+                    print(f"[FILE] Using file-type icon for library browsing: {file_path.name}")
 
             # Generate simple file-type icon (no Maya import needed)
             cache_key = self._generate_cache_key(file_path, size)
             cache_path = self._get_cache_path(cache_key)
             thumbnail_path = self._create_file_type_icon(file_path, size)
             if thumbnail_path and Path(thumbnail_path).exists():
-                print(f"✅ Generated file-type icon: {file_path.name}")
+                print(f"[OK] Generated file-type icon: {file_path.name}")
                 return thumbnail_path
 
-            print(f"⚠️ Thumbnail generation failed: {file_path.name}")
+            print(f"[WARNING] Thumbnail generation failed: {file_path.name}")
             return None
 
         except Exception as e:
-            print(f"❌ Thumbnail generation error: {e}")
+            print(f"[ERROR] Thumbnail generation error: {e}")
             return None
 
     def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
@@ -301,13 +301,13 @@ class ThumbnailServiceImpl(IThumbnailService):
             for screenshot_file in screenshot_files:
                 print(f"   Checking: {screenshot_file.name} - Exists: {screenshot_file.exists()}")
                 if screenshot_file.exists():
-                    print(f"✅ Using custom screenshot: {screenshot_file}")
+                    print(f"[OK] Using custom screenshot: {screenshot_file}")
                     return str(screenshot_file)
 
-            print(f"   ℹ️ No custom screenshot found for: {asset_name}")
+            print(f"   [INFO] No custom screenshot found for: {asset_name}")
 
         except Exception as e:
-            print(f"⚠️ Error checking custom screenshot: {e}")
+            print(f"[WARNING] Error checking custom screenshot: {e}")
 
         return None
 
@@ -335,9 +335,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                     if not custom_screenshot_path.exists():
                         import shutil
                         shutil.copy2(cached_path, str(custom_screenshot_path))
-                        print(f"📸 Saved cached playblast as custom screenshot: {custom_screenshot_path.name}")
+                        print(f"[CAMERA] Saved cached playblast as custom screenshot: {custom_screenshot_path.name}")
                 except Exception as save_error:
-                    print(f"⚠️ Could not save custom screenshot from cache: {save_error}")
+                    print(f"[WARNING] Could not save custom screenshot from cache: {save_error}")
 
                 return str(cached_path)
 
@@ -361,7 +361,7 @@ class ThumbnailServiceImpl(IThumbnailService):
         try:
             import maya.cmds as cmds  # type: ignore
         except ImportError:
-            print("⚠️ Maya cmds not available")
+            print("[WARNING] Maya cmds not available")
             return None
 
         namespace = None
@@ -369,22 +369,22 @@ class ThumbnailServiceImpl(IThumbnailService):
         original_viewport_settings = {}
         temp_dir = None
         try:
-            print(f"📸 Starting SAFE Maya playblast for: {file_path.name}")
+            print(f"[CAMERA] Starting SAFE Maya playblast for: {file_path.name}")
 
             original_selection = cmds.ls(selection=True) or []
             cmds.select(clear=True)
 
             namespace, imported_nodes = self._import_maya_scene_safely_no_new_scene(file_path, cmds)
             if not namespace:
-                print(f"⚠️ Playblast import failed for {file_path.name}")
+                print(f"[WARNING] Playblast import failed for {file_path.name}")
                 return None
 
             if imported_nodes:
-                print(f"✅ Imported {len(imported_nodes)} nodes for playblast")
+                print(f"[OK] Imported {len(imported_nodes)} nodes for playblast")
 
             meshes = self._get_scene_geometry_safely(cmds, namespace)
             if not meshes:
-                print(f"⚠️ No geometry found in {file_path.name}")
+                print(f"[WARNING] No geometry found in {file_path.name}")
                 return None
 
             # Frame imported geometry for consistent thumbnails
@@ -392,7 +392,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 cmds.select(meshes[:5])
                 cmds.viewFit()
             except Exception as frame_error:
-                print(f"⚠️ View fit warning: {frame_error}")
+                print(f"[WARNING] View fit warning: {frame_error}")
             finally:
                 cmds.select(clear=True)
 
@@ -430,7 +430,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             ]
 
             if not generated_files:
-                print("❌ Playblast file not generated")
+                print("[ERROR] Playblast file not generated")
                 return None
 
             latest_capture = max(generated_files, key=os.path.getmtime)
@@ -445,15 +445,15 @@ class ThumbnailServiceImpl(IThumbnailService):
                 thumbnail_dir.mkdir(parents=True, exist_ok=True)
                 custom_screenshot_path = thumbnail_dir / f"{asset_name}_screenshot.png"
                 shutil.copy2(latest_capture, str(custom_screenshot_path))
-                print(f"📸 Saved playblast as custom screenshot: {custom_screenshot_path}")
+                print(f"[CAMERA] Saved playblast as custom screenshot: {custom_screenshot_path}")
             except Exception as save_error:
-                print(f"⚠️ Could not save as custom screenshot: {save_error}")
+                print(f"[WARNING] Could not save as custom screenshot: {save_error}")
 
-            print(f"✅ Maya playblast successful: {capture_path}")
+            print(f"[OK] Maya playblast successful: {capture_path}")
             return str(capture_path)
 
         except Exception as capture_error:
-            print(f"❌ Maya playblast error: {capture_error}")
+            print(f"[ERROR] Maya playblast error: {capture_error}")
             return None
 
         finally:
@@ -462,13 +462,13 @@ class ThumbnailServiceImpl(IThumbnailService):
                 if original_viewport_settings:
                     self._restore_viewport_settings(cmds, original_viewport_settings)
             except Exception as viewport_error:
-                print(f"⚠️ Viewport restoration warning: {viewport_error}")
+                print(f"[WARNING] Viewport restoration warning: {viewport_error}")
 
             try:
                 if namespace:
                     self._bulletproof_namespace_cleanup(namespace, cmds)
             except Exception as cleanup_error:
-                print(f"⚠️ Playblast cleanup warning: {cleanup_error}")
+                print(f"[WARNING] Playblast cleanup warning: {cleanup_error}")
 
             try:
                 if original_selection:
@@ -495,7 +495,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             # Get the active model panel (viewport)
             panels = cmds.getPanel(type='modelPanel')
             if not panels:
-                print("⚠️ No model panels found")
+                print("[WARNING] No model panels found")
                 return original_settings
 
             active_panel = cmds.getPanel(withFocus=True)
@@ -519,11 +519,11 @@ class ThumbnailServiceImpl(IThumbnailService):
             cmds.modelEditor(active_panel, edit=True, shadows=False)  # Disable shadows for performance
             cmds.modelEditor(active_panel, edit=True, useDefaultMaterial=False)  # Use actual materials
 
-            print("✅ Viewport configured for textured playblast")
+            print("[OK] Viewport configured for textured playblast")
             return original_settings
 
         except Exception as e:
-            print(f"⚠️ Could not configure viewport settings: {e}")
+            print(f"[WARNING] Could not configure viewport settings: {e}")
             return original_settings
 
     def _restore_viewport_settings(self, cmds, original_settings: dict) -> None:
@@ -551,10 +551,10 @@ class ThumbnailServiceImpl(IThumbnailService):
             if 'useDefaultMaterial' in original_settings:
                 cmds.modelEditor(panel, edit=True, useDefaultMaterial=original_settings['useDefaultMaterial'])
 
-            print("✅ Viewport settings restored")
+            print("[OK] Viewport settings restored")
 
         except Exception as e:
-            print(f"⚠️ Could not restore viewport settings: {e}")
+            print(f"[WARNING] Could not restore viewport settings: {e}")
 
     def _bulletproof_namespace_cleanup(self, namespace: str, cmds) -> bool:
         """Bulletproof namespace cleanup handling complex production assets
@@ -572,7 +572,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             return True
 
         try:
-            print(f"🧹 Starting enhanced bulletproof cleanup for: {namespace}")
+            print(f"[CLEANUP] Starting enhanced bulletproof cleanup for: {namespace}")
 
             # PHASE 0: PRE-SCAN - Clear scene metadata and undo queue
             self._clear_scene_metadata(namespace, cmds)
@@ -589,7 +589,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             try:
                 success = self._delete_namespace_content(namespace, cmds)
             except Exception as phase3_error:
-                print(f"⚠️ Phase 3 error (continuing to aggressive cleanup): {phase3_error}")
+                print(f"[WARNING] Phase 3 error (continuing to aggressive cleanup): {phase3_error}")
 
             # PHASE 4: NAMESPACE - Remove namespace (only if Phase 3 succeeded)
             if success:
@@ -602,15 +602,18 @@ class ThumbnailServiceImpl(IThumbnailService):
             cleanup_complete = not cmds.namespace(exists=namespace)
 
             if cleanup_complete:
-                print(f"✅ Complete cleanup successful: {namespace}")
+                print(f"[OK] Complete cleanup successful: {namespace}")
                 return True
             else:
-                print(f"⚠️ Partial cleanup - namespace still exists, attempting aggressive final cleanup: {namespace}")
+                print(
+                    f"[WARNING] Partial cleanup - namespace still exists, "
+                    f"attempting aggressive final cleanup: {namespace}"
+                )
 
             # PHASE 6: AGGRESSIVE FINAL CLEANUP - Force remove everything from Outliner
             # THIS MUST ALWAYS RUN if namespace still exists!
             try:
-                print(f"🔥 Phase 6: Aggressive final cleanup for: {namespace}")
+                print(f"[DEBUG] Phase 6: Aggressive final cleanup for: {namespace}")
 
                 # Get all remaining nodes in namespace
                 remaining_nodes = []
@@ -662,9 +665,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                             except Exception:
                                 pass
 
-                            print(f"   🎯 Special handling for RenderMan volume: {node.split(':')[-1]}")
+                            print(f"   [TARGET] Special handling for RenderMan volume: {node.split(':')[-1]}")
                         except Exception as vol_err:
-                            print(f"   ⚠️ RenderMan volume handling: {vol_err}")
+                            print(f"   [WARNING] RenderMan volume handling: {vol_err}")
 
                     # Strategy 1: Unlock everything
                     try:
@@ -698,7 +701,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                     try:
                         cmds.delete(node)
                         if not cmds.objExists(node):
-                            print(f"   ✅ Force-deleted: {node.split(':')[-1]}")
+                            print(f"   [OK] Force-deleted: {node.split(':')[-1]}")
                             continue
                     except Exception:
                         pass
@@ -710,7 +713,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                             if cmds.objExists(parent) and namespace in parent:
                                 cmds.delete(parent)
                                 if not cmds.objExists(node):
-                                    print(f"   ✅ Deleted via parent: {node.split(':')[-1]}")
+                                    print(f"   [OK] Deleted via parent: {node.split(':')[-1]}")
                                     continue
                     except Exception:
                         pass
@@ -721,25 +724,25 @@ class ThumbnailServiceImpl(IThumbnailService):
                         renamed = cmds.rename(node, temp_name)
                         cmds.delete(renamed)
                         if not cmds.objExists(renamed):
-                            print(f"   ✅ Deleted after rename: {node.split(':')[-1]}")
+                            print(f"   [OK] Deleted after rename: {node.split(':')[-1]}")
                     except Exception:
                         node_short = node.split(':')[-1]
-                        print(f"   ⚠️ Could not delete locked node: {node_short} (acceptable)")
+                        print(f"   [WARNING] Could not delete locked node: {node_short} (acceptable)")
 
                 # Delete namespace with all content (don't move to root!)
                 try:
                     if cmds.namespace(exists=namespace):
                         cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True, force=True)
-                        print("   ✅ Removed namespace with deleteNamespaceContent flag")
+                        print("   [OK] Removed namespace with deleteNamespaceContent flag")
                 except Exception as ns_error:
-                    print(f"   ⚠️ Namespace removal attempt: {ns_error}")
+                    print(f"   [WARNING] Namespace removal attempt: {ns_error}")
 
                 # ISSUE #1 FIX: Nuclear option - DELETE all nodes in namespace (don't move!)
 
                 # ISSUE #1 FIX: Nuclear option - DELETE all nodes in namespace (don't move!)
                 try:
                     if cmds.namespace(exists=namespace):
-                        print(f"   🔥 Nuclear option: Deleting all content in namespace {namespace}")
+                        print(f"   [DEBUG] Nuclear option: Deleting all content in namespace {namespace}")
 
                         # Get ALL nodes in the namespace (DAG and DG nodes)
                         dag_nodes = cmds.namespaceInfo(namespace, listNamespace=True, recurse=True, dagPath=True) or []
@@ -748,7 +751,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                         nodes_deleted = 0
                         if all_nodes:
-                            print(f"   📋 Found {len(all_nodes)} nodes to delete")
+                            print(f"   [SELECT] Found {len(all_nodes)} nodes to delete")
 
                             # Debug: Show some node names to verify we're getting the right nodes
                             print(f"   🔍 Sample nodes: {[n.split(':')[-1] for n in all_nodes[:5]]}")
@@ -764,11 +767,11 @@ class ThumbnailServiceImpl(IThumbnailService):
                                             # Always try to unlock, don't query first
                                             # (query can fail on nested namespaces)
                                             cmds.lockNode(vol_node, lock=False)
-                                            print(f"   ✅ Unlocked: {vol_node.split(':')[-1]}")
+                                            print(f"   [OK] Unlocked: {vol_node.split(':')[-1]}")
                                     except Exception as unlock_err:
-                                        print(f"   ⚠️ Could not unlock {vol_node.split(':')[-1]}: {unlock_err}")
+                                        print(f"   [WARNING] Could not unlock {vol_node.split(':')[-1]}: {unlock_err}")
                             else:
-                                print("   ℹ️ No volume aggregate nodes found in initial scan")
+                                print("   [INFO] No volume aggregate nodes found in initial scan")
 
                             # Delete DAG nodes first (transforms, shapes, etc.)
                             for node in dag_nodes:
@@ -777,7 +780,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                                         cmds.delete(node)
                                         nodes_deleted += 1
                                 except Exception as e:
-                                    print(f"   ⚠️ Could not delete DAG node {node.split(':')[-1]}: {e}")
+                                    print(f"   [WARNING] Could not delete DAG node {node.split(':')[-1]}: {e}")
 
                             # Then delete DG nodes (shaders, textures, etc.)
                             for node in dg_nodes:
@@ -788,7 +791,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 except Exception:
                                     pass  # Expected for default nodes
 
-                            print(f"   ✅ Deleted {nodes_deleted} nodes from namespace")
+                            print(f"   [OK] Deleted {nodes_deleted} nodes from namespace")
 
                         # Special cleanup: Force-unlock and delete any remaining locked nodes
                         if cmds.namespace(exists=namespace):
@@ -797,7 +800,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 # Get ALL remaining nodes using ls command with namespace prefix
                                 remaining_nodes = cmds.ls(f"{namespace}:*", long=True) or []
                                 if remaining_nodes:
-                                    print(f"   📋 Found {len(remaining_nodes)} remaining nodes")
+                                    print(f"   [SELECT] Found {len(remaining_nodes)} remaining nodes")
                                     # Focus on globalVolumeAggregate nodes specifically
                                     locked_volumes = [n for n in remaining_nodes if 'globalVolumeAggregate' in n]
                                     if locked_volumes:
@@ -807,26 +810,27 @@ class ThumbnailServiceImpl(IThumbnailService):
                                             try:
                                                 cmds.lockNode(vol_node, lock=False)
                                                 cmds.delete(vol_node)
-                                                print(f"   ✅ Unlocked and deleted: {vol_node.split(':')[-1]}")
+                                                print(f"   [OK] Unlocked and deleted: {vol_node.split(':')[-1]}")
                                             except Exception as e:
-                                                print(f"   ⚠️ Failed to cleanup: {vol_node.split(':')[-1]} - {e}")
+                                                node_name = vol_node.split(':')[-1]
+                                                print(f"   [WARNING] Failed to cleanup: {node_name} - {e}")
                             except Exception as remaining_err:
-                                print(f"   ⚠️ Could not scan remaining nodes: {remaining_err}")
+                                print(f"   [WARNING] Could not scan remaining nodes: {remaining_err}")
 
                         # Now remove the empty namespace
                         if cmds.namespace(exists=namespace):
                             cmds.namespace(set=':')  # Switch to root namespace first
                             cmds.namespace(removeNamespace=namespace, force=True)
-                            print(f"   ✅ Namespace {namespace} removed")
+                            print(f"   [OK] Namespace {namespace} removed")
                 except Exception as nuclear_error:
-                    print(f"   ⚠️ Nuclear cleanup error: {nuclear_error}")
+                    print(f"   [WARNING] Nuclear cleanup error: {nuclear_error}")
 
                 # Verify final cleanup
                 final_cleanup = not cmds.namespace(exists=namespace)
                 if final_cleanup:
                     print(f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner")
                 else:
-                    print(f"⚠️ Warning: Namespace {namespace} still exists - manual cleanup may be needed")
+                    print(f"[WARNING] Warning: Namespace {namespace} still exists - manual cleanup may be needed")
                     # List remaining nodes for debugging
                     try:
                         remaining = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
@@ -837,11 +841,11 @@ class ThumbnailServiceImpl(IThumbnailService):
                 return final_cleanup  # Return actual cleanup status
 
             except Exception as aggressive_error:
-                print(f"⚠️ Aggressive cleanup warning: {aggressive_error}")
+                print(f"[WARNING] Aggressive cleanup warning: {aggressive_error}")
                 return False  # Indicate cleanup failed
 
         except Exception as e:
-            print(f"⚠️ Bulletproof cleanup error: {e}")
+            print(f"[WARNING] Bulletproof cleanup error: {e}")
             return self._fallback_cleanup(namespace, cmds)
 
     def _clear_scene_metadata(self, namespace: str, cmds):
@@ -879,12 +883,12 @@ class ThumbnailServiceImpl(IThumbnailService):
                     cmds.select(clear=True)
 
             except Exception as cleanup_error:
-                print(f"⚠️ Advanced cleanup warning: {cleanup_error}")
+                print(f"[WARNING] Advanced cleanup warning: {cleanup_error}")
 
-            print(f"✅ Enhanced scene metadata cleared for: {namespace}")
+            print(f"[OK] Enhanced scene metadata cleared for: {namespace}")
 
         except Exception as e:
-            print(f"⚠️ Scene metadata clearing warning: {e}")
+            print(f"[WARNING] Scene metadata clearing warning: {e}")
 
     def _unlock_namespace_nodes(self, namespace: str, cmds):
         """Unlock all locked nodes in namespace (Phase 1)"""
@@ -911,23 +915,23 @@ class ThumbnailServiceImpl(IThumbnailService):
                 # Force unlock RenderMan volume aggregates that ignore standard unlock
                 volume_aggregates = [node for node in locked_nodes if 'globalVolumeAggregate' in node]
                 if volume_aggregates:
-                    print(f"🔥 Force unlocking {len(volume_aggregates)} volume aggregates")
+                    print(f"[DEBUG] Force unlocking {len(volume_aggregates)} volume aggregates")
                     for vol_node in volume_aggregates:
                         if cmds.objExists(vol_node):
                             try:
                                 if cmds.attributeQuery('locked', node=vol_node, exists=True):
                                     cmds.setAttr(f"{vol_node}.locked", False)
                             except Exception as attr_error:
-                                print(f"⚠️ Volume aggregate attribute unlock warning: {attr_error}")
+                                print(f"[WARNING] Volume aggregate attribute unlock warning: {attr_error}")
                             try:
                                 cmds.lockNode(vol_node, lock=False, lockName=False)
                             except Exception as lock_error:
-                                print(f"⚠️ Volume aggregate lock warning: {lock_error}")
+                                print(f"[WARNING] Volume aggregate lock warning: {lock_error}")
 
-                print(f"✅ Unlocked nodes: {', '.join(locked_nodes[:3])}{'...' if len(locked_nodes) > 3 else ''}")
+                print(f"[OK] Unlocked nodes: {', '.join(locked_nodes[:3])}{'...' if len(locked_nodes) > 3 else ''}")
 
         except Exception as e:
-            print(f"⚠️ Lock management error: {e}")
+            print(f"[WARNING] Lock management error: {e}")
 
     def _disconnect_render_connections(self, namespace: str, cmds):
         """Break persistent render setup connections (Phase 2)"""
@@ -954,10 +958,10 @@ class ThumbnailServiceImpl(IThumbnailService):
                     continue
 
             if connections_broken > 0:
-                print(f"✅ Broke {connections_broken} render connections")
+                print(f"[OK] Broke {connections_broken} render connections")
 
         except Exception as e:
-            print(f"⚠️ Connection breaking error: {e}")
+            print(f"[WARNING] Connection breaking error: {e}")
 
     def _delete_namespace_content(self, namespace: str, cmds) -> bool:
         """Safely delete namespace content (Phase 3)"""
@@ -999,10 +1003,10 @@ class ThumbnailServiceImpl(IThumbnailService):
                     failed_objects.append((obj, error_text))
                     continue
 
-            print(f"✅ Deleted {deleted_count}/{len(namespace_objects)} objects")
+            print(f"[OK] Deleted {deleted_count}/{len(namespace_objects)} objects")
 
             if failed_objects:
-                print(f"⚠️ {len(failed_objects)} objects could not be deleted:")
+                print(f"[WARNING] {len(failed_objects)} objects could not be deleted:")
                 for obj, error in failed_objects[:3]:  # Show first 3 failures
                     print(f"   • {obj}: {error}")
                 if len(failed_objects) > 3:
@@ -1011,7 +1015,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             return len(failed_objects) == 0  # Success if no failures
 
         except Exception as e:
-            print(f"⚠️ Content deletion error: {e}")
+            print(f"[WARNING] Content deletion error: {e}")
             return False
 
     def _force_delete_volume_aggregate(self, node_name: str, cmds) -> bool:
@@ -1057,7 +1061,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                         try:
                             cmds.file(referenceNode=ref_node, removeReference=True, force=True)
                             if not cmds.objExists(node_name):
-                                print(f"🗑️ Removed reference {ref_node} for {node_name}")
+                                print(f"[DELETE] Removed reference {ref_node} for {node_name}")
                                 return True
                         except Exception:
                             pass
@@ -1204,21 +1208,21 @@ class ThumbnailServiceImpl(IThumbnailService):
             if namespace_depth >= 3:
                 # This is likely a nested reference node that can't be deleted directly
                 # This is acceptable - the parent namespace cleanup will handle it
-                # print(f"ℹ️ Skipping deeply nested reference node: {node_name}")
+                # print(f"[INFO] Skipping deeply nested reference node: {node_name}")
                 return True  # Consider this a success - it's in a reference we'll delete
 
             # Only report as failure if it's not a nested reference
-            # print(f"⚠️ Could not delete volume aggregate: {node_name}")
+            # print(f"[WARNING] Could not delete volume aggregate: {node_name}")
             return False
 
         except Exception:
-            # print(f"⚠️ Volume aggregate cleanup error: {e}")
+            # print(f"[WARNING] Volume aggregate cleanup error: {e}")
             return False
 
     def _fallback_cleanup(self, namespace: str, cmds) -> bool:
         """Fallback cleanup when standard cleanup fails (Recovery Level 2-4)"""
         try:
-            print(f"🔄 Attempting fallback cleanup for: {namespace}")
+            print(f"[REFRESH] Attempting fallback cleanup for: {namespace}")
 
             # Recovery Level 2: Individual node deletion + namespace removal
             try:
@@ -1236,7 +1240,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                     cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True)
 
                 if not cmds.namespace(exists=namespace):
-                    print(f"✅ Fallback Level 2 successful: {namespace}")
+                    print(f"[OK] Fallback Level 2 successful: {namespace}")
                     return True
 
             except Exception:
@@ -1248,18 +1252,18 @@ class ThumbnailServiceImpl(IThumbnailService):
                     cmds.namespace(removeNamespace=namespace, force=True)
 
                 if not cmds.namespace(exists=namespace):
-                    print(f"✅ Fallback Level 3 successful: {namespace}")
+                    print(f"[OK] Fallback Level 3 successful: {namespace}")
                     return True
 
             except Exception:
                 pass
 
             # Recovery Level 4: Log warning and continue
-            print(f"⚠️ All cleanup levels failed for: {namespace} - continuing operation")
+            print(f"[WARNING] All cleanup levels failed for: {namespace} - continuing operation")
             return False
 
         except Exception as e:
-            print(f"❌ Fallback cleanup failed: {e}")
+            print(f"[ERROR] Fallback cleanup failed: {e}")
             return False
 
     def _create_clean_scene_safely(self, cmds):
@@ -1274,16 +1278,16 @@ class ThumbnailServiceImpl(IThumbnailService):
             # Create new scene with minimal UI interaction
             cmds.file(new=True, force=True)
 
-            print("✅ Created clean Maya scene safely")
+            print("[OK] Created clean Maya scene safely")
 
         except Exception as e:
-            print(f"❌ Safe scene creation failed: {e}")
+            print(f"[ERROR] Safe scene creation failed: {e}")
             # Fallback: try without callback clearing
             try:
                 cmds.file(new=True, force=True)
-                print("⚠️ Scene created with fallback method")
+                print("[WARNING] Scene created with fallback method")
             except Exception as fallback_error:
-                print(f"❌ Complete scene creation failure: {fallback_error}")
+                print(f"[ERROR] Complete scene creation failure: {fallback_error}")
                 raise fallback_error
 
     def _import_maya_scene_safely_no_new_scene(self, file_path: Path, cmds) -> Tuple[Optional[str], List[str]]:
@@ -1322,13 +1326,13 @@ class ThumbnailServiceImpl(IThumbnailService):
             if imported_nodes:
                 # Select the imported objects for thumbnail generation
                 cmds.select(imported_nodes)
-                print(f"✅ Imported {len(imported_nodes)} objects for thumbnail: {file_path.name}")
+                print(f"[OK] Imported {len(imported_nodes)} objects for thumbnail: {file_path.name}")
             else:
-                print(f"⚠️ No objects imported from: {file_path.name}")
+                print(f"[WARNING] No objects imported from: {file_path.name}")
             return namespace, imported_nodes
 
         except Exception as e:
-            print(f"❌ Import error: {e}")
+            print(f"[ERROR] Import error: {e}")
             # Try bulletproof cleanup of namespace if it was created
             try:
                 if namespace:
@@ -1352,10 +1356,10 @@ class ThumbnailServiceImpl(IThumbnailService):
                     ignoreVersion=True, mergeNamespacesOnClash=True
                 )
 
-            print(f"✅ Imported Maya scene: {file_path.name}")
+            print(f"[OK] Imported Maya scene: {file_path.name}")
 
         except Exception as e:
-            print(f"⚠️ Import warning (continuing): {e}")
+            print(f"[WARNING] Import warning (continuing): {e}")
             # Continue anyway - scene might have loaded partially
 
     def _get_scene_geometry_safely(self, cmds, namespace: Optional[str] = None, limit: int = 10):
@@ -1470,13 +1474,13 @@ class ThumbnailServiceImpl(IThumbnailService):
                     # Save to cache
                     if pixmap.save(str(cache_path), "PNG"):
                         if is_unknown_type:
-                            print(f"✅ Created custom icon with text overlay: {extension}")
+                            print(f"[OK] Created custom icon with text overlay: {extension}")
                         else:
-                            print(f"✅ Using custom icon (no text): {extension}")
+                            print(f"[OK] Using custom icon (no text): {extension}")
                         return str(cache_path)
 
             # Fallback to programmatic colored icon if custom icon fails
-            print(f"⚠️ Custom icon not found: {custom_icon_path}, using fallback")
+            print(f"[WARNING] Custom icon not found: {custom_icon_path}, using fallback")
 
             # Color mapping for fallback (v1.4.0 style)
             color_map = {
@@ -1518,11 +1522,11 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Save icon
             if pixmap.save(str(cache_path), "PNG"):
-                print(f"✅ Created fallback file type icon: {extension}")
+                print(f"[OK] Created fallback file type icon: {extension}")
                 return str(cache_path)
 
         except Exception as e:
-            print(f"❌ Error creating file icon: {e}")
+            print(f"[ERROR] Error creating file icon: {e}")
 
         return None
 
@@ -1542,7 +1546,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             for cache_file in self._cache_dir.glob("*.png"):
                 cache_file.unlink(missing_ok=True)
             self._cache_stats.clear()
-            print("🗑️ Thumbnail cache cleared")
+            print("[DELETE] Thumbnail cache cleared")
         except Exception as e:
             print(f"Error clearing cache: {e}")
 
@@ -1560,9 +1564,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                     if cache_path.exists():
                         cache_path.unlink(missing_ok=True)
                         self._cache_stats.pop(cache_key, None)
-                        print(f"🗑️ Cleared cache for {file_path.name} ({size[0]}x{size[1]})")
+                        print(f"[DELETE] Cleared cache for {file_path.name} ({size[0]}x{size[1]})")
                 except Exception:
                     continue
 
         except Exception as e:
-            print(f"❌ Error clearing cache for {file_path}: {e}")
+            print(f"[ERROR] Error clearing cache for {file_path}: {e}")

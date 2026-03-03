@@ -145,7 +145,7 @@ class AssetInfoPanel(QLabel):
     def __init__(self, parent=None):
         # Delegate to the new implementation
         super().__init__(parent)
-        print("⚠️  AssetInfoPanel is deprecated, use AssetInfoLabel instead")
+        print("[WARNING]  AssetInfoPanel is deprecated, use AssetInfoLabel instead")
 
         # Create the enhanced label as a child
         self._enhanced_label = AssetInfoLabel(self)

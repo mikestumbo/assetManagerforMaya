@@ -220,7 +220,7 @@ class MayaBlendShapeBuilder:
 
                 cmds.setAttr(f"{target_shape}.intermediateObject", True)
 
-            self.logger.info(f"✅ Created blendShape: {blend_node} with {len(valid_targets)} targets")
+            self.logger.info(f"[OK] Created blendShape: {blend_node} with {len(valid_targets)} targets")
             return blend_node
 
         except Exception as e:

@@ -19,7 +19,10 @@ class IThumbnailService(ABC):
     """
 
     @abstractmethod
-    def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False) -> Optional[str]:
+    def generate_thumbnail(
+        self, file_path: Path, size: Tuple[int, int] = (64, 64),
+        force_playblast: bool = False
+    ) -> Optional[str]:
         """
         Generate thumbnail for asset file
 

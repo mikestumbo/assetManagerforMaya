@@ -16,7 +16,7 @@ try:
     from PySide6.QtCore import Signal, Qt
     from PySide6.QtGui import QColor
 except ImportError as e:
-    print(f"❌ PySide6 import failed: {e}")
+    print(f"[ERROR] PySide6 import failed: {e}")
     raise
 
 from typing import Dict
@@ -250,7 +250,7 @@ class TagManagerDialog(QDialog):
                 QMessageBox.warning(self, "Duplicate Tag", f"Tag '{tag_name}' already exists.")
                 return
 
-            print(f"🏷️  Tag Manager: Creating new custom tag '{tag_name}'")
+            print(f"[TAG]  Tag Manager: Creating new custom tag '{tag_name}'")
 
             # Add new tag with default values
             self._tags[tag_name] = {
@@ -265,7 +265,7 @@ class TagManagerDialog(QDialog):
             if items:
                 self._tags_list.setCurrentItem(items[0])
 
-            print(f"🏷️  ✨ Custom tag '{tag_name}' added to Tag Manager")
+            print(f"[TAG]  [NEW] Custom tag '{tag_name}' added to Tag Manager")
             self.tags_changed.emit()
 
     def _on_edit_tag(self) -> None:
@@ -327,7 +327,7 @@ class TagManagerDialog(QDialog):
             # Remove tag
             if tag_name in self._tags:
                 del self._tags[tag_name]
-                print(f"🏷️  Tag Manager: Deleted custom tag '{tag_name}'")
+                print(f"[TAG]  Tag Manager: Deleted custom tag '{tag_name}'")
 
             # Refresh list
             self._populate_tags()
@@ -380,7 +380,7 @@ class TagManagerDialog(QDialog):
             # Mark as changed
             self._on_tag_details_changed()
 
-            print(f"🎨 Tag '{tag_name}' color changed to {hex_color}")
+            print(f"[LOOKDEV] Tag '{tag_name}' color changed to {hex_color}")
 
     def _on_reset_color(self) -> None:
         """Reset tag color to default - Single Responsibility"""
@@ -401,7 +401,7 @@ class TagManagerDialog(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             self._color_edit.setText("#CCCCCC")
             self._on_tag_details_changed()
-            print(f"🎨 Tag '{tag_name}' color reset to default")
+            print(f"[LOOKDEV] Tag '{tag_name}' color reset to default")
 
     def get_tags(self) -> Dict[str, Dict]:
         """Get current tags data - Single Responsibility"""
@@ -410,8 +410,8 @@ class TagManagerDialog(QDialog):
     def set_tags(self, tags: Dict[str, Dict]) -> None:
         """Set tags data and populate the list - Single Responsibility"""
         self._tags = tags.copy()
-        print(f"🏷️  Tag Manager: Loaded {len(self._tags)} tags from parent")
+        print(f"[TAG]  Tag Manager: Loaded {len(self._tags)} tags from parent")
         predefined_count = sum(1 for t in self._tags.values() if t.get("predefined", False))
         custom_count = len(self._tags) - predefined_count
-        print(f"🏷️  ({predefined_count} predefined, {custom_count} custom)")
+        print(f"[TAG]  ({predefined_count} predefined, {custom_count} custom)")
         self._populate_tags()

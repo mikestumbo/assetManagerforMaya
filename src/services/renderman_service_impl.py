@@ -40,25 +40,25 @@ class RenderManService:
             # Check if RenderMan plugin is loaded
             if cmds.pluginInfo('RenderMan_for_Maya.py', query=True, loaded=True):
                 self._renderman_available = True
-                self.logger.info("✅ RenderMan for Maya detected")
+                self.logger.info("[OK] RenderMan for Maya detected")
             else:
                 # Try to load RenderMan plugin
                 try:
                     cmds.loadPlugin('RenderMan_for_Maya.py', quiet=True)
                     self._renderman_available = True
-                    self.logger.info("✅ RenderMan for Maya loaded successfully")
+                    self.logger.info("[OK] RenderMan for Maya loaded successfully")
                 except Exception:
                     self._renderman_available = False
-                    self.logger.info("ℹ️ RenderMan for Maya not available")
+                    self.logger.info("[INFO] RenderMan for Maya not available")
 
             # Check if prman Python module is available
             try:
                 import prman  # type: ignore  # noqa: F401
                 self._prman_available = True
-                self.logger.info("✅ prman Python API available")
+                self.logger.info("[OK] prman Python API available")
             except ImportError:
                 self._prman_available = False
-                self.logger.info("ℹ️ prman Python API not available")
+                self.logger.info("[INFO] prman Python API not available")
 
             return self._renderman_available
 
@@ -208,10 +208,10 @@ class RenderManService:
                                         writeImage=str(output_path))
 
             if output_path.exists():
-                self.logger.info(f"✅ RenderMan thumbnail generated: {output_path.name}")
+                self.logger.info(f"[OK] RenderMan thumbnail generated: {output_path.name}")
                 return True
             else:
-                self.logger.warning("⚠️ RenderMan thumbnail generation failed")
+                self.logger.warning("[WARNING] RenderMan thumbnail generation failed")
                 return False
 
         except Exception as e:
@@ -348,7 +348,7 @@ class RenderManService:
                 except Exception:
                     continue
 
-            self.logger.info(f"🧹 Cleaned {cleaned_count} RenderMan nodes from: {namespace}")
+            self.logger.info(f"[CLEANUP] Cleaned {cleaned_count} RenderMan nodes from: {namespace}")
             return cleaned_count
 
         except Exception as e:

@@ -68,7 +68,7 @@ class RigHealthReport:
     def get_summary(self) -> str:
         """Get human-readable summary"""
         lines = []
-        lines.append(f"{'✅' if self.success else '⚠️'} Rig Import Health Report")
+        lines.append(f"{'[OK]' if self.success else '[WARNING]'} Rig Import Health Report")
         lines.append(f"  Controllers: {self.controllers_created} created, {len(self.controllers_failed)} failed")
         lines.append(f"  Constraints: {self.constraints_created} created, {len(self.constraints_failed)} failed")
         lines.append(f"  Connections: {self.connections_made} made, {len(self.connections_broken)} broken")
@@ -190,7 +190,7 @@ class MayaRigImporter:
                 success = self._import_maya_rig_file(mrig_path)
                 if success:
                     self._report_progress("Import complete", 100)
-                    return True, f"✅ Imported rig from {mrig_path.name}"
+                    return True, f"[OK] Imported rig from {mrig_path.name}"
                 else:
                     return False, f"Failed to import rig from {mrig_path.name}"
 
@@ -198,7 +198,7 @@ class MayaRigImporter:
             with open(mrig_path, 'r') as f:
                 rig_data = json.load(f)
 
-            self.logger.info(f"🔧 Importing rig data from: {mrig_path}")
+            self.logger.info(f"[TOOL] Importing rig data from: {mrig_path}")
 
             # v1.5.0: Import controllers .mb file if it exists
             # This brings in NURBS controllers natively instead of recreating from JSON
@@ -215,7 +215,7 @@ class MayaRigImporter:
                 print(f">>> Importing controllers from: {controllers_mb.name}")
                 ref_success = self._reference_controllers_mb(controllers_mb)
                 if ref_success:
-                    self.logger.info(f"✅ Imported controllers from {controllers_mb.name}")
+                    self.logger.info(f"[OK] Imported controllers from {controllers_mb.name}")
                     # Skip JSON-based controller import since we imported them
                     options['_skip_controller_import'] = True
                 else:
@@ -226,7 +226,7 @@ class MayaRigImporter:
                 print(f">>> Importing controllers from: {controllers_ma.name}")
                 ref_success = self._reference_controllers_mb(controllers_ma)  # Same method works for both
                 if ref_success:
-                    self.logger.info(f"✅ Imported controllers from {controllers_ma.name}")
+                    self.logger.info(f"[OK] Imported controllers from {controllers_ma.name}")
                     options['_skip_controller_import'] = True
                 else:
                     self.logger.warning(f"Failed to import {controllers_ma.name}, will try JSON import")
@@ -252,12 +252,12 @@ class MayaRigImporter:
                     import_proxy_attrs=options.get('import_proxy_attrs', True)
                 )
                 print(f">>> Controllers DONE: {self._health_report.controllers_created}")
-                self.logger.info(f"     ✅ {self._health_report.controllers_created} controllers")
+                self.logger.info(f"     [OK] {self._health_report.controllers_created} controllers")
             elif options.get('_skip_controller_import'):
                 print(">>> STEP: Controllers already imported from .mb (15%)")
                 self._report_progress("Controllers imported from .mb ✓", 15)
                 print(">>> Controllers imported via .mb reference - skipping JSON import")
-                self.logger.info("     ✅ Controllers imported via .mb reference")
+                self.logger.info("     [OK] Controllers imported via .mb reference")
 
             # Import IK handles BEFORE constraints (pole vector constraints need IK handles)
             print(">>> STEP: Importing IK handles (25%)")
@@ -267,7 +267,7 @@ class MayaRigImporter:
                 print(f">>> Found {len(ik_handles)} IK handles to import")
                 self._import_ik_handles(ik_handles)
                 print(">>> IK handles DONE")
-                self.logger.info(f"     ✅ {len(ik_handles)} IK handles")
+                self.logger.info(f"     [OK] {len(ik_handles)} IK handles")
 
             # Import constraints (after IK handles so pole vector constraints work)
             print(">>> STEP: Importing constraints (40%)")
@@ -277,7 +277,7 @@ class MayaRigImporter:
                 print(f">>> Found {len(constraints)} constraints to import")
                 self._import_constraints(constraints)
                 print(f">>> Constraints DONE: {self._health_report.constraints_created}")
-                self.logger.info(f"     ✅ {self._health_report.constraints_created} constraints")
+                self.logger.info(f"     [OK] {self._health_report.constraints_created} constraints")
 
             # v1.5.0: Import space switches
             print(">>> STEP: Importing space switches (55%)")
@@ -287,7 +287,7 @@ class MayaRigImporter:
                 print(f">>> Found {len(space_switches)} space switches to import")
                 self._import_space_switches(space_switches)
                 print(">>> Space switches DONE")
-                self.logger.info(f"     ✅ {len(space_switches)} space switches")
+                self.logger.info(f"     [OK] {len(space_switches)} space switches")
 
             # Import blendshapes
             print(">>> STEP: Importing blendshapes (70%)")
@@ -299,7 +299,7 @@ class MayaRigImporter:
                 self._import_blendshapes(blendshapes, connections)
                 print(">>> Blendshapes DONE")
                 self.logger.info(
-                    f"     ✅ {len(blendshapes)} blendshapes, {len(connections)} connections"
+                    f"     [OK] {len(blendshapes)} blendshapes, {len(connections)} connections"
                 )
 
             # Import Set Driven Keys
@@ -308,7 +308,7 @@ class MayaRigImporter:
             if options.get('import_sdks', True):
                 sdks = rig_data.get('set_driven_keys', [])
                 self._import_set_driven_keys(sdks)
-                self.logger.info(f"     ✅ {len(sdks)} SDKs")
+                self.logger.info(f"     [OK] {len(sdks)} SDKs")
 
             # v1.5.0: Run health check and attempt auto-repair
             self._report_progress("Validating connections", 92)
@@ -331,7 +331,7 @@ class MayaRigImporter:
 
             # Build result message
             summary = self._health_report.get_summary()
-            self.logger.info(f"✅ Rig import complete\n{summary}")
+            self.logger.info(f"[OK] Rig import complete\n{summary}")
 
             # Close undo chunk on success
             if use_undo:
@@ -340,7 +340,7 @@ class MayaRigImporter:
             return True, summary
 
         except Exception as e:
-            self.logger.error(f"❌ Failed to import rig data: {e}")
+            self.logger.error(f"[ERROR] Failed to import rig data: {e}")
 
             # Close undo chunk and undo on failure (clean rollback)
             if use_undo:
@@ -387,7 +387,7 @@ class MayaRigImporter:
                 self.logger.warning("No nodes imported from rig file")
                 return False
 
-            self.logger.info(f"✅ Imported {len(imported_nodes)} nodes from {rig_path.name}")
+            self.logger.info(f"[OK] Imported {len(imported_nodes)} nodes from {rig_path.name}")
 
             # Keep Maya responsive
             cmds.refresh()
@@ -398,7 +398,7 @@ class MayaRigImporter:
             return True
 
         except Exception as e:
-            self.logger.error(f"❌ Failed to import Maya rig file: {e}")
+            self.logger.error(f"[ERROR] Failed to import Maya rig file: {e}")
             return False
 
     def _reference_controllers_mb(self, mb_path: Path) -> bool:
@@ -427,7 +427,7 @@ class MayaRigImporter:
                 self.logger.warning("No nodes imported from controller file")
                 return False
 
-            self.logger.info(f"✅ Imported {len(imported_nodes)} nodes from {mb_path.name}")
+            self.logger.info(f"[OK] Imported {len(imported_nodes)} nodes from {mb_path.name}")
 
             # Keep Maya responsive after file import
             cmds.refresh()
@@ -474,7 +474,7 @@ class MayaRigImporter:
         # Keep Maya responsive after heavy scene scan
         cmds.refresh()
 
-        self.logger.info(f"✅ Cached {len(self._scene_nodes)} scene nodes")
+        self.logger.info(f"[OK] Cached {len(self._scene_nodes)} scene nodes")
 
     def _build_smart_name_mapping(self, rig_data: Dict, usd_root: Optional[str]) -> None:
         """
@@ -545,7 +545,7 @@ class MayaRigImporter:
                 # Enable fast mode after 3 slow lookups
                 if slow_lookups >= 3 and not fast_mode_enabled:
                     fast_mode_enabled = True
-                    self.logger.warning("⚡ Enabling fast mode - skipping expensive name searches")
+                    self.logger.warning("[HYBRID] Enabling fast mode - skipping expensive name searches")
 
             if scene_name and scene_name != orig_name:
                 self.name_mapping[orig_name] = scene_name
@@ -1484,7 +1484,7 @@ class MayaRigImporter:
         if not self._health_report.connections_broken:
             return
 
-        self.logger.info("🔧 Attempting auto-repair...")
+        self.logger.info("[TOOL] Attempting auto-repair...")
         repairs_made = 0
 
         for broken in self._health_report.connections_broken[:]:  # Copy list to modify

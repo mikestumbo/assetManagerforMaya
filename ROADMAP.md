@@ -1,7 +1,7 @@
 # Asset Manager for Maya - Product Roadmap
 
 > **Strategic Planning Document**  
-> Last Updated: December 22, 2025  
+> Last Updated: February 20, 2026  
 > Current Version: v1.5.0
 
 ---
@@ -265,6 +265,111 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 
 ---
 
+## 🎬 v1.6.0 - USD Pipeline Enhancements (Target: Q3 2026)
+
+**Theme**: Advanced USD Export/Import Workflows
+
+### **Feature 1: Custom Export Presets** 📦
+
+**Priority**: HIGH | **Effort**: MEDIUM | **Impact**: HIGH
+
+**Current Status**: Base implementation complete (v1.5.1)
+- ✅ "Full Rig (Animation)" preset - exports complete rig with skeleton, animation, controllers
+- ✅ "Geometry + Materials Only (Texturing)" preset - optimized for Substance 3D Painter, Mari
+
+**Planned Enhancements**:
+
+**Capabilities**:
+- User-defined custom export presets
+- Save/load preset configurations
+- Share presets across team (JSON format)
+- Studio-specific preset templates
+- Preset import/export functionality
+- Preset management UI (create, edit, delete, duplicate)
+- Common presets library (LookDev, Layout, FX, etc.)
+
+**Technical Approach**:
+- Create `ExportPresetManager` service
+- JSON-based preset storage in user preferences
+- Preset schema with all export options:
+  - USD format (.usda, .usdc, .usdz)
+  - Rigging options (skeleton, weights, bind pose)
+  - Material conversion (UsdPreviewSurface, RenderMan)
+  - Animation/blendShapes inclusion
+  - Layer-based export settings
+  - Custom metadata fields
+- Add preset editor dialog
+- Implement preset validation
+- Create preset sharing workflow
+
+**User Value**:
+- Studio-specific workflows saved as presets
+- No manual checkbox configuration each export
+- Consistent exports across team
+- Faster export workflow (1-click presets)
+- Share best practices via preset templates
+
+**Example Preset Use Cases**:
+- **Animation Handoff**: Geometry + skeleton + animation curves only
+- **LookDev Review**: High-res geometry + materials + lighting rig
+- **Layout Proxy**: Low-res geometry + transforms only (no materials)
+- **FX Cache**: Deformed geometry at specific frame range
+- **Texture Bake**: Geometry + UVs + material slots (no rigging)
+- **CFX Sim**: Sim geometry + nCloth/nHair setup references
+
+---
+
+### **Feature 2: USD Layer Management** 📚
+
+**Priority**: MEDIUM | **Effort**: HIGH | **Impact**: MEDIUM
+
+**Capabilities**:
+- Visual layer stack editor
+- Layer reordering (drag-drop)
+- Layer muting/unmuting
+- Layer locking for safety
+- Opinion strength visualization
+- Sublayer and reference management
+
+**Technical Approach**:
+- Create `USDLayerStackWidget`
+- USD stage composition API integration
+- Layer metadata editing
+- Visual composition arc viewer
+
+**User Value**:
+- Understand USD composition
+- Non-destructive editing workflows
+- Better control over USD stage structure
+- Debug composition issues visually
+
+---
+
+### **Feature 3: USD Variant Sets UI** 🎨
+
+**Priority**: MEDIUM | **Effort**: MEDIUM | **Impact**: HIGH
+
+**Capabilities**:
+- Create variant sets on export
+- Visual variant selection on import
+- Common variant types: LOD, Shading, Costume, Props
+- Batch variant switching
+- Variant preview (thumbnails)
+
+**Technical Approach**:
+- Extend export options with variant set creation
+- Implement `VariantSetManager` service
+- Add variant selection UI widget
+- Generate variant thumbnails
+
+**User Value**:
+- Multiple LODs in single USD file
+- Character costume variations
+- Shading variants for different rendering needs
+- Cleaner asset organization
+
+---
+
 ## 🚀 v2.0.0 - Future Vision (Target: Q4 2026)
 
 **Theme**: AI-Powered & Next-Gen Features
@@ -336,9 +441,12 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 | Cloud Storage | VERY HIGH | HIGH | 4 | v1.5.0 |
 | Team Collaboration | VERY HIGH | HIGH | 5 | v1.5.0 |
 | Dependency Tracking | HIGH | MEDIUM | 6 | v1.5.0 |
-| AI Features | REVOLUTIONARY | VERY HIGH | 7 | v2.0.0 |
-| 360° Previews | HIGH | HIGH | 8 | v2.0.0 |
-| Pipeline Integration | VERY HIGH | VERY HIGH | 9 | v2.0.0 |
+| Custom Export Presets | HIGH | MEDIUM | 7 | v1.6.0 |
+| USD Layer Management | MEDIUM | HIGH | 8 | v1.6.0 |
+| USD Variant Sets | HIGH | MEDIUM | 9 | v1.6.0 |
+| AI Features | REVOLUTIONARY | VERY HIGH | 10 | v2.0.0 |
+| 360° Previews | HIGH | HIGH | 11 | v2.0.0 |
+| Pipeline Integration | VERY HIGH | VERY HIGH | 12 | v2.0.0 |
 
 ---
 

@@ -150,7 +150,7 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
     def _update_existing_colors(self) -> None:
         """Update existing color swatches without recreating widgets - Safer approach"""
         try:
-            print(f"🎨 Updating keychart colors for {len(self._color_scheme)} asset types")
+            print(f"[COLORS] Updating keychart colors for {len(self._color_scheme)} asset types")
 
             # Update existing color swatches with new colors
             for asset_type, color in self._color_scheme.items():
@@ -158,10 +158,10 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
                     # Update existing swatch color
                     swatch = self._color_swatches[asset_type]
                     swatch.setStyleSheet(UITheme.get_color_preview_style(color.name()))
-                    print(f"  ✅ Updated {asset_type}: {color.name()}")
+                    print(f"  [OK] Updated {asset_type}: {color.name()}")
                 else:
                     # If new asset type, need full recreation
-                    print(f"  🔄 New asset type '{asset_type}' detected, recreating keychart")
+                    print(f"  [REFRESH] New asset type '{asset_type}' detected, recreating keychart")
                     self._recreate_keychart()
                     return
 
@@ -171,20 +171,20 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
             if existing_types != new_types:
                 # Asset types changed, need full recreation
                 removed_types = existing_types - new_types
-                print(f"  🔄 Asset types removed {removed_types}, recreating keychart")
+                print(f"  [REFRESH] Asset types removed {removed_types}, recreating keychart")
                 self._recreate_keychart()
             else:
-                print("  ✅ Keychart colors updated successfully")
+                print("  [OK] Keychart colors updated successfully")
 
         except Exception as e:
-            print(f"❌ Error updating colors: {e}")
+            print(f"[ERROR] Error updating colors: {e}")
             # Fallback to full recreation on any error
             self._recreate_keychart()
 
     def _recreate_keychart(self) -> None:
         """Safely recreate the keychart when structure changes - Fallback method"""
         try:
-            print("🔄 Recreating keychart layout...")
+            print("[REFRESH] Recreating keychart layout...")
 
             # Clear widget references
             self._color_swatches.clear()
@@ -212,10 +212,10 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
 
             # Recreate the content
             self._create_keychart_content()
-            print("✅ Keychart recreated successfully")
+            print("[OK] Keychart recreated successfully")
 
         except Exception as e:
-            print(f"❌ Error recreating keychart: {e}")
+            print(f"[ERROR] Error recreating keychart: {e}")
 
     def _refresh_keychart(self) -> None:
         """Legacy method - redirects to safer update mechanism"""

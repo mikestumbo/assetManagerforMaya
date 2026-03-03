@@ -64,14 +64,14 @@ class ImportHelper:
         """
         # Security: Validate module name to prevent code injection
         if not module_name or not isinstance(module_name, str):
-            print(f"❌ Invalid module name: {module_name}")
+            print(f"[ERROR] Invalid module name: {module_name}")
             return fallback_value
 
         # Security: Allow only specific module patterns for our plugin
         allowed_prefixes = ['core.', 'ui.', 'services.', 'integrations.', 'config.']
         if not any(module_name.startswith(prefix) for prefix in allowed_prefixes):
             if module_name not in ['core', 'ui', 'services', 'integrations', 'config']:
-                print(f"❌ Module not in allowlist: {module_name}")
+                print(f"[ERROR] Module not in allowlist: {module_name}")
                 return fallback_value
 
         original_path = sys.path[:]
@@ -93,7 +93,7 @@ class ImportHelper:
                 return fallback_value
 
         except ImportError as e:
-            print(f"⚠️ Import failed for {module_name}: {e}")
+            print(f"[WARNING] Import failed for {module_name}: {e}")
             return fallback_value
         finally:
             # Restore original path for security
@@ -117,7 +117,7 @@ class ImportHelper:
                 return getattr(module, class_name)
             return None
         except Exception as e:
-            print(f"❌ Failed to get class {class_name} from {module_path}: {e}")
+            print(f"[ERROR] Failed to get class {class_name} from {module_path}: {e}")
             return None
 
 # Note: No global path modification for security

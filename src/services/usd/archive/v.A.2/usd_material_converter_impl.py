@@ -277,7 +277,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             surface_output = usd_material.CreateSurfaceOutput("ri")
             surface_output.ConnectToSource(shader_output)
 
-            self.logger.info(f"✅ Created RenderMan USD material: {safe_name} ({shader_type})")
+            self.logger.info(f"[OK] Created RenderMan USD material: {safe_name} ({shader_type})")
             return usd_material
 
         except Exception as e:

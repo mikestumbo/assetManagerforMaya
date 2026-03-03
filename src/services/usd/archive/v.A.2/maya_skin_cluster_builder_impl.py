@@ -95,9 +95,9 @@ class MayaSkinClusterBuilderImpl:
                 )
 
                 if usd_to_maya_vertex_map:
-                    self.logger.info(f"✅ Mapped {len(usd_to_maya_vertex_map)} vertices by position")
+                    self.logger.info(f"[OK] Mapped {len(usd_to_maya_vertex_map)} vertices by position")
                 else:
-                    self.logger.warning("⚠️ Position mapping failed, using index-based (may be incorrect!)")
+                    self.logger.warning("[WARNING] Position mapping failed, using index-based (may be incorrect!)")
 
             # Apply geomBindTransform to mesh for correct bind pose
             if skin_weight_data.geom_bind_transform:
@@ -134,7 +134,7 @@ class MayaSkinClusterBuilderImpl:
                 self.logger.warning(f"Weight application had issues on {mesh_transform}")
                 # Don't return None - skinCluster was created, weights might be partial
 
-            self.logger.info(f"✅ Created skinCluster: {skin_cluster}")
+            self.logger.info(f"[OK] Created skinCluster: {skin_cluster}")
             return skin_cluster
 
         except Exception as e:
@@ -397,9 +397,9 @@ class MayaSkinClusterBuilderImpl:
                     continue
 
             if matrices_fixed > 0:
-                self.logger.info(f"✅ Fixed {matrices_fixed}/{len(influences)} bind matrices from dagPose")
+                self.logger.info(f"[OK] Fixed {matrices_fixed}/{len(influences)} bind matrices from dagPose")
             else:
-                self.logger.warning("⚠️ Could not fix any bind matrices")
+                self.logger.warning("[WARNING] Could not fix any bind matrices")
 
         except Exception as e:
             self.logger.warning(f"Failed to fix bind matrices: {e}")
@@ -455,12 +455,12 @@ class MayaSkinClusterBuilderImpl:
 
             if matrices_set == len(influences):
                 self.logger.info(
-                    f"✅ Successfully set {matrices_set}/{len(influences)} bindPreMatrix values"
+                    f"[OK] Successfully set {matrices_set}/{len(influences)} bindPreMatrix values"
                 )
             elif matrices_set > 0:
-                self.logger.warning(f"⚠️ Partially set {matrices_set}/{len(influences)} bindPreMatrix values")
+                self.logger.warning(f"[WARNING] Partially set {matrices_set}/{len(influences)} bindPreMatrix values")
             else:
-                self.logger.warning("❌ Failed to set any bindPreMatrix values")
+                self.logger.warning("[ERROR] Failed to set any bindPreMatrix values")
 
         except Exception as e:
             self.logger.warning(f"Failed to set bindPreMatrix: {e}")
@@ -498,7 +498,7 @@ class MayaSkinClusterBuilderImpl:
             mel_command = f'dagPose -restore -g -bindPose {bind_pose_node};'
             mel.eval(mel_command)
 
-            self.logger.info(f"✅ Restored bind pose: {bind_pose_node}")
+            self.logger.info(f"[OK] Restored bind pose: {bind_pose_node}")
 
         except Exception as e:
             self.logger.warning(f"Failed to restore bind pose: {e}")
@@ -561,9 +561,9 @@ class MayaSkinClusterBuilderImpl:
                     continue
 
             if matrices_copied > 0:
-                self.logger.info(f"✅ Copied {matrices_copied} bind matrices to skinCluster")
+                self.logger.info(f"[OK] Copied {matrices_copied} bind matrices to skinCluster")
             else:
-                self.logger.warning("⚠️ No bind matrices copied - deformation may not work")
+                self.logger.warning("[WARNING] No bind matrices copied - deformation may not work")
 
         except Exception as e:
             self.logger.warning(f"Failed to copy bind pose matrices: {e}")
@@ -695,12 +695,12 @@ class MayaSkinClusterBuilderImpl:
 
             if unmatched_count > 0:
                 self.logger.warning(
-                    f"⚠️ {unmatched_count}/{len(usd_vertex_positions)} "
+                    f"[WARNING] {unmatched_count}/{len(usd_vertex_positions)} "
                     "vertices could not be matched"
                 )
 
             if len(usd_to_maya_map) < len(usd_vertex_positions) * 0.9:  # Less than 90% matched
-                self.logger.error(f"❌ Only {match_percentage:.1f}% matched - position mapping failed")
+                self.logger.error(f"[ERROR] Only {match_percentage:.1f}% matched - position mapping failed")
                 return None
 
             return usd_to_maya_map
@@ -745,7 +745,7 @@ class MayaSkinClusterBuilderImpl:
             if usd_to_maya_vertex_map:
                 self.logger.info(f"Using pre-computed vertex mapping ({len(usd_to_maya_vertex_map)} vertices)")
             else:
-                self.logger.warning("⚠️ No vertex mapping available, using index-based matching")
+                self.logger.warning("[WARNING] No vertex mapping available, using index-based matching")
                 self.logger.warning("   This may cause incorrect skinning if Maya reordered vertices!")
 
             # Diagnostic: Check first few vertices
@@ -766,10 +766,10 @@ class MayaSkinClusterBuilderImpl:
                     skin_cluster, mesh_name, maya_joints, weight_data, usd_to_maya_vertex_map
                 )
             except Exception as api_error:
-                self.logger.error(f"❌ API weight method failed: {api_error}")
+                self.logger.error(f"[ERROR] API weight method failed: {api_error}")
                 import traceback
                 traceback.print_exc()
-                self.logger.error("❌ Cannot fall back to per-vertex method (too slow for large meshes)")
+                self.logger.error("[ERROR] Cannot fall back to per-vertex method (too slow for large meshes)")
                 self.logger.error("   Please report this error to the developer")
                 return False
 
@@ -887,12 +887,12 @@ class MayaSkinClusterBuilderImpl:
 
         success_rate = vertices_processed / weight_data.vertex_count if weight_data.vertex_count > 0 else 0
         self.logger.info(
-            f"✅ Weight application: {vertices_processed}/{weight_data.vertex_count} "
+            f"[OK] Weight application: {vertices_processed}/{weight_data.vertex_count} "
             f"vertices ({success_rate*100:.1f}%)"
         )
 
         if vertices_failed > 0:
-            self.logger.warning(f"⚠️ {vertices_failed} vertices had weight application issues")
+            self.logger.warning(f"[WARNING] {vertices_failed} vertices had weight application issues")
 
         return vertices_failed == 0
 
@@ -959,7 +959,7 @@ class MayaSkinClusterBuilderImpl:
         )
 
         if vertices_failed > 0:
-            self.logger.warning(f"⚠️ {vertices_failed} vertices had weight application issues")
+            self.logger.warning(f"[WARNING] {vertices_failed} vertices had weight application issues")
 
         return vertices_failed == 0
 

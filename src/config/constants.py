@@ -62,17 +62,15 @@ class ErrorMessages:
 @dataclass(frozen=True)
 class PerformanceConstants:
 
-
     THREAD_POOL_MAX_WORKERS: int = 2
     CACHE_TIMEOUT_SECONDS: int = 30
     IMPORT_COOLDOWN_SECONDS: float = 1.5
     NETWORK_TIMEOUT_THRESHOLD: float = 5.0
     REFRESH_DELAY_MS: int = 2000
 
+
 # Singleton instances - immutable configuration
 SEARCH_CONFIG = SearchConstants()
-
-
 UI_CONFIG = UIConstants()
 ERROR_MESSAGES = ErrorMessages()
 PERFORMANCE_CONFIG = PerformanceConstants()

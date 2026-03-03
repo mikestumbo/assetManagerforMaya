@@ -37,7 +37,7 @@ class PluginService(IPluginService):
             return True
 
         except Exception as e:
-            print(f"❌ Plugin service initialization failed: {e}")
+            print(f"[ERROR] Plugin service initialization failed: {e}")
             return False
 
     def shutdown(self) -> bool:
@@ -56,7 +56,7 @@ class PluginService(IPluginService):
             return True
 
         except Exception as e:
-            print(f"⚠️ Plugin service shutdown warning: {e}")
+            print(f"[WARNING] Plugin service shutdown warning: {e}")
             return False
 
     def get_version(self) -> str:
@@ -71,7 +71,7 @@ class PluginService(IPluginService):
     def _create_main_ui(self) -> None:
         """Create the main Asset Manager UI using EMSA architecture."""
         try:
-            print("🚀 Attempting to launch Asset Manager v1.5.0 UI...")
+            print("[START] Attempting to launch Asset Manager v1.5.0 UI...")
 
             # Try to launch using the maya module command first
             import maya.cmds as cmds  # type: ignore
@@ -79,23 +79,23 @@ class PluginService(IPluginService):
             # Use Maya's built-in command to run the asset manager
             try:
                 cmds.assetManager()
-                print("🚀 Asset Manager v1.5.0 main UI launched via Maya command!")
+                print("[START] Asset Manager v1.5.0 main UI launched via Maya command!")
                 return
             except Exception:
-                print("⚠️ Maya command not available, trying direct import...")
+                print("[WARNING] Maya command not available, trying direct import...")
 
             # Fallback to direct UI import
             # For now, skip the complex UI and go straight to fallback
             # This ensures the plugin loads successfully while we resolve UI import issues
-            print("⚠️ Using Maya-native UI for compatibility")
+            print("[WARNING] Using Maya-native UI for compatibility")
             self._create_fallback_ui()
             return
 
         except ImportError as e:
-            print(f"⚠️ Could not launch full UI: {e}")
+            print(f"[WARNING] Could not launch full UI: {e}")
             self._create_fallback_ui()
         except Exception as e:
-            print(f"❌ Error launching Asset Manager UI: {e}")
+            print(f"[ERROR] Error launching Asset Manager UI: {e}")
             self._create_fallback_ui()
 
     def _create_fallback_ui(self) -> None:
@@ -119,8 +119,8 @@ class PluginService(IPluginService):
 
         # Status
         cmds.text(label="🏗️ EMSA Architecture Active", align="left")
-        cmds.text(label="📦 Maya Module System Enabled", align="left")
-        cmds.text(label="⚠️  Basic Mode - PySide6 UI unavailable", align="left")
+        cmds.text(label="[PACKAGE] Maya Module System Enabled", align="left")
+        cmds.text(label="[WARNING]  Basic Mode - PySide6 UI unavailable", align="left")
 
         cmds.separator(height=15)
 
@@ -138,8 +138,8 @@ class PluginService(IPluginService):
         try:
             # For now, show message that full UI is not available
             # This prevents the relative import error
-            print("⚠️ Full PySide6 UI is temporarily disabled for compatibility")
-            print("🔧 Using Maya-native UI for optimal stability")
+            print("[WARNING] Full PySide6 UI is temporarily disabled for compatibility")
+            print("[TOOL] Using Maya-native UI for optimal stability")
             cmds.confirmDialog(
                 title="Asset Manager UI",
                 message="Full PySide6 UI is temporarily disabled for compatibility.\n"
@@ -147,4 +147,4 @@ class PluginService(IPluginService):
                 button=["OK"]
             )
         except Exception as e:
-            print(f"❌ Could not launch full UI: {e}")
+            print(f"[ERROR] Could not launch full UI: {e}")
