@@ -3831,6 +3831,14 @@ class UsdPipeline:
             if options.usd_proxy_mode:
                 self.logger.info("[USD] USD PROXY MODE ACTIVATED (Experimental)")
 
+                # IMPORT-TIME COLOUR BOOST: the USDC was written by a previous
+                # export run and may contain desaturated grey-brown diffuseColors
+                # (0.29-0.43 typical for military gear).  Boost them now so VP2
+                # shows clearly distinct hues without needing to re-export.
+                # This is safe to run on every import — it is idempotent and only
+                # touches static (non-texture-connected) diffuseColor inputs.
+                self._boost_usd_material_colors(actual_usd_path)
+
                 # Build layered stage: decompose monolithic .usdc into
                 # root.usda → animation / controllers / materials / skeleton / geometry / base
                 self._report_progress("[LAYER] Building layered USD stage", 10)
@@ -4354,6 +4362,83 @@ class UsdPipeline:
             )
 
     # ─── Layered USD Stage Builder ───────────────────────────────────────
+
+    def _boost_usd_material_colors(self, usd_path: Path) -> None:
+        """Boost desaturated diffuseColors in a USD file for VP2 material identification.
+
+        Reads every UsdPreviewSurface shader in the stage, and for any
+        diffuseColor that is a static (non-texture-connected) value:
+        - If the colour has a detectable hue, boosts saturation / value so
+          per-material differences are clearly visible in VP2.
+        - If the colour is achromatic (metal / neutral), replaces it with a
+          deterministic name-hash hue so each material still gets a distinct colour.
+        Previously-exported files have physically-accurate averaged colours which
+        look uniformly grey in VP2 — this pass makes them vivid and distinct.
+        """
+        if not USD_AVAILABLE:
+            return
+        try:
+            from pxr import Usd, UsdShade, Sdf, Gf  # pyright: ignore[reportMissingImports]
+
+            stage = Usd.Stage.Open(str(usd_path))
+            if not stage:
+                self.logger.debug("[BOOST] Could not open USD for colour boost")
+                return
+
+            boosted = 0
+            hashed = 0
+            skipped = 0
+
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != 'Shader':
+                    continue
+                shader = UsdShade.Shader(prim)
+                if not shader or shader.GetShaderId() != 'UsdPreviewSurface':
+                    continue
+
+                dc_input = shader.GetInput('diffuseColor')
+                if not dc_input:
+                    continue
+                # Skip texture-driven inputs — never overwrite an upstream connection.
+                if dc_input.HasConnectedSource():
+                    skipped += 1
+                    continue
+
+                current = dc_input.Get()
+                if current is None:
+                    continue
+
+                raw = Gf.Vec3f(float(current[0]), float(current[1]), float(current[2]))
+                boosted_color = self._boost_color_for_display(raw)
+
+                mat_name = prim.GetParent().GetParent().GetName()
+                if boosted_color is not None:
+                    dc_input.Set(boosted_color)
+                    boosted += 1
+                    self.logger.debug(
+                        f"   [BOOST] {mat_name}: "
+                        f"({raw[0]:.3f}, {raw[1]:.3f}, {raw[2]:.3f}) → {boosted_color}"
+                    )
+                else:
+                    # Achromatic — use name-hash so each material gets a unique hue
+                    hash_color = self._rfm_name_color(mat_name)
+                    dc_input.Set(hash_color)
+                    hashed += 1
+                    self.logger.debug(
+                        f"   [BOOST] {mat_name}: achromatic → name-hash {hash_color}"
+                    )
+
+            if boosted + hashed > 0:
+                stage.GetRootLayer().Save()
+                self.logger.info(
+                    f"[BOOST] Colour boost applied: "
+                    f"{boosted} hue-boosted, {hashed} name-hashed, {skipped} texture-skipped"
+                )
+            else:
+                self.logger.debug("[BOOST] No static diffuseColors found to boost")
+
+        except Exception as e:
+            self.logger.warning(f"[BOOST] Colour boost failed: {e}")
 
     def _build_layered_stage(
         self,
