@@ -2919,14 +2919,21 @@ class UsdPipeline:
                     g = float(arr[:, :, 1].mean())
                     b = float(arr[:, :, 2].mean())
                     if r + g + b > 0.02:
-                        self.logger.info(
-                            f"   [TEX] {os.path.basename(tex_path)}: "
-                            f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL"
-                        )
-                        return Gf.Vec3f(
+                        raw_color = Gf.Vec3f(
                             max(0.0, min(1.0, r)),
                             max(0.0, min(1.0, g)),
                             max(0.0, min(1.0, b)),
+                        )
+                        boosted = self._boost_color_for_display(raw_color)
+                        if boosted is not None:
+                            self.logger.info(
+                                f"   [TEX] {os.path.basename(tex_path)}: "
+                                f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL → boosted {boosted}"
+                            )
+                            return boosted
+                        self.logger.info(
+                            f"   [TEX] {os.path.basename(tex_path)}: "
+                            f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL — achromatic, trying rma-scan"
                         )
             except ImportError:
                 self.logger.info("   [TEX-DIAG] PIL not available")
@@ -2949,14 +2956,21 @@ class UsdPipeline:
                             g = float(arr[:, :, 1].mean())
                             b = float(arr[:, :, 2].mean())
                             if r + g + b > 0.02:
-                                self.logger.info(
-                                    f"   [TEX] {os.path.basename(tex_path)}: "
-                                    f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO"
-                                )
-                                return Gf.Vec3f(
+                                raw_color = Gf.Vec3f(
                                     max(0.0, min(1.0, r)),
                                     max(0.0, min(1.0, g)),
                                     max(0.0, min(1.0, b)),
+                                )
+                                boosted = self._boost_color_for_display(raw_color)
+                                if boosted is not None:
+                                    self.logger.info(
+                                        f"   [TEX] {os.path.basename(tex_path)}: "
+                                        f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO → boosted {boosted}"
+                                    )
+                                    return boosted
+                                self.logger.info(
+                                    f"   [TEX] {os.path.basename(tex_path)}: "
+                                    f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO — achromatic, trying rma-scan"
                                 )
             except ImportError:
                 self.logger.info("   [TEX-DIAG] OpenImageIO not available")
@@ -2984,14 +2998,21 @@ class UsdPipeline:
                                     g = float(arr[:, :, 1].mean())
                                     b = float(arr[:, :, 2].mean())
                                     if r + g + b > 0.02:
-                                        self.logger.info(
-                                            f"   [TEX] {fname} (rma-scan): "
-                                            f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL"
-                                        )
-                                        return Gf.Vec3f(
+                                        raw_color = Gf.Vec3f(
                                             max(0.0, min(1.0, r)),
                                             max(0.0, min(1.0, g)),
                                             max(0.0, min(1.0, b)),
+                                        )
+                                        boosted = self._boost_color_for_display(raw_color)
+                                        if boosted is not None:
+                                            self.logger.info(
+                                                f"   [TEX] {fname} (rma-scan): "
+                                                f"({r:.3f}, {g:.3f}, {b:.3f}) → boosted {boosted}"
+                                            )
+                                            return boosted
+                                        self.logger.info(
+                                            f"   [TEX] {fname} (rma-scan): "
+                                            f"({r:.3f}, {g:.3f}, {b:.3f}) achromatic — using name-hash"
                                         )
                             except Exception:
                                 continue  # try next file
@@ -3019,10 +3040,33 @@ class UsdPipeline:
         """
         import hashlib
         import colorsys
+        from pxr import Gf  # type: ignore
         h = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)  # 0–4 294 967 295
         hue = h / 4294967296.0   # uniformly spread 0.0–1.0
-        r, g, b = colorsys.hsv_to_rgb(hue, 0.55, 0.70)
+        r, g, b = colorsys.hsv_to_rgb(hue, 0.65, 0.72)
         return Gf.Vec3f(float(r), float(g), float(b))
+
+    def _boost_color_for_display(self, color: "Gf.Vec3f"):
+        """Boost a sampled texture colour to be clearly visible in VP2.
+
+        Physically-accurate texture averages are typically dark and desaturated
+        for realistic character materials (skin, metal, cloth).  This method
+        preserves the dominant hue while pushing saturation and value into a
+        range that makes per-material differences immediately visible.
+
+        Returns None when the colour is achromatic (HSV saturation < 0.08),
+        which tells the caller to use _rfm_name_color instead.
+        """
+        import colorsys
+        from pxr import Gf  # type: ignore
+        r, g, b = float(color[0]), float(color[1]), float(color[2])
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        if s < 0.08:
+            return None  # achromatic — name-hash will be more distinctive
+        s_out = max(s, 0.62)
+        v_out = max(min(max(v, 0.58), 0.82), 0.58)
+        r2, g2, b2 = colorsys.hsv_to_rgb(h, s_out, v_out)
+        return Gf.Vec3f(float(r2), float(g2), float(b2))
 
     def _convert_renderman_materials_to_usd_preview(self, usd_path: Path) -> None:
         """
