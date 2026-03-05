@@ -4462,32 +4462,44 @@ class UsdPipeline:
             # always follow material:binding → UsdPreviewSurface.  Setting
             # primvars:displayColor directly on the geometry guarantees VP2
             # shows distinct colours regardless of the material system path.
+            #
+            # Use ComputeBoundMaterial() — the proper USD composition-aware
+            # API that resolves inherited bindings, collection bindings, and
+            # purpose-specific bindings.  GetDirectBinding() only returns
+            # bindings authored directly on the prim itself, and returns an
+            # always-truthy object even when no binding exists, making the
+            # previous ancestor-walk logic unreliable.
+            #
+            # Fallback guarantee: every mesh gets a displayColor — either the
+            # boosted material colour or a name-hash of the mesh's own name.
+            # This ensures no mesh is invisible-grey even if binding fails.
             display_colored = 0
             for prim in stage.Traverse():
                 if prim.GetTypeName() != 'Mesh':
                     continue
                 try:
-                    # Direct binding on this prim
-                    direct = UsdShade.MaterialBindingAPI(prim).GetDirectBinding()
-                    mat_path = direct.GetMaterialPath() if direct else None
-                    color = mat_path_to_color.get(mat_path) if mat_path else None
+                    color = None
 
-                    # Walk up ancestors — some rigs bind materials at scope level
+                    # ComputeBoundMaterial handles full USD binding resolution
+                    # including inherited and collection-based bindings.
+                    bound_mat, _ = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()
+                    if bound_mat and bound_mat.GetPrim().IsValid():
+                        mat_prim_path = bound_mat.GetPrim().GetPath()
+                        color = mat_path_to_color.get(mat_prim_path)
+                        if color is None:
+                            # Bound material exists but was texture-driven (None
+                            # sentinel) or not in our map — name-hash the material.
+                            color = self._rfm_name_color(bound_mat.GetPrim().GetName())
+
                     if color is None:
-                        ancestor = prim.GetParent()
-                        while ancestor and ancestor.IsValid() and not ancestor.IsPseudoRoot():
-                            anc_direct = UsdShade.MaterialBindingAPI(ancestor).GetDirectBinding()
-                            if anc_direct:
-                                color = mat_path_to_color.get(anc_direct.GetMaterialPath())
-                                if color is not None:
-                                    break
-                            ancestor = ancestor.GetParent()
+                        # No material bound at all — name-hash the mesh itself
+                        # so it still gets a unique non-grey display colour.
+                        color = self._rfm_name_color(prim.GetName())
 
-                    if color is not None:
-                        UsdGeom.Gprim(prim).CreateDisplayColorAttr(
-                            Vt.Vec3fArray([Gf.Vec3f(color[0], color[1], color[2])])
-                        )
-                        display_colored += 1
+                    UsdGeom.Gprim(prim).CreateDisplayColorAttr(
+                        Vt.Vec3fArray([Gf.Vec3f(color[0], color[1], color[2])])
+                    )
+                    display_colored += 1
                 except Exception:
                     continue
 
@@ -4699,10 +4711,14 @@ class UsdPipeline:
             # PxrTexture nodes in RfM 27.x era files).  These are harmless
             # forward-compatibility warnings — suppressing them keeps the
             # Script Editor clean without hiding any real failures.
-            _suppress_ok = False
+            # Suppress deprecated-attribute errors from the nested file load.
+            # scriptEditorInfo is a global command — no 'edit' flag needed.
             try:
-                cmds.scriptEditorInfo(edit=True, suppressErrors=1)
-                _suppress_ok = True
+                cmds.scriptEditorInfo(
+                    suppressErrors=True,
+                    suppressWarnings=True,
+                    suppressInfo=True,
+                )
             except Exception:
                 pass
 
@@ -4721,13 +4737,15 @@ class UsdPipeline:
                 )
                 return None
             finally:
-                # Always restore error output immediately after the file load,
-                # so any genuine errors from our own code remain visible.
-                if _suppress_ok:
-                    try:
-                        cmds.scriptEditorInfo(edit=True, suppressErrors=0)
-                    except Exception:
-                        pass
+                # Always restore all output channels immediately.
+                try:
+                    cmds.scriptEditorInfo(
+                        suppressErrors=False,
+                        suppressWarnings=False,
+                        suppressInfo=False,
+                    )
+                except Exception:
+                    pass
 
             controllers = []
             mappings: dict[str, list[str]] = {}
