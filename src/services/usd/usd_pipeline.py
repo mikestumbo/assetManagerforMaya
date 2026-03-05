@@ -4628,6 +4628,19 @@ class UsdPipeline:
         try:
             # ── Reference the .rig.mb temporarily ──
             namespace = "_rigExtract_"
+
+            # Suppress deprecated-attribute errors printed when Maya loads
+            # nested references inside the rig.mb (e.g. ".atlasStyle" from
+            # PxrTexture nodes in RfM 27.x era files).  These are harmless
+            # forward-compatibility warnings — suppressing them keeps the
+            # Script Editor clean without hiding any real failures.
+            _suppress_ok = False
+            try:
+                cmds.scriptEditorInfo(edit=True, suppressErrors=1)
+                _suppress_ok = True
+            except Exception:
+                pass
+
             try:
                 cmds.file(
                     str(rig_mb_path),
@@ -4642,6 +4655,14 @@ class UsdPipeline:
                     f"[RIG] Could not reference .rig.mb: {ref_err}"
                 )
                 return None
+            finally:
+                # Always restore error output immediately after the file load,
+                # so any genuine errors from our own code remain visible.
+                if _suppress_ok:
+                    try:
+                        cmds.scriptEditorInfo(edit=True, suppressErrors=0)
+                    except Exception:
+                        pass
 
             controllers = []
             mappings: dict[str, list[str]] = {}
