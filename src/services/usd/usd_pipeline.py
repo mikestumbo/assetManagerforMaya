@@ -1213,7 +1213,11 @@ class UsdPipeline:
 
                 # ============ BLENDSHAPES ============
                 # Maya 2026 supports this!
-                'exportBlendShapes': options.export_blendshapes,
+                # NOTE: Keep False here — _export_blendshapes_to_usd() handles blendshapes
+                # correctly via UsdSkel.BlendShape prims.  Setting True causes mayaUSD to
+                # also export blendshape TARGET meshes as standalone root-level Mesh prims
+                # (50+ floating clones visible in USD viewers).
+                'exportBlendShapes': False,
 
                 # ============ MATERIALS ============
                 'exportMaterials': options.export_materials,
@@ -1230,9 +1234,12 @@ class UsdPipeline:
                 'mergeTransformAndShape': True,
                 'stripNamespaces': not options.include_namespaces,
 
-                # ============ FILTER OUT NURBS CURVES ============
-                # Controllers stay in .rig.mb to preserve shapes/colors
-                'filterTypes': ['nurbsCurve'],
+                # ============ FILTER OUT NURBS CURVES AND SURFACES ============
+                # nurbsCurve  — control curve shapes (CVs, IK handles, etc.)
+                # nurbsSurface — NURBS patch surfaces (eye-lid fitGeo, cluster controls)
+                # Both are rig helpers that must NOT render in the USD output.
+                # They stay visible only inside .rig.mb via the controllers sublayer.
+                'filterTypes': ['nurbsCurve', 'nurbsSurface'],
             }
 
             # Add RenderMan support if available and requested
@@ -1287,12 +1294,12 @@ class UsdPipeline:
                         'none' if options.viewport_friendly_skeleton
                         else ('auto' if options.export_skin_weights else 'none')
                     ),
-                    'exportBlendShapes': options.export_blendshapes,
+                    'exportBlendShapes': False,   # see export_args comment above
                     'exportMaterials': options.export_materials,
                     'shadingMode': 'useRegistry',
                     'exportVisibility': True,
                     'stripNamespaces': not options.include_namespaces,
-                    'filterTypes': ['nurbsCurve'],  # Keep curves in .rig.mb
+                    'filterTypes': ['nurbsCurve', 'nurbsSurface'],  # hide all rig helpers
                 }
 
                 # Animation via frameRange only
@@ -1342,6 +1349,13 @@ class UsdPipeline:
             # Ensure PxrShader + Lambert combinations are properly converted
             if options.export_materials:
                 self._convert_renderman_materials_to_usd_preview(output_path)
+
+            # POST-PROCESS: Structural fix-up — must run after material conversion so
+            # that the UsdPreviewSurface shaders injected above are visible to the
+            # outputs:surface wiring pass.
+            # Fixes: outputs:surface wiring, material:binding, Skeleton→Xform re-typing,
+            #        orphan SkelAnimation deactivation, root-level blendshape mesh deactivation.
+            self._fix_exported_usdc(output_path)
 
             # Phase 3.3: USD-native animation workflow
             if options.merge_skeletons and not options.usd_layers_for_animation:
@@ -3634,6 +3648,242 @@ class UsdPipeline:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] Material conversion error: {e}")
+            import traceback
+            self.logger.warning(traceback.format_exc())
+
+    def _fix_exported_usdc(self, usd_path: Path) -> None:
+        """
+        Comprehensive post-export structural fix-up for the USDC written by mayaUSD.
+
+        mayaUSD leaves several structural issues that break display in all non-Maya
+        USD viewers (needle.tools, usdview, Unreal, Houdini, etc.) and in Maya's own
+        VP2 when the file is imported back as a proxy:
+
+        1. outputs:surface wiring  — mayaUSD with RenderMan shading mode creates
+           UsdPreviewSurface shaders inside render-context NodeGraphs but forgets to
+           connect the material's universal ``outputs:surface`` output.  Any viewer that
+           uses the universal surface output (everything except RenderMan) sees grey.
+
+        2. material:binding  — mayaUSD's ``useRegistry`` shading mode skips writing
+           material:binding relationships on skinned meshes when the source shaders are
+           RenderMan PxrSurface/PxrDisney nodes.  We rebuild the mesh→SG→Material path
+           mapping from Maya cmds and write the missing relationships.
+
+        3. GeomSubset binding  — face-level material assignments exported as GeomSubset
+           prims are named after their shading group; we match the name directly to the
+           USD Material prim and write material:binding.
+
+        4. Skeleton→Xform re-typing  — mayaUSD types EVERY joint chain as a Skeleton
+           prim.  A rig with 121 FK control joints produces 121 Skeleton prims, causing
+           UsdSkelImaging to create a separate mesh instance per skeleton and flooding
+           the stage with orphaned SkelAnimation prims.  Only the bind skeleton
+           (FitSkeleton) stays as Skeleton; all others become lightweight Xform prims.
+
+        5. SkelAnimation deactivation  — SkelAnimation prims paired with the now-Xform'd
+           rig-control joints are deactivated so they don't waste evaluation time.
+
+        6. Root-level Mesh deactivation  — any Mesh prim that lives outside the default
+           prim's subtree is a blendshape target mesh exported by mayaUSD as a standalone
+           prim.  These appear as floating duplicate geometry in viewers.  We deactivate
+           them (the UsdSkel.BlendShape prims written by _export_blendshapes_to_usd
+           already contain the correct offset data).
+        """
+        if not USD_AVAILABLE:
+            return
+        try:
+            from pxr import Usd, UsdShade, UsdSkel, UsdGeom  # type: ignore
+
+            stage = Usd.Stage.Open(str(usd_path))
+            if not stage:
+                self.logger.warning(f"[FIX] Could not open stage: {usd_path}")
+                return
+
+            # ── Pass 1: Single traversal \u2014 build all lookup maps ─────────────────────
+            # mat_name_to_path: Material prim name → SdfPath
+            # mat_path_to_shader: Material SdfPath → UsdShade.Shader (UsdPreviewSurface)
+            mat_name_to_path = {}
+            mat_path_to_shader = {}
+            for prim in stage.Traverse():
+                ptype = prim.GetTypeName()
+                if ptype == 'Material':
+                    mat_name_to_path[prim.GetName()] = prim.GetPath()
+                elif ptype == 'Shader':
+                    s = UsdShade.Shader(prim)
+                    sid_attr = s.GetIdAttr()
+                    if sid_attr and sid_attr.Get() == 'UsdPreviewSurface':
+                        # Walk up to find the owning Material
+                        ancestor = prim.GetParent()
+                        while ancestor and ancestor.IsValid():
+                            if ancestor.GetTypeName() == 'Material':
+                                # Keep the first (deepest) match per material
+                                if ancestor.GetPath() not in mat_path_to_shader:
+                                    mat_path_to_shader[ancestor.GetPath()] = s
+                                break
+                            ancestor = ancestor.GetParent()
+
+            self.logger.info(
+                f"[FIX] Found {len(mat_name_to_path)} USD materials, "
+                f"{len(mat_path_to_shader)} with UsdPreviewSurface shaders"
+            )
+
+            # ── Fix 1: Wire outputs:surface for all materials that are missing it ──
+            surface_wired = 0
+            for mat_path, preview_shader in mat_path_to_shader.items():
+                mat_prim = stage.GetPrimAtPath(mat_path)
+                if not mat_prim.IsValid():
+                    continue
+                surf_attr = mat_prim.GetAttribute('outputs:surface')
+                if surf_attr.IsValid() and surf_attr.HasAuthoredConnections():
+                    continue  # Already properly wired
+                UsdShade.Material(mat_prim).CreateSurfaceOutput().ConnectToSource(
+                    preview_shader.ConnectableAPI(), 'surface'
+                )
+                surface_wired += 1
+            self.logger.info(f"[FIX] Wired outputs:surface on {surface_wired} materials")
+
+            # ── Fix 2: Build Maya mesh→SG map (cmds available at export time) ───────
+            mesh_to_sg = {}   # USD Mesh prim transform name → Maya shading group name
+            if cmds is not None:
+                try:
+                    for maya_mesh_shape in (cmds.ls(type='mesh') or []):
+                        try:
+                            sgs = cmds.listConnections(
+                                maya_mesh_shape, type='shadingEngine'
+                            ) or []
+                            if not sgs:
+                                continue
+                            parents = (
+                                cmds.listRelatives(maya_mesh_shape, parent=True, fullPath=False)
+                                or []
+                            )
+                            transform_name = parents[0] if parents else maya_mesh_shape
+                            short_name = transform_name.split(':')[-1]  # strip namespace
+                            mesh_to_sg.setdefault(short_name, sgs[0])
+                        except Exception:
+                            pass
+                    self.logger.info(f"[FIX] Maya mesh→SG map: {len(mesh_to_sg)} entries")
+                except Exception as me:
+                    self.logger.warning(f"[FIX] Could not build mesh→SG map: {me}")
+
+            # ── Fix 3: Write material:binding + identify root-level Mesh prims ──────
+            default_prim = stage.GetDefaultPrim()
+            default_path_prefix = (
+                str(default_prim.GetPath()) + '/' if default_prim else ''
+            )
+            bindings_written = 0
+            subset_bindings = 0
+            root_mesh_paths = []
+
+            for prim in stage.Traverse():
+                ptype = prim.GetTypeName()
+                if ptype == 'Mesh':
+                    prim_path_str = str(prim.GetPath())
+                    if default_path_prefix and not prim_path_str.startswith(default_path_prefix):
+                        root_mesh_paths.append(prim.GetPath())
+                        continue  # Will deactivate below
+                    bind_api = UsdShade.MaterialBindingAPI(prim)
+                    existing, _ = bind_api.ComputeBoundMaterial()
+                    if existing and existing.GetPrim().IsValid():
+                        continue  # Already has a binding
+                    sg_name = mesh_to_sg.get(prim.GetName())
+                    if sg_name and sg_name in mat_name_to_path:
+                        mat_prim = stage.GetPrimAtPath(mat_name_to_path[sg_name])
+                        if mat_prim.IsValid():
+                            bind_api.Bind(UsdShade.Material(mat_prim))
+                            bindings_written += 1
+                elif ptype == 'GeomSubset':
+                    # mayaUSD names GeomSubsets after the shading group they represent
+                    bind_api = UsdShade.MaterialBindingAPI(prim)
+                    existing, _ = bind_api.ComputeBoundMaterial()
+                    if existing and existing.GetPrim().IsValid():
+                        continue
+                    subset_name = prim.GetName()
+                    if subset_name in mat_name_to_path:
+                        mat_prim = stage.GetPrimAtPath(mat_name_to_path[subset_name])
+                        if mat_prim.IsValid():
+                            bind_api.Bind(UsdShade.Material(mat_prim))
+                            subset_bindings += 1
+
+            self.logger.info(
+                f"[FIX] Material binding: {bindings_written} Mesh + "
+                f"{subset_bindings} GeomSubset relationships written"
+            )
+
+            # ── Fix 4: Deactivate root-level blendshape target Mesh prims ───────────
+            for path in root_mesh_paths:
+                stage.GetPrimAtPath(path).SetActive(False)
+            self.logger.info(
+                f"[FIX] Deactivated {len(root_mesh_paths)} root-level blendshape Mesh prims"
+            )
+
+            # ── Fix 4b: Set NurbsPatch purpose → guide (belt-and-suspenders for
+            #           cases where filterTypes didn't strip them) ──────────────────
+            nurbs_patched = []
+            for prim in stage.Traverse():
+                if prim.GetTypeName() == 'NurbsPatch':
+                    nurbs_patched.append(prim.GetPath())
+            for path in nurbs_patched:
+                UsdGeom.Imageable(stage.GetPrimAtPath(path)).CreatePurposeAttr().Set(
+                    UsdGeom.Tokens.guide
+                )
+            if nurbs_patched:
+                self.logger.info(
+                    f"[FIX] Set purpose=guide on {len(nurbs_patched)} NurbsPatch prims"
+                )
+
+            # ── Fix 5: Find the bind skeleton ────────────────────────────────────────
+            # Prefer FitSkeleton by name (mGear / Advanced Skeleton convention).
+            # Fallback: the Skeleton prim with the most joints = bind skeleton.
+            bind_skeleton_path = None
+            max_joints = 0
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != 'Skeleton':
+                    continue
+                if 'FitSkeleton' in str(prim.GetPath()):
+                    bind_skeleton_path = prim.GetPath()
+                    break
+                sk = UsdSkel.Skeleton(prim)
+                joints_attr = sk.GetJointsAttr()
+                joints = joints_attr.Get() if joints_attr else None
+                count = len(joints) if joints else 0
+                if count > max_joints:
+                    max_joints = count
+                    bind_skeleton_path = prim.GetPath()
+
+            bind_skel_str = str(bind_skeleton_path) if bind_skeleton_path else ''
+            self.logger.info(f"[FIX] Bind skeleton: {bind_skeleton_path}")
+
+            # ── Fix 6: Re-type FK-rig Skeleton prims → Xform ────────────────────────
+            # Collect first, then modify (safe with pxr's traversal model)
+            skeletons_to_retype = []
+            skel_anims_to_deactivate = []
+            for prim in stage.Traverse():
+                ptype = prim.GetTypeName()
+                if ptype == 'Skeleton':
+                    if bind_skeleton_path and prim.GetPath() == bind_skeleton_path:
+                        continue  # Keep the real bind skeleton
+                    skeletons_to_retype.append(prim.GetPath())
+                elif ptype == 'SkelAnimation':
+                    ppath_str = str(prim.GetPath())
+                    # Keep SkelAnimations that live directly under the bind skeleton
+                    if bind_skel_str and not ppath_str.startswith(bind_skel_str + '/'):
+                        skel_anims_to_deactivate.append(prim.GetPath())
+
+            for path in skeletons_to_retype:
+                stage.GetPrimAtPath(path).SetTypeName('Xform')
+            for path in skel_anims_to_deactivate:
+                stage.GetPrimAtPath(path).SetActive(False)
+
+            self.logger.info(
+                f"[FIX] Re-typed {len(skeletons_to_retype)} Skeleton→Xform, "
+                f"deactivated {len(skel_anims_to_deactivate)} orphan SkelAnimation prims"
+            )
+
+            stage.Save()
+            self.logger.info(f"[FIX] Structural fix-up complete → {usd_path.name}")
+
+        except Exception as e:
+            self.logger.warning(f"[FIX] Post-export fix-up failed: {e}")
             import traceback
             self.logger.warning(traceback.format_exc())
 
