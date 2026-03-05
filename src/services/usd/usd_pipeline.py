@@ -4526,17 +4526,21 @@ class UsdPipeline:
             root_stage = Usd.Stage.Open(root_layer)
             UsdGeom.SetStageUpAxis(root_stage, UsdGeom.Tokens.y)
 
-            # Read the default prim from the base stage so the root inherits it
+            # Read the default prim from the base stage so the root inherits it.
+            # IMPORTANT: use OverridePrim (or just set defaultPrim metadata) — never
+            # DefinePrim with a type here.  A "def Xform" opinion in root.usda would
+            # override the base USDC's "SkelRoot" type in stronger-wins composition,
+            # breaking UsdSkelImaging and hiding all material colours in VP2.
             base_stage = Usd.Stage.Open(str(base_usd_path))
             default_prim = base_stage.GetDefaultPrim() if base_stage else None
             default_prim_name = (
                 default_prim.GetName() if default_prim else asset_name
             )
 
-            root_stage.DefinePrim(f"/{default_prim_name}", "Xform")
-            root_stage.SetDefaultPrim(
-                root_stage.GetPrimAtPath(f"/{default_prim_name}")
-            )
+            # Set the defaultPrim metadata on the layer only — no prim spec,
+            # no type opinion.  The actual prim definition (SkelRoot / Xform /
+            # whatever the rig uses) stays exclusively in the base USDC sublayer.
+            root_layer.defaultPrim = default_prim_name
 
             # ── Build sublayer stack (strongest on top) ──
             for layer_path in created_layers:
