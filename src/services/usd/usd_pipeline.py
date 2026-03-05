@@ -4366,19 +4366,32 @@ class UsdPipeline:
     def _boost_usd_material_colors(self, usd_path: Path) -> None:
         """Boost desaturated diffuseColors in a USD file for VP2 material identification.
 
-        Reads every UsdPreviewSurface shader in the stage, and for any
-        diffuseColor that is a static (non-texture-connected) value:
-        - If the colour has a detectable hue, boosts saturation / value so
-          per-material differences are clearly visible in VP2.
-        - If the colour is achromatic (metal / neutral), replaces it with a
-          deterministic name-hash hue so each material still gets a distinct colour.
-        Previously-exported files have physically-accurate averaged colours which
-        look uniformly grey in VP2 — this pass makes them vivid and distinct.
+        Pass 1 — UsdPreviewSurface diffuseColor:
+            For every static (non-texture-connected) diffuseColor:
+            - If the colour has a detectable hue, boosts S/V so per-material
+              differences are clearly visible in VP2.
+            - If achromatic, replaces with a deterministic name-hash hue so
+              each material still gets a unique distinct colour.
+            Bug fixed: mat_name now uses the Material prim's OWN name
+            (prim.GetParent().GetName()), not its grandparent scope name.
+            Previously GetParent().GetParent().GetName() returned "Looks"
+            for every material, making all 20 achromatic materials hash to
+            the same single colour.
+
+        Pass 2 — primvars:displayColor on every Mesh prim:
+            Follows each mesh's material:binding and writes
+            primvars:displayColor to the same boosted colour.
+            VP2 reads displayColor directly from geometry even when
+            UsdSkelImaging is active and bypasses the full
+            material:binding → UsdPreviewSurface resolution chain,
+            which is the case for all skinned meshes.  Without this pass
+            VP2 renders skinned meshes as flat grey regardless of what
+            the UsdPreviewSurface diffuseColor is set to.
         """
         if not USD_AVAILABLE:
             return
         try:
-            from pxr import Usd, UsdShade, Sdf, Gf  # pyright: ignore[reportMissingImports]
+            from pxr import Usd, UsdShade, UsdGeom, Sdf, Gf, Vt  # pyright: ignore[reportMissingImports]
 
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
@@ -4388,7 +4401,10 @@ class UsdPipeline:
             boosted = 0
             hashed = 0
             skipped = 0
+            # Maps Material Sdf.Path → final display colour (None = texture-driven)
+            mat_path_to_color: dict = {}
 
+            # ── Pass 1: boost UsdPreviewSurface diffuseColor ─────────────────
             for prim in stage.Traverse():
                 if prim.GetTypeName() != 'Shader':
                     continue
@@ -4399,9 +4415,18 @@ class UsdPipeline:
                 dc_input = shader.GetInput('diffuseColor')
                 if not dc_input:
                     continue
-                # Skip texture-driven inputs — never overwrite an upstream connection.
+
+                # The Material prim is the direct parent of the PreviewSurface shader.
+                # Its name (e.g. "Veteran_Body_mat") is what we hash for name-colours.
+                mat_prim = prim.GetParent()
+                mat_path = mat_prim.GetPath() if mat_prim else None
+                mat_name = mat_prim.GetName() if mat_prim else "Unknown"
+
+                # Skip texture-driven inputs — never overwrite upstream connections.
                 if dc_input.HasConnectedSource():
                     skipped += 1
+                    if mat_path:
+                        mat_path_to_color[mat_path] = None  # texture-driven
                     continue
 
                 current = dc_input.Get()
@@ -4411,28 +4436,68 @@ class UsdPipeline:
                 raw = Gf.Vec3f(float(current[0]), float(current[1]), float(current[2]))
                 boosted_color = self._boost_color_for_display(raw)
 
-                mat_name = prim.GetParent().GetParent().GetName()
                 if boosted_color is not None:
                     dc_input.Set(boosted_color)
                     boosted += 1
+                    final_color = boosted_color
                     self.logger.debug(
                         f"   [BOOST] {mat_name}: "
                         f"({raw[0]:.3f}, {raw[1]:.3f}, {raw[2]:.3f}) → {boosted_color}"
                     )
                 else:
-                    # Achromatic — use name-hash so each material gets a unique hue
+                    # Achromatic — each material gets a unique deterministic hue
                     hash_color = self._rfm_name_color(mat_name)
                     dc_input.Set(hash_color)
                     hashed += 1
+                    final_color = hash_color
                     self.logger.debug(
                         f"   [BOOST] {mat_name}: achromatic → name-hash {hash_color}"
                     )
+
+                if mat_path:
+                    mat_path_to_color[mat_path] = final_color
+
+            # ── Pass 2: primvars:displayColor on every Mesh prim ─────────────
+            # VP2's UsdSkelImaging adapter renders skinned meshes but does NOT
+            # always follow material:binding → UsdPreviewSurface.  Setting
+            # primvars:displayColor directly on the geometry guarantees VP2
+            # shows distinct colours regardless of the material system path.
+            display_colored = 0
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != 'Mesh':
+                    continue
+                try:
+                    # Direct binding on this prim
+                    direct = UsdShade.MaterialBindingAPI(prim).GetDirectBinding()
+                    mat_path = direct.GetMaterialPath() if direct else None
+                    color = mat_path_to_color.get(mat_path) if mat_path else None
+
+                    # Walk up ancestors — some rigs bind materials at scope level
+                    if color is None:
+                        ancestor = prim.GetParent()
+                        while ancestor and ancestor.IsValid() and not ancestor.IsPseudoRoot():
+                            anc_direct = UsdShade.MaterialBindingAPI(ancestor).GetDirectBinding()
+                            if anc_direct:
+                                color = mat_path_to_color.get(anc_direct.GetMaterialPath())
+                                if color is not None:
+                                    break
+                            ancestor = ancestor.GetParent()
+
+                    if color is not None:
+                        UsdGeom.Gprim(prim).CreateDisplayColorAttr(
+                            Vt.Vec3fArray([Gf.Vec3f(color[0], color[1], color[2])])
+                        )
+                        display_colored += 1
+                except Exception:
+                    continue
 
             if boosted + hashed > 0:
                 stage.GetRootLayer().Save()
                 self.logger.info(
                     f"[BOOST] Colour boost applied: "
-                    f"{boosted} hue-boosted, {hashed} name-hashed, {skipped} texture-skipped"
+                    f"{boosted} hue-boosted, {hashed} name-hashed, "
+                    f"{skipped} texture-skipped | "
+                    f"{display_colored} mesh primvars:displayColor set"
                 )
             else:
                 self.logger.debug("[BOOST] No static diffuseColors found to boost")
