@@ -4030,15 +4030,31 @@ class UsdPipeline:
             self.logger.info("[ANIMATION] Creating USD Stage (mayaUsdProxyShape)...")
 
             try:
+                # Tell VP2 to resolve UsdPreviewSurface materials via the shader registry
+                # BEFORE the stage loads.  The proxy shape consults this optionVar at load
+                # time (when filePath is set), so it must be in place first.
+                # Maya confirms success with: "# Using V3 Lighting API for UsdPreviewSurface shading."
+                try:
+                    cmds.optionVar(stringValue=('mayaUsd_ShadingModeImport', 'useRegistry'))
+                    self.logger.info("[SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API")
+                except Exception:
+                    pass
+
+                # Sanitize the stem: Maya node names must not contain dots.
+                # e.g. "Veteran_Rig.root" → "Veteran_Rig_root"
+                node_base = usd_path.stem.replace('.', '_')
+
                 # Create the proxy shape
-                proxy_transform = cmds.createNode('transform', name=usd_path.stem + '_USD')
+                proxy_transform = cmds.createNode('transform', name=node_base + '_USD')
                 proxy_shape = cmds.createNode(
                     'mayaUsdProxyShape',
                     parent=proxy_transform,
-                    name=usd_path.stem + '_USDShape'
+                    name=node_base + '_USDShape'
                 )
 
-                # Set the file path to load the USD
+                # Loading the file path triggers USD stage composition.
+                # Maya will print "# Using V3 Lighting API for UsdPreviewSurface shading."
+                # confirming the optionVar above was respected.
                 cmds.setAttr(f"{proxy_shape}.filePath", str(usd_path), type='string')
 
                 # Enable proxy drawing
@@ -4051,21 +4067,6 @@ class UsdPipeline:
                     cmds.setAttr(f"{proxy_shape}.drawGuidePurpose", False)
                 except Exception:
                     pass  # Attribute may not exist in all Maya versions
-
-                # IMPORTANT: Tell VP2 to resolve UsdPreviewSurface materials via the
-                # shader registry.  Without this the proxy shape defaults to displayColor
-                # (flat grey) regardless of what shaders are authored in the USD stage.
-                try:
-                    cmds.setAttr(f"{proxy_shape}.shadingMode", "useRegistry", type='string')
-                    self.logger.info("[SHADING] Set proxy shadingMode=useRegistry for VP2 material display")
-                except Exception:
-                    pass  # Attribute name differs across mayaUSD versions — try alternatives
-                try:
-                    # Belt-and-suspenders: the global optionVar is also consulted by some
-                    # mayaUSD builds when the per-node attribute is not available.
-                    cmds.optionVar(stringValue=('mayaUsd_ShadingModeImport', 'useRegistry'))
-                except Exception:
-                    pass
 
                 # WORKAROUND: Force stage reload to ensure skeleton bindings resolve correctly
                 # Toggling the file path forces a clean reload.
