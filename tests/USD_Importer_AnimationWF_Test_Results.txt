@@ -11,24 +11,10 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1653
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
-// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline : [FILE] Extracted USD: Veteran_Rig.usdc
 // src.services.usd.usd_pipeline : [PACKAGE] Extracted rig backup: Veteran_Rig.rig.mb
 // src.services.usd.usd_pipeline : [USD] USD PROXY MODE ACTIVATED (Experimental)
+// src.services.usd.usd_pipeline : [BOOST] Colour boost applied: 10 hue-boosted, 20 name-hashed, 0 texture-skipped | 0 mesh primvars:displayColor set
 // src.services.usd.usd_pipeline : [LAYER] Building layered USD stage from base asset...
 // src.services.usd.usd_pipeline : [LAYER] Extracting controller data from: Veteran_Rig.rig.mb
 requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
@@ -42,6 +28,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144793: ':PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144794: ':rmanBakingGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
 # Read 2 files in  5.7 seconds.
 // Error: mirror: could not initialize vertex mapping
@@ -270,6 +257,9 @@ requires "stereoCamera" "10.0";
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: The PxrTexture 'PxrTexture102' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: setAttr: No object matches name: .atlasStyle
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143743: ':rmanBakingGlobals.displays[0]' already has an incoming connection from ':rmanDefaultBakeDisplay.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143838: ':rmanDefaultDisplay.displayType' already has an incoming connection from ':d_openexr.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143839: ':rmanDefaultDisplay.displayChannels[0]' already has an incoming connection from ':Ci.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143840: ':rmanDefaultDisplay.displayChannels[1]' already has an incoming connection from ':a.message'.
 // src.services.usd.usd_pipeline : [RIG] Referenced .rig.mb for controller extraction
 // src.services.usd.usd_pipeline : [RIG] Found 642 NURBS curves, 548 joints
 // src.services.usd.usd_pipeline : [RIG] Extracted 642 controllers, 360 controller→joint mappings
@@ -287,18 +277,17 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline : [INFO] USD contains: 79 meshes, 121 skeleton rig(s) (548 joints), 642 curves, 30 materials
 // src.services.usd.usd_pipeline : [INFO] USD has skeleton-bound meshes (skinned)
 // src.services.usd.usd_pipeline : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
-# Warning: Removing invalid characters from name.
-# Warning: Removing invalid characters from name.
+// src.services.usd.usd_pipeline : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
 # Using V3 Lighting API for UsdPreviewSurface shading.
 // src.services.usd.usd_pipeline : [REFRESH] Forced stage reload for skeleton imaging
 // src.services.usd.usd_pipeline : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
-// src.services.usd.usd_pipeline : [FILE] Loading USD file: C:\Users\ChEeP\AppData\Local\Temp\usdz_import_fieywtb2\Veteran_Rig.root.usda
+// src.services.usd.usd_pipeline : [FILE] Loading USD file: C:\Users\ChEeP\AppData\Local\Temp\usdz_import_ul06yla8\Veteran_Rig.root.usda
 // src.services.usd.usd_pipeline : [CAMERA] Selected and framed USD proxy in viewport
 // src.services.usd.usd_pipeline : [LOOKDEV] Enabled material display in 4 viewport(s) (VP2, smoothShaded, useDefaultMaterial=False)
 // src.services.usd.usd_pipeline : [SKEL] Skeleton managed by UsdSkelImaging inside proxy shape (set convert_skeleton_to_maya=True to extract as Maya joints)
 // src.services.usd.usd_pipeline : [PACKAGE] USD proxy shape(s) created: 1
 // src.services.usd.usd_pipeline : 📚 USD contains 7 layers:
-// src.services.usd.usd_pipeline :    Root: C:/Users/ChEeP/AppData/Local/Temp/usdz_import_fieywtb2/Veteran_Rig.root.usda
+// src.services.usd.usd_pipeline :    Root: C:/Users/ChEeP/AppData/Local/Temp/usdz_import_ul06yla8/Veteran_Rig.root.usda
 // src.services.usd.usd_pipeline :    Sublayer: ./Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline :    Sublayer: ./Veteran_Rig.controllers.usda
 // src.services.usd.usd_pipeline :    Sublayer: ./Veteran_Rig.materials.usda
@@ -306,13 +295,13 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline :    Sublayer: ./Veteran_Rig.geometry.usda
 // src.services.usd.usd_pipeline :    Sublayer: ./Veteran_Rig.usdc
 // src.services.usd.usd_pipeline : [LOOKDEV] Verifying USD material colors...
-// src.services.usd.usd_pipeline : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 28 with non-black diffuseColor
+// src.services.usd.usd_pipeline : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 30 with non-black diffuseColor
 // src.services.usd.usd_pipeline : 📚 Total USD layers loaded: 7
 // src.services.usd.usd_pipeline : [OK] USD Stage loaded - 79 meshes, 121 skeleton rig(s) / 548 joints, 642 curves, 30 materials
 // src.services.usd.usd_pipeline : [INFO] Complex skeleton detected - USD proxy will display skinned meshes via UsdSkelImaging
 // src.services.usd.usd_pipeline : [LAYER] Edit target set to 'animation' sublayer — keyframes will be authored here
 // src.services.usd.usd_pipeline : [TIP] Select USD prims in viewport → press S to set keyframes on the animation layer
-mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "C:/Users/ChEeP/AppData/Local/Temp/usdz_import_fieywtb2/Veteran_Rig.root.usda";
+mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "C:/Users/ChEeP/AppData/Local/Temp/usdz_import_ul06yla8/Veteran_Rig.root.usda";
 // src.services.usd.usd_pipeline : [LAYER] Opened mayaUSD Layer Editor — author animation as USD layers (Option B)
 // src.services.usd.usd_pipeline : [OK] USD Proxy created: 79 meshes, 548 joints in USD
 // src.services.usd.usd_pipeline : [LOOKDEV] 30 USD materials rendered via VP2 (UsdPreviewSurface — these are USD-native, not Maya Hypershade shaders)
@@ -320,4 +309,19 @@ mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_
 # [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1653

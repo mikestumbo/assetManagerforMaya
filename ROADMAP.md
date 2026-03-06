@@ -274,12 +274,14 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 **Priority**: HIGH | **Effort**: MEDIUM | **Impact**: HIGH
 
 **Current Status**: Base implementation complete (v1.5.1)
+
 - ✅ "Full Rig (Animation)" preset - exports complete rig with skeleton, animation, controllers
 - ✅ "Geometry + Materials Only (Texturing)" preset - optimized for Substance 3D Painter, Mari
 
 **Planned Enhancements**:
 
 **Capabilities**:
+
 - User-defined custom export presets
 - Save/load preset configurations
 - Share presets across team (JSON format)
@@ -289,6 +291,7 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 - Common presets library (LookDev, Layout, FX, etc.)
 
 **Technical Approach**:
+
 - Create `ExportPresetManager` service
 - JSON-based preset storage in user preferences
 - Preset schema with all export options:
@@ -303,6 +306,7 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 - Create preset sharing workflow
 
 **User Value**:
+
 - Studio-specific workflows saved as presets
 - No manual checkbox configuration each export
 - Consistent exports across team
@@ -310,6 +314,7 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 - Share best practices via preset templates
 
 **Example Preset Use Cases**:
+
 - **Animation Handoff**: Geometry + skeleton + animation curves only
 - **LookDev Review**: High-res geometry + materials + lighting rig
 - **Layout Proxy**: Low-res geometry + transforms only (no materials)
@@ -324,6 +329,7 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 **Priority**: MEDIUM | **Effort**: HIGH | **Impact**: MEDIUM
 
 **Capabilities**:
+
 - Visual layer stack editor
 - Layer reordering (drag-drop)
 - Layer muting/unmuting
@@ -332,12 +338,14 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 - Sublayer and reference management
 
 **Technical Approach**:
+
 - Create `USDLayerStackWidget`
 - USD stage composition API integration
 - Layer metadata editing
 - Visual composition arc viewer
 
 **User Value**:
+
 - Understand USD composition
 - Non-destructive editing workflows
 - Better control over USD stage structure
@@ -350,6 +358,7 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 **Priority**: MEDIUM | **Effort**: MEDIUM | **Impact**: HIGH
 
 **Capabilities**:
+
 - Create variant sets on export
 - Visual variant selection on import
 - Common variant types: LOD, Shading, Costume, Props
@@ -357,12 +366,14 @@ The USD Rig Creator (`maya_rig_exporter.py` / `maya_rig_importer.py`) exports Ma
 - Variant preview (thumbnails)
 
 **Technical Approach**:
+
 - Extend export options with variant set creation
 - Implement `VariantSetManager` service
 - Add variant selection UI widget
 - Generate variant thumbnails
 
 **User Value**:
+
 - Multiple LODs in single USD file
 - Character costume variations
 - Shading variants for different rendering needs

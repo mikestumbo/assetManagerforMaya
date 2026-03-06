@@ -25,12 +25,7 @@ except ImportError:
 
 # ── Config ───────────────────────────────────────────────────────────────────────
 USDZ_PATH = r"D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.usdz"
-BACKUP_PATH = USDZ_PATH + ".bak"
 
-# ── Safety backup ────────────────────────────────────────────────────────────────
-if not os.path.exists(BACKUP_PATH):
-    shutil.copy2(USDZ_PATH, BACKUP_PATH)
-    print(f"Backup: {BACKUP_PATH}")
 
 # ── Extract USDZ → temp dir ──────────────────────────────────────────────────────
 tmp_dir = tempfile.mkdtemp(prefix="fix_usdz_")
@@ -121,12 +116,28 @@ for prim in stage.Traverse():
                 subset_bindings += 1
 
 print(f"[FIX 2] GeomSubset material:binding: {subset_bindings} written")
-print(f"        (Mesh-level binding needs Maya cmds — auto-applied on next export)")
+print("        (Mesh-level binding needs Maya cmds — auto-applied on next export)")
 
-# ── Fix 3: Deactivate root-level blendshape Mesh prims ───────────────────────────
+# ── Fix 3: Deactivate root-level blendshape Mesh prims + rig-fit helpers ───────────
+# FaceGroup fit-geometry (FitEyeSphere, EyeLidInner, LipInner, ForeHead helpers)
+# and numbered duplicate _usdExport1 meshes are rig construction helpers — hide them.
+fit_geo_keywords = ('FaceGroup', 'FaceFit', 'FitEye', 'FitLip', 'FitFore')
+deactivated_extra = 0
+for prim in stage.Traverse():
+    if prim.GetTypeName() != 'Mesh':
+        continue
+    p_str = str(prim.GetPath())
+    if any(kw in p_str for kw in fit_geo_keywords):
+        prim.SetActive(False)
+        deactivated_extra += 1
+        continue
+    name = prim.GetName()
+    if name.endswith(tuple('0123456789')) and '_usdExport' in name:
+        prim.SetActive(False)
+        deactivated_extra += 1
 for path in root_mesh_paths:
     stage.GetPrimAtPath(path).SetActive(False)
-print(f"[FIX 3] Deactivated {len(root_mesh_paths)} root-level blendshape Mesh prims")
+print(f"[FIX 3] Deactivated {len(root_mesh_paths)} root-level + {deactivated_extra} FaceGroup/duplicate Mesh prims")
 
 # ── Fix 3b: Set NurbsPatch purpose → guide (hide rig controller surfaces) ─────────
 nurbs_fixed = []

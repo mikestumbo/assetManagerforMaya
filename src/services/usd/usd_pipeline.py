@@ -3809,11 +3809,36 @@ class UsdPipeline:
                 f"{subset_bindings} GeomSubset relationships written"
             )
 
-            # ── Fix 4: Deactivate root-level blendshape target Mesh prims ───────────
+            # ── Fix 4: Deactivate root-level blendshape target Mesh prims + rig-fit helpers
+            # Root-level prims: blendshape targets exported by mayaUSD outside SkelRoot.
+            # FaceGroup fit-geometry (FitEyeSphere, EyeLidInnerArea, LipInner, ForeHead):
+            #   Advanced Skeleton face-fitting rig meshes live under FaceGroup/FaceFitSkeleton.
+            #   They are scene-construction helpers, not render geometry — deactivate them.
+            # Duplicate _usdExport1 meshes: mayaUSD sometimes writes a numbered duplicate
+            #   when the same shape is skinned by more than one skin cluster (e.g. body mesh
+            #   with a secondary corrective cluster); deactivate the redundant copy.
+            fit_geo_keywords = ('FaceGroup', 'FaceFit', 'FitEye', 'FitLip', 'FitFore')
+            deactivated_extra = 0
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != 'Mesh':
+                    continue
+                p_str = str(prim.GetPath())
+                # FaceGroup fit-geometry
+                if any(kw in p_str for kw in fit_geo_keywords):
+                    prim.SetActive(False)
+                    deactivated_extra += 1
+                    continue
+                # Numbered duplicate: name ends with a digit suffix on '_usdExport'
+                # e.g. model_Body_Geo_usdExport1 vs model_Body_Geo_usdExport
+                name = prim.GetName()
+                if name.endswith(tuple('0123456789')) and '_usdExport' in name:
+                    prim.SetActive(False)
+                    deactivated_extra += 1
             for path in root_mesh_paths:
                 stage.GetPrimAtPath(path).SetActive(False)
             self.logger.info(
-                f"[FIX] Deactivated {len(root_mesh_paths)} root-level blendshape Mesh prims"
+                f"[FIX] Deactivated {len(root_mesh_paths)} root-level blendshape Mesh prims, "
+                f"{deactivated_extra} FaceGroup/duplicate Mesh prims"
             )
 
             # ── Fix 4b: Set NurbsPatch purpose → guide (belt-and-suspenders for
