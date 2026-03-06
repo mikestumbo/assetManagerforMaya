@@ -3785,7 +3785,8 @@ class UsdPipeline:
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
                         continue  # Already has a binding
-                    sg_name = mesh_to_sg.get(prim.GetName())
+                    prim_bare_name = prim.GetName().split(':')[-1]
+                    sg_name = mesh_to_sg.get(prim_bare_name)
                     if sg_name and sg_name in mat_name_to_path:
                         mat_prim = stage.GetPrimAtPath(mat_name_to_path[sg_name])
                         if mat_prim.IsValid():
