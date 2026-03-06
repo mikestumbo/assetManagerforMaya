@@ -388,7 +388,38 @@ class USDPipelineDialog(QDialog):  # type: ignore
         self._material_group.addButton(self._renderman_radio, 1)
         layout.addWidget(self._renderman_radio)
 
-        # Rigging options
+        # RenderMan Asset Library path — shown/hidden with the radio above
+        self._rma_lib_widget = QWidget()
+        rma_lib_layout = QHBoxLayout(self._rma_lib_widget)
+        rma_lib_layout.setContentsMargins(20, 0, 0, 0)
+        rma_lib_layout.setSpacing(4)
+        rma_lib_label = QLabel("Asset Library:")
+        rma_lib_label.setToolTip(
+            "Path to your RenderMan Asset Library folder.\n"
+            "This lets the exporter read the original source textures\n"
+            "(PNG/TIFF) before RenderMan converts them to .tex, giving\n"
+            "pixel-accurate diffuse colors without needing OpenImageIO.\n\n"
+            "Typical location:\n"
+            "  D:/Maya/RenderManAssetLibrary/Materials/\n"
+            "  ~/RenderManAssetLibrary/Materials/"
+        )
+        self._rma_lib_edit = QLineEdit()
+        self._rma_lib_edit.setPlaceholderText(
+            "e.g.  D:/Maya/RenderManAssetLibrary/Materials"
+        )
+        self._rma_lib_edit.setToolTip(rma_lib_label.toolTip())
+        self._rma_lib_browse_btn = QPushButton("Browse...")
+        self._rma_lib_browse_btn.setFixedWidth(72)
+        self._rma_lib_browse_btn.clicked.connect(self._on_browse_rma_library)
+        rma_lib_layout.addWidget(rma_lib_label)
+        rma_lib_layout.addWidget(self._rma_lib_edit, 1)
+        rma_lib_layout.addWidget(self._rma_lib_browse_btn)
+        self._rma_lib_widget.setVisible(False)
+        layout.addWidget(self._rma_lib_widget)
+
+        # Show the library row only when RenderMan radio is selected
+        self._renderman_radio.toggled.connect(self._rma_lib_widget.setVisible)
+
         rigging_label = QLabel("Rigging Options:")
         rigging_label.setStyleSheet("font-weight: bold; margin-top: 8px;")
         layout.addWidget(rigging_label)
@@ -700,6 +731,16 @@ class USDPipelineDialog(QDialog):  # type: ignore
             print("[LOOKDEV] Export preset: Geometry + Materials Only (for texture painting)")
             print("[INFO] Disabled: Rigging, Animation, Controllers - Pure geo + UVs + shaders")
 
+    def _on_browse_rma_library(self) -> None:
+        """Browse for the RenderMan Asset Library folder."""
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Select RenderMan Asset Library Folder",
+            self._rma_lib_edit.text() or "",
+        )
+        if folder:
+            self._rma_lib_edit.setText(folder)
+
     def _on_browse_output(self) -> None:
         """Browse for output USD file"""
         # Get format from radio buttons
@@ -852,6 +893,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 # USD Animation Layers (Phase 3.3)
                 merge_skeletons=self._export_merge_skeletons_cb.isChecked(),
                 usd_layers_for_animation=self._export_usd_layers_cb.isChecked(),
+                renderman_library_path=self._rma_lib_edit.text().strip(),
             )
 
             # Set up progress callback

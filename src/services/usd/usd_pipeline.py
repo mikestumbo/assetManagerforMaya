@@ -304,6 +304,14 @@ class ExportOptions:
         "Cheek", "cheek", "Ear", "ear", "Fleshy", "fleshy", "Ribbon", "ribbon"
     )
 
+    # RenderMan Asset Library (optional — user-supplied)
+    # When set, the texture color sampler searches this directory for the
+    # original source .png/.tiff files BEFORE RenderMan converts them to
+    # binary .tex format.  This guarantees accurate diffuse colors without
+    # needing OpenImageIO to decode .tex files.
+    # Expected layout: <renderman_library_path>/<MaterialName>.rma/<texture>.png
+    renderman_library_path: str = ""
+
 
 @dataclass
 class ImportOptions:
@@ -1355,6 +1363,7 @@ class UsdPipeline:
             # outputs:surface wiring pass.
             # Fixes: outputs:surface wiring, material:binding, Skeleton→Xform re-typing,
             #        orphan SkelAnimation deactivation, root-level blendshape mesh deactivation.
+            self._current_export_options = options  # give post-process methods access
             self._fix_exported_usdc(output_path)
 
             # Phase 3.3: USD-native animation workflow
@@ -2921,7 +2930,77 @@ class UsdPipeline:
                         f"({os.path.basename(source_candidate)}), trying .tex directly"
                     )
 
-            # ── Attempt 1: PIL/Pillow ────────────────────────────────────────
+            # ── Attempt 0: RenderMan Asset Library (user-supplied path) ──────
+            # When the user points us at their RenderMan Asset Library we can find
+            # the original source .png/.tiff/.exr files that RenderMan compiled into
+            # .tex — giving pixel-accurate colors without OIIO or PIL .tex decoding.
+            # Layout: <library>/<MaterialName>.rma/<texture_basename>
+            _rma_lib = ""
+            try:
+                _rma_lib = getattr(
+                    getattr(self, "_current_export_options", None),
+                    "renderman_library_path",
+                    ""
+                ) or ""
+            except Exception:
+                _rma_lib = ""
+
+            if _rma_lib and os.path.isdir(_rma_lib):
+                # The RfM node name typically matches the .rma folder name (minus .rma).
+                # Walk every .rma folder under the library and look for a source image
+                # whose basename (without .tex) matches the texture we're after.
+                tex_basename = os.path.basename(tex_path)
+                # Strip .tex suffix for matching original file names
+                if tex_basename.lower().endswith('.tex'):
+                    tex_basename_raw = tex_basename[:-4]
+                else:
+                    tex_basename_raw = tex_basename
+
+                try:
+                    from PIL import Image  # type: ignore
+                    import numpy as np     # type: ignore
+
+                    for rma_folder in os.listdir(_rma_lib):
+                        if not rma_folder.lower().endswith('.rma'):
+                            continue
+                        rma_full = os.path.join(_rma_lib, rma_folder)
+                        if not os.path.isdir(rma_full):
+                            continue
+                        for src_file in os.listdir(rma_full):
+                            if src_file.lower() == tex_basename_raw.lower() or \
+                               src_file.lower().endswith(('.png', '.tiff', '.tif', '.exr', '.jpg')) and \
+                               tex_basename_raw.lower().startswith(
+                                   os.path.splitext(src_file.lower())[0]
+                               ):
+                                candidate = os.path.join(rma_full, src_file)
+                                try:
+                                    with Image.open(candidate).convert('RGB') as img:
+                                        thumb = img.resize((32, 32), Image.LANCZOS)
+                                        arr = np.array(thumb, dtype=float) / 255.0
+                                        r = float(arr[:, :, 0].mean())
+                                        g = float(arr[:, :, 1].mean())
+                                        b = float(arr[:, :, 2].mean())
+                                        if r + g + b > 0.02:
+                                            raw_color = Gf.Vec3f(
+                                                max(0.0, min(1.0, r)),
+                                                max(0.0, min(1.0, g)),
+                                                max(0.0, min(1.0, b)),
+                                            )
+                                            boosted = self._boost_color_for_display(raw_color)
+                                            color_out = boosted if boosted is not None else raw_color
+                                            self.logger.info(
+                                                f"   [TEX] {src_file} (rma-lib): "
+                                                f"({r:.3f}, {g:.3f}, {b:.3f}) "
+                                                f"→ {'boosted ' if boosted else 'direct '}{color_out}"
+                                            )
+                                            return color_out
+                                except Exception:
+                                    continue
+                except ImportError:
+                    self.logger.info("   [TEX-DIAG] PIL not available for rma-lib scan")
+                except Exception as lib_err:
+                    self.logger.info(f"   [TEX-DIAG] rma-lib scan error: {lib_err}")
+
             try:
                 from PIL import Image  # type: ignore
                 import numpy as np     # type: ignore
