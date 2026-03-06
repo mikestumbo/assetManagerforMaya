@@ -3791,10 +3791,20 @@ class UsdPipeline:
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
                         continue  # Already has a binding
-                    sg_name = mesh_to_sg.get(prim.GetName())
+                    prim_name = prim.GetName()
+                    sg_name = mesh_to_sg.get(prim_name)
+                    if not sg_name:
+                        # Baked meshes: _usdExport[N] suffix was added by the
+                        # pipeline during multi-skincluster fixup; strip it to
+                        # find the original transform in the map.
+                        import re as _re
+                        base_name = _re.sub(r'_usdExport\d*$', '', prim_name)
+                        if base_name != prim_name:
+                            sg_name = mesh_to_sg.get(base_name)
                     if sg_name and sg_name in mat_name_to_path:
                         mat_prim = stage.GetPrimAtPath(mat_name_to_path[sg_name])
                         if mat_prim.IsValid():
+                            UsdShade.MaterialBindingAPI.Apply(prim)
                             bind_api.Bind(UsdShade.Material(mat_prim))
                             bindings_written += 1
                 elif ptype == 'GeomSubset':
@@ -3807,6 +3817,7 @@ class UsdPipeline:
                     if subset_name in mat_name_to_path:
                         mat_prim = stage.GetPrimAtPath(mat_name_to_path[subset_name])
                         if mat_prim.IsValid():
+                            UsdShade.MaterialBindingAPI.Apply(prim)
                             bind_api.Bind(UsdShade.Material(mat_prim))
                             subset_bindings += 1
 
