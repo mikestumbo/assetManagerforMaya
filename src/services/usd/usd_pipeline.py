@@ -3757,8 +3757,14 @@ class UsdPipeline:
                                 or []
                             )
                             transform_name = parents[0] if parents else maya_mesh_shape
-                            short_name = transform_name.split(':')[-1]  # strip namespace
+                            # mayaUSD can represent namespaces two ways:
+                            # 1. stripNamespaces=True  → prim name = short name only
+                            # 2. stripNamespaces=False → colon sanitized to underscore
+                            short_name = transform_name.split(':')[-1]
+                            sanitized  = transform_name.replace(':', '_')
                             mesh_to_sg.setdefault(short_name, sgs[0])
+                            if sanitized != short_name:
+                                mesh_to_sg.setdefault(sanitized, sgs[0])
                         except Exception:
                             pass
                     self.logger.info(f"[FIX] Maya mesh→SG map: {len(mesh_to_sg)} entries")
@@ -3785,8 +3791,7 @@ class UsdPipeline:
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
                         continue  # Already has a binding
-                    prim_bare_name = prim.GetName().split(':')[-1]
-                    sg_name = mesh_to_sg.get(prim_bare_name)
+                    sg_name = mesh_to_sg.get(prim.GetName())
                     if sg_name and sg_name in mat_name_to_path:
                         mat_prim = stage.GetPrimAtPath(mat_name_to_path[sg_name])
                         if mat_prim.IsValid():
