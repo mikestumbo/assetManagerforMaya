@@ -2956,6 +2956,15 @@ class UsdPipeline:
 
             # ── Attempt 2: OpenImageIO (ships with RfM 24+) ──────────────────
             try:
+                import sys as _sys
+                import glob as _glob
+                _oiio_base = (
+                    r"C:\Program Files\Pixar\RenderManProServer-*"
+                    r"\lib\python3.11\Lib\site-packages\thirdparty"
+                )
+                for _p in _glob.glob(_oiio_base):
+                    if _p not in _sys.path:
+                        _sys.path.insert(0, _p)
                 import OpenImageIO as oiio  # type: ignore
 
                 inp = oiio.ImageInput.open(tex_path)
@@ -3761,7 +3770,7 @@ class UsdPipeline:
                             # 1. stripNamespaces=True  → prim name = short name only
                             # 2. stripNamespaces=False → colon sanitized to underscore
                             short_name = transform_name.split(':')[-1]
-                            sanitized  = transform_name.replace(':', '_')
+                            sanitized = transform_name.replace(':', '_')
                             mesh_to_sg.setdefault(short_name, sgs[0])
                             if sanitized != short_name:
                                 mesh_to_sg.setdefault(sanitized, sgs[0])
@@ -4683,7 +4692,7 @@ class UsdPipeline:
         if not USD_AVAILABLE:
             return
         try:
-            from pxr import Usd, UsdShade, UsdGeom, Sdf, Gf, Vt  # pyright: ignore[reportMissingImports]
+            from pxr import Usd, UsdShade, UsdGeom, Sdf, Gf, Vt  # type: ignore
 
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
@@ -5504,7 +5513,7 @@ class UsdPipeline:
 
                 # Try method 1: mayaUSD duplicate command (Maya 2023+)
                 try:
-                    import maya.mel as mel
+                    import maya.mel as mel  # type: ignore
 
                     # Select the proxy transform for the command
                     cmds.select(proxy_transform, replace=True)
@@ -5555,7 +5564,7 @@ class UsdPipeline:
             return
 
         try:
-            from pxr import Usd, UsdSkel, Gf  # pyright: ignore[reportMissingImports]
+            from pxr import Usd, UsdSkel  # pyright: ignore[reportMissingImports]
 
             # Open the USD stage
             stage = Usd.Stage.Open(str(usd_path))
@@ -5604,7 +5613,7 @@ class UsdPipeline:
 
                 # Create Maya joints from USD skeleton data
                 joint_map = {}
-                for i, (joint_token, bind_xform) in enumerate(zip(joint_names, bind_transforms)):
+                for joint_token, bind_xform in zip(joint_names, bind_transforms):
                     joint_name = str(joint_token)
 
                     # Parse hierarchy (joint names use "/" as separator)
