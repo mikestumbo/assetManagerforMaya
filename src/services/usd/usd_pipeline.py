@@ -1355,6 +1355,7 @@ class UsdPipeline:
 
             # POST-PROCESS: Convert RenderMan materials to UsdPreviewSurface
             # Ensure PxrShader + Lambert combinations are properly converted
+            self._current_export_options = options  # give post-process methods access
             if options.export_materials:
                 self._convert_renderman_materials_to_usd_preview(output_path)
 
@@ -1363,7 +1364,6 @@ class UsdPipeline:
             # outputs:surface wiring pass.
             # Fixes: outputs:surface wiring, material:binding, Skeleton→Xform re-typing,
             #        orphan SkelAnimation deactivation, root-level blendshape mesh deactivation.
-            self._current_export_options = options  # give post-process methods access
             self._fix_exported_usdc(output_path)
 
             # Phase 3.3: USD-native animation workflow
