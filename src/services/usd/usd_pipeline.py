@@ -2930,11 +2930,21 @@ class UsdPipeline:
                         f"({os.path.basename(source_candidate)}), trying .tex directly"
                     )
 
-            # ── Attempt 0: RenderMan Asset Library (user-supplied path) ──────
-            # When the user points us at their RenderMan Asset Library we can find
-            # the original source .png/.tiff/.exr files that RenderMan compiled into
-            # .tex — giving pixel-accurate colors without OIIO or PIL .tex decoding.
-            # Layout: <library>/<MaterialName>.rma/<texture_basename>
+            # ── Attempt 0: user-supplied texture folder ───────────────────────
+            # The user points us at a folder of source PNGs — either the flat
+            # project renderman folder (Substance Painter exports) or the
+            # RenderMan Asset Library root whose subfolders end in .rma.
+            # Both use the same source filename; only the directory layout differs:
+            #
+            #   Flat   : <path>/<texname>.png
+            #            e.g. renderman/Veteran/Veteran_V008_Base_color_..._1001.png
+            #
+            #   .rma   : <path>/<Mat>.rma/<texname>.png
+            #            e.g. RenderManAssetLibrary/.../Body.rma/Veteran_V008_...png
+            #
+            # Maya's PxrTexture.filename already tells us which .rma subfolder the
+            # texture belongs to, so we use that to target the exact folder instead
+            # of walking every .rma directory.
             _rma_lib = ""
             try:
                 _rma_lib = getattr(
@@ -2946,60 +2956,97 @@ class UsdPipeline:
                 _rma_lib = ""
 
             if _rma_lib and os.path.isdir(_rma_lib):
-                # The RfM node name typically matches the .rma folder name (minus .rma).
-                # Walk every .rma folder under the library and look for a source image
-                # whose basename (without .tex) matches the texture we're after.
                 tex_basename = os.path.basename(tex_path)
-                # Strip .tex suffix for matching original file names
-                if tex_basename.lower().endswith('.tex'):
-                    tex_basename_raw = tex_basename[:-4]
-                else:
-                    tex_basename_raw = tex_basename
+                # Strip .tex to recover the original source filename:
+                # "Veteran_V008_Base_color_..._1001.png.tex"
+                # → "Veteran_V008_Base_color_..._1001.png"
+                tex_basename_raw = (
+                    tex_basename[:-4]
+                    if tex_basename.lower().endswith('.tex')
+                    else tex_basename
+                )
 
+                def _sample_png(path: str) -> "Optional[Gf.Vec3f]":
+                    """Read *path* with PIL, return Gf.Vec3f color or None."""
+                    try:
+                        from PIL import Image  # type: ignore
+                        import numpy as np     # type: ignore
+                        with Image.open(path).convert('RGB') as img:
+                            thumb = img.resize((32, 32), Image.LANCZOS)
+                            arr = np.array(thumb, dtype=float) / 255.0
+                            r = float(arr[:, :, 0].mean())
+                            g = float(arr[:, :, 1].mean())
+                            b = float(arr[:, :, 2].mean())
+                            if r + g + b > 0.02:
+                                raw = Gf.Vec3f(
+                                    max(0.0, min(1.0, r)),
+                                    max(0.0, min(1.0, g)),
+                                    max(0.0, min(1.0, b)),
+                                )
+                                boosted = self._boost_color_for_display(raw)
+                                color_out = boosted if boosted is not None else raw
+                                self.logger.info(
+                                    f"   [TEX] {os.path.basename(path)} "
+                                    f"(src-lib): ({r:.3f}, {g:.3f}, {b:.3f}) "
+                                    f"→ {'boosted ' if boosted else 'direct '}"
+                                    f"{color_out}"
+                                )
+                                return color_out
+                    except ImportError:
+                        self.logger.info(
+                            "   [TEX-DIAG] PIL not available for src-lib scan"
+                        )
+                    except Exception:
+                        pass
+                    return None
+
+                # ── Priority 1: flat folder (e.g. renderman/Veteran/) ─────────
+                flat_candidate = os.path.join(_rma_lib, tex_basename_raw)
+                if os.path.exists(flat_candidate):
+                    result_color = _sample_png(flat_candidate)
+                    if result_color is not None:
+                        return result_color
+
+                # ── Priority 2: targeted .rma subfolder ──────────────────────
+                # Maya's tex_path tells us which .rma subfolder owns this
+                # texture (e.g. Body.rma).  Use that name under the user's
+                # supplied root so we land in exactly the right place without
+                # having to walk every .rma directory.
+                orig_rma_dir = os.path.dirname(tex_path)
+                orig_rma_folder = os.path.basename(orig_rma_dir)  # e.g. "Body.rma"
+                if orig_rma_folder.lower().endswith('.rma'):
+                    targeted = os.path.join(
+                        _rma_lib, orig_rma_folder, tex_basename_raw
+                    )
+                    if os.path.exists(targeted):
+                        result_color = _sample_png(targeted)
+                        if result_color is not None:
+                            return result_color
+                    else:
+                        self.logger.info(
+                            f"   [TEX-DIAG] src-lib targeted miss: "
+                            f"{orig_rma_folder}/{tex_basename_raw}"
+                        )
+
+                # ── Priority 3: walk all .rma subfolders as last resort ───────
                 try:
-                    from PIL import Image  # type: ignore
-                    import numpy as np     # type: ignore
-
                     for rma_folder in os.listdir(_rma_lib):
                         if not rma_folder.lower().endswith('.rma'):
                             continue
+                        if rma_folder == orig_rma_folder:
+                            continue  # already tried above
                         rma_full = os.path.join(_rma_lib, rma_folder)
                         if not os.path.isdir(rma_full):
                             continue
-                        for src_file in os.listdir(rma_full):
-                            if src_file.lower() == tex_basename_raw.lower() or \
-                               src_file.lower().endswith(('.png', '.tiff', '.tif', '.exr', '.jpg')) and \
-                               tex_basename_raw.lower().startswith(
-                                   os.path.splitext(src_file.lower())[0]
-                               ):
-                                candidate = os.path.join(rma_full, src_file)
-                                try:
-                                    with Image.open(candidate).convert('RGB') as img:
-                                        thumb = img.resize((32, 32), Image.LANCZOS)
-                                        arr = np.array(thumb, dtype=float) / 255.0
-                                        r = float(arr[:, :, 0].mean())
-                                        g = float(arr[:, :, 1].mean())
-                                        b = float(arr[:, :, 2].mean())
-                                        if r + g + b > 0.02:
-                                            raw_color = Gf.Vec3f(
-                                                max(0.0, min(1.0, r)),
-                                                max(0.0, min(1.0, g)),
-                                                max(0.0, min(1.0, b)),
-                                            )
-                                            boosted = self._boost_color_for_display(raw_color)
-                                            color_out = boosted if boosted is not None else raw_color
-                                            self.logger.info(
-                                                f"   [TEX] {src_file} (rma-lib): "
-                                                f"({r:.3f}, {g:.3f}, {b:.3f}) "
-                                                f"→ {'boosted ' if boosted else 'direct '}{color_out}"
-                                            )
-                                            return color_out
-                                except Exception:
-                                    continue
-                except ImportError:
-                    self.logger.info("   [TEX-DIAG] PIL not available for rma-lib scan")
+                        rma_candidate = os.path.join(rma_full, tex_basename_raw)
+                        if os.path.exists(rma_candidate):
+                            result_color = _sample_png(rma_candidate)
+                            if result_color is not None:
+                                return result_color
                 except Exception as lib_err:
-                    self.logger.info(f"   [TEX-DIAG] rma-lib scan error: {lib_err}")
+                    self.logger.info(
+                        f"   [TEX-DIAG] src-lib .rma scan error: {lib_err}"
+                    )
 
             try:
                 from PIL import Image  # type: ignore
