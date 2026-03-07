@@ -2955,6 +2955,8 @@ class UsdPipeline:
             except Exception:
                 _rma_lib = ""
 
+            if _rma_lib and not os.path.isdir(_rma_lib):
+                self.logger.info(f"   [TEX-DIAG] src-lib: path not found on disk: {_rma_lib}")
             if _rma_lib and os.path.isdir(_rma_lib):
                 tex_basename = os.path.basename(tex_path)
                 # Strip .tex to recover the original source filename:
@@ -3287,6 +3289,18 @@ class UsdPipeline:
                     # ----------------------------------------------------------
                     # ── PHASE B CODE VERSION: v5 ─────────────────────────
                     self.logger.info("   [PHASE-B] v5 — scanning RfM SGs for texture colors")
+                    _phase_b_rma_lib = getattr(
+                        getattr(self, "_current_export_options", None),
+                        "renderman_library_path", ""
+                    ) or ""
+                    if _phase_b_rma_lib:
+                        self.logger.info(
+                            f"   [PHASE-B] src-lib path: {_phase_b_rma_lib}"
+                        )
+                    else:
+                        self.logger.info(
+                            "   [PHASE-B] src-lib path: (none) — texture colors from asset_100.png"
+                        )
                     RFM_SHADER_TYPES = {
                         # node_type: (color_attr, gain_attr_or_None)
                         "PxrSurface":      ("diffuseColor", "diffuseGain"),

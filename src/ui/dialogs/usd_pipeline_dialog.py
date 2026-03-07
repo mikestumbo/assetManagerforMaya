@@ -80,6 +80,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
         # Setup UI
         self._setup_window()
         self._create_ui()
+        self._restore_form_state()
 
         logger.info("USD Pipeline Dialog initialized")
 
@@ -395,13 +396,15 @@ class USDPipelineDialog(QDialog):  # type: ignore
         rma_lib_layout.setSpacing(4)
         rma_lib_label = QLabel("Asset Library:")
         rma_lib_label.setToolTip(
-            "Path to your RenderMan Asset Library folder.\n"
-            "This lets the exporter read the original source textures\n"
-            "(PNG/TIFF) before RenderMan converts them to .tex, giving\n"
-            "pixel-accurate diffuse colors without needing OpenImageIO.\n\n"
-            "Typical location:\n"
-            "  D:/Maya/RenderManAssetLibrary/Materials/\n"
-            "  ~/RenderManAssetLibrary/Materials/"
+            "Path to the folder containing your original source textures\n"
+            "(PNG/TIFF exported from Substance 3D Painter before RenderMan\n"
+            "compiled them to .tex). Used to read pixel-accurate diffuse\n"
+            "colors without needing OpenImageIO to decode .tex files.\n\n"
+            "Supported layouts:\n"
+            "  Flat folder:  D:/Maya/projects/<Seq>/renderman/<Asset>/\n"
+            "  RMA library:  D:/Maya/RenderManAssetLibrary/Materials/<Asset>/\n\n"
+            "The exporter looks for a PNG whose name matches the .tex file\n"
+            "(e.g. Body_Base_color_1001.png for Body_Base_color_1001.png.tex)."
         )
         self._rma_lib_edit = QLineEdit()
         self._rma_lib_edit.setPlaceholderText(
@@ -1982,6 +1985,17 @@ class USDPipelineDialog(QDialog):  # type: ignore
             self._export_btn.setDefault(False)
             self._import_btn.setDefault(True)
 
+    def _restore_form_state(self) -> None:
+        """Restore persisted form values (called after _create_ui)"""
+        try:
+            from PySide6.QtCore import QSettings
+            settings = QSettings("MikeStumbo", "USDPipeline")
+            path = settings.value("rma_lib_path", "")
+            if path:
+                self._rma_lib_edit.setText(path)
+        except Exception:
+            pass
+
     def _restore_geometry(self) -> None:
         """Restore dialog geometry from settings"""
         try:
@@ -2010,6 +2024,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             settings = QSettings("MikeStumbo", "USDPipeline")
             settings.setValue("geometry", self.saveGeometry())
+            settings.setValue("rma_lib_path", self._rma_lib_edit.text())
             logger.info(f"[OK] USD Pipeline geometry saved: {self.size().width()}x{self.size().height()}")
 
         except Exception as e:
