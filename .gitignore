@@ -98,3 +98,7 @@ ui_tests/screenshots/
 
 # Releases folder - managed through GitHub Releases
 releases/
+
+# Zencoder / ZenFlow AI tool configs (auto-generated, not needed)
+.zencoder/
+.zenflow/
