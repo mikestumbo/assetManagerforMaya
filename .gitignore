@@ -102,3 +102,7 @@ releases/
 # Zencoder / ZenFlow AI tool configs (auto-generated, not needed)
 .zencoder/
 .zenflow/
+
+# Test screenshots (local reference only, not needed in repo)
+tests/*.png
+tests/*.jpg
