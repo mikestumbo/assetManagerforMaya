@@ -3095,34 +3095,75 @@ class UsdPipeline:
                         _sys.path.insert(0, _p)
                 import OpenImageIO as oiio  # type: ignore
 
-                inp = oiio.ImageInput.open(tex_path)
-                if inp:
-                    pixels = inp.read_image('float')
-                    inp.close()
-                    if pixels is not None:
-                        import numpy as np  # type: ignore
-                        arr = np.array(pixels)
-                        if arr.ndim == 3 and arr.shape[2] >= 3:
-                            r = float(arr[:, :, 0].mean())
-                            g = float(arr[:, :, 1].mean())
-                            b = float(arr[:, :, 2].mean())
-                            if r + g + b > 0.02:
-                                raw_color = Gf.Vec3f(
-                                    max(0.0, min(1.0, r)),
-                                    max(0.0, min(1.0, g)),
-                                    max(0.0, min(1.0, b)),
+                def _oiio_sample(path: str):
+                    """Try ImageInput then ImageBuf; return (r,g,b) tuple or None."""
+                    import numpy as np  # type: ignore
+
+                    # ── Strategy A: ImageInput.open ──────────────────────────
+                    inp = oiio.ImageInput.open(path)
+                    if inp is not None:
+                        pixels = inp.read_image('float')
+                        inp.close()
+                        if pixels is not None:
+                            arr = np.array(pixels)
+                            if arr.ndim == 3 and arr.shape[2] >= 3:
+                                return (
+                                    float(arr[:, :, 0].mean()),
+                                    float(arr[:, :, 1].mean()),
+                                    float(arr[:, :, 2].mean()),
                                 )
-                                boosted = self._boost_color_for_display(raw_color)
-                                if boosted is not None:
-                                    self.logger.info(
-                                        f"   [TEX] {os.path.basename(tex_path)}: "
-                                        f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO → boosted {boosted}"
-                                    )
-                                    return boosted
-                                self.logger.info(
-                                    f"   [TEX] {os.path.basename(tex_path)}: "
-                                    f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO — achromatic, trying rma-scan"
-                                )
+                        return None
+
+                    # If ImageInput fails (returns None), log the reason.
+                    _oiio_err = oiio.geterror()
+                    self.logger.info(
+                        f"   [TEX-DIAG] OIIO ImageInput.open returned None "
+                        f"for {os.path.basename(path)}"
+                        + (f": {_oiio_err}" if _oiio_err else "")
+                    )
+
+                    # ── Strategy B: ImageBuf (handles more format variants) ──
+                    buf = oiio.ImageBuf(path)
+                    if buf.has_error:
+                        self.logger.info(
+                            f"   [TEX-DIAG] OIIO ImageBuf also failed: {buf.geterror()}"
+                        )
+                        return None
+                    spec = buf.spec()
+                    if spec.nchannels < 3:
+                        return None
+                    pixels_b = buf.get_pixels(oiio.FLOAT)
+                    if pixels_b is None:
+                        return None
+                    arr = np.array(pixels_b)
+                    if arr.ndim == 3 and arr.shape[2] >= 3:
+                        return (
+                            float(arr[:, :, 0].mean()),
+                            float(arr[:, :, 1].mean()),
+                            float(arr[:, :, 2].mean()),
+                        )
+                    return None
+
+                rgb = _oiio_sample(tex_path)
+                if rgb is not None:
+                    r, g, b = rgb
+                    if r + g + b > 0.02:
+                        raw_color = Gf.Vec3f(
+                            max(0.0, min(1.0, r)),
+                            max(0.0, min(1.0, g)),
+                            max(0.0, min(1.0, b)),
+                        )
+                        boosted = self._boost_color_for_display(raw_color)
+                        if boosted is not None:
+                            self.logger.info(
+                                f"   [TEX] {os.path.basename(tex_path)}: "
+                                f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO → boosted {boosted}"
+                            )
+                            return boosted
+                        self.logger.info(
+                            f"   [TEX] {os.path.basename(tex_path)}: "
+                            f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO — achromatic, trying rma-scan"
+                        )
             except ImportError:
                 self.logger.info("   [TEX-DIAG] OpenImageIO not available")
             except Exception as oiio_err:
