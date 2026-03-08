@@ -3681,27 +3681,84 @@ class UsdPipeline:
                                     # it here before falling through to texture sampling.
                                     if node_type == "lambert" and sg not in sg_to_color:
                                         try:
-                                            raw_lc = cmds.getAttr(f"{rfm_node}.color")
-                                            if raw_lc:
-                                                lc = raw_lc[0] if isinstance(raw_lc, list) else raw_lc
-                                                lr, lg, lb = float(lc[0]), float(lc[1]), float(lc[2])
-                                                # Skip pure default grey (0.5, 0.5, 0.5) — that's
-                                                # an unset placeholder, not a real preview color.
-                                                is_default_grey = (
-                                                    abs(lr - 0.5) < 0.01
-                                                    and abs(lg - 0.5) < 0.01
-                                                    and abs(lb - 0.5) < 0.01
-                                                )
-                                                if not is_default_grey and lr + lg + lb > 0.02:
+                                            # Priority 1: file texture connected to lambert.color
+                                            # Maya VP2 uses this PNG directly — it's the real
+                                            # diffuse source, readable by PIL, no .tex needed.
+                                            _lfile_conns = cmds.listConnections(
+                                                f"{rfm_node}.color",
+                                                source=True,
+                                                destination=False,
+                                            ) or []
+                                            _lfile_path = None
+                                            for _lf in _lfile_conns:
+                                                if cmds.nodeType(_lf) == "file":
+                                                    try:
+                                                        _lfile_path = cmds.getAttr(
+                                                            f"{_lf}.fileTextureName"
+                                                        )
+                                                    except Exception:
+                                                        pass
+                                                    break
+                                            if _lfile_path and os.path.isfile(_lfile_path):
+                                                try:
+                                                    from PIL import Image  # type: ignore
+                                                    import statistics as _lst
+                                                    with Image.open(_lfile_path).convert("RGB") as _limg:
+                                                        _lw, _lh = _limg.size
+                                                        _lcrop = _limg.crop((
+                                                            _lw // 4, _lh // 4,
+                                                            _lw * 3 // 4, _lh * 3 // 4,
+                                                        ))
+                                                        _lpix = list(_lcrop.getdata())
+                                                        lr = _lst.median(p[0] for p in _lpix) / 255.0
+                                                        lg = _lst.median(p[1] for p in _lpix) / 255.0
+                                                        lb = _lst.median(p[2] for p in _lpix) / 255.0
+                                                    # Proportional brightness lift for dark PBR albedos
+                                                    _TARGET_V = 0.45
+                                                    _max_ch = max(lr, lg, lb)
+                                                    if 0.02 < _max_ch < _TARGET_V:
+                                                        _scale = _TARGET_V / _max_ch
+                                                        lr = min(lr * _scale, 1.0)
+                                                        lg = min(lg * _scale, 1.0)
+                                                        lb = min(lb * _scale, 1.0)
                                                     sg_to_color[sg] = Gf.Vec3f(
                                                         max(0.0, min(1.0, lr)),
                                                         max(0.0, min(1.0, lg)),
                                                         max(0.0, min(1.0, lb)),
                                                     )
                                                     self.logger.info(
-                                                        f"   [PHASE-B] {sg}: Lambert VP2 color "
-                                                        f"({lr:.3f}, {lg:.3f}, {lb:.3f}) from {rfm_node}"
+                                                        f"   [PHASE-B] {sg}: Lambert file texture "
+                                                        f"({lr:.3f}, {lg:.3f}, {lb:.3f}) ← "
+                                                        f"{os.path.basename(_lfile_path)}"
                                                     )
+                                                except Exception as _lpil_exc:
+                                                    self.logger.info(
+                                                        f"   [PHASE-B] {sg}: Lambert file PIL "
+                                                        f"failed ({_lpil_exc})"
+                                                    )
+                                            # Priority 2: flat color stored on lambert.color
+                                            if sg not in sg_to_color:
+                                                raw_lc = cmds.getAttr(f"{rfm_node}.color")
+                                                if raw_lc:
+                                                    lc = raw_lc[0] if isinstance(raw_lc, list) else raw_lc
+                                                    lr, lg, lb = float(lc[0]), float(lc[1]), float(lc[2])
+                                                    # Skip pure default grey (0.5, 0.5, 0.5) — that's
+                                                    # an unset placeholder, not a real preview color.
+                                                    is_default_grey = (
+                                                        abs(lr - 0.5) < 0.01
+                                                        and abs(lg - 0.5) < 0.01
+                                                        and abs(lb - 0.5) < 0.01
+                                                    )
+                                                    if not is_default_grey and lr + lg + lb > 0.02:
+                                                        sg_to_color[sg] = Gf.Vec3f(
+                                                            max(0.0, min(1.0, lr)),
+                                                            max(0.0, min(1.0, lg)),
+                                                            max(0.0, min(1.0, lb)),
+                                                        )
+                                                        self.logger.info(
+                                                            f"   [PHASE-B] {sg}: Lambert VP2 color "
+                                                            f"({lr:.3f}, {lg:.3f}, {lb:.3f}) from {rfm_node}"
+                                                        )
                                         except Exception:
                                             pass
                                     else:
