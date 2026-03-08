@@ -3041,20 +3041,81 @@ class UsdPipeline:
                         pass
                     return None
 
-                # ── Priority 1: flat folder (e.g. renderman/Veteran/) ─────────
+                # Extract .rma folder info early — needed by multiple priorities.
+                orig_rma_dir = os.path.dirname(tex_path)
+                orig_rma_folder = os.path.basename(orig_rma_dir)  # e.g. "Body.rma"
+                rma_stem = (
+                    orig_rma_folder[:-4]
+                    if orig_rma_folder.lower().endswith('.rma')
+                    else orig_rma_folder
+                )
+
+                # ── Priority 1: flat folder — exact filename match ─────────────
                 flat_candidate = os.path.join(_rma_lib, tex_basename_raw)
                 if os.path.exists(flat_candidate):
                     result_color = _sample_png(flat_candidate)
                     if result_color is not None:
                         return result_color
 
+                # ── Priority 1b: flat folder — fuzzy Base_color match ──────────
+                # Handles backups where files are named "{MatName}_Base_color.png"
+                # but the .rma stem differs slightly (e.g. LfButn01 → LfButton_01,
+                # LfZipr → LfZipper, LwrTeeth → LwrTeeth_3).
+                # Only applies to base-color textures (the ones that drive diffuse).
+                if 'base_color' in tex_basename_raw.lower():
+                    try:
+                        import difflib
+                        _bc_files = [
+                            f for f in os.listdir(_rma_lib)
+                            if f.lower().endswith('.png')
+                            and 'base_color' in f.lower()
+                        ]
+                        _matched_bc = None
+                        _stem_lo = rma_stem.lower()
+                        # Step A: exact prefix "{rma_stem}_"
+                        for f in _bc_files:
+                            if f.lower().startswith(_stem_lo + '_'):
+                                _matched_bc = f
+                                break
+                        # Step B: backup stem starts with rma_stem
+                        # (handles LwrTeeth → LwrTeeth_3_Base_color.png)
+                        if _matched_bc is None:
+                            for f in _bc_files:
+                                if f.lower().startswith(_stem_lo):
+                                    _matched_bc = f
+                                    break
+                        # Step C: difflib fuzzy on the portion before "_Base_color"
+                        # (handles LfButn01 → LfButton_01, LfZipr → LfZipper)
+                        if _matched_bc is None and _bc_files:
+                            _bc_stems = []
+                            for f in _bc_files:
+                                idx = f.lower().find('_base_color')
+                                _bc_stems.append(f[:idx] if idx != -1 else f)
+                            best = difflib.get_close_matches(
+                                rma_stem, _bc_stems, n=1, cutoff=0.5
+                            )
+                            if best:
+                                _matched_bc = _bc_files[_bc_stems.index(best[0])]
+                        if _matched_bc:
+                            self.logger.info(
+                                f"   [TEX-DIAG] src-lib fuzzy match: "
+                                f"'{rma_stem}' → '{_matched_bc}'"
+                            )
+                            result_color = _sample_png(
+                                os.path.join(_rma_lib, _matched_bc)
+                            )
+                            if result_color is not None:
+                                return result_color
+                    except Exception as _fuzz_err:
+                        self.logger.info(
+                            f"   [TEX-DIAG] src-lib fuzzy match error: {_fuzz_err}"
+                        )
+
                 # ── Priority 2: targeted .rma subfolder ──────────────────────
                 # Maya's tex_path tells us which .rma subfolder owns this
                 # texture (e.g. Body.rma).  Use that name under the user's
                 # supplied root so we land in exactly the right place without
                 # having to walk every .rma directory.
-                orig_rma_dir = os.path.dirname(tex_path)
-                orig_rma_folder = os.path.basename(orig_rma_dir)  # e.g. "Body.rma"
                 if orig_rma_folder.lower().endswith('.rma'):
                     targeted = os.path.join(
                         _rma_lib, orig_rma_folder, tex_basename_raw
