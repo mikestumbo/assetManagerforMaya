@@ -3170,10 +3170,14 @@ class UsdPipeline:
                 self.logger.info(f"   [TEX-DIAG] OIIO failed: {oiio_err}")
 
             # ── Last resort: scan the .rma package dir for any preview / source image ──
-            # RenderMan Material Archives sometimes ship a preview PNG alongside the
-            # .tex files.  Even if the original source PNG is gone, a thumbnail can
-            # supply a representative color.  We look at the folder that holds the
-            # .tex file and try every .png/.jpg/.jpeg we find there.
+            # RenderMan Material Archives ship a rendered preview PNG (asset_100.png)
+            # alongside the .tex files.  A naive mean over the whole preview is
+            # unreliable because the image includes the grey background, a full-white
+            # specular highlight at the top and a full-black shadow at the bottom.
+            # Fix: crop to the centre 50 % of the image (where the diffuse midtone
+            # lives), then exclude the remaining near-white / near-black pixels and
+            # take the per-channel MEDIAN.  This gives a much cleaner approximation
+            # of the actual diffuse colour than the old whole-image mean.
             try:
                 rma_dir = os.path.dirname(tex_path)
                 if os.path.isdir(rma_dir):
@@ -3184,11 +3188,25 @@ class UsdPipeline:
                                 from PIL import Image  # type: ignore
                                 import numpy as np     # type: ignore
                                 with Image.open(candidate).convert('RGB') as img:
-                                    thumb = img.resize((32, 32), Image.LANCZOS)
+                                    w, h = img.size
+                                    # Centre-crop: keep the middle 50 % of each axis
+                                    cx, cy = w // 2, h // 2
+                                    mx = max(w // 4, 1)
+                                    my = max(h // 4, 1)
+                                    center = img.crop(
+                                        (cx - mx, cy - my, cx + mx, cy + my)
+                                    )
+                                    thumb = center.resize((16, 16), Image.LANCZOS)
                                     arr = np.array(thumb, dtype=float) / 255.0
-                                    r = float(arr[:, :, 0].mean())
-                                    g = float(arr[:, :, 1].mean())
-                                    b = float(arr[:, :, 2].mean())
+                                    pixels = arr.reshape(-1, 3)
+                                    # Exclude near-black (shadow) and near-white (highlight)
+                                    brightness = pixels.mean(axis=1)
+                                    mask = (brightness > 0.12) & (brightness < 0.88)
+                                    if mask.sum() >= 4:
+                                        pixels = pixels[mask]
+                                    r = float(np.median(pixels[:, 0]))
+                                    g = float(np.median(pixels[:, 1]))
+                                    b = float(np.median(pixels[:, 2]))
                                     if r + g + b > 0.02:
                                         raw_color = Gf.Vec3f(
                                             max(0.0, min(1.0, r)),
