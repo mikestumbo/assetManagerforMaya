@@ -3008,7 +3008,16 @@ class UsdPipeline:
                 )
 
                 def _sample_png(path: str) -> "Optional[Gf.Vec3f]":
-                    """Read *path* with PIL, return Gf.Vec3f color or None."""
+                    """Read *path* with PIL, return Gf.Vec3f color or None.
+
+                    Source-library PNGs are real PBR albedo textures. Their raw
+                    averages are physically accurate but often dark (< 0.2) for
+                    realistic materials. We apply a proportional brightness lift
+                    — scaling all three channels equally so the brightest channel
+                    reaches TARGET_V — which preserves the exact hue ratios from
+                    the source while making the colour clearly visible in the viewer.
+                    No saturation forcing is applied, so the hue stays true.
+                    """
                     try:
                         from PIL import Image  # type: ignore
                         import numpy as np     # type: ignore
@@ -3019,18 +3028,22 @@ class UsdPipeline:
                             g = float(arr[:, :, 1].mean())
                             b = float(arr[:, :, 2].mean())
                             if r + g + b > 0.02:
-                                raw = Gf.Vec3f(
+                                # Proportional lift — preserve hue, boost to visibility
+                                TARGET_V = 0.45
+                                max_ch = max(r, g, b)
+                                if 0.02 < max_ch < TARGET_V:
+                                    scale = TARGET_V / max_ch
+                                    r = min(r * scale, 1.0)
+                                    g = min(g * scale, 1.0)
+                                    b = min(b * scale, 1.0)
+                                color_out = Gf.Vec3f(
                                     max(0.0, min(1.0, r)),
                                     max(0.0, min(1.0, g)),
                                     max(0.0, min(1.0, b)),
                                 )
-                                boosted = self._boost_color_for_display(raw)
-                                color_out = boosted if boosted is not None else raw
                                 self.logger.info(
                                     f"   [TEX] {os.path.basename(path)} "
-                                    f"(src-lib): ({r:.3f}, {g:.3f}, {b:.3f}) "
-                                    f"→ {'boosted ' if boosted else 'direct '}"
-                                    f"{color_out}"
+                                    f"(src-lib): ({r:.3f}, {g:.3f}, {b:.3f})"
                                 )
                                 return color_out
                     except ImportError:
