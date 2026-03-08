@@ -3163,6 +3163,56 @@ class UsdPipeline:
                         f"   [TEX-DIAG] src-lib .rma scan error: {lib_err}"
                     )
 
+            # ── Attempt 1: Maya MImage — reads .tex via RenderMan plugin ────
+            # RenderMan registers a .tex format reader with Maya when the plugin
+            # is loaded. MImage.readFromFile() goes through Maya's plugin chain,
+            # so it can decode .tex files that OIIO/PIL cannot.
+            try:
+                from maya import OpenMaya as _om  # type: ignore
+                import numpy as _np_mimg
+                _mimg = _om.MImage()
+                _mimg.readFromFile(tex_path)
+                _w, _h = _om.MScriptUtil(), _om.MScriptUtil()
+                _wp = _w.asUintPtr()
+                _hp = _h.asUintPtr()
+                _mimg.getSize(_wp, _hp)
+                _width = _om.MScriptUtil.getUint(_wp)
+                _height = _om.MScriptUtil.getUint(_hp)
+                if _width > 0 and _height > 0:
+                    _mimg.verticalFlip()  # MImage is bottom-up
+                    _char_arr = _mimg.pixels()
+                    _byte_arr = _np_mimg.frombuffer(
+                        bytes(_char_arr[:_width * _height * 4]),
+                        dtype=_np_mimg.uint8
+                    ).reshape(_height, _width, 4)
+                    arr_f = _byte_arr[:, :, :3].astype(float) / 255.0
+                    r = float(arr_f[:, :, 0].mean())
+                    g = float(arr_f[:, :, 1].mean())
+                    b = float(arr_f[:, :, 2].mean())
+                    if r + g + b > 0.02:
+                        TARGET_V = 0.45
+                        max_ch = max(r, g, b)
+                        if 0.02 < max_ch < TARGET_V:
+                            scale = TARGET_V / max_ch
+                            r = min(r * scale, 1.0)
+                            g = min(g * scale, 1.0)
+                            b = min(b * scale, 1.0)
+                        color_out = Gf.Vec3f(
+                            max(0.0, min(1.0, r)),
+                            max(0.0, min(1.0, g)),
+                            max(0.0, min(1.0, b)),
+                        )
+                        self.logger.info(
+                            f"   [TEX] {os.path.basename(tex_path)} "
+                            f"(MImage): ({r:.3f}, {g:.3f}, {b:.3f})"
+                        )
+                        return color_out
+            except Exception as _mimg_err:
+                self.logger.info(
+                    f"   [TEX-DIAG] MImage failed for "
+                    f"{os.path.basename(tex_path)}: {_mimg_err}"
+                )
+
             try:
                 from PIL import Image  # type: ignore
                 import numpy as np     # type: ignore
