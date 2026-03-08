@@ -2929,6 +2929,16 @@ class UsdPipeline:
                         f"   [TEX-DIAG] .tex source not on disk "
                         f"({os.path.basename(source_candidate)}), trying .tex directly"
                     )
+                    # ── One-time dir listing so we can see actual filenames ──
+                    _sc_dir = os.path.dirname(source_candidate)
+                    try:
+                        _dir_files = sorted(os.listdir(_sc_dir))[:12]
+                        self.logger.info(
+                            f"   [TEX-DIAG] Contents of {os.path.basename(_sc_dir)}/: "
+                            f"{_dir_files}"
+                        )
+                    except Exception:
+                        pass
 
             # ── Attempt 0: user-supplied texture folder ───────────────────────
             # The user points us at a folder of source PNGs — either the flat
@@ -2958,6 +2968,32 @@ class UsdPipeline:
             if _rma_lib and not os.path.isdir(_rma_lib):
                 self.logger.info(f"   [TEX-DIAG] src-lib: path not found on disk: {_rma_lib}")
             if _rma_lib and os.path.isdir(_rma_lib):
+                # ── One-shot listing diagnostic (first call only) ─────────────
+                if not getattr(self, "_rma_lib_listed", False):
+                    self._rma_lib_listed = True
+                    try:
+                        top_entries = sorted(os.listdir(_rma_lib))
+                        self.logger.info(
+                            f"   [TEX-DIAG] src-lib listing ({len(top_entries)} entries): "
+                            + ", ".join(top_entries[:30])
+                            + ("..." if len(top_entries) > 30 else "")
+                        )
+                        # For each subdirectory, list its first 10 files
+                        for entry in top_entries[:10]:
+                            entry_path = os.path.join(_rma_lib, entry)
+                            if os.path.isdir(entry_path):
+                                sub_files = sorted(os.listdir(entry_path))
+                                self.logger.info(
+                                    f"   [TEX-DIAG] src-lib subdir '{entry}' "
+                                    f"({len(sub_files)} files): "
+                                    + ", ".join(sub_files[:10])
+                                    + ("..." if len(sub_files) > 10 else "")
+                                )
+                    except Exception as _list_err:
+                        self.logger.info(
+                            f"   [TEX-DIAG] src-lib listing error: {_list_err}"
+                        )
+
                 tex_basename = os.path.basename(tex_path)
                 # Strip .tex to recover the original source filename:
                 # "Veteran_V008_Base_color_..._1001.png.tex"
@@ -2966,6 +3002,9 @@ class UsdPipeline:
                     tex_basename[:-4]
                     if tex_basename.lower().endswith('.tex')
                     else tex_basename
+                )
+                self.logger.info(
+                    f"   [TEX-DIAG] src-lib seeking: '{tex_basename_raw}'"
                 )
 
                 def _sample_png(path: str) -> "Optional[Gf.Vec3f]":
