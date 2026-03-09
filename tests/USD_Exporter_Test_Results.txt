@@ -1,6 +1,7 @@
 [OK] Pixar USD Python API available
 [OK] USD Service initialized - Disney's Universal Scene Description support active
 // src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
+// Warning: src.services.usd.external_usd_bridge_impl : [WARNING] USD command-line tools not detected
 // src.services.usd.usd_import_service_impl : USD Import Service initialized with 2 methods: mayaUSD, Pure Python
 // src.services.usd.usd_pipeline : USD Pipeline initialized
 // src.services.usd.usd_pipeline :   Maya: True
@@ -10,10 +11,26 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1653
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 [EXPORT] USD export started...
 // src.services.usd.usd_pipeline : [FILE] Opening source file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.mb
 requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
 requires "stereoCamera" "10.0";
+updateRenderOverride;
 requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.0 @ 2386582";
 requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
@@ -24,7 +41,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
 // Warning: line 1262: The default image may not be modified. Use the -i/image flag instead.
-# Read 2 files in  4.5 seconds.
+# Read 2 files in  4.8 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -262,11 +279,11 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline : [EXPORT] Found 45 nurbsSurface nodes
 // src.services.usd.usd_pipeline : [EXPORT] Found 548 joint nodes
 // src.services.usd.usd_pipeline : [BLEND] XGen filter: Excluded 7 meshes
-// src.services.usd.usd_pipeline :    └─ Hair_xgen
-// src.services.usd.usd_pipeline :    └─ Beard_xgen
 // src.services.usd.usd_pipeline :    └─ R_Eyelash_xgen
-// src.services.usd.usd_pipeline :    └─ L_Eyelash_xgen
+// src.services.usd.usd_pipeline :    └─ Hair_xgen
+// src.services.usd.usd_pipeline :    └─ L_Eyebrow_xgen
 // src.services.usd.usd_pipeline :    └─ Manbun_xgen
+// src.services.usd.usd_pipeline :    └─ L_Eyelash_xgen
 // src.services.usd.usd_pipeline :    └─ ... and 2 more
 // src.services.usd.usd_pipeline : [SKEL] Found 52 skinClusters in scene
 // src.services.usd.usd_pipeline :    [DEBUG] DIAGNOSTIC: Found 23 meshes with blendShapes:
@@ -374,110 +391,110 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline : [BLEND] RenderMan material export enabled
 // src.services.usd.usd_pipeline : mayaUSDExport args: {'file': 'D:\\Maya\\projects\\Athens_Sequence\\assets\\Character Models\\Veteran\\Veteran_Rig.usdc', 'selection': True, 'exportDisplayColor': True, 'exportUVs': True, 'exportMaterialCollections': False, 'exportSkels': 'auto', 'exportSkin': 'auto', 'exportBlendShapes': False, 'exportMaterials': True, 'shadingMode': 'useRegistry', 'convertMaterialsTo': ['UsdPreviewSurface', 'rendermanForMaya'], 'materialsScopeName': 'Looks', 'exportVisibility': True, 'exportInstances': True, 'exportStagesAsRefs': False, 'mergeTransformAndShape': True, 'stripNamespaces': False, 'filterTypes': ['nurbsCurve', 'nurbsSurface']}
 # Opening layer 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig.usdc' for writing
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster12_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster12_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster15_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster15_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster15_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster1_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster1_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape. Skipping...
@@ -604,9 +621,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture5.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Body.rma/Veteran_V008_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of Body.rma/: ['Veteran_V008_Ambient_occlusion_Utility - Raw_1001.png.tex', 'Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex', 'Veteran_V008_Height_Utility - Raw_1001.png.tex', 'Veteran_V008_Metallic_Utility - Raw_1001.png.tex', 'Veteran_V008_Normal_OpenGL_Utility - Raw_1001.png.tex', 'Veteran_V008_Roughness_Utility - Raw_1001.png.tex', 'Veteran_V008_Specular_level_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Body.rma/Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.391, 0.411, 0.426) → boosted (0.2204, 0.4226057, 0.58)
-// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf1SG — sampled texture color: (0.2204, 0.4226057, 0.58)
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Body.rma/Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Body.rma/Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Body.rma/Veteran_V008_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.231, 0.251, 0.271) → boosted (0.2204, 0.40020007, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf1SG — sampled texture color: (0.2204, 0.40020007, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf2SG: broad-scan found 'model:PxrDisplace2'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf2SG: broad-scan found 'model:Veteran_LwrTeeth_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf2SG: found model:PxrDisplace2 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -616,9 +637,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture44.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LwrTeeth.rma/LwrTeeth_3_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LwrTeeth.rma/: ['LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LwrTeeth_3_Height_Utility - Raw_1001.png.tex', 'LwrTeeth_3_Metallic_Utility - Raw_1001.png.tex', 'LwrTeeth_3_Mixed_AO_Utility - Raw_1001.png.tex', 'LwrTeeth_3_Normal_Utility - Raw_1001.png.tex', 'LwrTeeth_3_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LwrTeeth.rma/LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.304, 0.311, 0.321) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LwrTeeth.rma/LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LwrTeeth.rma/LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LwrTeeth.rma/LwrTeeth_3_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.273, 0.292, 0.312) → boosted (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf2SG — sampled texture color: (0.2204, 0.4002, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf3SG: broad-scan found 'model:Veteran_UprTeeth_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf3SG: broad-scan found 'model:PxrDisplace3'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_UprTeeth_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -627,10 +652,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture89.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/UprTeeth.rma/UprTeeth_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (UprTeeth_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of UprTeeth.rma/: ['UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex', 'UprTeeth_Height_Utility - Raw_1001.png.tex', 'UprTeeth_Metallic_Utility - Raw_1001.png.tex', 'UprTeeth_Mixed_AO_Utility - Raw_1001.png.tex', 'UprTeeth_Normal_Utility - Raw_1001.png.tex', 'UprTeeth_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/UprTeeth.rma/UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.298, 0.308, 0.317) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf3SG: found model:PxrDisplace3 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/UprTeeth.rma/UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/UprTeeth.rma/UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/UprTeeth.rma/UprTeeth_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.271, 0.290, 0.310) → boosted (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf3SG — sampled texture color: (0.2204, 0.4002, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf5SG: broad-scan found 'model:PxrDisplace5'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf5SG: broad-scan found 'model:Veteran_Tags_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf5SG: found model:PxrDisplace5 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -640,9 +668,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture79.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tags.rma/Tags_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: Tags_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (Tags_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of Tags.rma/: ['Tags_Base_color_Utility - sRGB - Texture_1001.png.tex', 'Tags_Height_Utility - Raw_1001.png.tex', 'Tags_Metallic_Utility - Raw_1001.png.tex', 'Tags_Mixed_AO_Utility - Raw_1001.png.tex', 'Tags_Normal_Utility - Raw_1001.png.tex', 'Tags_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for Tags_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tags.rma/Tags_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.382, 0.404, 0.422) → boosted (0.2204, 0.4131804, 0.58)
-// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf5SG — sampled texture color: (0.2204, 0.4131804, 0.58)
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for Tags_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tags.rma/Tags_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tags.rma/Tags_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tags.rma/Tags_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.451, 0.482, 0.514) → boosted (0.2204, 0.40019992, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf5SG — sampled texture color: (0.2204, 0.40019992, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf6SG: broad-scan found 'model:Veteran_RtZipr_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf6SG: broad-scan found 'model:PxrDisplace6'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_RtZipr_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -651,10 +683,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture74.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtZipr.rma/RtZipper_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (RtZipper_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of RtZipr.rma/: ['RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex', 'RtZipper_Height_Utility - Raw_1001.png.tex', 'RtZipper_Metallic_Utility - Raw_1001.png.tex', 'RtZipper_Mixed_AO_Utility - Raw_1001.png.tex', 'RtZipper_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex', 'asset_100_srgbtex_acescg.tif.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtZipr.rma/RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.366, 0.372, 0.357) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf6SG: found model:PxrDisplace6 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtZipr.rma/RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtZipr.rma/RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtZipr.rma/RtZipper_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.257, 0.245, 0.192) → boosted (0.58, 0.5146181, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf6SG — sampled texture color: (0.58, 0.5146181, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf7SG: broad-scan found 'model:Veteran_RtButn04_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf7SG: broad-scan found 'model:PxrDisplace7'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_RtButn04_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -663,10 +698,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture69.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn04.rma/RtButton_04_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (RtButton_04_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of RtButn04.rma/: ['RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex', 'RtButton_04_Height_Utility - Raw_1001.png.tex', 'RtButton_04_Metallic_Utility - Raw_1001.png.tex', 'RtButton_04_Mixed_AO_Utility - Raw_1001.png.tex', 'RtButton_04_Normal_Utility - Raw_1001.png.tex', 'RtButton_04_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn04.rma/RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.424, 0.430, 0.408) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf7SG: found model:PxrDisplace7 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn04.rma/RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn04.rma/RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn04.rma/RtButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.418, 0.380, 0.333) → boosted (0.58, 0.42110696, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf7SG — sampled texture color: (0.58, 0.42110696, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf8SG: broad-scan found 'model:PxrDisplace8'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf8SG: broad-scan found 'model:Veteran_RtButn03_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf8SG: found model:PxrDisplace8 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -676,9 +714,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture64.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn03.rma/RtButton_03_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (RtButton_03_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of RtButn03.rma/: ['RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex', 'RtButton_03_Height_Utility - Raw_1001.png.tex', 'RtButton_03_Metallic_Utility - Raw_1001.png.tex', 'RtButton_03_Mixed_AO_Utility - Raw_1001.png.tex', 'RtButton_03_Normal_Utility - Raw_1001.png.tex', 'RtButton_03_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn03.rma/RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.382, 0.406, 0.394) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn03.rma/RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn03.rma/RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn03.rma/RtButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.494, 0.549, 0.471) → boosted (0.32827997, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf8SG — sampled texture color: (0.32827997, 0.58, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf9SG: broad-scan found 'model:PxrDisplace9'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf9SG: broad-scan found 'model:Veteran_RtButn02_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf9SG: found model:PxrDisplace9 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -688,9 +730,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture59.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn02.rma/RtButton_02_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (RtButton_02_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of RtButn02.rma/: ['RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex', 'RtButton_02_Height_Utility - Raw_1001.png.tex', 'RtButton_02_Metallic_Utility - Raw_1001.png.tex', 'RtButton_02_Mixed_AO_Utility - Raw_1001.png.tex', 'RtButton_02_Normal_Utility - Raw_1001.png.tex', 'RtButton_02_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn02.rma/RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.370, 0.395, 0.372) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn02.rma/RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn02.rma/RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn02.rma/RtButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.459, 0.525, 0.384) → boosted (0.41018885, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf9SG — sampled texture color: (0.41018885, 0.58, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf10SG: broad-scan found 'model:PxrDisplace10'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf10SG: broad-scan found 'model:Veteran_RtButn01_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf10SG: found model:PxrDisplace10 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -700,9 +746,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture54.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn01.rma/RtButton_01_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (RtButton_01_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of RtButn01.rma/: ['RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex', 'RtButton_01_Height_Utility - Raw_1001.png.tex', 'RtButton_01_Metallic_Utility - Raw_1001.png.tex', 'RtButton_01_Mixed_AO_Utility - Raw_1001.png.tex', 'RtButton_01_Normal_Utility - Raw_1001.png.tex', 'RtButton_01_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn01.rma/RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.368, 0.390, 0.382) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn01.rma/RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn01.rma/RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/RtButn01.rma/RtButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.400, 0.431, 0.388) → boosted (0.3184727, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf10SG — sampled texture color: (0.3184727, 0.58, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf11SG: broad-scan found 'model:PxrDisplace11'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf11SG: broad-scan found 'model:Veteran_MainMesh_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf11SG: found model:PxrDisplace11 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -712,9 +762,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture49.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/MainMesh.rma/MainMesh_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (MainMesh_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of MainMesh.rma/: ['MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex', 'MainMesh_Height_Utility - Raw_1001.png.tex', 'MainMesh_Metallic_Utility - Raw_1001.png.tex', 'MainMesh_Mixed_AO_Utility - Raw_1001.png.tex', 'MainMesh_Normal_Utility - Raw_1001.png.tex', 'MainMesh_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/MainMesh.rma/MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.300, 0.316, 0.323) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/MainMesh.rma/MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/MainMesh.rma/MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/MainMesh.rma/MainMesh_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.278, 0.298, 0.318) → boosted (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf11SG — sampled texture color: (0.2204, 0.4002, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf12SG: broad-scan found 'model:PxrDisplace12'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf12SG: broad-scan found 'model:Veteran_LfZipr_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf12SG: found model:PxrDisplace12 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -724,9 +778,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture39.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfZipr.rma/LfZipper_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LfZipper_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LfZipr.rma/: ['LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LfZipper_Height_Utility - Raw_1001.png.tex', 'LfZipper_Metallic_Utility - Raw_1001.png.tex', 'LfZipper_Mixed_AO_Utility - Raw_1001.png.tex', 'LfZipper_Normal_Utility - Raw_1001.png.tex', 'LfZipper_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfZipr.rma/LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.495, 0.497, 0.461) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfZipr.rma/LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfZipr.rma/LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfZipr.rma/LfZipper_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.455, 0.424, 0.357) → boosted (0.58, 0.464928, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf12SG — sampled texture color: (0.58, 0.464928, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf13SG: broad-scan found 'model:Veteran_LfButn04_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf13SG: broad-scan found 'model:PxrDisplace13'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_LfButn04_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -735,10 +793,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture34.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn04.rma/LfButton_04_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LfButton_04_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LfButn04.rma/: ['LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LfButton_04_Height_Utility - Raw_1001.png.tex', 'LfButton_04_Metallic_Utility - Raw_1001.png.tex', 'LfButton_04_Mixed_AO_Utility - Raw_1001.png.tex', 'LfButton_04_Normal_Utility - Raw_1001.png.tex', 'LfButton_04_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn04.rma/LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.331, 0.341, 0.338) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf13SG: found model:PxrDisplace13 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn04.rma/LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn04.rma/LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn04.rma/LfButton_04_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.278, 0.298, 0.316) → boosted (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf13SG — sampled texture color: (0.2204, 0.40966317, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf14SG: broad-scan found 'model:Veteran_LfButn03_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf14SG: broad-scan found 'model:PxrDisplace14'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_LfButn03_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -747,10 +808,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture29.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn03.rma/LfButton_03_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LfButton_03_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LfButn03.rma/: ['LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LfButton_03_Height_Utility - Raw_1001.png.tex', 'LfButton_03_Metallic_Utility - Raw_1001.png.tex', 'LfButton_03_Normal_Utility - Raw_1001.png.tex', 'LfButton_03_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex', 'asset_100_srgbtex_acescg.tif.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn03.rma/LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.344, 0.365, 0.357) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf14SG: found model:PxrDisplace14 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn03.rma/LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn03.rma/LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn03.rma/LfButton_03_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.325, 0.353, 0.365) → boosted (0.2204, 0.47212, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf14SG — sampled texture color: (0.2204, 0.47212, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf15SG: broad-scan found 'model:PxrDisplace15'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf15SG: broad-scan found 'model:Veteran_LfButn02_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf15SG: found model:PxrDisplace15 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -760,9 +824,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture25.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn02.rma/LfButton_02_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LfButton_02_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LfButn02.rma/: ['LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LfButton_02_Height_Utility - Raw_1001.png.tex', 'LfButton_02_Metallic_Utility - Raw_1001.png.tex', 'LfButton_02_Mixed_AO_Utility - Raw_1001.png.tex', 'LfButton_02_Normal_Utility - Raw_1001.png.tex', 'LfButton_02_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn02.rma/LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.306, 0.323, 0.320) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn02.rma/LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn02.rma/LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn02.rma/LfButton_02_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.278, 0.298, 0.316) → boosted (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf15SG — sampled texture color: (0.2204, 0.40966317, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf16SG: broad-scan found 'model:Veteran_LfButn01_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf16SG: broad-scan found 'model:PxrDisplace16'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_LfButn01_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
@@ -771,10 +839,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture17.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn01.rma/LfButton_01_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (LfButton_01_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of LfButn01.rma/: ['LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex', 'LfButton_01_Height_Utility - Raw_1001.png.tex', 'LfButton_01_Metallic_Utility - Raw_1001.png.tex', 'LfButton_01_Mixed_AO_Utility - Raw_1001.png.tex', 'LfButton_01_Normal_Utility - Raw_1001.png.tex', 'LfButton_01_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn01.rma/LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.419, 0.446, 0.420) achromatic — using name-hash
-// src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling failed for LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex — no supported image library could read it
-// src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf16SG: found model:PxrDisplace16 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn01.rma/LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn01.rma/LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/LfButn01.rma/LfButton_01_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.412, 0.473, 0.365) → boosted (0.37731636, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf16SG — sampled texture color: (0.37731636, 0.58, 0.2204)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf17SG: broad-scan found 'model:PxrDisplace17'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf17SG: broad-scan found 'model:Veteran_Chain_Bsdf'
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf17SG: found model:PxrDisplace17 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
@@ -784,9 +855,13 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture13.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Chain.rma/Chain_Base_color_Utility - sRGB - Texture_<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: Chain_Base_color_Utility - sRGB - Texture_1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (Chain_Base_color_Utility - sRGB - Texture_1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of Chain.rma/: ['Chain_Base_color_Utility - sRGB - Texture_1001.png.tex', 'Chain_Height_Utility - Raw_1001.png.tex', 'Chain_Metallic_Utility - Raw_1001.png.tex', 'Chain_Mixed_AO_Utility - Raw_1001.png.tex', 'Chain_Normal_Utility - Raw_1001.png.tex', 'Chain_Roughness_Utility - Raw_1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100.png.tex', 'asset_100.tif', 'asset_100.tif.tex', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for Chain_Base_color_Utility - sRGB - Texture_1001.png.tex: (kFailure): Unexpected Internal Failure
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Chain.rma/Chain_Base_color_Utility - sRGB - Texture_1001.png.tex'
-// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.489, 0.517, 0.543) → boosted (0.2204, 0.41058844, 0.58)
-// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf17SG — sampled texture color: (0.2204, 0.41058844, 0.58)
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageInput.open returned None for Chain_Base_color_Utility - sRGB - Texture_1001.png.tex: OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Chain.rma/Chain_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX-DIAG] OIIO ImageBuf also failed: Invalid image file "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Chain.rma/Chain_Base_color_Utility - sRGB - Texture_1001.png.tex": OpenImageIO could not find a format reader for "D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Chain.rma/Chain_Base_color_Utility - sRGB - Texture_1001.png.tex". Is it a file format that OpenImageIO doesn't know about?
+// src.services.usd.usd_pipeline :    [TEX] asset_100.png (rma-scan): (0.471, 0.504, 0.541) → boosted (0.2204, 0.39021105, 0.58)
+// src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf17SG — sampled texture color: (0.2204, 0.39021105, 0.58)
 // src.services.usd.usd_pipeline :    [PHASE-B] PxrDisneyBsdf18SG: broad-scan found 'model:Veteran_Tongue_Bsdf'
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_Tongue_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline :    [B-DIAG] model:Veteran_Tongue_Bsdf: near-zero, calling texture sampler...
@@ -794,14 +869,16 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Found path on model:PxrTexture94.filename: D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tongue.rma/Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.<UDIM>.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] Sampling texture: Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex
 // src.services.usd.usd_pipeline :    [TEX-DIAG] .tex source not on disk (Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png), trying .tex directly
+// src.services.usd.usd_pipeline :    [TEX-DIAG] Contents of Tongue.rma/: ['Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex', 'Tongue_Geo_Tongue_Metallic_data_acescg.1001.png.tex', 'Tongue_Geo_Tongue_Normal_data_acescg.1001.png.tex', 'Tongue_Geo_Tongue_Roughness_data_acescg.1001.png.tex', 'asset.json', 'asset_100.png', 'asset_100_srgbtex_acescg.png.tex']
+// src.services.usd.usd_pipeline :    [TEX-DIAG] MImage failed for Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex: 'SwigPyObject' object is not subscriptable
 // src.services.usd.usd_pipeline :    [TEX-DIAG] PIL failed: cannot identify image file 'D:/Maya/RenderManAssetLibrary/Materials/Characters/Veteran/Tongue.rma/Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex'
 // src.services.usd.usd_pipeline :    [TEX] Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex: (0.171, 0.069, 0.072) via OIIO → boosted (0.58, 0.2204, 0.22999099)
 // src.services.usd.usd_pipeline :    [TEX] PxrDisneyBsdf18SG — sampled texture color: (0.58, 0.2204, 0.22999099)
 // src.services.usd.usd_pipeline :    [PHASE-B] initialParticleSE: found standardSurface1 type='standardSurface' — not in RFM_SHADER_TYPES, skipping
 // src.services.usd.usd_pipeline :    [PHASE-B] initialShadingGroup: found standardSurface1 type='standardSurface' — not in RFM_SHADER_TYPES, skipping
 // src.services.usd.usd_pipeline : [LOOKDEV] Found 8 Lambert materials in Maya
-// src.services.usd.usd_pipeline : [LOOKDEV] Mapped 16 shading groups to colors (A=Lambert, B=RfM Pxr*, C=generic), 15 RfM texture-driven skipped
-// src.services.usd.usd_pipeline : [LOOKDEV] Skipped RfM SGs: ['Cornea_Mat_SG', 'Pupils_MatSG', 'PxrDisneyBsdf2SG', 'PxrDisneyBsdf3SG', 'PxrDisneyBsdf6SG', 'PxrDisneyBsdf7SG', 'PxrDisneyBsdf8SG', 'PxrDisneyBsdf9SG', 'PxrDisneyBsdf10SG', 'PxrDisneyBsdf11SG']
+// src.services.usd.usd_pipeline : [LOOKDEV] Mapped 29 shading groups to colors (A=Lambert, B=RfM Pxr*, C=generic), 2 RfM texture-driven skipped
+// src.services.usd.usd_pipeline : [LOOKDEV] Skipped RfM SGs: ['Cornea_Mat_SG', 'Pupils_MatSG']
 // src.services.usd.usd_pipeline : [LOOKDEV] Sample SG keys: ['Iris_MatSG', 'Sclera_MatSG', 'asClusterControlShaderSG', 'asFaceBlueSG', 'asFaceBrownSG', 'asFaceCyanSG', 'asFaceGreenSG', 'asFaceRedSG']
 // src.services.usd.usd_pipeline : [LOOKDEV] Scanning USD material prims for name→SG matches...
 // src.services.usd.usd_pipeline :    [INJECT] initialShadingGroup ← initialShadingGroup = (0.4, 0.4, 0.4)
@@ -815,51 +892,38 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline :    [UPDATE] asClusterControlShaderSG ← asClusterControlShaderSG = (0.073238954, 0.94773877, 1)
 // src.services.usd.usd_pipeline :    [UPDATE] Sclera_MatSG ← Sclera_MatSG = (0.5, 0.5, 0.5)
 // src.services.usd.usd_pipeline :    [UPDATE] Iris_MatSG ← Iris_MatSG = (0.059, 0.039061934, 0)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf1SG — writing Phase B color: (0.2204, 0.4226057, 0.58)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf1SG ← PxrDisneyBsdf1SG = (0.2204, 0.4226057, 0.58)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf17SG — writing Phase B color: (0.2204, 0.41058844, 0.58)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf17SG ← PxrDisneyBsdf17SG = (0.2204, 0.41058844, 0.58)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf11SG — texture unreadable, using name-hash color: (0.252, 0.72, 0.5135433)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf11SG — writing Phase B color: (0.252, 0.72, 0.5135433)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf11SG ← [fallback:RfM-name-hash] = (0.252, 0.72, 0.5135433)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf16SG — texture unreadable, using name-hash color: (0.56505585, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf16SG — writing Phase B color: (0.56505585, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf16SG ← [fallback:RfM-name-hash] = (0.56505585, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf15SG — texture unreadable, using name-hash color: (0.252, 0.4347028, 0.72)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf15SG — writing Phase B color: (0.252, 0.4347028, 0.72)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf15SG ← [fallback:RfM-name-hash] = (0.252, 0.4347028, 0.72)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf14SG — texture unreadable, using name-hash color: (0.63267523, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf14SG — writing Phase B color: (0.63267523, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf14SG ← [fallback:RfM-name-hash] = (0.63267523, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf13SG — texture unreadable, using name-hash color: (0.252, 0.34296522, 0.72)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf13SG — writing Phase B color: (0.252, 0.34296522, 0.72)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf13SG ← [fallback:RfM-name-hash] = (0.252, 0.34296522, 0.72)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf12SG — texture unreadable, using name-hash color: (0.4392389, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf12SG — writing Phase B color: (0.4392389, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf12SG ← [fallback:RfM-name-hash] = (0.4392389, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf2SG — texture unreadable, using name-hash color: (0.72, 0.252, 0.5440369)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf2SG — writing Phase B color: (0.72, 0.252, 0.5440369)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf2SG ← [fallback:RfM-name-hash] = (0.72, 0.252, 0.5440369)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf10SG — texture unreadable, using name-hash color: (0.46135494, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf10SG — writing Phase B color: (0.46135494, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf10SG ← [fallback:RfM-name-hash] = (0.46135494, 0.72, 0.252)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf9SG — texture unreadable, using name-hash color: (0.72, 0.5337989, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf9SG — writing Phase B color: (0.72, 0.5337989, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf9SG ← [fallback:RfM-name-hash] = (0.72, 0.5337989, 0.252)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf8SG — texture unreadable, using name-hash color: (0.252, 0.72, 0.6752304)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf8SG — writing Phase B color: (0.252, 0.72, 0.6752304)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf8SG ← [fallback:RfM-name-hash] = (0.252, 0.72, 0.6752304)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf7SG — texture unreadable, using name-hash color: (0.252, 0.5057863, 0.72)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf7SG — writing Phase B color: (0.252, 0.5057863, 0.72)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf7SG ← [fallback:RfM-name-hash] = (0.252, 0.5057863, 0.72)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf6SG — texture unreadable, using name-hash color: (0.72, 0.4465869, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf6SG — writing Phase B color: (0.72, 0.4465869, 0.252)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf6SG ← [fallback:RfM-name-hash] = (0.72, 0.4465869, 0.252)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf5SG — writing Phase B color: (0.2204, 0.4131804, 0.58)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf5SG ← PxrDisneyBsdf5SG = (0.2204, 0.4131804, 0.58)
-// src.services.usd.usd_pipeline :    [FALLBACK] PxrDisneyBsdf3SG — texture unreadable, using name-hash color: (0.252, 0.72, 0.447598)
-// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf3SG — writing Phase B color: (0.252, 0.72, 0.447598)
-// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf3SG ← [fallback:RfM-name-hash] = (0.252, 0.72, 0.447598)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf1SG — writing Phase B color: (0.2204, 0.40020007, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf1SG ← PxrDisneyBsdf1SG = (0.2204, 0.40020007, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf17SG — writing Phase B color: (0.2204, 0.39021105, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf17SG ← PxrDisneyBsdf17SG = (0.2204, 0.39021105, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf11SG — writing Phase B color: (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf11SG ← PxrDisneyBsdf11SG = (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf16SG — writing Phase B color: (0.37731636, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf16SG ← PxrDisneyBsdf16SG = (0.37731636, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf15SG — writing Phase B color: (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf15SG ← PxrDisneyBsdf15SG = (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf14SG — writing Phase B color: (0.2204, 0.47212, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf14SG ← PxrDisneyBsdf14SG = (0.2204, 0.47212, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf13SG — writing Phase B color: (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf13SG ← PxrDisneyBsdf13SG = (0.2204, 0.40966317, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf12SG — writing Phase B color: (0.58, 0.464928, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf12SG ← PxrDisneyBsdf12SG = (0.58, 0.464928, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf2SG — writing Phase B color: (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf2SG ← PxrDisneyBsdf2SG = (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf10SG — writing Phase B color: (0.3184727, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf10SG ← PxrDisneyBsdf10SG = (0.3184727, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf9SG — writing Phase B color: (0.41018885, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf9SG ← PxrDisneyBsdf9SG = (0.41018885, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf8SG — writing Phase B color: (0.32827997, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf8SG ← PxrDisneyBsdf8SG = (0.32827997, 0.58, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf7SG — writing Phase B color: (0.58, 0.42110696, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf7SG ← PxrDisneyBsdf7SG = (0.58, 0.42110696, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf6SG — writing Phase B color: (0.58, 0.5146181, 0.2204)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf6SG ← PxrDisneyBsdf6SG = (0.58, 0.5146181, 0.2204)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf5SG — writing Phase B color: (0.2204, 0.40019992, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf5SG ← PxrDisneyBsdf5SG = (0.2204, 0.40019992, 0.58)
+// src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf3SG — writing Phase B color: (0.2204, 0.4002, 0.58)
+// src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf3SG ← PxrDisneyBsdf3SG = (0.2204, 0.4002, 0.58)
 // src.services.usd.usd_pipeline :    [RFM] PxrDisneyBsdf18SG — writing Phase B color: (0.58, 0.2204, 0.22999099)
 // src.services.usd.usd_pipeline :    [UPDATE] PxrDisneyBsdf18SG ← PxrDisneyBsdf18SG = (0.58, 0.2204, 0.22999099)
 // src.services.usd.usd_pipeline : [LOOKDEV] Sample USD mat names: ['initialShadingGroup', 'asRedSG', 'asGreenSG', 'asGreen2SG', 'asBlueSG']
@@ -886,7 +950,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline : [INFO] Found 30 materials in USD
 // src.services.usd.usd_pipeline : [INFO] Found 63 blendshapes in USD
 // src.services.usd.usd_pipeline : [INFO] Found 1 SkelAnimation prims (rest pose only)
-// src.services.usd.usd_pipeline : [INFO] All prim types in USD: {'NodeGraph', 'SkelAnimation', 'Skeleton', 'SkelRoot', 'BlendShape', 'Material', 'Scope', 'GeomSubset', 'Mesh', 'Xform', 'Shader'}
+// src.services.usd.usd_pipeline : [INFO] All prim types in USD: {'Scope', 'BlendShape', 'Mesh', 'Shader', 'NodeGraph', 'GeomSubset', 'SkelRoot', 'Skeleton', 'SkelAnimation', 'Material', 'Xform'}
 // src.services.usd.usd_pipeline : [INFO] USD validation complete
 // src.services.usd.usd_pipeline : [OK] USD exported: Veteran_Rig.usdc
 // src.services.usd.usd_pipeline : [PACKAGE] Added rig backup to USDZ: Veteran_Rig.rig.mb

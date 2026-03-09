@@ -19,7 +19,16 @@ disable=
     broad-exception-caught,
 
     # False positive when Maya stubs are absent
-    no-member
+    no-member,
+
+    # Qt dialogs always initialize widgets in _setup_* helpers, not __init__
+    attribute-defined-outside-init,
+
+    # _-prefixed params are used for signature compatibility (Qt overrides)
+    unused-argument,
+
+    # TODO comments are tracked intentionally as future work markers
+    fixme
 
 [FORMAT]
 max-line-length=120

@@ -1899,7 +1899,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             import traceback
             traceback.print_exc()
 
-    def _create_unified_rig_structure(self, usd_path: str, rig_path: str) -> bool:
+    def _create_unified_rig_structure(self, usd_path: str, _rig_path: str) -> bool:
         """
         Create a unified rig structure combining USD geometry and rig controls
 
