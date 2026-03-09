@@ -1733,7 +1733,6 @@ class USDPipelineDialog(QDialog):  # type: ignore
             return
 
         try:
-            from pathlib import Path
             path = Path(usd_path)
             if not path.exists():
                 self._usd_info_label.setText(f"[ERROR] File does not exist: {usd_path}")
@@ -1852,6 +1851,17 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     prefer_usd=False,           # Prefer .rig.mb data for animation
                     namespace=self._namespace_edit.text().strip() or None,
                     import_animation=True
+                )
+
+            else:
+                # Fallback: standard geometry import if no mode radio is selected
+                import_options = ImportOptions(
+                    import_geometry=self._import_geometry_cb.isChecked(),
+                    import_skeleton=self._import_skeleton_cb.isChecked(),
+                    import_skin_weights=self._import_skin_weights_cb.isChecked(),
+                    import_blendshapes=self._import_blendshapes_cb.isChecked(),
+                    import_materials=self._import_materials_cb.isChecked(),
+                    namespace=self._namespace_edit.text().strip() or None,
                 )
 
             # Set up progress callback

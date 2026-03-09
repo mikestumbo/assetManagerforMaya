@@ -1,0 +1,29 @@
+[MASTER]
+# Maya and RenderMan modules are only available inside Maya's Python
+# environment. Suppress import/attribute errors for these at lint time.
+ignored-modules=maya,maya.cmds,maya.mel,maya.OpenMaya,maya.app,
+                PySide6,PySide2,shiboken6,shiboken2,
+                pxr,usdviewq,
+                rfm,rfm2
+
+[MESSAGES CONTROL]
+disable=
+    # Maya/PySide6 not installed in the lint environment
+    import-error,
+    no-name-in-module,
+
+    # f-strings in logging are fine in Python 3 (PEP 675)
+    logging-fstring-interpolation,
+
+    # Broad except is standard practice in Maya plugin callbacks
+    broad-exception-caught,
+
+    # False positive when Maya stubs are absent
+    no-member
+
+[FORMAT]
+max-line-length=120
+
+[BASIC]
+# Allow short names common in Maya/USD code
+good-names=i,j,k,r,g,b,e,sg,uv,fn,cm,op
