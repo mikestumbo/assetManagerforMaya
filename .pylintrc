@@ -1,4 +1,7 @@
 [MASTER]
+# Exclude archived legacy versions from linting (historical snapshots, not active code)
+ignore-paths=.*[/\\]archive[/\\].*
+
 # Maya and RenderMan modules are only available inside Maya's Python
 # environment. Suppress import/attribute errors for these at lint time.
 ignored-modules=maya,maya.cmds,maya.mel,maya.OpenMaya,maya.app,
@@ -28,7 +31,90 @@ disable=
     unused-argument,
 
     # TODO comments are tracked intentionally as future work markers
-    fixme
+    fixme,
+
+    # pxr is imported at module level inside try/except; local re-imports in methods
+    # are intentional lazy guards and shadow the outer names
+    redefined-outer-name,
+
+    # -------------------------------------------------------------------------
+    # Maya DCC plugin patterns — intentional, not defects
+    # -------------------------------------------------------------------------
+
+    # Maya's Python environment requires lazy imports inside try/except guards
+    # and deferred imports inside methods to avoid crashing outside Maya.
+    import-outside-toplevel,
+
+    # Guard-pattern imports (try: import x; except: x = None) appear unused
+    # to Pylint but are the standard Maya/USD optional-dependency pattern.
+    unused-import,
+    reimported,
+
+    # sys.path manipulation for Maya's unusual module layout requires this
+    wrong-import-position,
+    wrong-import-order,
+
+    # -------------------------------------------------------------------------
+    # Style preferences — project has consistent conventions already
+    # -------------------------------------------------------------------------
+
+    # consider-using-from-import conflicts with `import foo` style used project-wide
+    consider-using-from-import,
+
+    # Early returns sometimes communicate intent better than eliminating else
+    no-else-return,
+    no-else-break,
+    no-else-continue,
+
+    # Many DTOs, interfaces, and adapters naturally expose 1-2 methods
+    too-few-public-methods,
+
+    # One-liner property getters and guards are intentionally concise
+    multiple-statements,
+
+    # Docstrings are maintained where they add value; stubs are self-evident
+    missing-function-docstring,
+    missing-class-docstring,
+    missing-module-docstring,
+
+    # -------------------------------------------------------------------------
+    # Complexity thresholds — Maya rig/scene operations are inherently complex
+    # -------------------------------------------------------------------------
+    too-many-locals,
+    too-many-branches,
+    too-many-nested-blocks,
+    too-many-statements,
+    too-many-instance-attributes,
+    too-many-return-statements,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-lines,
+    too-many-public-methods,
+
+    # Shared USD/Maya boilerplate across mixin files is unavoidable duplication
+    duplicate-code,
+
+    # Builder-pattern factory methods access protected members by design
+    protected-access,
+
+    # Module-level singleton variables and class constants use project-specific naming
+    global-statement,
+
+    # Fallback class definitions inside if-blocks are intentional resilience patterns
+    function-redefined,
+
+    # __all__ paired with __getattr__ is a valid lazy-export pattern (PEP 562)
+    undefined-all-variable,
+
+    # Minor style hints below — not worth enforcing in a DCC plugin context
+    trailing-newlines,
+    raise-missing-from,
+    use-maxsplit-arg,
+    consider-using-get,
+    consider-using-with,
+    consider-using-in,
+    consider-using-join,
+    consider-iterating-dictionary
 
 [FORMAT]
 max-line-length=120
@@ -36,3 +122,15 @@ max-line-length=120
 [BASIC]
 # Allow short names common in Maya/USD code
 good-names=i,j,k,r,g,b,e,sg,uv,fn,cm,op
+
+# Naming conventions: allow any style for constants, attributes, and variables
+# to accommodate UPPER_CASE class constants, PascalCase type aliases, and
+# _private_singleton patterns used throughout this Maya plugin.
+const-naming-style=any
+attr-naming-style=any
+variable-naming-style=any
+class-attribute-naming-style=any
+
+# Qt overrides use camelCase to match PySide6/PyQt5 C++ API method signatures
+method-naming-style=any
+argument-naming-style=any

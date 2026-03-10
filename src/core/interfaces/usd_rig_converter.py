@@ -59,7 +59,6 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Skeleton structure conversion
         """
-        pass
 
     @abstractmethod
     def convert_skin_weights(
@@ -82,7 +81,6 @@ class IUSDRigConverter(ABC):
         Clean Code: Weight data conversion and binding
         Disney/Pixar Critical: Accurate weight preservation essential
         """
-        pass
 
     @abstractmethod
     def create_bind_pose(
@@ -102,7 +100,6 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Bind pose is explicit operation
         """
-        pass
 
     @abstractmethod
     def validate_joint_topology(
@@ -120,7 +117,6 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Validation before processing
         """
-        pass
 
     @abstractmethod
     def normalize_weights(
@@ -138,7 +134,6 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Weight normalization is separate utility
         """
-        pass
 
     @abstractmethod
     def get_max_influences_per_vertex(
@@ -156,7 +151,6 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Analyze data before processing
         """
-        pass
 
     @abstractmethod
     def prune_zero_weights(
@@ -176,4 +170,3 @@ class IUSDRigConverter(ABC):
 
         Clean Code: Optimization utility
         """
-        pass

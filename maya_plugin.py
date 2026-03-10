@@ -32,6 +32,10 @@ def _ensure_path_for_imports():
     return original_path
 
 
+# Module-level singleton reference (required before show_asset_manager uses global)
+_asset_manager_window = None
+
+
 def show_asset_manager():
     original_path = None
     try:
@@ -88,7 +92,7 @@ def show_asset_manager():
             from src.ui.asset_manager_window import AssetManagerWindow
 
             # Singleton window management - prevent duplicates
-            global _asset_manager_window
+            global _asset_manager_window  # pylint: disable=global-statement
             if '_asset_manager_window' not in globals():
                 _asset_manager_window = None
 

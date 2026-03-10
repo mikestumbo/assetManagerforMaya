@@ -42,7 +42,6 @@ class IEventPublisher(ABC):
         Returns:
             Subscription ID for later unsubscription
         """
-        pass
 
     @abstractmethod
     def unsubscribe(self, subscription_id: str) -> bool:
@@ -55,7 +54,6 @@ class IEventPublisher(ABC):
         Returns:
             True if unsubscription was successful
         """
-        pass
 
     @abstractmethod
     def publish(self, event_type: EventType, event_data: Dict[str, Any]) -> None:
@@ -66,7 +64,6 @@ class IEventPublisher(ABC):
             event_type: Type of event being published
             event_data: Data associated with the event
         """
-        pass
 
     @abstractmethod
     def get_subscribers_count(self, event_type: EventType) -> int:
@@ -79,11 +76,9 @@ class IEventPublisher(ABC):
         Returns:
             Number of active subscribers
         """
-        pass
 
     @abstractmethod
     def clear_all_subscriptions(self) -> None:
         """
         Clear all event subscriptions
         """
-        pass

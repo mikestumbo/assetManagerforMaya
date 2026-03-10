@@ -325,7 +325,7 @@ class UsdImportServiceImpl(IUsdImportService):
             # Check skeleton animation
             for skel_prim in skeletons:
                 skel = UsdSkel.Skeleton(skel_prim)
-                if self.skeleton_reader._check_skeleton_animation(skel):  # pylint: disable=protected-access
+                if self.skeleton_reader._check_skeleton_animation(skel):
                     return True
 
             # Check for time-sampled transforms on any prim
@@ -1185,7 +1185,7 @@ _usd_import_service: Optional[UsdImportServiceImpl] = None
 
 def get_usd_import_service():
     """Get singleton USD import service instance"""
-    global _usd_import_service  # pylint: disable=global-statement
+    global _usd_import_service
     if _usd_import_service is None:
         _usd_import_service = UsdImportServiceImpl()
     return _usd_import_service

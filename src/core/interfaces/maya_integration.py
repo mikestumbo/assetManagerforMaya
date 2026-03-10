@@ -28,7 +28,6 @@ class IMayaIntegration(ABC):
         Returns:
             True if Maya is accessible
         """
-        pass
 
     @abstractmethod
     def import_asset(self, asset: Asset, options: Optional[Dict[str, Any]] = None) -> bool:
@@ -42,7 +41,6 @@ class IMayaIntegration(ABC):
         Returns:
             True if import was successful
         """
-        pass
 
     @abstractmethod
     def reference_asset(self, asset: Asset, namespace: Optional[str] = None) -> bool:
@@ -56,7 +54,6 @@ class IMayaIntegration(ABC):
         Returns:
             True if reference was successful
         """
-        pass
 
     @abstractmethod
     def export_selection(self, export_path: Path, options: Optional[Dict[str, Any]] = None) -> bool:
@@ -70,7 +67,6 @@ class IMayaIntegration(ABC):
         Returns:
             True if export was successful
         """
-        pass
 
     @abstractmethod
     def get_scene_assets(self) -> List[str]:
@@ -80,7 +76,6 @@ class IMayaIntegration(ABC):
         Returns:
             List of asset paths in current scene
         """
-        pass
 
     @abstractmethod
     def validate_asset_compatibility(self, asset: Asset) -> bool:
@@ -93,7 +88,6 @@ class IMayaIntegration(ABC):
         Returns:
             True if asset is compatible
         """
-        pass
 
     @abstractmethod
     def get_maya_version(self) -> Optional[str]:
@@ -103,4 +97,3 @@ class IMayaIntegration(ABC):
         Returns:
             Maya version string, None if Maya not available
         """
-        pass

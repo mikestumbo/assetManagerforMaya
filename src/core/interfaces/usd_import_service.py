@@ -137,7 +137,6 @@ class IUsdImportService(ABC):
             >>> if result.success:
             ...     print(f"Created {result.skin_clusters_created} skin clusters!")
         """
-        pass
 
     @abstractmethod
     def import_with_skinning(
@@ -157,7 +156,6 @@ class IUsdImportService(ABC):
         Returns:
             ImportResult
         """
-        pass
 
     @abstractmethod
     def validate_usd_file(self, usd_path: Path) -> tuple[bool, str]:
@@ -176,7 +174,6 @@ class IUsdImportService(ABC):
         Returns:
             (is_valid, error_message) - Empty string if valid
         """
-        pass
 
     @abstractmethod
     def get_usd_info(self, usd_path: Path) -> Dict[str, Any]:
@@ -195,4 +192,3 @@ class IUsdImportService(ABC):
         Returns:
             Dictionary of USD file information
         """
-        pass

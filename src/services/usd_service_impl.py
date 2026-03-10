@@ -51,8 +51,8 @@ class UsdService:
 
             # Check for pxr USD Python API
             try:
-                from pxr import Usd  # type: ignore  # noqa: F401
-                self._pxr_available = True
+                from pxr import Usd  # type: ignore
+                self._pxr_available = Usd is not None
                 print("[OK] Pixar USD Python API available")
             except ImportError:
                 print("[INFO] Pixar USD Python API not available")
@@ -99,7 +99,7 @@ class UsdService:
             }
 
         try:
-            from pxr import Usd, UsdGeom, UsdShade, Sdf  # type: ignore  # noqa: F401
+            from pxr import Usd  # type: ignore
 
             # Open USD stage
             stage = Usd.Stage.Open(str(file_path))
@@ -525,7 +525,7 @@ _usd_service_instance: Optional[UsdService] = None
 
 def get_usd_service() -> UsdService:
     """Get or create USD service singleton instance"""
-    global _usd_service_instance
+    global _usd_service_instance  # pylint: disable=global-statement
     if _usd_service_instance is None:
         _usd_service_instance = UsdService()
     return _usd_service_instance

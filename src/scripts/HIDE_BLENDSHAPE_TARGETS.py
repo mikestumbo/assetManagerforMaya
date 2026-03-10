@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name  # Script filename uses UPPER_CASE per Maya pipeline convention
 """
 Blendshape Target Cleanup Utility
 Automatically hides blendshape targets and duplicate meshes for clean USD export/import.

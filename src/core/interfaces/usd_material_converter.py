@@ -45,7 +45,6 @@ class IUSDMaterialConverter(ABC):
 
         Clean Code: Standard USD Preview Surface workflow
         """
-        pass
 
     @abstractmethod
     def convert_renderman_material(
@@ -70,7 +69,6 @@ class IUSDMaterialConverter(ABC):
         Clean Code: RenderMan-specific conversion logic
         Disney/Pixar Compatibility: Preserves RenderMan workflows
         """
-        pass
 
     @abstractmethod
     def map_texture_inputs(
@@ -92,7 +90,6 @@ class IUSDMaterialConverter(ABC):
 
         Clean Code: Texture path resolution separated from conversion
         """
-        pass
 
     @abstractmethod
     def bind_material_to_geometry(
@@ -112,7 +109,6 @@ class IUSDMaterialConverter(ABC):
 
         Clean Code: Material binding is explicit operation
         """
-        pass
 
     @abstractmethod
     def get_supported_maya_shaders(self) -> list[str]:
@@ -124,7 +120,6 @@ class IUSDMaterialConverter(ABC):
 
         Clean Code: Explicit about capabilities
         """
-        pass
 
     @abstractmethod
     def validate_texture_paths(
@@ -142,4 +137,3 @@ class IUSDMaterialConverter(ABC):
 
         Clean Code: Validation before processing
         """
-        pass

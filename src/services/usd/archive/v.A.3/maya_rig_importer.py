@@ -195,7 +195,7 @@ class MayaRigImporter:
                     return False, f"Failed to import rig from {mrig_path.name}"
 
             # Legacy: Load .mrig JSON data
-            with open(mrig_path, 'r', encoding='utf-8') as f:
+            with open(mrig_path, 'r') as f:
                 rig_data = json.load(f)
 
             self.logger.info(f"[TOOL] Importing rig data from: {mrig_path}")

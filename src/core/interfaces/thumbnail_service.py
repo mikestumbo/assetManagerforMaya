@@ -35,7 +35,6 @@ class IThumbnailService(ABC):
         Returns:
             Path to generated thumbnail, None if generation failed
         """
-        pass
 
     @abstractmethod
     def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
@@ -49,14 +48,12 @@ class IThumbnailService(ABC):
         Returns:
             Path to cached thumbnail, None if not cached
         """
-        pass
 
     @abstractmethod
     def clear_cache(self) -> None:
         """
         Clear all cached thumbnails
         """
-        pass
 
     @abstractmethod
     def clear_cache_for_file(self, file_path: Path) -> None:
@@ -66,7 +63,6 @@ class IThumbnailService(ABC):
         Args:
             file_path: Path to asset file
         """
-        pass
 
     @abstractmethod
     def is_thumbnail_supported(self, file_path: Path) -> bool:
@@ -79,7 +75,6 @@ class IThumbnailService(ABC):
         Returns:
             True if thumbnail generation is supported
         """
-        pass
 
     @abstractmethod
     def get_cache_size(self) -> int:
@@ -89,4 +84,3 @@ class IThumbnailService(ABC):
         Returns:
             Cache size in bytes
         """
-        pass

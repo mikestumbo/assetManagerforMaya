@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=invalid-name  # Maya API requires camelCase: maya_useNewAPI, initializePlugin, uninitializePlugin
 """
 Asset Manager for Maya v1.5.0
 Ultra-minimal plugin entry point implementing Clean Code and SOLID principles.
@@ -86,7 +87,6 @@ class AssetManagerPlugin:
 
         # Fallback: Use Maya plugin manager to find plugin path
         try:
-            import maya.cmds as cmds  # type: ignore
             plugin_list = cmds.pluginInfo(query=True, listPlugins=True)
             if plugin_list and 'assetManager' in plugin_list:
                 plugin_path = cmds.pluginInfo('assetManager', query=True, path=True)
@@ -281,7 +281,7 @@ def initializePlugin(mobject: om.MObject) -> None:
     Args:
         mobject: Maya plugin object
     """
-    global _asset_manager_plugin
+    global _asset_manager_plugin  # pylint: disable=global-statement
 
     try:
         # Register plugin with Maya using proper MFnPlugin
@@ -314,7 +314,7 @@ def uninitializePlugin(mobject: om.MObject) -> None:
     Args:
         mobject: Maya plugin object
     """
-    global _asset_manager_plugin
+    global _asset_manager_plugin  # pylint: disable=global-statement
 
     try:
         # Cleanup plugin instance

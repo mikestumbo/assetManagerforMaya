@@ -21,14 +21,13 @@ try:
         QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
         QPushButton, QCheckBox, QWidget, QMessageBox
     )
-    from PySide6.QtCore import Qt
     PYSIDE_AVAILABLE = True
 except ImportError:
     print("[ERROR] PySide6 not available - Screenshot dialog disabled")
     PYSIDE_AVAILABLE = False
     # Fallback definitions
     QDialog = QVBoxLayout = QHBoxLayout = QLabel = QComboBox = None
-    QPushButton = QCheckBox = QWidget = QMessageBox = Qt = None
+    QPushButton = QCheckBox = QWidget = QMessageBox = None
 
 # Import core models - suppress import warnings for standalone testing
 try:
@@ -375,7 +374,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
                 # Validate asset
                 if not self._asset or not self._asset.file_path:
-                    raise Exception("No asset selected for screenshot")
+                    raise RuntimeError("No asset selected for screenshot")
 
                 # Get settings from UI
                 resolution = self._res_combo.currentData() if self._res_combo else 1024  # type: ignore
@@ -388,7 +387,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                     if model_panels:
                         active_panel = model_panels[0]
                     else:
-                        raise Exception("No Maya viewport found for screenshot")
+                        raise RuntimeError("No Maya viewport found for screenshot")
 
                 # Apply final viewport settings
                 self._apply_viewport_settings()
@@ -419,7 +418,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 # Maya adds frame number to filename, find the actual file
                 actual_files = [f for f in os.listdir(temp_dir) if f.startswith("maya_screenshot_")]
                 if not actual_files:
-                    raise Exception("Screenshot file not created")
+                    raise RuntimeError("Screenshot file not created")
 
                 actual_temp_path = os.path.join(temp_dir, actual_files[0])
 
@@ -458,7 +457,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
             try:
                 # Validate asset file path
                 if not self._asset.file_path:
-                    raise Exception("Asset file path is not available")
+                    raise RuntimeError("Asset file path is not available")
 
                 # Create thumbnail directory for this asset
                 asset_dir = Path(self._asset.file_path).parent
@@ -487,7 +486,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
             except Exception as e:
                 print(f"[ERROR] Error saving thumbnail: {e}")
-                raise Exception(f"Failed to save thumbnail: {str(e)}")
+                raise RuntimeError(f"Failed to save thumbnail: {str(e)}") from e
 
         def _get_screenshot_icon_path(self) -> Optional[str]:
             """Get the path to the custom screenshot icon - Single Responsibility"""

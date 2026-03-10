@@ -243,7 +243,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             node_type = cmds.nodeType(material_name)
 
             # Extract properties based on shader type
-            if node_type in ('lambert', 'blinn'):
+            if node_type == 'lambert' or node_type == 'blinn':
                 return self._extract_standard_material(material_name, node_type)
             elif node_type == 'standardSurface':
                 return self._extract_standard_surface_material(material_name, node_type)
@@ -875,7 +875,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             u_values = cmds.polyEditUV(f"{shape_node}.map[*]", query=True, u=True) or []
             v_values = cmds.polyEditUV(f"{shape_node}.map[*]", query=True, v=True) or []
 
-            uvs = list(zip(u_values, v_values))
+            uvs = [(u, v) for u, v in zip(u_values, v_values)]
 
             # Get UV indices per face-vertex
             # For now, return simple sequential indices

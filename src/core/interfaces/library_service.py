@@ -36,7 +36,6 @@ class ILibraryService(ABC):
         Returns:
             Tuple of (success: bool, new_path: Optional[Path])
         """
-        pass
 
     @abstractmethod
     def remove_asset_from_library(self, asset: Asset) -> bool:
@@ -49,7 +48,6 @@ class ILibraryService(ABC):
         Returns:
             True if successful
         """
-        pass
 
     @abstractmethod
     def get_library_path_for_asset(
@@ -67,4 +65,3 @@ class ILibraryService(ABC):
         Returns:
             Calculated target path in library
         """
-        pass

@@ -249,7 +249,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Single entry point for file parsing
         """
-        pass
 
     @abstractmethod
     def parse_selected_objects(
@@ -269,7 +268,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Supports partial parsing for workflows
         """
-        pass
 
     @abstractmethod
     def extract_mesh_data(self, mesh_name: str) -> MeshData:
@@ -284,7 +282,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Single mesh extraction for modularity
         """
-        pass
 
     @abstractmethod
     def extract_material_data(self, material_name: str) -> MaterialData:
@@ -299,7 +296,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Material extraction separated from geometry
         """
-        pass
 
     @abstractmethod
     def extract_skin_cluster(self, mesh_name: str) -> Optional[SkinClusterData]:
@@ -314,7 +310,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Optional rigging data (not all meshes are rigged)
         """
-        pass
 
     @abstractmethod
     def get_joint_hierarchy(self, root_joint: Optional[str] = None) -> List[JointData]:
@@ -329,7 +324,6 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Preserves skeletal structure
         """
-        pass
 
     @abstractmethod
     def extract_nurbs_curves(
@@ -353,7 +347,6 @@ class IMayaSceneParser(ABC):
         Clean Code: Separates curve extraction from other geometry
         Production Critical: Enables full rig round-tripping
         """
-        pass
 
     @abstractmethod
     def extract_rig_connections(
@@ -375,7 +368,6 @@ class IMayaSceneParser(ABC):
         Clean Code: Separates connection extraction from geometry
         Production Critical: Makes controllers actually functional after import
         """
-        pass
 
     @abstractmethod
     def extract_constraints(
@@ -391,7 +383,6 @@ class IMayaSceneParser(ABC):
         Returns:
             List of constraint data structures
         """
-        pass
 
     @abstractmethod
     def extract_set_driven_keys(
@@ -407,7 +398,6 @@ class IMayaSceneParser(ABC):
         Returns:
             List of set-driven key data structures
         """
-        pass
 
     @abstractmethod
     def validate_maya_file(self, maya_file: Path) -> tuple[bool, str]:
@@ -422,4 +412,3 @@ class IMayaSceneParser(ABC):
 
         Clean Code: Fail fast with validation
         """
-        pass

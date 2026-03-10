@@ -49,8 +49,7 @@ class UsdViewBridge:
                 ["usdcat", "--version"],
                 capture_output=True,
                 text=True,
-                timeout=5,
-                check=False
+                timeout=5
             )
             if result.returncode == 0:
                 self.usdcat_path = "usdcat"
@@ -84,8 +83,7 @@ class UsdViewBridge:
                 ["usdcat", "--validate", str(usd_path)],
                 capture_output=True,
                 text=True,
-                timeout=30,
-                check=False
+                timeout=30
             )
 
             return {
@@ -122,8 +120,7 @@ class UsdViewBridge:
                 ["usdcat", "-o", str(output_path), str(usd_path)],
                 capture_output=True,
                 text=True,
-                timeout=60,
-                check=False
+                timeout=60
             )
 
             if result.returncode == 0 and output_path.exists():

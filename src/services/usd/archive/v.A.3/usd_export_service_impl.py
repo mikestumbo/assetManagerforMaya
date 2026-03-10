@@ -28,7 +28,7 @@ from ...core.interfaces.usd_rig_converter import IUSDRigConverter
 
 # Conditional USD import
 try:
-    from pxr import Usd, UsdGeom, Sdf, UsdShade, Gf, UsdUtils, Vt  # type: ignore
+    from pxr import Usd, UsdGeom, Sdf, UsdShade, Gf, UsdUtils, UsdRi, Vt  # type: ignore
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -38,6 +38,7 @@ except ImportError:
     UsdShade: Any = None  # type: ignore
     Gf: Any = None  # type: ignore
     UsdUtils: Any = None  # type: ignore
+    UsdRi: Any = None  # type: ignore
     Vt: Any = None  # type: ignore
 
 
@@ -380,13 +381,12 @@ class USDExportServiceImpl(IUSDExportService):
                 self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: Loading script from {scripts_dir}")
 
                 # Execute the cleanup script directly (avoids import issues with paths containing spaces)
-                with open(script_path, 'r', encoding='utf-8') as f:
+                with open(script_path, 'r') as f:
                     script_code = f.read()
 
-                # Execute in a controlled namespace (exec is safe here — script_path is
-                # a known internal path, not user-provided input)
+                # Execute in a controlled namespace
                 cleanup_namespace = {}
-                exec(script_code, cleanup_namespace)  # pylint: disable=exec-used  # nosec B102
+                exec(script_code, cleanup_namespace)
 
                 self.logger.info("[TOOL] PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS")
 

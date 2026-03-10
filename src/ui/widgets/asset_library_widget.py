@@ -274,6 +274,15 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             self._refresh_timer.timeout.connect(self._auto_refresh)  # type: ignore
             self._refresh_timer.start(30000)  # 30 seconds
 
+        @property
+        def current_project_path(self) -> Optional[str]:
+            """Public accessor for the currently loaded project path."""
+            return self._current_project_path
+
+        @current_project_path.setter
+        def current_project_path(self, value: Optional[str]) -> None:
+            self._current_project_path = value
+
         def _create_fallback_repository(self):
             """Create minimal fallback asset repository"""
             class FallbackAssetRepository:
@@ -429,7 +438,6 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
                 def clear_cache_for_file(self, file_path):
                     """Clear cache for file - fallback implementation"""
-                    pass
 
             return FallbackThumbnailService()
 
@@ -852,9 +860,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             import os
             try:
                 if os.name == 'nt':  # Windows
-                    subprocess.run(['explorer', '/select,', str(asset.file_path)])
+                    subprocess.run(['explorer', '/select,', str(asset.file_path)], check=False)
                 elif os.name == 'posix':  # macOS/Linux
-                    subprocess.run(['xdg-open', str(asset.file_path.parent)])
+                    subprocess.run(['xdg-open', str(asset.file_path.parent)], check=False)
             except Exception as e:
                 self._set_status(f"Error opening folder: {e}")
 
@@ -912,6 +920,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             except Exception as e:
                 print(f"[WARNING] Error updating icon sizes: {e}")
+
+        def reset_icon_size(self) -> None:
+            """Reset icon size to default 64px - Public API for external control."""
+            self._icon_size = 64
+            self._update_icon_sizes()
 
         def _show_properties(self, asset: Any) -> None:
             """Show asset properties dialog - Single Responsibility"""
@@ -1309,13 +1322,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _on_search_text_changed(self, text: str) -> None:
             """Handle search text changes - Real-time search"""
-            # Debounce search for performance
-            if hasattr(self, '_search_timer'):
-                self._search_timer.stop()  # type: ignore
-
-            self._search_timer = QTimer()  # type: ignore
-            self._search_timer.timeout.connect(self._perform_search)  # type: ignore
-            self._search_timer.setSingleShot(True)  # type: ignore
+            # Lazy-initialize the debounce timer (created once, reused on every keystroke)
+            if not hasattr(self, '_search_timer'):
+                self._search_timer = QTimer()  # type: ignore
+                self._search_timer.timeout.connect(self._perform_search)  # type: ignore
+                self._search_timer.setSingleShot(True)  # type: ignore
+            self._search_timer.stop()  # type: ignore
             self._search_timer.start(500)  # 500ms delay
 
         def _on_selection_changed(self) -> None:

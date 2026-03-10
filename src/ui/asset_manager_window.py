@@ -7,7 +7,6 @@ Author: Mike Stumbo
 Enterprise Refactoring: Clean Code & SOLID Principles
 """
 
-import sys
 import json
 import logging
 import shutil
@@ -41,24 +40,6 @@ try:
 except ImportError:
     # Fallback for development/testing outside Maya
     PLUGIN_VERSION = "1.5.0"
-
-# Robust import strategy for Maya compatibility
-try:
-    from ..config.constants import UI_CONFIG
-except ImportError:
-    try:
-        # Fallback for Maya context
-        current_dir = Path(__file__).parent.parent
-        if str(current_dir) not in sys.path:
-            sys.path.insert(0, str(current_dir))
-        from config.constants import UI_CONFIG
-    except ImportError:
-        # Ultimate fallback - define UI_CONFIG locally with dynamic version
-        UI_CONFIG = {
-            'WINDOW_TITLE': f'Asset Manager v{PLUGIN_VERSION}',
-            'WINDOW_SIZE': (1400, 900),
-            'MIN_WINDOW_SIZE': (800, 600)
-        }
 
 from .widgets.asset_library_widget import AssetLibraryWidget
 from .widgets.asset_preview_widget import AssetPreviewWidget
@@ -117,7 +98,7 @@ class AssetManagerWindow(QMainWindow):
         self._load_window_state()
 
         # Set global singleton reference to this instance
-        global _asset_manager_window
+        global _asset_manager_window  # pylint: disable=global-statement
         _asset_manager_window = self
 
     def _setup_window(self) -> None:
@@ -893,14 +874,14 @@ class AssetManagerWindow(QMainWindow):
                     cmds.file(file_path, i=True, type="FBX")
                     return True
                 else:
-                    raise Exception("FBX plugin not available")
+                    raise RuntimeError("FBX plugin not available")
             elif file_ext in ['.abc']:
                 # Alembic files
                 if cmds.pluginInfo('AbcImport', query=True, loaded=True) or cmds.loadPlugin('AbcImport', quiet=True):
                     cmds.AbcImport(file_path)
                     return True
                 else:
-                    raise Exception("Alembic plugin not available")
+                    raise RuntimeError("Alembic plugin not available")
             elif file_ext in ['.usd', '.usda', '.usdc', '.usdz']:
                 # USD files - Use our custom import service for skinCluster reconstruction
                 try:
@@ -909,9 +890,9 @@ class AssetManagerWindow(QMainWindow):
                     return maya_integration.import_asset(asset)
                 except Exception as usd_error:
                     # Fallback error message
-                    raise Exception(f"USD import failed: {usd_error}")
+                    raise RuntimeError(f"USD import failed: {usd_error}") from usd_error
             else:
-                raise Exception(f"Unsupported file type: {file_ext}")
+                raise ValueError(f"Unsupported file type: {file_ext}")
 
         except Exception as e:
             print(f"Maya import failed: {e}")
@@ -1040,7 +1021,6 @@ class AssetManagerWindow(QMainWindow):
 
             # Create project configuration file
             config_file = project_path / "project.json"
-            import json
             from datetime import datetime
 
             project_config = {
@@ -1057,7 +1037,7 @@ class AssetManagerWindow(QMainWindow):
                 }
             }
 
-            with open(config_file, 'w') as f:
+            with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(project_config, f, indent=4)
 
             # Create README file
@@ -1096,7 +1076,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
 
 """
 
-            with open(readme_file, 'w') as f:
+            with open(readme_file, 'w', encoding='utf-8') as f:
                 f.write(readme_content)
 
             print(f"[OK] Created project structure at: {project_path}")
@@ -1195,8 +1175,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             config_file = project_path / "project.json"
             if config_file.exists():
                 try:
-                    import json
-                    with open(config_file, 'r') as f:
+                    with open(config_file, 'r', encoding='utf-8') as f:
                         config = json.load(f)
 
                     if 'created' in config:
@@ -1238,7 +1217,6 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
     def _on_delete_project(self) -> None:
         """Handle deleting an existing project permanently - Single Responsibility with Safety Measures"""
         from PySide6.QtWidgets import QFileDialog
-        import shutil
 
         try:
             # Show warning dialog first
@@ -1326,9 +1304,9 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             # Check if we're deleting the current project
             current_project_path = None
             if (self._library_widget and
-                    hasattr(self._library_widget, '_current_project_path') and
-                    self._library_widget._current_project_path):
-                current_project_path = Path(self._library_widget._current_project_path)
+                    hasattr(self._library_widget, 'current_project_path') and
+                    self._library_widget.current_project_path):
+                current_project_path = Path(self._library_widget.current_project_path)
 
             is_current_project = (
                 current_project_path and
@@ -1345,7 +1323,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                 # If we deleted the current project, clear the library
                 if is_current_project:
                     if self._library_widget:
-                        self._library_widget._current_project_path = None
+                        self._library_widget.current_project_path = None
                         self._library_widget.refresh_library()
                     self._set_status(f"Deleted current project: {project_dir.name} - Library cleared")
                 else:
@@ -1411,8 +1389,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         try:
             # Check if we have a current project loaded
             if (not self._library_widget or
-                    not hasattr(self._library_widget, '_current_project_path') or
-                    not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, 'current_project_path') or
+                    not self._library_widget.current_project_path):
                 QMessageBox.information(
                     self,
                     "No Project Loaded",
@@ -1424,7 +1402,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                 )
                 return
 
-            project_path = Path(self._library_widget._current_project_path)
+            project_path = Path(self._library_widget.current_project_path)
 
             # Save project configuration and refresh library
             self._save_project_data(project_path)
@@ -1451,8 +1429,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         try:
             # Check if we have a current project loaded
             if (not self._library_widget or
-                    not hasattr(self._library_widget, '_current_project_path') or
-                    not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, 'current_project_path') or
+                    not self._library_widget.current_project_path):
                 QMessageBox.information(
                     self,
                     "No Project Loaded",
@@ -1465,7 +1443,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                 return
 
             from PySide6.QtWidgets import QFileDialog
-            current_project_path = Path(self._library_widget._current_project_path)
+            current_project_path = Path(self._library_widget.current_project_path)
 
             # Get new project location
             new_project_path = QFileDialog.getExistingDirectory(
@@ -1555,7 +1533,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             project_config = {}
             if config_file.exists():
                 try:
-                    with open(config_file, 'r') as f:
+                    with open(config_file, 'r', encoding='utf-8') as f:
                         project_config = json.load(f)
                 except Exception:
                     pass  # Use empty config if can't read
@@ -1583,7 +1561,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                 project_config["created"] = datetime.now().isoformat()
 
             # Save updated configuration
-            with open(config_file, 'w') as f:
+            with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(project_config, f, indent=4)
 
             print(f"[OK] Saved project configuration: {config_file}")
@@ -1599,8 +1577,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
 
             # Check if we have a project loaded (optional warning)
             if (not self._library_widget or
-                    not hasattr(self._library_widget, '_current_project_path') or
-                    not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, 'current_project_path') or
+                    not self._library_widget.current_project_path):
                 reply = QMessageBox.question(
                     self,
                     "No Project Loaded",
@@ -1659,8 +1637,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
 
             # Check if we have a project loaded (optional warning)
             if (not self._library_widget or
-                    not hasattr(self._library_widget, '_current_project_path') or
-                    not self._library_widget._current_project_path):
+                    not hasattr(self._library_widget, 'current_project_path') or
+                    not self._library_widget.current_project_path):
                 reply = QMessageBox.question(
                     self,
                     "No Project Loaded",
@@ -1734,9 +1712,9 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             # Get project path
             project_path = None
             if (self._library_widget and
-                    hasattr(self._library_widget, '_current_project_path') and
-                    self._library_widget._current_project_path):
-                project_path = self._library_widget._current_project_path
+                    hasattr(self._library_widget, 'current_project_path') and
+                    self._library_widget.current_project_path):
+                project_path = self._library_widget.current_project_path
 
             if not project_path:
                 # Fallback to default assets directory
@@ -1767,7 +1745,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                         QTimer.singleShot(200, lambda: self._generate_thumbnail_for_library_asset(target_path))
 
                 # Refresh library to show new asset
-                QTimer.singleShot(100, lambda: self._on_refresh_library())
+                QTimer.singleShot(100, self._on_refresh_library)
 
                 return True
             else:
@@ -1920,7 +1898,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
                                 if self._library_widget:
                                     QTimer.singleShot(
                                         100,
-                                        lambda: self._library_widget.refresh_library()  # type: ignore
+                                        self._library_widget.refresh_library  # type: ignore
                                     )
                             else:
                                 print("[WARNING] Repository doesn't support update_asset()")
@@ -1952,8 +1930,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             self._library_widget.refresh_library()
 
             # Get current project path for feedback
-            if hasattr(self._library_widget, '_current_project_path'):
-                project_path = self._library_widget._current_project_path
+            if hasattr(self._library_widget, 'current_project_path'):
+                project_path = self._library_widget.current_project_path
                 if project_path:
                     # Ensure project_path is a Path object before accessing .name
                     if isinstance(project_path, str):
@@ -1984,16 +1962,10 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
     def _on_reset_icon_size(self) -> None:
         """Reset library icon size to default - Single Responsibility"""
         try:
-            if self._library_widget and hasattr(self._library_widget, '_icon_size'):
-                # Reset to default size (64px)
-                self._library_widget._icon_size = 64
-                # Apply the reset
-                if hasattr(self._library_widget, '_update_icon_sizes'):
-                    self._library_widget._update_icon_sizes()
-                    self._set_status("Icon size reset to default (64px)")
-                    print("[OK] Icon size reset to default: 64px")
-                else:
-                    self._set_status("Could not reset icon size - method not available")
+            if self._library_widget and hasattr(self._library_widget, 'reset_icon_size'):
+                self._library_widget.reset_icon_size()
+                self._set_status("Icon size reset to default (64px)")
+                print("[OK] Icon size reset to default: 64px")
             else:
                 self._set_status("Library widget not available")
         except Exception as e:
@@ -2163,7 +2135,6 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         """Create asset from current Maya scene - Single Responsibility"""
         try:
             import maya.cmds as cmds  # type: ignore
-            from pathlib import Path
 
             # Get asset library path - simple fallback approach
             # Try to use Documents/Maya/projects/default/assets
@@ -2458,8 +2429,8 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             # Auto-select first asset if available
             try:
                 if self._library_widget and hasattr(self._library_widget, '_current_assets'):
-                    current_assets = getattr(self._library_widget, '_current_assets', None)
-                    if current_assets and len(current_assets) > 0:
+                    current_assets: list = getattr(self._library_widget, '_current_assets', [])
+                    if current_assets:
                         first_asset = current_assets[0]
                         self._on_asset_selected(first_asset)
             except Exception as e:
@@ -2476,12 +2447,10 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
     def _handle_asset_selected_event(self, event_data: Dict[str, Any]) -> None:
         """Handle asset selected event from event system"""
         # Could update other UI components here
-        pass
 
     def _handle_asset_imported_event(self, event_data: Dict[str, Any]) -> None:
         """Handle asset imported event from event system"""
         # Could update recent assets, statistics, etc.
-        pass
 
     def _handle_library_refreshed_event(self, event_data: Dict[str, Any]) -> None:
         """Handle library refreshed event from event system"""
@@ -2551,9 +2520,9 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
 
             # Save current project path
             if (hasattr(self, '_library_widget') and self._library_widget and
-                    hasattr(self._library_widget, '_current_project_path') and
-                    self._library_widget._current_project_path):
-                settings.setValue("lastProject", str(self._library_widget._current_project_path))
+                    hasattr(self._library_widget, 'current_project_path') and
+                    self._library_widget.current_project_path):
+                settings.setValue("lastProject", str(self._library_widget.current_project_path))
 
             # Ensure settings are written to disk immediately
             settings.sync()
@@ -2840,7 +2809,6 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             try:
                 import urllib.request
                 import urllib.error
-                import json
                 import maya.utils  # type: ignore
 
                 # Get versions
@@ -2978,7 +2946,6 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
             import urllib.request
             import tempfile
             import zipfile
-            import shutil
             import os
 
             backup_dir = None
@@ -3116,7 +3083,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         if not self._library_widget:
             return
 
-        selected_assets = self._library_widget._selected_assets
+        selected_assets = self._library_widget.get_selected_assets()
         if not selected_assets:
             QMessageBox.information(self, "No Selection", "Please select an asset to remove.")
             return
@@ -3202,7 +3169,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         if not self._library_widget:
             return
 
-        selected_assets = self._library_widget._selected_assets
+        selected_assets = self._library_widget.get_selected_assets()
         if not selected_assets:
             QMessageBox.information(
                 self,
@@ -3319,7 +3286,7 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         self._event_publisher.clear_all_subscriptions()
 
         # Clear global singleton reference (replaces external module attribute access)
-        global _asset_manager_window
+        global _asset_manager_window  # pylint: disable=global-statement
         _asset_manager_window = None
         print("[OK] Asset Manager singleton reference cleared")
 
@@ -3329,15 +3296,14 @@ This project is managed by Asset Manager v1.5.0. Use the Asset Manager interface
         """Handle window resize event - Auto-save window geometry"""
         super().resizeEvent(event)
 
-        # Save window state after resize (with small delay to avoid excessive saves)
-        if hasattr(self, '_resize_timer'):
-            self._resize_timer.stop()
-        else:
+        # Lazy-initialize the debounce timer (created once, reused on every resize)
+        if not hasattr(self, '_resize_timer'):
             self._resize_timer = QTimer()
             self._resize_timer.setSingleShot(True)
             self._resize_timer.timeout.connect(self._save_window_state)
 
         # Save after 500ms of no more resize events (debouncing)
+        self._resize_timer.stop()
         self._resize_timer.start(500)
 
     def bring_to_front(self) -> None:

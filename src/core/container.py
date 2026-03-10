@@ -243,13 +243,13 @@ class EMSAContainer:
         """
         services = {}
 
-        for interface in self._singletons.keys():
+        for interface in self._singletons:
             services[interface.__name__] = "instance"
 
-        for interface in self._services.keys():
+        for interface in self._services:
             services[interface.__name__] = "singleton"
 
-        for interface in self._factories.keys():
+        for interface in self._factories:
             services[interface.__name__] = "transient"
 
         return services
@@ -271,7 +271,7 @@ def get_container() -> ServiceContainer:
     Returns:
         Global ServiceContainer instance
     """
-    global _container
+    global _container  # pylint: disable=global-statement
 
     if _container is None:
         with _container_lock:
@@ -395,7 +395,6 @@ def _create_fallback_thumbnail_service():
     class FallbackThumbnailService:
         def generate_thumbnail(self, file_path, size=(64, 64)):
             print(f"[FALLBACK] Fallback: No thumbnail for {file_path}")
-            return None
 
         def get_cached_thumbnail(self, file_path, size=(64, 64)):
             return None

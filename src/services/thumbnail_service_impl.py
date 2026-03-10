@@ -32,7 +32,6 @@ if str(src_dir) not in sys.path:
 # Now import with fallback handling
 try:
     from core.interfaces.thumbnail_service import IThumbnailService  # type: ignore
-    from config.constants import THUMBNAIL_CONFIG
 except ImportError:
     # Create minimal interface locally if imports fail
     class IThumbnailService(ABC):
@@ -215,7 +214,6 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 thumbnail_dir.mkdir(parents=True, exist_ok=True)
                                 custom_screenshot_path = thumbnail_dir / f"{file_path.stem}_screenshot.png"
 
-                                import shutil
                                 shutil.copy2(str(cache_path), str(custom_screenshot_path))
                                 print(f"[CAMERA] Saved USD playblast as custom screenshot: {custom_screenshot_path}")
                             except Exception as e:
@@ -333,7 +331,6 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                     # Copy cached playblast to custom screenshot location if it doesn't exist
                     if not custom_screenshot_path.exists():
-                        import shutil
                         shutil.copy2(cached_path, str(custom_screenshot_path))
                         print(f"[CAMERA] Saved cached playblast as custom screenshot: {custom_screenshot_path.name}")
                 except Exception as save_error:

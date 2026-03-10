@@ -39,8 +39,6 @@ class ServiceFactory:
 
         try:
             # Direct import of thumbnail service implementation (full-featured service)
-            from pathlib import Path
-
             # Get direct path to thumbnail service implementation
             services_file = Path(__file__).parent.parent / "services" / "thumbnail_service_impl.py"
 
@@ -79,7 +77,6 @@ class ServiceFactory:
         try:
             # Direct import of standalone services file
             import importlib.util
-            from pathlib import Path
 
             # Get direct path to standalone services
             services_file = Path(__file__).parent.parent / "services" / "standalone_services.py"
@@ -158,7 +155,6 @@ class ServiceFactory:
             # Strategy 2: Use standalone event publisher (reliable fallback)
             try:
                 import importlib.util
-                from pathlib import Path
 
                 # Get direct path to standalone services
                 standalone_file = Path(__file__).parent.parent / "services" / "standalone_services.py"
@@ -241,7 +237,7 @@ def get_service_factory() -> ServiceFactory:
     Returns:
         ServiceFactory instance
     """
-    global _service_factory
+    global _service_factory  # pylint: disable=global-statement
     if _service_factory is None:
         _service_factory = ServiceFactory()
     return _service_factory

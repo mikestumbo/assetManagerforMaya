@@ -372,7 +372,7 @@ class MayaRigExporter:
             # Write to JSON file
             self._report_progress("Writing file", 90)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, 'w') as f:
                 json.dump(rig_data, f, indent=2, default=self._json_encoder)
 
             # Log success
@@ -387,7 +387,7 @@ class MayaRigExporter:
                 if ma_path:
                     rig_data['controllers_ma_file'] = ma_path.name
                     # Re-write .mrig with the .ma reference added
-                    with open(output_path, 'w', encoding='utf-8') as f:
+                    with open(output_path, 'w') as f:
                         json.dump(rig_data, f, indent=2, default=self._json_encoder)
                     self.logger.info(f"[OK] Controllers .ma exported: {ma_path.name}")
 
@@ -1343,8 +1343,8 @@ class MayaRigExporter:
                         # Get target index
                         target_idx = int(target_attr.split('[')[-1].rstrip(']'))
 
-                        # Get target data (deltas) - deferred until full delta extraction is implemented
-                        deltas = None  # _get_blendshape_deltas is a placeholder that always returns None
+                        # Get target data (deltas)
+                        deltas = self._get_blendshape_deltas(bs, target_idx, base_geometry)
 
                         # Get in-between targets
                         inbetweens = self._get_blendshape_inbetweens(bs, target_idx)

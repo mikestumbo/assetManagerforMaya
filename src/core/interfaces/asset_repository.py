@@ -32,7 +32,6 @@ class IAssetRepository(ABC):
         Returns:
             List of discovered assets
         """
-        pass
 
     @abstractmethod
     def find_by_criteria(self, criteria: SearchCriteria) -> List[Asset]:
@@ -45,7 +44,6 @@ class IAssetRepository(ABC):
         Returns:
             Filtered list of assets
         """
-        pass
 
     @abstractmethod
     def find_by_id(self, asset_id: str) -> Optional[Asset]:
@@ -58,7 +56,6 @@ class IAssetRepository(ABC):
         Returns:
             Asset if found, None otherwise
         """
-        pass
 
     @abstractmethod
     def get_recent_assets(self, limit: int = 20) -> List[Asset]:
@@ -71,7 +68,6 @@ class IAssetRepository(ABC):
         Returns:
             List of recently used assets
         """
-        pass
 
     @abstractmethod
     def get_favorites(self) -> List[Asset]:
@@ -81,7 +77,6 @@ class IAssetRepository(ABC):
         Returns:
             List of favorited assets
         """
-        pass
 
     @abstractmethod
     def add_to_favorites(self, asset: Asset) -> bool:
@@ -94,7 +89,6 @@ class IAssetRepository(ABC):
         Returns:
             True if successful
         """
-        pass
 
     @abstractmethod
     def remove_from_favorites(self, asset: Asset) -> bool:
@@ -107,7 +101,6 @@ class IAssetRepository(ABC):
         Returns:
             True if successful
         """
-        pass
 
     @abstractmethod
     def update_access_time(self, asset: Asset) -> None:
@@ -117,7 +110,6 @@ class IAssetRepository(ABC):
         Args:
             asset: Asset that was accessed
         """
-        pass
 
     @abstractmethod
     def remove_asset(self, asset: Asset) -> bool:
@@ -134,7 +126,6 @@ class IAssetRepository(ABC):
             AssetNotFoundError: If the asset doesn't exist in the repository
             PermissionError: If insufficient permissions to delete files
         """
-        pass
 
     @abstractmethod
     def get_assets_from_directory(self, directory: str) -> List[Asset]:
@@ -147,4 +138,3 @@ class IAssetRepository(ABC):
         Returns:
             List of assets found in the directory
         """
-        pass

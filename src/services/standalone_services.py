@@ -103,7 +103,10 @@ if IAssetRepository is None:
     class IThumbnailService(ABC):
         """Thumbnail Service Interface - Maya Standalone Fallback"""
         @abstractmethod
-        def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]: pass
+        def generate_thumbnail(
+            self, file_path: Path, size: Tuple[int, int] = (64, 64),
+            force_playblast: bool = False
+        ) -> Optional[str]: pass
         @abstractmethod
         def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]: pass
         @abstractmethod
@@ -1520,7 +1523,10 @@ class StandaloneThumbnailService(IThumbnailService):
         """Initialize standalone thumbnail service"""
         self.logger = logging.getLogger(__name__)
 
-    def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+    def generate_thumbnail(
+            self, file_path: Path, size: Tuple[int, int] = (64, 64),
+            force_playblast: bool = False
+    ) -> Optional[str]:
         """
         Generate thumbnail for asset - Clean Code: Single Responsibility
 
@@ -1658,7 +1664,7 @@ class StandaloneEventPublisher(IEventPublisher):
             True if unsubscription was successful
         """
         for event_type, subscribers in self._subscribers.items():
-            for i, (sub_id, callback) in enumerate(subscribers):
+            for i, (sub_id, _callback) in enumerate(subscribers):
                 if sub_id == subscription_id:
                     del subscribers[i]
                     self.logger.debug(f"Unsubscribed {subscription_id} from {event_type.value}")

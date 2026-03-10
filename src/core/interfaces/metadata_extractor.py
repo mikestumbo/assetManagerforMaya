@@ -31,7 +31,6 @@ class IMetadataExtractor(ABC):
         Returns:
             FileMetadata object with all extracted information
         """
-        pass
 
     @abstractmethod
     def get_file_size(self, file_path: Path) -> int:
@@ -44,7 +43,6 @@ class IMetadataExtractor(ABC):
         Returns:
             File size in bytes
         """
-        pass
 
     @abstractmethod
     def get_creation_date(self, file_path: Path) -> Optional[str]:
@@ -57,7 +55,6 @@ class IMetadataExtractor(ABC):
         Returns:
             Creation date as string, None if unavailable
         """
-        pass
 
     @abstractmethod
     def get_modification_date(self, file_path: Path) -> Optional[str]:
@@ -70,7 +67,6 @@ class IMetadataExtractor(ABC):
         Returns:
             Modification date as string, None if unavailable
         """
-        pass
 
     @abstractmethod
     def is_supported_format(self, file_path: Path) -> bool:
@@ -83,4 +79,3 @@ class IMetadataExtractor(ABC):
         Returns:
             True if format is supported
         """
-        pass

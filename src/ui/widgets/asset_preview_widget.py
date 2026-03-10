@@ -97,7 +97,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     if self._thumbnail_service:
                         print("[OK] Asset preview widget - factory service resolved")
                     else:
-                        raise Exception("Factory returned None")
+                        raise RuntimeError("Factory returned None") from None
                 except Exception as factory_error:
                     print(f"[WARNING] Asset preview factory error: {factory_error}")
                     self._thumbnail_service = self._create_fallback_thumbnail_service()
@@ -121,7 +121,6 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 def __init__(self):
                     self._cache_dir = None
                     try:
-                        from pathlib import Path
                         import tempfile
                         self._cache_dir = Path(tempfile.gettempdir()) / "asset_manager_preview"
                         self._cache_dir.mkdir(exist_ok=True)
@@ -138,9 +137,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 def _create_placeholder_thumbnail(self, file_path, size=(256, 256)):
                     """Create a simple placeholder thumbnail"""
                     try:
-                        from pathlib import Path
                         from PySide6.QtGui import QPixmap, QPainter, QFont, QColor
-                        from PySide6.QtCore import Qt  # noqa: F401
 
                         # Create a simple placeholder pixmap
                         pixmap = QPixmap(size[0], size[1])
@@ -197,8 +194,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
                 # Method 3: Try to find Maya scripts directory with our icon
                 try:
-                    from pathlib import Path as PathLib
-                    home = PathLib.home()
+                    home = Path.home()
                     maya_paths = [
                         home / "OneDrive" / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png",
                         home / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png"

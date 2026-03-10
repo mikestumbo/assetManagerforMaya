@@ -20,7 +20,6 @@ class IPluginService(ABC):
         Returns:
             bool: True if initialization successful, False otherwise
         """
-        pass
 
     @abstractmethod
     def shutdown(self) -> bool:
@@ -30,7 +29,6 @@ class IPluginService(ABC):
         Returns:
             bool: True if shutdown successful, False otherwise
         """
-        pass
 
     @abstractmethod
     def get_version(self) -> str:
@@ -40,4 +38,3 @@ class IPluginService(ABC):
         Returns:
             str: Version string
         """
-        pass

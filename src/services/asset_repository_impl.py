@@ -373,7 +373,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load favorites from file"""
         try:
             if self._favorites_file.exists():
-                with open(self._favorites_file, 'r') as f:
+                with open(self._favorites_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception:
             pass
@@ -382,7 +382,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_favorites(self, favorites: List[Dict[str, Any]]) -> None:
         """Save favorites to file"""
         try:
-            with open(self._favorites_file, 'w') as f:
+            with open(self._favorites_file, 'w', encoding='utf-8') as f:
                 json.dump(favorites, f, indent=2)
         except Exception as e:
             print(f"Error saving favorites: {e}")
@@ -391,7 +391,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load recent assets from file"""
         try:
             if self._recent_file.exists():
-                with open(self._recent_file, 'r') as f:
+                with open(self._recent_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception:
             pass
@@ -400,7 +400,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_recent(self, recent: List[Dict[str, Any]]) -> None:
         """Save recent assets to file"""
         try:
-            with open(self._recent_file, 'w') as f:
+            with open(self._recent_file, 'w', encoding='utf-8') as f:
                 json.dump(recent, f, indent=2)
         except Exception as e:
             print(f"Error saving recent assets: {e}")
@@ -409,7 +409,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load list of removed asset paths - Single Responsibility"""
         try:
             if self._removed_file.exists():
-                with open(self._removed_file, 'r') as f:
+                with open(self._removed_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             return []
         except Exception as e:
@@ -419,7 +419,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_removed_assets(self, removed_paths: List[str]) -> None:
         """Save list of removed asset paths - Single Responsibility"""
         try:
-            with open(self._removed_file, 'w') as f:
+            with open(self._removed_file, 'w', encoding='utf-8') as f:
                 json.dump(removed_paths, f, indent=2)
         except Exception as e:
             print(f"Error saving removed assets: {e}")

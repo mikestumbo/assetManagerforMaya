@@ -864,7 +864,7 @@ class MayaSkinClusterBuilderImpl:
             for joint_idx, weight in zip(usd_joint_indices, usd_weights):
                 if weight > 0.0001 and joint_idx < len(joint_list_to_influence):
                     inf_idx = joint_list_to_influence[joint_idx]
-                    if 0 <= inf_idx < num_influences:
+                    if inf_idx >= 0 and inf_idx < num_influences:
                         weights[base_idx + inf_idx] = weight
                         weight_sum += weight
 

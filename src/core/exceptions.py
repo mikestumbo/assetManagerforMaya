@@ -12,7 +12,6 @@ from typing import Optional
 
 class AssetManagerError(Exception):
     """Base exception class for Asset Manager"""
-    pass
 
 
 class AssetNotFoundError(AssetManagerError):
@@ -29,9 +28,7 @@ class AssetNotFoundError(AssetManagerError):
 
 class AssetValidationError(AssetManagerError):
     """Exception raised when asset validation fails"""
-    pass
 
 
 class RepositoryError(AssetManagerError):
     """Exception raised for repository-related errors"""
-    pass
