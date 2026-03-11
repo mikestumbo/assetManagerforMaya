@@ -352,5 +352,3 @@ class ImportOptions:
     flatten_layers: bool = False      # Flatten layers on import (combine into one)
     create_edit_layer: bool = True    # Create editable layer for local edits
     open_layer_editor: bool = False   # Open mayaUSD Layer Editor after proxy import (Option B)
-
-

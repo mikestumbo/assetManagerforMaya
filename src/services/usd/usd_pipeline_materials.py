@@ -5,15 +5,12 @@ Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-spli
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
-import shutil
-import tempfile
 import traceback
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Optional
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
@@ -22,7 +19,7 @@ try:
     MAYA_AVAILABLE = True
 except ImportError:
     cmds = None   # type: ignore[assignment]
-    mel  = None   # type: ignore[assignment]
+    mel = None   # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
@@ -33,14 +30,7 @@ except ImportError:
     USD_AVAILABLE = False
 
 from .usd_pipeline_models import (
-    ConversionResult,
-    ConversionStatus,
     ExportOptions,
-    ExportResult,
-    ImportOptions,
-    ImportResult,
-    MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL,
-    USD_AVAILABLE as _USD_AVAILABLE_MODEL,
 )
 
 
@@ -764,8 +754,6 @@ class MaterialsMixin:
             return
 
         try:
-            from pxr import Usd, UsdShade, Sdf, Gf
-
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
                 self.logger.warning("[WARNING] Could not open USD stage for material conversion")
@@ -1008,34 +996,46 @@ class MaterialsMixin:
                                             continue
                                         try:
                                             from PIL import Image  # type: ignore
-                                            import statistics as _lst
+                                            import numpy as _np
                                             with Image.open(_lfile_path).convert("RGB") as _limg:
-                                                _lw, _lh = _limg.size
-                                                _lcrop = _limg.crop((
-                                                    _lw // 4, _lh // 4,
-                                                    _lw * 3 // 4, _lh * 3 // 4,
-                                                ))
-                                                _lpix = list(_lcrop.getdata())
-                                                lr = _lst.median(p[0] for p in _lpix) / 255.0
-                                                lg = _lst.median(p[1] for p in _lpix) / 255.0
-                                                lb = _lst.median(p[2] for p in _lpix) / 255.0
-                                            _TARGET_V = 0.45
-                                            _max_ch = max(lr, lg, lb)
-                                            if 0.02 < _max_ch < _TARGET_V:
-                                                _scale = _TARGET_V / _max_ch
-                                                lr = min(lr * _scale, 1.0)
-                                                lg = min(lg * _scale, 1.0)
-                                                lb = min(lb * _scale, 1.0)
-                                            sg_to_color[sg] = Gf.Vec3f(
-                                                max(0.0, min(1.0, lr)),
-                                                max(0.0, min(1.0, lg)),
-                                                max(0.0, min(1.0, lb)),
-                                            )
-                                            self.logger.info(
-                                                f"   [PHASE-B] {sg}: Lambert file texture "
-                                                f"({lr:.3f}, {lg:.3f}, {lb:.3f}) ← "
-                                                f"{os.path.basename(_lfile_path)}"
-                                            )
+                                                # Resize to a small sample for speed —
+                                                # preserves the full color distribution
+                                                # across the UV layout.
+                                                _lthumb = _limg.resize(
+                                                    (32, 32), Image.LANCZOS
+                                                )
+                                                _larr = _np.array(
+                                                    _lthumb, dtype=float
+                                                ) / 255.0
+                                                _lpix = _larr.reshape(-1, 3)
+                                                # Filter out near-black pixels
+                                                # (unmapped UV space / shadows) so
+                                                # they don't drag the median to zero.
+                                                _lbright = _lpix.mean(axis=1)
+                                                _lmask = _lbright > 0.05
+                                                if _lmask.sum() >= 4:
+                                                    _lpix = _lpix[_lmask]
+                                                lr = float(_np.median(_lpix[:, 0]))
+                                                lg = float(_np.median(_lpix[:, 1]))
+                                                lb = float(_np.median(_lpix[:, 2]))
+                                            if max(lr, lg, lb) > 0.02:
+                                                sg_to_color[sg] = Gf.Vec3f(
+                                                    max(0.0, min(1.0, lr)),
+                                                    max(0.0, min(1.0, lg)),
+                                                    max(0.0, min(1.0, lb)),
+                                                )
+                                                self.logger.info(
+                                                    f"   [PHASE-B] {sg}: Lambert file texture "
+                                                    f"({lr:.3f}, {lg:.3f}, {lb:.3f}) ← "
+                                                    f"{os.path.basename(_lfile_path)}"
+                                                )
+                                            else:
+                                                self.logger.info(
+                                                    f"   [PHASE-B] {sg}: Lambert file near-zero "
+                                                    f"({lr:.3f}, {lg:.3f}, {lb:.3f}) ← "
+                                                    f"{os.path.basename(_lfile_path)}"
+                                                    f" — skipping, will use Pxr texture sampler"
+                                                )
                                         except Exception as _lpil_exc:
                                             self.logger.info(
                                                 f"   [PHASE-B] {sg}: Lambert file PIL "
@@ -1099,10 +1099,12 @@ class MaterialsMixin:
                                         break
                                     else:
                                         # baseColor is near-zero — this shader is
-                                        # texture-driven. Follow the connection to
-                                        # the PxrTexture and sample the actual file
-                                        # so VP2 shows a meaningful preview color
-                                        # instead of uniform mid-grey.
+                                        # texture-driven. If Lambert already found a
+                                        # color for this SG, skip the expensive texture
+                                        # sampler entirely (MImage/PIL/OIIO would run
+                                        # for nothing and the result would be discarded).
+                                        if sg in sg_to_color:
+                                            break
                                         self.logger.info(
                                             f"   [B-DIAG] {rfm_node}: near-zero, "
                                             f"calling texture sampler..."
@@ -1111,11 +1113,10 @@ class MaterialsMixin:
                                             rfm_node, color_attr
                                         )
                                         if tex_color is not None:
-                                            if sg not in sg_to_color:  # don't overwrite Lambert file result
-                                                sg_to_color[sg] = tex_color
-                                                self.logger.info(
-                                                    f"   [TEX] {sg} — sampled texture color: {tex_color}"
-                                                )
+                                            sg_to_color[sg] = tex_color
+                                            self.logger.info(
+                                                f"   [TEX] {sg} — sampled texture color: {tex_color}"
+                                            )
                                             break
                                 except Exception as _b_exc:
                                     self.logger.info(
@@ -1376,7 +1377,6 @@ class MaterialsMixin:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] Material conversion error: {e}")
-            import traceback
             self.logger.warning(traceback.format_exc())
 
     def _fix_exported_usdc(self, usd_path: Path) -> None:
@@ -1419,8 +1419,6 @@ class MaterialsMixin:
         if not USD_AVAILABLE:
             return
         try:
-            from pxr import Usd, UsdShade, UsdSkel, UsdGeom  # type: ignore
-
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
                 self.logger.warning(f"[FIX] Could not open stage: {usd_path}")
@@ -1654,7 +1652,6 @@ class MaterialsMixin:
 
         except Exception as e:
             self.logger.warning(f"[FIX] Post-export fix-up failed: {e}")
-            import traceback
             self.logger.warning(traceback.format_exc())
 
     def _create_usd_preview_material(
@@ -1667,8 +1664,6 @@ class MaterialsMixin:
     ) -> None:
         """Create a UsdPreviewSurface material and bind it to a mesh"""
         try:
-            from pxr import UsdShade, Sdf, Gf
-
             # Create material prim
             material_path = f"{materials_scope.GetPath()}/{mesh_name}_mat"
             material = UsdShade.Material.Define(stage, material_path)
@@ -1710,8 +1705,6 @@ class MaterialsMixin:
         Create USDZ package containing USD and .rig.mb backup
         """
         try:
-            import zipfile
-
             with zipfile.ZipFile(str(usdz_path), 'w', zipfile.ZIP_STORED) as zf:
                 # Add USD file (must be first for USDZ spec compliance)
                 zf.write(str(usd_path), usd_path.name)
@@ -1771,8 +1764,6 @@ class MaterialsMixin:
         This provides better compression and protection for asset distribution.
         """
         try:
-            import zipfile
-
             with zipfile.ZipFile(str(zip_path), 'w', zipfile.ZIP_DEFLATED) as zf:
                 # If organized in subfolder, zip the entire folder
                 if subfolder and subfolder.exists():
@@ -1808,4 +1799,3 @@ class MaterialsMixin:
     # =========================================================================
     # IMPORT
     # =========================================================================
-
