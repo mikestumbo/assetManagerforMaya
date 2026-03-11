@@ -137,7 +137,7 @@ class MaterialsMixin:
                     unique_candidates.append(c)
 
             if not unique_candidates:
-                self.logger.info(
+                self.logger.debug(
                     f"   [TEX-DIAG] {rfm_node}.{color_attr}: no upstream nodes found "
                     f"via connectionInfo or listConnections"
                 )
@@ -1120,7 +1120,7 @@ class MaterialsMixin:
                                         # for nothing and the result would be discarded).
                                         if sg in sg_to_color:
                                             break
-                                        self.logger.info(
+                                        self.logger.debug(
                                             f"   [B-DIAG] {rfm_node}: near-zero, "
                                             f"calling texture sampler..."
                                         )
