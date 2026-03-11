@@ -22,7 +22,7 @@ try:
     MAYA_AVAILABLE = True
 except ImportError:
     cmds = None   # type: ignore[assignment]
-    mel  = None   # type: ignore[assignment]
+    mel = None    # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
@@ -224,7 +224,6 @@ class ExportMixin:
 
         except Exception as e:
             self.logger.error(f"Export failed: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             result.error_message = str(e)
 
@@ -494,7 +493,6 @@ class ExportMixin:
 
             except Exception as e:
                 self.logger.warning(f"   [WARNING] Failed to fix {mesh_name}: {e}")
-                import traceback
                 self.logger.debug(traceback.format_exc())
 
         return temp_nodes
@@ -1070,7 +1068,6 @@ class ExportMixin:
 
         except Exception as e:
             self.logger.error(f"mayaUSD export failed: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             return False
 
@@ -1101,8 +1098,6 @@ class ExportMixin:
             return False
 
         try:
-            from pxr import Usd  # type: ignore
-
             base_dir = base_usd_path.parent
             base_name = base_usd_path.stem
 
@@ -1153,15 +1148,12 @@ class ExportMixin:
 
         except Exception as e:
             self.logger.error(f"Failed to create layered USD: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             return False
 
     def _extract_geometry_layer(self, source_stage, output_path: Path) -> bool:
         """Extract geometry prims to a separate layer"""
         try:
-            from pxr import Usd, Sdf  # pyright: ignore[reportMissingImports]
-
             # Create new layer
             layer = Sdf.Layer.CreateNew(str(output_path))
             stage = Usd.Stage.Open(layer)
@@ -1188,8 +1180,6 @@ class ExportMixin:
     def _extract_skeleton_layer(self, source_stage, output_path: Path) -> bool:
         """Extract skeleton/skinning prims to a separate layer"""
         try:
-            from pxr import Usd, Sdf  # pyright: ignore[reportMissingImports]
-
             layer = Sdf.Layer.CreateNew(str(output_path))
             stage = Usd.Stage.Open(layer)
 
@@ -1215,8 +1205,6 @@ class ExportMixin:
     def _extract_materials_layer(self, source_stage, output_path: Path) -> bool:
         """Extract material prims to a separate layer"""
         try:
-            from pxr import Usd, Sdf  # pyright: ignore[reportMissingImports]
-
             layer = Sdf.Layer.CreateNew(str(output_path))
             stage = Usd.Stage.Open(layer)
 
@@ -1241,8 +1229,6 @@ class ExportMixin:
     def _extract_animation_layer(self, source_stage, output_path: Path) -> bool:
         """Extract animation data to a separate layer"""
         try:
-            from pxr import Usd, Sdf  # pyright: ignore[reportMissingImports]
-
             layer = Sdf.Layer.CreateNew(str(output_path))
             stage = Usd.Stage.Open(layer)
 
@@ -1275,8 +1261,6 @@ class ExportMixin:
     ) -> bool:
         """Create root layer that references sublayers"""
         try:
-            from pxr import Usd, Sdf, UsdGeom  # pyright: ignore[reportMissingImports]
-
             # Create root layer as ASCII for readability
             layer = Sdf.Layer.CreateNew(str(root_path))
             stage = Usd.Stage.Open(layer)
@@ -1334,8 +1318,6 @@ class ExportMixin:
             return True
 
         try:
-            from pxr import Usd, UsdSkel, UsdGeom, Sdf
-
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
                 return True
@@ -1498,7 +1480,5 @@ class ExportMixin:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] SkelRoot scope fix failed (non-fatal): {e}")
-            import traceback
             self.logger.debug(traceback.format_exc())
             return True  # Non-fatal - continue anyway
-
