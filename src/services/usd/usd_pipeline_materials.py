@@ -1047,6 +1047,11 @@ class MaterialsMixin:
                             except Exception:
                                 pass
 
+                            # Lambert pre-scan already resolved this SG — skip
+                            # the Pxr loop entirely to avoid noisy [B-DIAG] output.
+                            if sg in sg_to_color:
+                                continue
+
                             has_pxr_node = False
                             for rfm_node in rfm_nodes:
                                 try:
@@ -1058,6 +1063,12 @@ class MaterialsMixin:
                                 # a meaningful color from it.
                                 if node_type.startswith("Pxr"):
                                     has_pxr_node = True
+                                # PxrBlack is a valid shader that renders as solid black.
+                                # Give it a near-black preview color so the mesh is visible.
+                                if node_type == "PxrBlack":
+                                    if sg not in sg_to_color:
+                                        sg_to_color[sg] = Gf.Vec3f(0.01, 0.01, 0.01)
+                                    break
                                 if node_type not in RFM_SHADER_TYPES:
                                     if node_type != "lambert":  # Lambert handled in pre-scan above
                                         self.logger.info(
@@ -1078,10 +1089,14 @@ class MaterialsMixin:
                                     else:
                                         c = raw[0] if isinstance(raw, list) else raw
                                         r, g, b = float(c[0]), float(c[1]), float(c[2])
-                                    self.logger.info(
-                                        f"   [B-DIAG] {rfm_node}.{color_attr}: "
-                                        f"raw={raw!r}  r+g+b={r+g+b:.4f}"
-                                    )
+                                    # Only log the raw diagnostic when the sg
+                                    # is still unresolved — avoids noise for
+                                    # texture-driven shaders with 0,0,0 base color.
+                                    if sg not in sg_to_color:
+                                        self.logger.debug(
+                                            f"   [B-DIAG] {rfm_node}.{color_attr}: "
+                                            f"raw={raw!r}  r+g+b={r+g+b:.4f}"
+                                        )
                                     if gain_attr:
                                         try:
                                             gain = float(cmds.getAttr(f"{rfm_node}.{gain_attr}"))
@@ -1125,10 +1140,22 @@ class MaterialsMixin:
                                     )
                                     continue
                             # If ANY Pxr* node was found on this SG but no
-                            # usable color was extracted, mark it with None
-                            # so Phase C can't pick it up with black.
+                            # usable color was extracted, assign a sensible
+                            # fallback so Phase C can't corrupt it with 0,0,0.
+                            # Transparent/glass materials get a pale glass color;
+                            # everything else is marked None (RfM name-hash
+                            # fallback runs later in the USD injection step).
                             if has_pxr_node and sg not in sg_to_color:
-                                sg_to_color[sg] = None
+                                _sg_lo = sg.lower()
+                                _is_glass = any(
+                                    kw in _sg_lo
+                                    for kw in ("cornea", "glass", "crystal", "clear", "transp")
+                                )
+                                sg_to_color[sg] = (
+                                    Gf.Vec3f(0.85, 0.88, 0.92)  # pale ice-blue for transparent
+                                    if _is_glass
+                                    else None
+                                )
                         except Exception:
                             continue
 
