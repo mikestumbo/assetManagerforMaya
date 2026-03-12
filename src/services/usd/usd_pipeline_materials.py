@@ -1229,6 +1229,11 @@ class MaterialsMixin:
                                 break
                             except Exception:
                                 pass
+                    self.logger.info(
+                        f"   [PHASE-B-PBR] Populated {len(sg_to_pbr)} SGs with PBR values "
+                        f"(metallic/roughness from PxrDisney). "
+                        f"Samples: {list(sg_to_pbr.items())[:4]}"
+                    )
 
                     # ----------------------------------------------------------
                     # Phase C: Generic surface shader fallback for non-Lambert,
@@ -1508,6 +1513,10 @@ class MaterialsMixin:
                         _active_shader.CreateInput(
                             "roughness", Sdf.ValueTypeNames.Float
                         ).Set(_pbr['roughness'])
+                        self.logger.info(
+                            f"   [PBR] {usd_mat_name} -- metallic={_pbr['metallic']:.3f}, "
+                            f"roughness={_pbr['roughness']:.3f}"
+                        )
                     # Eye material name-based overrides
                     if 'cornea' in _name_lo:
                         # Cornea is transparent glass — opacity=0 lets iris/pupil show
@@ -1544,6 +1553,9 @@ class MaterialsMixin:
                         _active_shader.CreateInput(
                             "roughness", Sdf.ValueTypeNames.Float
                         ).Set(0.2)
+                        self.logger.info(
+                            f"   [EYE] {usd_mat_name} -- iris non-metallic, roughness=0.2"
+                        )
                     elif 'pupil' in _name_lo:
                         _active_shader.CreateInput(
                             "metallic", Sdf.ValueTypeNames.Float
@@ -1551,6 +1563,9 @@ class MaterialsMixin:
                         _active_shader.CreateInput(
                             "roughness", Sdf.ValueTypeNames.Float
                         ).Set(0.5)
+                        self.logger.info(
+                            f"   [EYE] {usd_mat_name} -- pupils non-metallic, roughness=0.5"
+                        )
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
             self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
