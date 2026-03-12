@@ -781,6 +781,12 @@ class MaterialsMixin:
             # instead of flat diffuseColor values.  Works for any RenderMan
             # rig — the Lambert proxy / file-node chain is standard RfM.
             sg_to_texpath: dict = {}
+            # Parallel dict: sg_name → {'metallic': float, 'roughness': float}
+            # Populated by Phase B-PBR scan from PxrDisney / PxrSurface attrs.
+            # Transferred to UsdPreviewSurface so metal objects (chain, dog tags,
+            # zippers, buttons) render with correct PBR properties instead of
+            # looking like flat plastic.
+            sg_to_pbr: dict = {}
             if cmds is not None:
                 try:
                     # ----------------------------------------------------------
@@ -1183,6 +1189,48 @@ class MaterialsMixin:
                             continue
 
                     # ----------------------------------------------------------
+                    # Phase B-PBR: Transfer metallic / roughness from PxrDisney
+                    # shaders into sg_to_pbr.  Metal accessories (chain, dog tags,
+                    # zippers, buttons) rely on this to not look like flat plastic
+                    # in USD Preview Surface viewers.
+                    # ----------------------------------------------------------
+                    for _sg_pbr, _pxr_list_pbr in _sg_to_pxr_map.items():
+                        for _pxr_pbr in _pxr_list_pbr:
+                            try:
+                                _nt_pbr = cmds.nodeType(_pxr_pbr)
+                                if _nt_pbr not in (
+                                    'PxrDisney', 'PxrDisneyBsdf', 'PxrDisneyBSDF',
+                                    'PxrSurface', 'PxrUnified',
+                                ):
+                                    continue
+                                _m_pbr, _r_pbr = 0.0, 0.5
+                                try:
+                                    _m_pbr = float(
+                                        cmds.getAttr(f"{_pxr_pbr}.metallic") or 0.0
+                                    )
+                                except Exception:
+                                    pass
+                                try:
+                                    _rough_attr = (
+                                        "roughness"
+                                        if _nt_pbr.startswith("PxrDisney")
+                                        else "diffuseRoughness"
+                                    )
+                                    _r_pbr = float(
+                                        cmds.getAttr(f"{_pxr_pbr}.{_rough_attr}") or 0.5
+                                    )
+                                except Exception:
+                                    pass
+                                if _sg_pbr not in sg_to_pbr:
+                                    sg_to_pbr[_sg_pbr] = {
+                                        'metallic': min(1.0, max(0.0, _m_pbr)),
+                                        'roughness': min(1.0, max(0.0, _r_pbr)),
+                                    }
+                                break
+                            except Exception:
+                                pass
+
+                    # ----------------------------------------------------------
                     # Phase C: Generic surface shader fallback for non-Lambert,
                     # non-RFM SGs (e.g. aiStandardSurface, blinn, phong, etc.).
                     # Tries common color attribute names on whatever node is
@@ -1369,6 +1417,7 @@ class MaterialsMixin:
                             preview_shader = s
                             break
 
+                _active_shader = None  # set below; used for shared PBR / eye overrides
                 if preview_shader:
                     # Never overwrite a diffuseColor that already has a texture
                     # connection wired by mayaUSD (e.g. PxrDisney with PxrTexture).
@@ -1400,6 +1449,7 @@ class MaterialsMixin:
                                 f"   [UPDATE] {usd_mat_name} ← {matched_sg} = {lambert_color}"
                             )
                         materials_converted += 1
+                        _active_shader = preview_shader
 
                     # Ensure material's universal 'surface' output is connected.
                     # The RenderMan exporter only creates ri:surface — VP2 needs
@@ -1440,6 +1490,67 @@ class MaterialsMixin:
                     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
                     material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
                     materials_converted += 1
+                    _active_shader = shader
+
+                # ── Shared PBR + eye override post-processing ──────────────────
+                # Runs after both UPDATE (non-skip) and INJECT branches.
+                # Applies Phase B-PBR values (metallic / roughness from PxrDisney)
+                # and eye-specific material overrides (cornea opacity, sclera white,
+                # iris / pupil metallic reset).
+                if _active_shader is not None:
+                    _name_lo = usd_mat_name.lower()
+                    # Transfer PBR values from PxrDisney scan
+                    _pbr = sg_to_pbr.get(matched_sg) if matched_sg else None
+                    if _pbr:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(_pbr['metallic'])
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(_pbr['roughness'])
+                    # Eye material name-based overrides
+                    if 'cornea' in _name_lo:
+                        # Cornea is transparent glass — opacity=0 lets iris/pupil show
+                        _active_shader.CreateInput(
+                            "opacity", Sdf.ValueTypeNames.Float
+                        ).Set(0.0)
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.0)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.05)
+                        self.logger.info(
+                            f"   [EYE] {usd_mat_name} — opacity=0 (transparent cornea)"
+                        )
+                    elif 'sclera' in _name_lo:
+                        # Force white regardless of Lambert proxy color
+                        _active_shader.CreateInput(
+                            "diffuseColor", Sdf.ValueTypeNames.Color3f
+                        ).Set(Gf.Vec3f(0.95, 0.95, 0.95))
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.0)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.35)
+                        self.logger.info(
+                            f"   [EYE] {usd_mat_name} — white sclera, metallic=0"
+                        )
+                    elif 'iris' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.0)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.2)
+                    elif 'pupil' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.0)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.5)
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
             self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
@@ -1597,6 +1708,13 @@ class MaterialsMixin:
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
                         continue  # Already has a binding
+                    # Don't write a mesh-level binding for multi-material meshes
+                    # that have GeomSubset children (e.g. the inner eyeball with
+                    # Sclera / Iris / Pupil face groups).  A mesh-level binding
+                    # would compete with the per-face GeomSubset bindings and
+                    # cause solid wrong-color eyes in many viewers.
+                    if any(c.GetTypeName() == 'GeomSubset' for c in prim.GetChildren()):
+                        continue
                     prim_name = prim.GetName()
                     sg_name = mesh_to_sg.get(prim_name)
                     if not sg_name:
@@ -1614,7 +1732,15 @@ class MaterialsMixin:
                             bind_api.Bind(UsdShade.Material(mat_prim))
                             bindings_written += 1
                 elif ptype == 'GeomSubset':
-                    # mayaUSD names GeomSubsets after the shading group they represent
+                    # mayaUSD names GeomSubsets after the shading group they represent.
+                    # Ensure the subset is declared as a face-element materialBind
+                    # family so USD-compliant viewers treat it as a per-face binding.
+                    _gs = UsdGeom.Subset(prim)
+                    _gs.CreateElementTypeAttr().Set(UsdGeom.Tokens.face)
+                    _fam_attr = prim.CreateAttribute(
+                        "familyName", Sdf.ValueTypeNames.Token, False
+                    )
+                    _fam_attr.Set("materialBind")
                     bind_api = UsdShade.MaterialBindingAPI(prim)
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
