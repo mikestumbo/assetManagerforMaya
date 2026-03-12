@@ -1566,6 +1566,49 @@ class MaterialsMixin:
                         self.logger.info(
                             f"   [EYE] {usd_mat_name} -- pupils non-metallic, roughness=0.5"
                         )
+                    # Metal accessory overrides — PxrDisney metallic=0 in Maya
+                    # means chain/tags/zippers look like flat plastic in USD.
+                    # Override by name so they get realistic metal PBR values.
+                    elif 'chain' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.9)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.2)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- chain override metallic=0.9, roughness=0.2"
+                        )
+                    elif 'tag' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.85)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.15)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- dog tag override metallic=0.85, roughness=0.15"
+                        )
+                    elif 'zipr' in _name_lo or 'zipper' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.85)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.25)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- zipper override metallic=0.85, roughness=0.25"
+                        )
+                    elif 'butn' in _name_lo or 'button' in _name_lo:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.75)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.3)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- button override metallic=0.75, roughness=0.3"
+                        )
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
             self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
