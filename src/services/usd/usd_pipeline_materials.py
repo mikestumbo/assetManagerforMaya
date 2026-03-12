@@ -346,6 +346,7 @@ class MaterialsMixin:
                                     f"   [TEX] {os.path.basename(path)} "
                                     f"(src-lib): ({r:.3f}, {g:.3f}, {b:.3f})"
                                 )
+                                self._last_resolved_tex_path = path
                                 return color_out
                     except ImportError:
                         self.logger.info(
@@ -507,6 +508,7 @@ class MaterialsMixin:
                             f"   [TEX] {os.path.basename(tex_path)} "
                             f"(MImage): ({r:.3f}, {g:.3f}, {b:.3f})"
                         )
+                        self._last_resolved_tex_path = tex_path
                         return color_out
             except Exception as _mimg_err:
                 self.logger.info(
@@ -536,6 +538,7 @@ class MaterialsMixin:
                                 f"   [TEX] {os.path.basename(tex_path)}: "
                                 f"({r:.3f}, {g:.3f}, {b:.3f}) via PIL → boosted {boosted}"
                             )
+                            self._last_resolved_tex_path = tex_path
                             return boosted
                         self.logger.info(
                             f"   [TEX] {os.path.basename(tex_path)}: "
@@ -623,6 +626,7 @@ class MaterialsMixin:
                                 f"   [TEX] {os.path.basename(tex_path)}: "
                                 f"({r:.3f}, {g:.3f}, {b:.3f}) via OIIO → boosted {boosted}"
                             )
+                            self._last_resolved_tex_path = tex_path
                             return boosted
                         self.logger.info(
                             f"   [TEX] {os.path.basename(tex_path)}: "
@@ -683,6 +687,7 @@ class MaterialsMixin:
                                                 f"   [TEX] {fname} (rma-scan): "
                                                 f"({r:.3f}, {g:.3f}, {b:.3f}) → boosted {boosted}"
                                             )
+                                            self._last_resolved_tex_path = candidate
                                             return boosted
                                         self.logger.info(
                                             f"   [TEX] {fname} (rma-scan): "
@@ -770,6 +775,12 @@ class MaterialsMixin:
             # mayaUSD names USD Material prims after the Maya shading group.
             # ----------------------------------------------------------------
             sg_to_color = {}
+            # Parallel dict: sg_name → resolved source PNG path.
+            # Populated by Phase B Lambert scan (and Pxr sampler fallback).
+            # Used in the USD injection step to create UsdUVTexture networks
+            # instead of flat diffuseColor values.  Works for any RenderMan
+            # rig — the Lambert proxy / file-node chain is standard RfM.
+            sg_to_texpath: dict = {}
             if cmds is not None:
                 try:
                     # ----------------------------------------------------------
@@ -1024,6 +1035,12 @@ class MaterialsMixin:
                                                     max(0.0, min(1.0, lg)),
                                                     max(0.0, min(1.0, lb)),
                                                 )
+                                                _tex_for_usd = _lfile_path
+                                                if _tex_for_usd.lower().endswith(".tex"):
+                                                    _src = _tex_for_usd[:-4]
+                                                    if os.path.isfile(_src):
+                                                        _tex_for_usd = _src
+                                                sg_to_texpath[sg] = _tex_for_usd
                                                 self.logger.info(
                                                     f"   [PHASE-B] {sg}: Lambert file texture "
                                                     f"({lr:.3f}, {lg:.3f}, {lb:.3f}) ← "
@@ -1129,6 +1146,12 @@ class MaterialsMixin:
                                         )
                                         if tex_color is not None:
                                             sg_to_color[sg] = tex_color
+                                            _ltp = getattr(
+                                                self, '_last_resolved_tex_path', None
+                                            )
+                                            if _ltp:
+                                                sg_to_texpath[sg] = _ltp
+                                                self._last_resolved_tex_path = None
                                             self.logger.info(
                                                 f"   [TEX] {sg} — sampled texture color: {tex_color}"
                                             )
@@ -1358,11 +1381,25 @@ class MaterialsMixin:
                             f"   [SKIP] {usd_mat_name} — diffuseColor already has texture connection"
                         )
                     else:
-                        preview_shader.CreateInput(
-                            "diffuseColor", Sdf.ValueTypeNames.Color3f
-                        ).Set(lambert_color)
+                        _tex_src = sg_to_texpath.get(matched_sg) if matched_sg else None
+                        if (
+                            _tex_src and os.path.isfile(_tex_src)
+                            and self._wire_diffuse_texture(
+                                stage, prim, preview_shader, _tex_src, usd_path.parent
+                            )
+                        ):
+                            self.logger.info(
+                                f"   [UPDATE] {usd_mat_name} ← {matched_sg}: "
+                                f"UsdUVTexture({os.path.basename(_tex_src)})"
+                            )
+                        else:
+                            preview_shader.CreateInput(
+                                "diffuseColor", Sdf.ValueTypeNames.Color3f
+                            ).Set(lambert_color)
+                            self.logger.info(
+                                f"   [UPDATE] {usd_mat_name} ← {matched_sg} = {lambert_color}"
+                            )
                         materials_converted += 1
-                        self.logger.info(f"   [UPDATE] {usd_mat_name} ← {matched_sg} = {lambert_color}")
 
                     # Ensure material's universal 'surface' output is connected.
                     # The RenderMan exporter only creates ri:surface — VP2 needs
@@ -1381,12 +1418,28 @@ class MaterialsMixin:
                     shader_path = f"{str(prim.GetPath())}/PreviewSurface"
                     shader = UsdShade.Shader.Define(stage, shader_path)
                     shader.CreateIdAttr("UsdPreviewSurface")
-                    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(lambert_color)
+                    _tex_src = sg_to_texpath.get(matched_sg) if matched_sg else None
+                    if (
+                        _tex_src and os.path.isfile(_tex_src)
+                        and self._wire_diffuse_texture(
+                            stage, prim, shader, _tex_src, usd_path.parent
+                        )
+                    ):
+                        self.logger.info(
+                            f"   [INJECT] {usd_mat_name} ← {matched_sg}: "
+                            f"UsdUVTexture({os.path.basename(_tex_src)})"
+                        )
+                    else:
+                        shader.CreateInput(
+                            "diffuseColor", Sdf.ValueTypeNames.Color3f
+                        ).Set(lambert_color)
+                        self.logger.info(
+                            f"   [INJECT] {usd_mat_name} ← {matched_sg} = {lambert_color}"
+                        )
                     shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
                     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
                     material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
                     materials_converted += 1
-                    self.logger.info(f"   [INJECT] {usd_mat_name} ← {matched_sg} = {lambert_color}")
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
             self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
@@ -1722,6 +1775,86 @@ class MaterialsMixin:
         except Exception as e:
             self.logger.warning(f"[WARNING] Failed to create material for {mesh_name}: {e}")
 
+    def _wire_diffuse_texture(
+        self,
+        stage,
+        mat_prim,
+        surface_shader,
+        png_src_path: str,
+        usd_dir,
+    ) -> bool:
+        """
+        Create a UsdUVTexture + UsdPrimvarReader_float2 shader network and
+        connect it to ``surface_shader.inputs:diffuseColor``.
+
+        Also copies the source PNG into ``usd_dir/textures/`` so that
+        ``_create_usdz_package`` can bundle it automatically.
+
+        The relative asset path ``./textures/<basename>`` written into the
+        USD is resolved by any USDZ viewer from the archive root — no
+        hardcoded paths, no rig-specific logic.  Works for any character
+        whose RenderMan Lambert proxy nodes point to real PNG files.
+
+        Returns True on success so callers can fall back to a flat color on
+        failure without needing a try/except at the call site.
+        """
+        try:
+            import shutil
+            from pxr import Sdf, UsdShade  # type: ignore
+
+            tex_basename = os.path.basename(png_src_path)
+            textures_dir = usd_dir / "textures"
+            textures_dir.mkdir(exist_ok=True)
+            dst_png = textures_dir / tex_basename
+            if not dst_png.exists():
+                shutil.copy2(png_src_path, str(dst_png))
+
+            mat_path = str(mat_prim.GetPath())
+
+            # UV reader — provides the mesh's 'st' primvar to the texture
+            st_reader = UsdShade.Shader.Define(
+                stage, f"{mat_path}/TexCoordReader"
+            )
+            st_reader.CreateIdAttr("UsdPrimvarReader_float2")
+            st_reader.CreateInput(
+                "varname", Sdf.ValueTypeNames.Token
+            ).Set("st")
+
+            # Diffuse texture — reads the source PNG via relative USDZ path
+            tex_shader = UsdShade.Shader.Define(
+                stage, f"{mat_path}/DiffuseTexture"
+            )
+            tex_shader.CreateIdAttr("UsdUVTexture")
+            tex_shader.CreateInput(
+                "file", Sdf.ValueTypeNames.Asset
+            ).Set(Sdf.AssetPath(f"./textures/{tex_basename}"))
+            tex_shader.CreateInput(
+                "wrapS", Sdf.ValueTypeNames.Token
+            ).Set("repeat")
+            tex_shader.CreateInput(
+                "wrapT", Sdf.ValueTypeNames.Token
+            ).Set("repeat")
+            tex_shader.CreateInput(
+                "sourceColorSpace", Sdf.ValueTypeNames.Token
+            ).Set("sRGB")
+            tex_shader.CreateInput(
+                "st", Sdf.ValueTypeNames.Float2
+            ).ConnectToSource(st_reader.ConnectableAPI(), "result")
+
+            # Wire texture RGB output → PreviewSurface diffuseColor
+            surface_shader.CreateInput(
+                "diffuseColor", Sdf.ValueTypeNames.Color3f
+            ).ConnectToSource(tex_shader.ConnectableAPI(), "rgb")
+
+            return True
+
+        except Exception as _exc:
+            self.logger.warning(
+                f"   [TEX-WIRE] Failed to wire UsdUVTexture for "
+                f"{os.path.basename(png_src_path)}: {_exc}"
+            )
+            return False
+
     def _create_usdz_package(
         self,
         usd_path: Path,
@@ -1729,7 +1862,12 @@ class MaterialsMixin:
         usdz_path: Path
     ) -> bool:
         """
-        Create USDZ package containing USD and .rig.mb backup
+        Create USDZ package containing USD, texture PNGs, and .rig.mb backup.
+
+        Build order ensures everything is already fully converted before this
+        method is called (mayaUSD export → blendshapes → material conversion
+        → structural fix → layered USD).  This method only packages what the
+        conversion steps produced.
         """
         try:
             with zipfile.ZipFile(str(usdz_path), 'w', zipfile.ZIP_STORED) as zf:
@@ -1740,6 +1878,26 @@ class MaterialsMixin:
                 if rig_mb_path and rig_mb_path.exists():
                     zf.write(str(rig_mb_path), rig_mb_path.name)
                     self.logger.info(f"[PACKAGE] Added rig backup to USDZ: {rig_mb_path.name}")
+
+                # Bundle texture PNGs staged by _wire_diffuse_texture.
+                # The material conversion step copies every referenced PNG
+                # into usd_dir/textures/ and writes relative
+                # './textures/<name>' asset paths into the USD — USDZ
+                # viewers resolve those paths from the archive root.
+                # Works for any rig, not just this one.
+                textures_dir = usd_path.parent / "textures"
+                if textures_dir.is_dir():
+                    tex_files = sorted(
+                        f for f in textures_dir.iterdir() if f.is_file()
+                    )
+                    for tex_file in tex_files:
+                        zf.write(str(tex_file), f"textures/{tex_file.name}")
+                    if tex_files:
+                        self.logger.info(
+                            f"[PACKAGE] Bundled {len(tex_files)} texture(s) "
+                            f"into USDZ: {', '.join(f.name for f in tex_files[:5])}"
+                            + ("..." if len(tex_files) > 5 else "")
+                        )
 
             file_size = usdz_path.stat().st_size / (1024 * 1024)
             self.logger.info(f"[BUNDLE] USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
