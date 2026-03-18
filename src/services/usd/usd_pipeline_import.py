@@ -221,10 +221,11 @@ class ImportMixin:
                     )
                     result.temp_usd_path = actual_usd_path  # Store for reference
                 else:
-                    # Used .rig.mb fallback - safe to cleanup temp files
-                    import shutil
-                    shutil.rmtree(temp_dir, ignore_errors=True)
-                    self.logger.info("[CLEANUP] Cleaned up temp USDZ extraction")
+                    # Persistent extract_dir — do not delete; proxy shape may
+                    # still reference sublayers inside it.  Log location instead.
+                    self.logger.info(
+                        f"[SAVE] USD files preserved in: {temp_dir}"
+                    )
 
         except Exception as e:
             self.logger.error(f"Import failed: {e}")
@@ -239,34 +240,54 @@ class ImportMixin:
         usdz_path: Path
     ) -> Tuple[Optional[Path], Optional[Path], Optional[Path]]:
         """
-        Extract USDZ package
+        Extract USDZ package to a persistent directory alongside the source file.
+
+        Using a persistent directory (not a system temp dir) means the
+        mayaUsdProxyShape filePath remains valid across Maya sessions and
+        machine reboots.  The directory is named <stem>_usd/ and sits next
+        to the .usdz file so it travels with the project.
 
         Returns:
-            (usd_path, rig_mb_path, temp_dir) or (None, None, None) on failure
+            (usd_path, rig_mb_path, extract_dir) or (None, None, None) on failure
         """
         try:
             import zipfile
-            import tempfile
 
-            # Create temp directory
-            temp_dir = Path(tempfile.mkdtemp(prefix='usdz_import_'))
+            # Persistent sibling directory — survives Maya restarts
+            extract_dir = usdz_path.parent / (usdz_path.stem + "_usd")
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"[EXTRACT] Extracting USDZ to persistent dir: {extract_dir}")
+
+            # Remove any previously-extracted USD/rig files so we always
+            # start from a clean extraction.  Existing .usda sublayers written
+            # by _build_layered_stage are kept — they may contain user edits.
+            _usd_exts = {'.usd', '.usdc', '.mb', '.ma'}
+            for old_file in extract_dir.iterdir():
+                if old_file.is_file() and old_file.suffix in _usd_exts:
+                    try:
+                        old_file.unlink()
+                    except Exception:
+                        pass
 
             usd_path = None
             rig_mb_path = None
 
             with zipfile.ZipFile(str(usdz_path), 'r') as zf:
                 for name in zf.namelist():
-                    zf.extract(name, str(temp_dir))
-                    extracted_path = temp_dir / name
+                    # Flatten any sub-directory structure from the ZIP entry
+                    flat_name = Path(name).name
+                    dest = extract_dir / flat_name
+                    with zf.open(name) as src, open(dest, 'wb') as dst:
+                        dst.write(src.read())
 
-                    if name.endswith(('.usd', '.usdc', '.usda')):
-                        usd_path = extracted_path
-                        self.logger.info(f"[FILE] Extracted USD: {name}")
-                    elif name.endswith('.rig.mb') or name.endswith('.rig.ma'):
-                        rig_mb_path = extracted_path
-                        self.logger.info(f"[PACKAGE] Extracted rig backup: {name}")
+                    if flat_name.endswith(('.usd', '.usdc', '.usda')):
+                        usd_path = dest
+                        self.logger.info(f"[FILE] Extracted USD: {flat_name}")
+                    elif flat_name.endswith(('.rig.mb', '.rig.ma')):
+                        rig_mb_path = dest
+                        self.logger.info(f"[PACKAGE] Extracted rig backup: {flat_name}")
 
-            return usd_path, rig_mb_path, temp_dir
+            return usd_path, rig_mb_path, extract_dir
 
         except Exception as e:
             self.logger.error(f"USDZ extraction failed: {e}")
@@ -737,34 +758,70 @@ class ImportMixin:
             # boosted material colour or a name-hash of the mesh's own name.
             # This ensures no mesh is invisible-grey even if binding fails.
             display_colored = 0
+            _first_disp_err: Optional[str] = None
             for prim in stage.Traverse():
                 if prim.GetTypeName() != 'Mesh':
                     continue
                 try:
                     color = None
 
-                    # ComputeBoundMaterial handles full USD binding resolution
-                    # including inherited and collection-based bindings.
-                    bound_mat, _ = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()
-                    if bound_mat and bound_mat.GetPrim().IsValid():
-                        mat_prim_path = bound_mat.GetPrim().GetPath()
-                        color = mat_path_to_color.get(mat_prim_path)
-                        if color is None:
-                            # Bound material exists but was texture-driven (None
-                            # sentinel) or not in our map — name-hash the material.
-                            color = self._rfm_name_color(bound_mat.GetPrim().GetName())
+                    # ── Primary: direct material:binding relationship ──────────
+                    # More reliable than ComputeBoundMaterial across USD versions
+                    # because it avoids USD 22.x/23.x/24.x API signature changes.
+                    binding_rel = prim.GetRelationship('material:binding')
+                    if binding_rel and binding_rel.HasAuthoredTargets():
+                        targets = binding_rel.GetForwardedTargets()
+                        if targets:
+                            mat_prim = stage.GetPrimAtPath(targets[0])
+                            if mat_prim and mat_prim.IsValid():
+                                color = mat_path_to_color.get(mat_prim.GetPath())
+                                if color is None:
+                                    # Texture-driven sentinel or unknown — name-hash
+                                    color = self._rfm_name_color(mat_prim.GetName())
 
+                    # ── Secondary: ComputeBoundMaterial (inherited/collection) ─
                     if color is None:
-                        # No material bound at all — name-hash the mesh itself
-                        # so it still gets a unique non-grey display colour.
+                        try:
+                            _cm_result = UsdShade.MaterialBindingAPI(
+                                prim
+                            ).ComputeBoundMaterial()
+                            # Handle both tuple return (USD 22+) and bare object
+                            bound_mat = (
+                                _cm_result[0]
+                                if isinstance(_cm_result, (tuple, list))
+                                else _cm_result
+                            )
+                            if bound_mat and bound_mat.GetPrim().IsValid():
+                                color = mat_path_to_color.get(
+                                    bound_mat.GetPrim().GetPath()
+                                )
+                                if color is None:
+                                    color = self._rfm_name_color(
+                                        bound_mat.GetPrim().GetName()
+                                    )
+                        except Exception:
+                            pass
+
+                    # ── Final fallback: name-hash the mesh itself ─────────────
+                    if color is None:
                         color = self._rfm_name_color(prim.GetName())
 
+                    r = float(color[0])
+                    g = float(color[1])
+                    b = float(color[2])
                     UsdGeom.Gprim(prim).CreateDisplayColorAttr(
-                        Vt.Vec3fArray([Gf.Vec3f(color[0], color[1], color[2])])
+                        Vt.Vec3fArray([Gf.Vec3f(r, g, b)])
                     )
                     display_colored += 1
-                except Exception:
+                except Exception as _disp_err:
+                    if _first_disp_err is None:
+                        _first_disp_err = f"{prim.GetPath()}: {_disp_err}"
                     continue
+
+            if _first_disp_err:
+                self.logger.warning(
+                    f"[BOOST] displayColor: first mesh error — {_first_disp_err}"
+                )
 
             if boosted + hashed > 0:
                 stage.GetRootLayer().Save()
@@ -829,7 +886,17 @@ class ImportMixin:
 
             for name in layer_names:
                 layer_path = base_dir / f"{asset_name}.{name}.usda"
-                layer = Sdf.Layer.CreateNew(str(layer_path))
+                # Re-import safe: Sdf.Layer.CreateNew fails if file exists.
+                # Find the layer in the cache first; if not open, delete stale
+                # file so CreateNew can write a fresh copy.
+                layer = Sdf.Layer.Find(str(layer_path))
+                if layer is None:
+                    if layer_path.exists():
+                        try:
+                            layer_path.unlink()
+                        except Exception:
+                            pass
+                    layer = Sdf.Layer.CreateNew(str(layer_path))
                 if layer is None:
                     self.logger.warning(f"[LAYER] Could not create {name} sublayer")
                     continue
@@ -858,7 +925,14 @@ class ImportMixin:
 
             # ── Create root .usda that composes everything ──
             root_path = base_dir / f"{asset_name}.root.usda"
-            root_layer = Sdf.Layer.CreateNew(str(root_path))
+            root_layer = Sdf.Layer.Find(str(root_path))
+            if root_layer is None:
+                if root_path.exists():
+                    try:
+                        root_path.unlink()
+                    except Exception:
+                        pass
+                root_layer = Sdf.Layer.CreateNew(str(root_path))
             if root_layer is None:
                 self.logger.error("[LAYER] Could not create root layer")
                 return None
@@ -969,21 +1043,19 @@ class ImportMixin:
             # ── Reference the .rig.mb temporarily ──
             namespace = "_rigExtract_"
 
-            # Suppress deprecated-attribute errors printed when Maya loads
-            # nested references inside the rig.mb (e.g. ".atlasStyle" from
-            # PxrTexture nodes in RfM 27.x era files).  These are harmless
-            # forward-compatibility warnings — suppressing them keeps the
-            # Script Editor clean without hiding any real failures.
-            # Suppress deprecated-attribute errors from the nested file load.
-            # scriptEditorInfo is a global command — no 'edit' flag needed.
-            try:
-                cmds.scriptEditorInfo(
-                    suppressErrors=True,
-                    suppressWarnings=True,
-                    suppressInfo=True,
-                )
-            except Exception:
-                pass
+            # ── RfM 27.1→27.2 compatibility note ─────────────────────────────
+            # The .rig.mb was saved with RenderMan for Maya 27.1 which stored an
+            # 'atlasStyle' attribute on PxrTexture/PxrNormalMap nodes.  RfM 27.2
+            # removed this attribute.  Maya's C++ file parser emits one
+            # "setAttr: No object matches name: .atlasStyle" error per node
+            # during the reference load.  These are emitted at the C++ I/O layer
+            # and cannot be suppressed by scriptEditorInfo — they are completely
+            # harmless and do not affect controller extraction.  The [RIG-OK]
+            # message below confirms extraction succeeded despite the noise.
+            self.logger.info(
+                "[RIG] Loading .rig.mb — expect RfM 27.1→27.2 .atlasStyle "
+                "compatibility messages below.  These are harmless."
+            )
 
             try:
                 cmds.file(
@@ -993,22 +1065,12 @@ class ImportMixin:
                     returnNewNodes=False,
                     loadReferenceDepth="all"
                 )
-                self.logger.info("[RIG] Referenced .rig.mb for controller extraction")
+                self.logger.info("[RIG] .rig.mb reference loaded successfully")
             except Exception as ref_err:
                 self.logger.warning(
                     f"[RIG] Could not reference .rig.mb: {ref_err}"
                 )
                 return None
-            finally:
-                # Always restore all output channels immediately.
-                try:
-                    cmds.scriptEditorInfo(
-                        suppressErrors=False,
-                        suppressWarnings=False,
-                        suppressInfo=False,
-                    )
-                except Exception:
-                    pass
 
             controllers = []
             mappings: dict[str, list[str]] = {}
@@ -1197,8 +1259,9 @@ class ImportMixin:
                             continue
 
                 self.logger.info(
-                    f"[RIG] Extracted {len(controllers)} controllers, "
-                    f"{len(mappings)} controller→joint mappings"
+                    f"[RIG-OK] Extracted {len(controllers)} controllers, "
+                    f"{len(mappings)} controller\u2192joint mappings \u2014 "
+                    f"any .atlasStyle errors above are harmless RfM 27.1\u219227.2 noise"
                 )
 
             finally:
