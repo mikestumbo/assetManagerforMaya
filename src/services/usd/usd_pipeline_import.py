@@ -89,6 +89,25 @@ class ImportMixin:
                     result.error_message = "Failed to extract USDZ package"
                     return result
 
+                # Sibling .rig.mb lookup — the .rig.mb is kept separate from
+                # the .usdz for online viewer compatibility.  Check for a file
+                # named <stem>.rig.mb (or .rig.ma) alongside the source .usdz.
+                if rig_mb_path is None:
+                    for _ext in ('.rig.mb', '.rig.ma'):
+                        _sibling = usd_path.parent / (usd_path.stem + _ext)
+                        if _sibling.exists():
+                            rig_mb_path = _sibling
+                            self.logger.info(
+                                f"[RIG] Found sibling rig file: {_sibling.name}"
+                            )
+                            break
+                    if rig_mb_path is None:
+                        self.logger.info(
+                            f"[RIG] No .rig.mb found inside USDZ or alongside it.  "
+                            f"Place '{usd_path.stem}.rig.mb' next to the .usdz to "
+                            f"enable controller and skeleton layer population."
+                        )
+
             # ========== USD PROXY MODE (EXPERIMENTAL) ==========
             # Keep USD as proxy for pipeline integration
             if options.usd_proxy_mode:
@@ -274,18 +293,43 @@ class ImportMixin:
 
             with zipfile.ZipFile(str(usdz_path), 'r') as zf:
                 for name in zf.namelist():
-                    # Flatten any sub-directory structure from the ZIP entry
+                    if name.endswith('/'):
+                        continue  # skip directory entries
+
                     flat_name = Path(name).name
-                    dest = extract_dir / flat_name
-                    with zf.open(name) as src, open(dest, 'wb') as dst:
-                        dst.write(src.read())
 
                     if flat_name.endswith(('.usd', '.usdc', '.usda')):
+                        # USD stage files go to root of extract_dir so that
+                        # relative paths inside the USDC (e.g. @textures/foo.png@)
+                        # resolve correctly against extract_dir as the base.
+                        dest = extract_dir / flat_name
+                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                            dst.write(src.read())
                         usd_path = dest
                         self.logger.info(f"[FILE] Extracted USD: {flat_name}")
                     elif flat_name.endswith(('.rig.mb', '.rig.ma')):
+                        dest = extract_dir / flat_name
+                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                            dst.write(src.read())
                         rig_mb_path = dest
                         self.logger.info(f"[PACKAGE] Extracted rig backup: {flat_name}")
+                    else:
+                        # ALL other files (textures, etc.) — preserve the
+                        # relative ZIP path so that USDC-internal references
+                        # like @./textures/Chain_Base_color.png@ resolve correctly.
+                        dest = extract_dir / name
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                            dst.write(src.read())
+
+            # Count extracted textures for diagnostics
+            tex_count = sum(
+                1 for f in extract_dir.rglob('*')
+                if f.is_file() and f.suffix.lower() in
+                {'.png', '.jpg', '.jpeg', '.exr', '.tif', '.tiff', '.tx', '.tex'}
+            )
+            if tex_count:
+                self.logger.info(f"[EXTRACT] {tex_count} texture file(s) extracted")
 
             return usd_path, rig_mb_path, extract_dir
 
@@ -919,6 +963,12 @@ class ImportMixin:
                         sub_stage, base_usd_path, rig_data
                     )
 
+                # Populate materials sublayer with RenderMan ri:surface networks
+                # so the USD proxy is renderable in RenderMan for Maya 27.2+ IPR
+                # and batch renders in addition to VP2 UsdPreviewSurface display.
+                if name == "materials":
+                    self._populate_rfm_materials_sublayer(sub_stage, base_usd_path)
+
                 sub_stage.Save()
                 created_layers.append(layer_path)
                 self.logger.info(f"   [LAYER] {layer_path.name}")
@@ -1508,6 +1558,177 @@ class ImportMixin:
             self.logger.warning(
                 f"[LAYER] Could not populate skeleton metadata: {e}"
             )
+            import traceback
+            self.logger.debug(traceback.format_exc())
+
+    def _populate_rfm_materials_sublayer(
+        self,
+        sub_stage: Any,
+        base_usd_path: "Path",
+    ) -> None:
+        """Populate the materials sublayer with RenderMan ri:surface shader networks.
+
+        For every Material prim in the base USDC that has a UsdPreviewSurface,
+        this method authors a PxrPreviewSurface shader override into the materials
+        sublayer and wires it to ``outputs:ri:surface`` on the material.
+
+        RenderMan for Maya 27.2 resolves ``outputs:ri:surface`` in preference to
+        ``outputs:surface`` when rendering, so the USD proxy shape will render
+        correctly in RfM IPR (``.it``) and batch/XPU renders without any scene
+        conversion or Hybrid Mode.
+
+        VP2 continues to use the original ``UsdPreviewSurface`` (via
+        ``outputs:surface``) because USD's render-context resolution means VP2
+        never sees the ``ri:`` namespace outputs.
+
+        Texture files referenced by UsdUVTexture nodes are re-connected to new
+        sibling PxrTexture nodes in this sublayer using the same relative paths,
+        so no texture duplication occurs on disk.
+
+        Args:
+            sub_stage: The materials sublayer Usd.Stage (already open for edit).
+            base_usd_path: Absolute Path to the monolithic base .usdc file.
+        """
+        if not USD_AVAILABLE:
+            return
+        try:
+            from pxr import Usd, UsdShade, Sdf, Gf  # type: ignore
+
+            base_stage = Usd.Stage.Open(str(base_usd_path))
+            if not base_stage:
+                self.logger.warning("[RFM] Could not open base USDC for RfM materials")
+                return
+
+            rfm_count = 0
+            tex_count = 0
+
+            for prim in base_stage.Traverse():
+                if prim.GetTypeName() != 'Material':
+                    continue
+
+                mat_path = prim.GetPath()
+
+                # ── Collect UsdPreviewSurface scalar inputs ───────────────────
+                preview_shader: Optional[Any] = None
+                diffuse_tex_file: Optional[str] = None
+                normal_tex_file: Optional[str] = None
+
+                for child in prim.GetAllChildren():
+                    if child.GetTypeName() != 'Shader':
+                        continue
+                    s = UsdShade.Shader(child)
+                    try:
+                        sid = s.GetIdAttr().Get() or ''
+                    except Exception:
+                        sid = ''
+
+                    if sid == 'UsdPreviewSurface':
+                        preview_shader = s
+
+                    elif sid == 'UsdUVTexture':
+                        try:
+                            file_inp = s.GetInput('file')
+                            if file_inp:
+                                asset = file_inp.Get()
+                                if asset:
+                                    fpath = str(asset.path)
+                                    cname = child.GetName().lower()
+                                    if 'normal' in cname or 'nrm' in cname or 'nml' in cname:
+                                        if normal_tex_file is None:
+                                            normal_tex_file = fpath
+                                    else:
+                                        if diffuse_tex_file is None:
+                                            diffuse_tex_file = fpath
+                        except Exception:
+                            pass
+
+                if not preview_shader:
+                    continue
+
+                # ── Author override in materials sublayer ─────────────────────
+                mat_override = sub_stage.OverridePrim(mat_path)
+                mat_usd = UsdShade.Material(mat_override)
+
+                # PxrPreviewSurface — a RenderMan shader that implements the
+                # same Disney PBR model as UsdPreviewSurface.  RfM 27.2 ships
+                # it as "PxrPreviewSurface" (same input names as UsdPreviewSurface).
+                pxr_surf_path = mat_path.AppendChild('PxrPreviewSurface')
+                pxr_surf_prim = sub_stage.DefinePrim(pxr_surf_path, 'Shader')
+                pxr_surf = UsdShade.Shader(pxr_surf_prim)
+                pxr_surf.CreateIdAttr('PxrPreviewSurface')
+
+                # ── Copy scalar inputs ────────────────────────────────────────
+                for attr_name in ('roughness', 'metallic', 'opacity'):
+                    try:
+                        inp = preview_shader.GetInput(attr_name)
+                        if inp and not inp.HasConnectedSource():
+                            val = inp.Get()
+                            if val is not None:
+                                pxr_surf.CreateInput(
+                                    attr_name, Sdf.ValueTypeNames.Float
+                                ).Set(float(val))
+                    except Exception:
+                        pass
+
+                # ── diffuseColor: connect PxrTexture or copy static value ─────
+                if diffuse_tex_file:
+                    pxr_tex_path = mat_path.AppendChild('PxrTexture_diffuse')
+                    pxr_tex_prim = sub_stage.DefinePrim(pxr_tex_path, 'Shader')
+                    pxr_tex = UsdShade.Shader(pxr_tex_prim)
+                    pxr_tex.CreateIdAttr('PxrTexture')
+                    pxr_tex.CreateInput(
+                        'filename', Sdf.ValueTypeNames.Asset
+                    ).Set(Sdf.AssetPath(diffuse_tex_file))
+                    # linearize=1: convert sRGB PNG to linear before shading
+                    pxr_tex.CreateInput(
+                        'linearize', Sdf.ValueTypeNames.Int
+                    ).Set(1)
+                    tex_out = pxr_tex.CreateOutput(
+                        'resultRGB', Sdf.ValueTypeNames.Color3f
+                    )
+                    pxr_surf.CreateInput(
+                        'diffuseColor', Sdf.ValueTypeNames.Color3f
+                    ).ConnectToSource(tex_out)
+                    tex_count += 1
+                else:
+                    try:
+                        dc_inp = preview_shader.GetInput('diffuseColor')
+                        if dc_inp and not dc_inp.HasConnectedSource():
+                            dc_val = dc_inp.Get()
+                            if dc_val is not None:
+                                pxr_surf.CreateInput(
+                                    'diffuseColor', Sdf.ValueTypeNames.Color3f
+                                ).Set(Gf.Vec3f(
+                                    float(dc_val[0]),
+                                    float(dc_val[1]),
+                                    float(dc_val[2])
+                                ))
+                    except Exception:
+                        pass
+
+                # ── Wire outputs:ri:surface ───────────────────────────────────
+                pxr_out = pxr_surf.CreateOutput('out', Sdf.ValueTypeNames.Token)
+                mat_usd.CreateOutput(
+                    'ri:surface', Sdf.ValueTypeNames.Token
+                ).ConnectToSource(pxr_out)
+
+                rfm_count += 1
+
+            if rfm_count > 0:
+                self.logger.info(
+                    f"[RFM] Wrote PxrPreviewSurface ri:surface for {rfm_count} "
+                    f"materials ({tex_count} with PxrTexture diffuse) in "
+                    f"materials.usda \u2014 renderable in RenderMan for Maya 27.2+ "
+                    f"via IPR (.it) and XPU batch render"
+                )
+            else:
+                self.logger.warning(
+                    "[RFM] No UsdPreviewSurface materials found in base USDC \u2014 "
+                    "ri:surface networks could not be authored"
+                )
+
+        except Exception as e:
+            self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
             import traceback
             self.logger.debug(traceback.format_exc())
 
