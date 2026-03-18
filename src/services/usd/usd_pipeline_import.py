@@ -1602,56 +1602,103 @@ class ImportMixin:
             rfm_count = 0
             tex_count = 0
 
+            # ── Step 1: Collect all shaders via flat Traverse (same pattern as ──
+            # _boost_usd_material_colors).  This finds shaders at ANY nesting    ──
+            # depth inside a material — direct children, NodeGraph subscopes,   ──
+            # or deeply nested hierarchies.  The previous GetAllChildren() approach ──
+            # only found 8/30 materials because 22 had shaders nested in NodeGraphs.──
+            mat_preview: dict = {}        # Sdf.Path → UsdShade.Shader (UsdPreviewSurface)
+            mat_uv_textures: dict = {}    # Sdf.Path → list[UsdShade.Shader] (UsdUVTexture)
+
             for prim in base_stage.Traverse():
-                if prim.GetTypeName() != 'Material':
+                if prim.GetTypeName() != 'Shader':
                     continue
-
-                mat_path = prim.GetPath()
-
-                # ── Collect UsdPreviewSurface scalar inputs ───────────────────
-                preview_shader: Optional[Any] = None
-                diffuse_tex_file: Optional[str] = None
-                normal_tex_file: Optional[str] = None
-
-                for child in prim.GetAllChildren():
-                    if child.GetTypeName() != 'Shader':
-                        continue
-                    s = UsdShade.Shader(child)
+                shader = UsdShade.Shader(prim)
+                try:
+                    sid = shader.GetShaderId() or ''
+                except Exception:
                     try:
-                        sid = s.GetIdAttr().Get() or ''
+                        sid = shader.GetIdAttr().Get() or ''
                     except Exception:
                         sid = ''
 
-                    if sid == 'UsdPreviewSurface':
-                        preview_shader = s
+                if sid not in ('UsdPreviewSurface', 'UsdUVTexture'):
+                    continue
 
-                    elif sid == 'UsdUVTexture':
+                # Walk up the hierarchy to find the enclosing Material prim.
+                # Shaders may be direct children (depth 1) or inside a NodeGraph
+                # subscope (depth 2+) — the ancestor walk handles either case.
+                ancestor = prim.GetParent()
+                mat_prim = None
+                while ancestor and ancestor.IsValid():
+                    if ancestor.GetTypeName() == 'Material':
+                        mat_prim = ancestor
+                        break
+                    ancestor = ancestor.GetParent()
+
+                if mat_prim is None:
+                    continue
+
+                mat_path = mat_prim.GetPath()
+                if sid == 'UsdPreviewSurface':
+                    if mat_path not in mat_preview:          # keep first found
+                        mat_preview[mat_path] = shader
+                elif sid == 'UsdUVTexture':
+                    mat_uv_textures.setdefault(mat_path, []).append(shader)
+
+            # ── Step 2: Author PxrPreviewSurface overrides for every material ──
+            for mat_path, preview_shader in mat_preview.items():
+
+                # ── Find diffuse texture via connection chain ─────────────────
+                # Follow diffuseColor's connection to its upstream UsdUVTexture.
+                # This is reliable regardless of whether the texture node is a
+                # sibling, inside a NodeGraph, or deeply nested.
+                diffuse_tex_file: Optional[str] = None
+                try:
+                    dc_inp = preview_shader.GetInput('diffuseColor')
+                    if dc_inp and dc_inp.HasConnectedSource():
+                        for conn_path in dc_inp.GetAttr().GetConnections():
+                            src_prim = base_stage.GetPrimAtPath(
+                                conn_path.GetPrimPath()
+                            )
+                            if src_prim and src_prim.IsValid():
+                                src_shader = UsdShade.Shader(src_prim)
+                                try:
+                                    src_id = src_shader.GetShaderId() or ''
+                                except Exception:
+                                    src_id = ''
+                                if src_id == 'UsdUVTexture':
+                                    file_inp = src_shader.GetInput('file')
+                                    if file_inp:
+                                        asset = file_inp.Get()
+                                        if asset:
+                                            diffuse_tex_file = str(asset.path)
+                                    break
+                except Exception:
+                    pass
+
+                # Fallback: scan the collected UdimTexture list for this material
+                if not diffuse_tex_file:
+                    for uv_shader in mat_uv_textures.get(mat_path, []):
                         try:
-                            file_inp = s.GetInput('file')
+                            cname = uv_shader.GetPrim().GetName().lower()
+                            if 'normal' in cname or 'nrm' in cname or 'nml' in cname:
+                                continue
+                            file_inp = uv_shader.GetInput('file')
                             if file_inp:
                                 asset = file_inp.Get()
                                 if asset:
-                                    fpath = str(asset.path)
-                                    cname = child.GetName().lower()
-                                    if 'normal' in cname or 'nrm' in cname or 'nml' in cname:
-                                        if normal_tex_file is None:
-                                            normal_tex_file = fpath
-                                    else:
-                                        if diffuse_tex_file is None:
-                                            diffuse_tex_file = fpath
+                                    diffuse_tex_file = str(asset.path)
+                                    break
                         except Exception:
                             pass
 
-                if not preview_shader:
-                    continue
-
                 # ── Author override in materials sublayer ─────────────────────
                 mat_override = sub_stage.OverridePrim(mat_path)
-                mat_usd = UsdShade.Material(mat_override)
 
-                # PxrPreviewSurface — a RenderMan shader that implements the
-                # same Disney PBR model as UsdPreviewSurface.  RfM 27.2 ships
-                # it as "PxrPreviewSurface" (same input names as UsdPreviewSurface).
+                # PxrPreviewSurface — RenderMan 27.x ships this shader in
+                # $RMANTREE/lib/shaders/ as a first-class RIS surface shader
+                # that implements the same Disney PBR model as UsdPreviewSurface.
                 pxr_surf_path = mat_path.AppendChild('PxrPreviewSurface')
                 pxr_surf_prim = sub_stage.DefinePrim(pxr_surf_path, 'Shader')
                 pxr_surf = UsdShade.Shader(pxr_surf_prim)
@@ -1679,7 +1726,7 @@ class ImportMixin:
                     pxr_tex.CreateInput(
                         'filename', Sdf.ValueTypeNames.Asset
                     ).Set(Sdf.AssetPath(diffuse_tex_file))
-                    # linearize=1: convert sRGB PNG to linear before shading
+                    # linearize=1: convert sRGB PNG/JPEG to linear before shading
                     pxr_tex.CreateInput(
                         'linearize', Sdf.ValueTypeNames.Int
                     ).Set(1)
@@ -1706,11 +1753,12 @@ class ImportMixin:
                     except Exception:
                         pass
 
-                # ── Wire outputs:ri:surface ───────────────────────────────────
-                pxr_out = pxr_surf.CreateOutput('out', Sdf.ValueTypeNames.Token)
-                mat_usd.CreateOutput(
-                    'ri:surface', Sdf.ValueTypeNames.Token
-                ).ConnectToSource(pxr_out)
+                # ── Wire outputs:ri:surface via the proper render-context API ─
+                # UsdShadeMaterial.CreateSurfaceOutput('ri') creates the
+                # outputs:ri:surface attribute with correct USD schema metadata.
+                pxr_surf_out = pxr_surf.CreateOutput('out', Sdf.ValueTypeNames.Token)
+                ri_surface_out = UsdShade.Material(mat_override).CreateSurfaceOutput('ri')
+                ri_surface_out.ConnectToSource(pxr_surf_out)
 
                 rfm_count += 1
 

@@ -741,15 +741,24 @@ class MaterialsMixin:
         preserves the dominant hue while pushing saturation and value into a
         range that makes per-material differences immediately visible.
 
-        Returns None when the colour is achromatic (HSV saturation < 0.08),
-        which tells the caller to use _rfm_name_color instead.
+        Returns None when the colour is a truly dark/black achromatic (HSV
+        saturation < 0.08 AND value < 0.80), which tells the caller to use
+        _rfm_name_color instead.
+
+        Near-white achromatic colours (e.g. eye sclera, teeth at ~(1,1,1)) are
+        returned unchanged — they must NOT be name-hashed, as that would turn
+        white eye whites into a random vivid hue like magenta or pink.
         """
         import colorsys
         from pxr import Gf  # type: ignore
         r, g, b = float(color[0]), float(color[1]), float(color[2])
         h, s, v = colorsys.rgb_to_hsv(r, g, b)
         if s < 0.08:
-            return None  # achromatic — name-hash will be more distinctive
+            # Near-white (sclera, teeth, light-grey surfaces) — preserve as-is.
+            # Only truly dark/black achromatic colours get name-hashed.
+            if v > 0.80:
+                return Gf.Vec3f(r, g, b)
+            return None  # dark achromatic — name-hash will be more distinctive
         s_out = max(s, 0.62)
         v_out = max(min(max(v, 0.58), 0.82), 0.58)
         r2, g2, b2 = colorsys.hsv_to_rgb(h, s_out, v_out)

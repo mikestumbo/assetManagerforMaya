@@ -11,7 +11,279 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
-// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+// src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
+// src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
+// src.services.usd.usd_pipeline_export : [EXTRACT] 17 texture file(s) extracted
+// src.services.usd.usd_pipeline_export : [RIG] Found sibling rig file: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline_export : [USD] USD PROXY MODE ACTIVATED (Experimental)
+// src.services.usd.usd_pipeline_export : [BOOST] Colour boost applied: 7 hue-boosted, 6 name-hashed, 17 texture-skipped | 21 mesh primvars:displayColor set
+// src.services.usd.usd_pipeline_export : [LAYER] Building layered USD stage from base asset...
+// src.services.usd.usd_pipeline_export : [LAYER] Extracting controller data from: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline_export : [RIG] Loading .rig.mb — expect RfM 27.1→27.2 .atlasStyle compatibility messages below.  These are harmless.
+requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
+requires "stereoCamera" "10.0";
+updateRenderOverride;
+requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
+requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.2 @ 2396366";
+requires "stereoCamera" "10.0";
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144792: ':rmanGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144793: ':PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144794: ':rmanBakingGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
+# Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
+# Read 2 files in  6 seconds.
+// Error: mirror: could not initialize vertex mapping
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: The PxrTexture 'PxrTexture5' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: The PxrNormalMap 'PxrNormalMap24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: The PxrTexture 'PxrTexture4' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: The PxrTexture 'PxrTexture1' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: The PxrTexture 'PxrTexture2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: The PxrTexture 'PxrTexture3' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: The PxrTexture 'PxrTexture15' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: The PxrNormalMap 'PxrNormalMap25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: The PxrTexture 'PxrTexture12' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: The PxrTexture 'PxrTexture14' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: The PxrTexture 'PxrTexture13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: The PxrTexture 'PxrTexture11' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: The PxrTexture 'PxrTexture49' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: The PxrNormalMap 'PxrNormalMap26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: The PxrTexture 'PxrTexture46' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: The PxrTexture 'PxrTexture48' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: The PxrTexture 'PxrTexture45' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: The PxrTexture 'PxrTexture47' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: The PxrTexture 'PxrTexture20' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: The PxrNormalMap 'PxrNormalMap27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: The PxrTexture 'PxrTexture17' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: The PxrTexture 'PxrTexture18' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: The PxrTexture 'PxrTexture19' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: The PxrTexture 'PxrTexture16' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: The PxrTexture 'PxrTexture21' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: The PxrNormalMap 'PxrNormalMap28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: The PxrTexture 'PxrTexture24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: The PxrTexture 'PxrTexture22' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: The PxrTexture 'PxrTexture23' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: The PxrTexture 'PxrTexture25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: The PxrTexture 'PxrTexture26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: The PxrNormalMap 'PxrNormalMap29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: The PxrTexture 'PxrTexture27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: The PxrTexture 'PxrTexture29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: The PxrTexture 'PxrTexture28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: The PxrTexture 'PxrTexture34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: The PxrNormalMap 'PxrNormalMap13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: The PxrTexture 'PxrTexture32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: The PxrTexture 'PxrTexture31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: The PxrTexture 'PxrTexture30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: The PxrTexture 'PxrTexture33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: The PxrTexture 'PxrTexture37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: The PxrTexture 'PxrTexture38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: The PxrNormalMap 'PxrNormalMap30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: The PxrTexture 'PxrTexture39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: The PxrTexture 'PxrTexture35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: The PxrTexture 'PxrTexture36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: The PxrTexture 'PxrTexture40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: The PxrTexture 'PxrTexture44' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: The PxrNormalMap 'PxrNormalMap2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: The PxrTexture 'PxrTexture42' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: The PxrTexture 'PxrTexture43' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: The PxrTexture 'PxrTexture41' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: The PxrTexture 'PxrTexture52' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: The PxrTexture 'PxrTexture54' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: The PxrNormalMap 'PxrNormalMap31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: The PxrTexture 'PxrTexture53' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: The PxrTexture 'PxrTexture51' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: The PxrTexture 'PxrTexture50' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: The PxrNormalMap 'PxrNormalMap32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: The PxrTexture 'PxrTexture58' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: The PxrTexture 'PxrTexture59' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: The PxrTexture 'PxrTexture56' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: The PxrTexture 'PxrTexture57' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: The PxrTexture 'PxrTexture55' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: The PxrTexture 'PxrTexture63' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: The PxrTexture 'PxrTexture64' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: The PxrTexture 'PxrTexture61' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: The PxrTexture 'PxrTexture62' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: The PxrTexture 'PxrTexture60' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: The PxrNormalMap 'PxrNormalMap33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: The PxrTexture 'PxrTexture65' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: The PxrTexture 'PxrTexture68' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: The PxrTexture 'PxrTexture69' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: The PxrTexture 'PxrTexture67' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: The PxrTexture 'PxrTexture66' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: The PxrNormalMap 'PxrNormalMap34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: The PxrTexture 'PxrTexture74' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: The PxrTexture 'PxrTexture72' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: The PxrTexture 'PxrTexture71' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: The PxrNormalMap 'PxrNormalMap6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: The PxrTexture 'PxrTexture73' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: The PxrTexture 'PxrTexture70' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: The PxrTexture 'PxrTexture75' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: The PxrTexture 'PxrTexture78' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: The PxrTexture 'PxrTexture77' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: The PxrTexture 'PxrTexture79' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: The PxrNormalMap 'PxrNormalMap35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: The PxrTexture 'PxrTexture76' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: The PxrNormalMap 'PxrNormalMap36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: The PxrTexture 'PxrTexture85' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: The PxrTexture 'PxrTexture89' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: The PxrTexture 'PxrTexture87' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: The PxrTexture 'PxrTexture86' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: The PxrTexture 'PxrTexture88' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: The PxrTexture 'PxrTexture91' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: The PxrTexture 'PxrTexture92' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: The PxrTexture 'PxrTexture93' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: The PxrNormalMap 'PxrNormalMap37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: The PxrTexture 'PxrTexture94' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: The PxrTexture 'PxrTexture95' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: The PxrNormalMap 'PxrNormalMap38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: The PxrTexture 'PxrTexture96' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: The PxrTexture 'PxrTexture97' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: The PxrTexture 'PxrTexture98' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: The PxrNormalMap 'PxrNormalMap39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: The PxrTexture 'PxrTexture99' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: The PxrTexture 'PxrTexture100' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: The PxrTexture 'PxrTexture101' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: The PxrNormalMap 'PxrNormalMap40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: The PxrTexture 'PxrTexture102' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143743: ':rmanBakingGlobals.displays[0]' already has an incoming connection from ':rmanDefaultBakeDisplay.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143838: ':rmanDefaultDisplay.displayType' already has an incoming connection from ':d_openexr.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143839: ':rmanDefaultDisplay.displayChannels[0]' already has an incoming connection from ':Ci.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143840: ':rmanDefaultDisplay.displayChannels[1]' already has an incoming connection from ':a.message'.
+// src.services.usd.usd_pipeline_export : [RIG] .rig.mb reference loaded successfully
+// src.services.usd.usd_pipeline_export : [RIG] Found 642 NURBS curves, 548 joints
+// src.services.usd.usd_pipeline_export : [RIG-OK] Extracted 642 controllers, 360 controller→joint mappings — any .atlasStyle errors above are harmless RfM 27.1→27.2 noise
+// src.services.usd.usd_pipeline_export : [RIG] Removed .rig.mb reference
+// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
+// src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
+// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.controllers.usda
+// src.services.usd.usd_pipeline_export : [RFM] Wrote PxrPreviewSurface ri:surface for 8 materials (0 with PxrTexture diffuse) in materials.usda — renderable in RenderMan for Maya 27.2+ via IPR (.it) and XPU batch render
+// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
+// src.services.usd.usd_pipeline_export : [LAYER] Wrote controller→joint mappings for 1 skeleton(s) — 116 joints mapped
+// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
+// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.geometry.usda
+// src.services.usd.usd_pipeline_export : [OK] Layered stage: Veteran_Rig.root.usda → 6 sublayers (642 controllers, 360 joint mappings from .rig.mb)
+// src.services.usd.usd_pipeline_export : [OK] Proxy will load layered stage: Veteran_Rig.root.usda
+// src.services.usd.usd_pipeline_export : [FILE] USD default prim: /SkelRoot
+// src.services.usd.usd_pipeline_export : [INFO] USD contains: 21 meshes, 2 skeleton rig(s) (124 joints), 642 curves, 30 materials
+// src.services.usd.usd_pipeline_export : [INFO] USD has skeleton-bound meshes (skinned)
+// src.services.usd.usd_pipeline_export : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
+// src.services.usd.usd_pipeline_export : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
+# Using V3 Lighting API for UsdPreviewSurface shading.
+# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
 [REFRESH] Populating asset list with 0 assets
 [OK] Populated asset list with 0 unique assets
 [RECENT] Loading recent assets...
@@ -26,24 +298,6 @@
 [REFRESH] Populating asset list with 0 assets
 [OK] Populated asset list with 0 unique assets
 [FAVORITE] Populated favorites tab with 0 items
-// src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
-// src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
-// src.services.usd.usd_pipeline_export : [USD] USD PROXY MODE ACTIVATED (Experimental)
-// src.services.usd.usd_pipeline_export : [BOOST] Colour boost applied: 7 hue-boosted, 6 name-hashed, 17 texture-skipped | 21 mesh primvars:displayColor set
-// src.services.usd.usd_pipeline_export : [LAYER] Building layered USD stage from base asset...
-// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
-// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.controllers.usda
-// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
-// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
-// src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.geometry.usda
-// src.services.usd.usd_pipeline_export : [OK] Layered stage: Veteran_Rig.root.usda → 6 sublayers
-// src.services.usd.usd_pipeline_export : [OK] Proxy will load layered stage: Veteran_Rig.root.usda
-// src.services.usd.usd_pipeline_export : [FILE] USD default prim: /SkelRoot
-// src.services.usd.usd_pipeline_export : [INFO] USD contains: 21 meshes, 2 skeleton rig(s) (124 joints), 0 curves, 30 materials
-// src.services.usd.usd_pipeline_export : [INFO] USD has skeleton-bound meshes (skinned)
-// src.services.usd.usd_pipeline_export : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
-// src.services.usd.usd_pipeline_export : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
-# Using V3 Lighting API for UsdPreviewSurface shading.
 // src.services.usd.usd_pipeline_export : [REFRESH] Forced stage reload for skeleton imaging
 // src.services.usd.usd_pipeline_export : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
 // src.services.usd.usd_pipeline_export : [FILE] Loading USD file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd\Veteran_Rig.root.usda
@@ -62,7 +316,7 @@
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Verifying USD material colors...
 // src.services.usd.usd_pipeline_export : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 13 with non-black diffuseColor
 // src.services.usd.usd_pipeline_export : 📚 Total USD layers loaded: 7
-// src.services.usd.usd_pipeline_export : [OK] USD Stage loaded - 21 meshes, 2 skeleton rig(s) / 124 joints, 0 curves, 30 materials
+// src.services.usd.usd_pipeline_export : [OK] USD Stage loaded - 21 meshes, 2 skeleton rig(s) / 124 joints, 642 curves, 30 materials
 // src.services.usd.usd_pipeline_export : [LAYER] Edit target set to 'animation' sublayer — keyframes will be authored here
 // src.services.usd.usd_pipeline_export : [TIP] Select USD prims in viewport → press S to set keyframes on the animation layer
 mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda";
@@ -70,8 +324,11 @@ mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_
 // src.services.usd.usd_pipeline_export : [OK] USD Proxy created: 21 meshes, 124 joints in USD
 // src.services.usd.usd_pipeline_export : [LOOKDEV] 30 USD materials rendered via VP2 (UsdPreviewSurface — these are USD-native, not Maya Hypershade shaders)
 // src.services.usd.usd_pipeline_export : [TIP] USD Layer Editor opened — author animation as a non-destructive layer (Option B)
-// Warning: Invalid primvar indices -- and 3 similar
-// Error: Failed verification: ' image ' -- Unable to create an image from textures/Chain_Base_color.png -- and 16 similar
+# [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
+// Warning: Invalid primvar indices
+// Warning: Invalid primvar indices
+// Warning: Invalid primvar indices
+// Warning: Invalid primvar indices
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1618
-[OK] Window state saved: 1389x795
-[OK] Asset Manager singleton reference cleared
