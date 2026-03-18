@@ -5,15 +5,10 @@ Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-spli
 """
 from __future__ import annotations
 
-import json
 import logging
-import os
-import shutil
-import tempfile
 import traceback
-import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
@@ -33,14 +28,8 @@ except ImportError:
     USD_AVAILABLE = False
 
 from .usd_pipeline_models import (
-    ConversionResult,
-    ConversionStatus,
     ExportOptions,
     ExportResult,
-    ImportOptions,
-    ImportResult,
-    MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL,
-    USD_AVAILABLE as _USD_AVAILABLE_MODEL,
 )
 
 
@@ -128,6 +117,11 @@ class ExportMixin:
                 if source_path.exists():
                     self.logger.info(f"[FILE] Opening source file: {source_path}")
                     self._report_progress("Opening Maya scene", 2)
+                    # Note: .atlasStyle errors from PxrTexture/PxrNormalMap nodes
+                    # (RfM 27 deprecation) are harmless noise — Maya's .ma file
+                    # parser emits them through an internal channel that cannot
+                    # be suppressed without risking a crash. They do not affect
+                    # the export output in any way.
                     cmds.file(str(source_path), open=True, force=True)
                     self.logger.info(f"[OK] Scene opened: {source_path.name}")
                 else:
@@ -1413,20 +1407,31 @@ class ExportMixin:
             if new_main_skeleton_path:
                 self.logger.info(f"   [SKEL] New skeleton path: {new_main_skeleton_path}")
 
-                # Update all mesh bindings to point to the new skeleton path
+                # Update skeleton binding paths: translate /OldRoot/... → /SkelRoot/OldRoot/...
+                # Use the same prefix-translation pattern as animationSource (Step 4) so that
+                # each mesh keeps its OWN skeleton binding — we must NOT overwrite all bindings
+                # to a single skeleton path (that was the bug: it forced everything to FitSkeleton).
+                # Bindings may live on Mesh prims OR on parent Xform/Scope prims (inherited), so
+                # we scan every prim.
                 binding_count = 0
                 for prim in stage.Traverse():
-                    if not prim.IsA(UsdGeom.Mesh):
-                        continue
-
                     binding = UsdSkel.BindingAPI(prim)
                     skel_rel = binding.GetSkeletonRel()
-                    if skel_rel and skel_rel.HasAuthoredTargets():
-                        old_targets = skel_rel.GetTargets()
-                        if old_targets:
-                            # Update to new path
-                            skel_rel.SetTargets([new_main_skeleton_path])
-                            binding_count += 1
+                    if not (skel_rel and skel_rel.HasAuthoredTargets()):
+                        continue
+                    old_targets = skel_rel.GetTargets()
+                    new_targets = []
+                    updated = False
+                    for old_t in old_targets:
+                        old_str = str(old_t)
+                        if old_str.startswith("/") and not old_str.startswith("/SkelRoot"):
+                            new_targets.append(Sdf.Path("/SkelRoot" + old_str))
+                            updated = True
+                        else:
+                            new_targets.append(old_t)
+                    if updated:
+                        skel_rel.SetTargets(new_targets)
+                        binding_count += 1
 
                 if binding_count > 0:
                     self.logger.info(f"   [OK] Updated {binding_count} skeleton bindings")

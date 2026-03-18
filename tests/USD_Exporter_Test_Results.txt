@@ -9,12 +9,13 @@
 // src.services.usd.usd_pipeline_export :   mayaUSD: True
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline initialized
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
-// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1653
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
 [EXPORT] USD export started...
 // src.services.usd.usd_pipeline_export : [FILE] Opening source file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.mb
 requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
 requires "stereoCamera" "10.0";
+updateRenderOverride;
 requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.0 @ 2386582";
 requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
@@ -25,22 +26,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
 // Warning: line 1262: The default image may not be modified. Use the -i/image flag instead.
-# Read 2 files in  4.5 seconds.
-# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
+# Read 2 files in  4.9 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -278,9 +264,9 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [EXPORT] Found 45 nurbsSurface nodes
 // src.services.usd.usd_pipeline_export : [EXPORT] Found 548 joint nodes
 // src.services.usd.usd_pipeline_export : [BLEND] XGen filter: Excluded 7 meshes
+// src.services.usd.usd_pipeline_export :    └─ R_Eyelash_xgen
 // src.services.usd.usd_pipeline_export :    └─ Hair_xgen
 // src.services.usd.usd_pipeline_export :    └─ Beard_xgen
-// src.services.usd.usd_pipeline_export :    └─ Manbun_xgen
 // src.services.usd.usd_pipeline_export :    └─ L_Eyebrow_xgen
 // src.services.usd.usd_pipeline_export :    └─ L_Eyelash_xgen
 // src.services.usd.usd_pipeline_export :    └─ ... and 2 more
@@ -390,110 +376,110 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [BLEND] RenderMan material export enabled
 // src.services.usd.usd_pipeline_export : mayaUSDExport args: {'file': 'D:\\Maya\\projects\\Athens_Sequence\\assets\\Character Models\\Veteran\\Veteran_Rig.usdc', 'selection': True, 'exportUVs': True, 'exportMaterialCollections': False, 'exportSkels': 'auto', 'exportSkin': 'auto', 'exportBlendShapes': False, 'exportMaterials': True, 'shadingMode': 'useRegistry', 'convertMaterialsTo': ['UsdPreviewSurface', 'rendermanForMaya'], 'materialsScopeName': 'Looks', 'exportDisplayColor': True, 'exportVisibility': True, 'exportInstances': True, 'exportStagesAsRefs': False, 'mergeTransformAndShape': True, 'stripNamespaces': False, 'filterTypes': ['nurbsCurve', 'nurbsSurface']}
 # Opening layer 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig.usdc' for writing
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster17_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster17_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster17_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape. Skipping...
@@ -601,100 +587,66 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [USD] Exported 63 blendShape targets to USD
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Converting RenderMan materials to UsdPreviewSurface...
 // src.services.usd.usd_pipeline_export :    [PHASE-B] v5 — scanning RfM SGs for texture colors
-// src.services.usd.usd_pipeline_export :    [PHASE-B] src-lib path: (none) — texture colors from asset_100.png
-# Warning: Unknown object type: PxrDisneyBSDF
-# Warning: Unknown object type: PxrLMDiffuse
+// src.services.usd.usd_pipeline_export :    [PHASE-B] src-lib path: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/RenderManAssetLibrary
 // src.services.usd.usd_pipeline_export :    [PHASE-B] pre-collected 203 Pxr* nodes: ['Cornea_Mat', 'Iris_Mat', 'Sclera_Mat', 'Veteran_Body_Bsdf', 'Veteran_Chain_Bsdf', 'Veteran_LfButn01_Bsdf']...
 // src.services.usd.usd_pipeline_export :    [PHASE-B] reverse Pxr→SG map: 20 SGs have Pxr shader linkage. Sample: {'Cornea_Mat_SG': ['model:Cornea_Mat'], 'Iris_MatSG': ['model:Iris_Mat'], 'Sclera_MatSG': ['model:Sclera_Mat']}
 // src.services.usd.usd_pipeline_export :    [PHASE-B] Cornea_Mat_SG: broad-scan found 'model:Cornea_Mat'
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Cornea_Mat.diffuseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Cornea_Mat: near-zero, calling texture sampler...
-// src.services.usd.usd_pipeline_export :    [TEX-DIAG] model:Cornea_Mat.diffuseColor: no upstream nodes found via connectionInfo or listConnections
 // src.services.usd.usd_pipeline_export :    [PHASE-B] Pupils_MatSG: broad-scan found 'model:Pupils_Mat'
-// src.services.usd.usd_pipeline_export :    [PHASE-B] Pupils_MatSG: found model:Pupils_Mat type='PxrBlack' — not in RFM_SHADER_TYPES, skipping
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf1SG: broad-scan found 'model:Veteran_Body_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf1SG: broad-scan found 'model:PxrDisplace1'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf1SG: Lambert file texture (0.545, 0.478, 0.443) ← Body_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_Body_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf2SG: broad-scan found 'model:PxrDisplace2'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf2SG: broad-scan found 'model:Veteran_LwrTeeth_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf2SG: Lambert file texture (0.969, 0.522, 0.498) ← LwrTeeth_3_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf2SG: found model:PxrDisplace2 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LwrTeeth_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf3SG: broad-scan found 'model:Veteran_UprTeeth_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf3SG: broad-scan found 'model:PxrDisplace3'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf3SG: Lambert file texture (0.988, 0.522, 0.498) ← UprTeeth_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_UprTeeth_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf5SG: broad-scan found 'model:PxrDisplace5'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf5SG: broad-scan found 'model:Veteran_Tags_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf5SG: Lambert file texture (0.561, 0.569, 0.584) ← Tags_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf5SG: found model:PxrDisplace5 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_Tags_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf6SG: broad-scan found 'model:Veteran_RtZipr_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf6SG: broad-scan found 'model:PxrDisplace6'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf6SG: Lambert file texture (0.612, 0.490, 0.259) ← RtZipper_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_RtZipr_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf7SG: broad-scan found 'model:Veteran_RtButn04_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf7SG: broad-scan found 'model:PxrDisplace7'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf7SG: Lambert file texture (0.659, 0.533, 0.278) ← RtButton_04_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_RtButn04_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf8SG: broad-scan found 'model:PxrDisplace8'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf8SG: broad-scan found 'model:Veteran_RtButn03_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf8SG: Lambert file texture (0.498, 0.522, 0.310) ← RtButton_03_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf8SG: found model:PxrDisplace8 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_RtButn03_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf9SG: broad-scan found 'model:PxrDisplace9'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf9SG: broad-scan found 'model:Veteran_RtButn02_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf9SG: Lambert file texture (0.478, 0.510, 0.275) ← RtButton_02_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf9SG: found model:PxrDisplace9 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_RtButn02_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf10SG: broad-scan found 'model:PxrDisplace10'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf10SG: broad-scan found 'model:Veteran_RtButn01_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf10SG: Lambert file texture (0.471, 0.514, 0.298) ← RtButton_01_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf10SG: found model:PxrDisplace10 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_RtButn01_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf11SG: broad-scan found 'model:PxrDisplace11'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf11SG: broad-scan found 'model:Veteran_MainMesh_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf11SG: Lambert file texture (0.427, 0.443, 0.373) ← MainMesh_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf11SG: found model:PxrDisplace11 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_MainMesh_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf12SG: broad-scan found 'model:PxrDisplace12'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf12SG: broad-scan found 'model:Veteran_LfZipr_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf12SG: Lambert file texture (0.600, 0.478, 0.255) ← LfZipper_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf12SG: found model:PxrDisplace12 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LfZipr_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf13SG: broad-scan found 'model:Veteran_LfButn04_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf13SG: broad-scan found 'model:PxrDisplace13'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf13SG: Lambert file texture (0.639, 0.518, 0.275) ← LfButton_04_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LfButn04_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf14SG: broad-scan found 'model:Veteran_LfButn03_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf14SG: broad-scan found 'model:PxrDisplace14'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf14SG: Lambert file texture (0.498, 0.525, 0.298) ← LfButton_03_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LfButn03_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf15SG: broad-scan found 'model:PxrDisplace15'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf15SG: broad-scan found 'model:Veteran_LfButn02_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf15SG: Lambert file texture (0.445, 0.502, 0.255) ← LfButton_02_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf15SG: found model:PxrDisplace15 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LfButn02_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf16SG: broad-scan found 'model:Veteran_LfButn01_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf16SG: broad-scan found 'model:PxrDisplace16'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf16SG: Lambert file texture (0.508, 0.514, 0.282) ← LfButton_01_Base_color.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_LfButn01_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf17SG: broad-scan found 'model:PxrDisplace17'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf17SG: broad-scan found 'model:Veteran_Chain_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf17SG: Lambert file texture (0.553, 0.561, 0.576) ← Chain_Base_color.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf17SG: found model:PxrDisplace17 type='PxrDisplace' — not in RFM_SHADER_TYPES, skipping
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_Chain_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf18SG: broad-scan found 'model:Veteran_Tongue_Bsdf'
 // src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf18SG: Lambert file texture (0.694, 0.345, 0.384) ← Tongue_Geo_Tongue_BaseColor.1001.png
-// src.services.usd.usd_pipeline_export :    [B-DIAG] model:Veteran_Tongue_Bsdf.baseColor: raw=[(0.0, 0.0, 0.0)]  r+g+b=0.0000
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf18SG1: Lambert file texture (0.694, 0.345, 0.384) ← Tongue_Geo_Tongue_BaseColor.1001.png
-// src.services.usd.usd_pipeline_export :    [PHASE-B] PxrDisneyBsdf18SG2: Lambert file texture (0.694, 0.345, 0.384) ← Tongue_Geo_Tongue_BaseColor.1001.png
 // src.services.usd.usd_pipeline_export :    [PHASE-B] initialParticleSE: found standardSurface1 type='standardSurface' — not in RFM_SHADER_TYPES, skipping
 // src.services.usd.usd_pipeline_export :    [PHASE-B] initialShadingGroup: found standardSurface1 type='standardSurface' — not in RFM_SHADER_TYPES, skipping
+// src.services.usd.usd_pipeline_export :    [PHASE-B-PBR] Populated 20 SGs with PBR values (metallic/roughness from PxrDisney). Samples: [('Cornea_Mat_SG', {'metallic': 0.0, 'roughness': 0.5}), ('Iris_MatSG', {'metallic': 0.0, 'roughness': 0.25}), ('Sclera_MatSG', {'metallic': 0.0, 'roughness': 0.25}), ('PxrDisneyBsdf1SG', {'metallic': 0.0, 'roughness': 0.5})]
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Found 8 Lambert materials in Maya
-// src.services.usd.usd_pipeline_export : [LOOKDEV] Mapped 29 shading groups to colors (A=Lambert, B=RfM Pxr*, C=generic), 2 RfM texture-driven skipped
-// src.services.usd.usd_pipeline_export : [LOOKDEV] Skipped RfM SGs: ['Cornea_Mat_SG', 'Pupils_MatSG']
+// src.services.usd.usd_pipeline_export : [LOOKDEV] Mapped 31 shading groups to colors (A=Lambert, B=RfM Pxr*, C=generic)
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Sample SG keys: ['Iris_MatSG', 'Sclera_MatSG', 'asClusterControlShaderSG', 'asFaceBlueSG', 'asFaceBrownSG', 'asFaceCyanSG', 'asFaceGreenSG', 'asFaceRedSG']
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Scanning USD material prims for name→SG matches...
 // src.services.usd.usd_pipeline_export :    [INJECT] initialShadingGroup ← initialShadingGroup = (0.4, 0.4, 0.4)
@@ -706,77 +658,210 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export :    [INJECT] asWhiteSG ← [name:white] = (0.95, 0.95, 0.95)
 // src.services.usd.usd_pipeline_export :    [INJECT] asBlackSG ← [name:black] = (0.02, 0.02, 0.02)
 // src.services.usd.usd_pipeline_export :    [UPDATE] asClusterControlShaderSG ← asClusterControlShaderSG = (0.073238954, 0.94773877, 1)
+// src.services.usd.usd_pipeline_export :    [UPDATE] Pupils_MatSG ← Pupils_MatSG = (0.01, 0.01, 0.01)
+// src.services.usd.usd_pipeline_export :    [EYE] Pupils_MatSG -- pupils non-metallic, roughness=0.5
 // src.services.usd.usd_pipeline_export :    [UPDATE] Sclera_MatSG ← Sclera_MatSG = (0.5, 0.5, 0.5)
+// src.services.usd.usd_pipeline_export :    [PBR] Sclera_MatSG -- metallic=0.000, roughness=0.250
+// src.services.usd.usd_pipeline_export :    [EYE] Sclera_MatSG — white sclera, metallic=0
 // src.services.usd.usd_pipeline_export :    [UPDATE] Iris_MatSG ← Iris_MatSG = (0.059, 0.039061934, 0)
+// src.services.usd.usd_pipeline_export :    [PBR] Iris_MatSG -- metallic=0.000, roughness=0.250
+// src.services.usd.usd_pipeline_export :    [EYE] Iris_MatSG -- iris hazel-brown, roughness=0.2
+// src.services.usd.usd_pipeline_export :    [UPDATE] Cornea_Mat_SG ← Cornea_Mat_SG = (0.85, 0.88, 0.92)
+// src.services.usd.usd_pipeline_export :    [PBR] Cornea_Mat_SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [EYE] Cornea_Mat_SG — opacity=0 glass cornea, diffuse=clear-water, roughness=0.02
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf1SG — writing Phase B color: (0.54509807, 0.47843137, 0.44313726)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf1SG ← PxrDisneyBsdf1SG = (0.54509807, 0.47843137, 0.44313726)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf1SG ← PxrDisneyBsdf1SG: UsdUVTexture(Body_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf1SG -- metallic=0.000, roughness=0.500
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf17SG — writing Phase B color: (0.5529412, 0.56078434, 0.5764706)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf17SG ← PxrDisneyBsdf17SG = (0.5529412, 0.56078434, 0.5764706)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf17SG ← PxrDisneyBsdf17SG: UsdUVTexture(Chain_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf17SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf17SG -- chain override metallic=0.45, roughness=0.3
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf11SG — writing Phase B color: (0.42745098, 0.44313726, 0.37254903)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf11SG ← PxrDisneyBsdf11SG = (0.42745098, 0.44313726, 0.37254903)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf11SG ← PxrDisneyBsdf11SG: UsdUVTexture(MainMesh_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf11SG -- metallic=0.000, roughness=0.500
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf16SG — writing Phase B color: (0.50784314, 0.5137255, 0.28235295)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf16SG ← PxrDisneyBsdf16SG = (0.50784314, 0.5137255, 0.28235295)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf16SG ← PxrDisneyBsdf16SG: UsdUVTexture(LfButton_01_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf16SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf16SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf15SG — writing Phase B color: (0.44509804, 0.5019608, 0.25490198)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf15SG ← PxrDisneyBsdf15SG = (0.44509804, 0.5019608, 0.25490198)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf15SG ← PxrDisneyBsdf15SG: UsdUVTexture(LfButton_02_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf15SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf15SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf14SG — writing Phase B color: (0.49803922, 0.5254902, 0.29803923)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf14SG ← PxrDisneyBsdf14SG = (0.49803922, 0.5254902, 0.29803923)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf14SG ← PxrDisneyBsdf14SG: UsdUVTexture(LfButton_03_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf14SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf14SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf13SG — writing Phase B color: (0.6392157, 0.5176471, 0.27450982)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf13SG ← PxrDisneyBsdf13SG = (0.6392157, 0.5176471, 0.27450982)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf13SG ← PxrDisneyBsdf13SG: UsdUVTexture(LfButton_04_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf13SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf13SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf12SG — writing Phase B color: (0.6, 0.47843137, 0.25490198)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf12SG ← PxrDisneyBsdf12SG = (0.6, 0.47843137, 0.25490198)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf12SG ← PxrDisneyBsdf12SG: UsdUVTexture(LfZipper_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf12SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf12SG -- zipper override metallic=0.4, roughness=0.35
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf2SG — writing Phase B color: (0.96862745, 0.52156866, 0.49803922)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf2SG ← PxrDisneyBsdf2SG = (0.96862745, 0.52156866, 0.49803922)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf2SG ← PxrDisneyBsdf2SG: UsdUVTexture(LwrTeeth_3_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf2SG -- metallic=0.000, roughness=0.500
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf10SG — writing Phase B color: (0.47058824, 0.5137255, 0.29803923)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf10SG ← PxrDisneyBsdf10SG = (0.47058824, 0.5137255, 0.29803923)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf10SG ← PxrDisneyBsdf10SG: UsdUVTexture(RtButton_01_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf10SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf10SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf9SG — writing Phase B color: (0.47843137, 0.50980395, 0.27450982)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf9SG ← PxrDisneyBsdf9SG = (0.47843137, 0.50980395, 0.27450982)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf9SG ← PxrDisneyBsdf9SG: UsdUVTexture(RtButton_02_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf9SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf9SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf8SG — writing Phase B color: (0.49803922, 0.52156866, 0.30980393)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf8SG ← PxrDisneyBsdf8SG = (0.49803922, 0.52156866, 0.30980393)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf8SG ← PxrDisneyBsdf8SG: UsdUVTexture(RtButton_03_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf8SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf8SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf7SG — writing Phase B color: (0.65882355, 0.53333336, 0.2784314)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf7SG ← PxrDisneyBsdf7SG = (0.65882355, 0.53333336, 0.2784314)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf7SG ← PxrDisneyBsdf7SG: UsdUVTexture(RtButton_04_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf7SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf7SG -- button override metallic=0.35, roughness=0.4
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf6SG — writing Phase B color: (0.6117647, 0.49019608, 0.25882354)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf6SG ← PxrDisneyBsdf6SG = (0.6117647, 0.49019608, 0.25882354)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf6SG ← PxrDisneyBsdf6SG: UsdUVTexture(RtZipper_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf6SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf6SG -- zipper override metallic=0.4, roughness=0.35
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf5SG — writing Phase B color: (0.56078434, 0.5686275, 0.58431375)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf5SG ← PxrDisneyBsdf5SG = (0.56078434, 0.5686275, 0.58431375)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf5SG ← PxrDisneyBsdf5SG: UsdUVTexture(Tags_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf5SG -- metallic=0.000, roughness=0.500
+// src.services.usd.usd_pipeline_export :    [METAL] PxrDisneyBsdf5SG -- dog tag override metallic=0.4, roughness=0.25
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf3SG — writing Phase B color: (0.9882353, 0.52156866, 0.49803922)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf3SG ← PxrDisneyBsdf3SG = (0.9882353, 0.52156866, 0.49803922)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf3SG ← PxrDisneyBsdf3SG: UsdUVTexture(UprTeeth_Base_color.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf3SG -- metallic=0.000, roughness=0.500
 // src.services.usd.usd_pipeline_export :    [RFM] PxrDisneyBsdf18SG — writing Phase B color: (0.69411767, 0.34509805, 0.38431373)
-// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf18SG ← PxrDisneyBsdf18SG = (0.69411767, 0.34509805, 0.38431373)
+// src.services.usd.usd_pipeline_export :    [UPDATE] PxrDisneyBsdf18SG ← PxrDisneyBsdf18SG: UsdUVTexture(Tongue_Geo_Tongue_BaseColor.1001.png)
+// src.services.usd.usd_pipeline_export :    [PBR] PxrDisneyBsdf18SG -- metallic=0.000, roughness=0.500
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Sample USD mat names: ['initialShadingGroup', 'asRedSG', 'asGreenSG', 'asGreen2SG', 'asBlueSG']
-// src.services.usd.usd_pipeline_export : [LOOKDEV] Scanned 30 USD materials, injected/updated 28
-// src.services.usd.usd_pipeline_export : [LOOKDEV] 2 USD materials had no SG color match — check SG keys above
-// src.services.usd.usd_pipeline_export : [OK] Created/updated 28 UsdPreviewSurface materials with colors
+// src.services.usd.usd_pipeline_export : [LOOKDEV] Scanned 30 USD materials, injected/updated 30
+// src.services.usd.usd_pipeline_export : [OK] Created/updated 30 UsdPreviewSurface materials with colors
 // src.services.usd.usd_pipeline_export : [FIX] Found 30 USD materials, 30 with UsdPreviewSurface shaders
-// src.services.usd.usd_pipeline_export : [FIX] Wired outputs:surface on 0 materials
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] initialShadingGroup → /SkelRoot/Group/Looks/initialShadingGroup/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asRedSG → /SkelRoot/Group/Looks/asRedSG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asGreenSG → /SkelRoot/Group/Looks/asGreenSG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asGreen2SG → /SkelRoot/Group/Looks/asGreen2SG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asBlueSG → /SkelRoot/Group/Looks/asBlueSG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asBlue2SG → /SkelRoot/Group/Looks/asBlue2SG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asWhiteSG → /SkelRoot/Group/Looks/asWhiteSG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-DIRECT] asBlackSG → /SkelRoot/Group/Looks/asBlackSG/PreviewSurface
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] asClusterControlShaderSG → /SkelRoot/Group/Looks/asClusterControlShaderSG/UsdPreviewSurface/asClusterControlShader (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] Pupils_MatSG → /SkelRoot/Group/Looks/Pupils_MatSG/UsdPreviewSurface/Pupils_Mat_lambert (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] Sclera_MatSG → /SkelRoot/Group/Looks/Sclera_MatSG/UsdPreviewSurface/Sclera_Mat_lambert (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] Iris_MatSG → /SkelRoot/Group/Looks/Iris_MatSG/UsdPreviewSurface/Iris_Mat_lambert (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] Cornea_Mat_SG → /SkelRoot/Group/Looks/Cornea_Mat_SG/UsdPreviewSurface/Cornea_Mat_lambert (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf1SG → /SkelRoot/Group/Looks/PxrDisneyBsdf1SG/UsdPreviewSurface/lambert2 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf17SG → /SkelRoot/Group/Looks/PxrDisneyBsdf17SG/UsdPreviewSurface/lambert3 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf11SG → /SkelRoot/Group/Looks/PxrDisneyBsdf11SG/UsdPreviewSurface/lambert4 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf16SG → /SkelRoot/Group/Looks/PxrDisneyBsdf16SG/UsdPreviewSurface/lambert5 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf15SG → /SkelRoot/Group/Looks/PxrDisneyBsdf15SG/UsdPreviewSurface/lambert6 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf14SG → /SkelRoot/Group/Looks/PxrDisneyBsdf14SG/UsdPreviewSurface/lambert7 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf13SG → /SkelRoot/Group/Looks/PxrDisneyBsdf13SG/UsdPreviewSurface/lambert8 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf12SG → /SkelRoot/Group/Looks/PxrDisneyBsdf12SG/UsdPreviewSurface/lambert9 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf2SG → /SkelRoot/Group/Looks/PxrDisneyBsdf2SG/UsdPreviewSurface/lambert10 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf10SG → /SkelRoot/Group/Looks/PxrDisneyBsdf10SG/UsdPreviewSurface/lambert11 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf9SG → /SkelRoot/Group/Looks/PxrDisneyBsdf9SG/UsdPreviewSurface/lambert12 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf8SG → /SkelRoot/Group/Looks/PxrDisneyBsdf8SG/UsdPreviewSurface/lambert13 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf7SG → /SkelRoot/Group/Looks/PxrDisneyBsdf7SG/UsdPreviewSurface/lambert14 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf6SG → /SkelRoot/Group/Looks/PxrDisneyBsdf6SG/UsdPreviewSurface/lambert15 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf5SG → /SkelRoot/Group/Looks/PxrDisneyBsdf5SG/UsdPreviewSurface/lambert16 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf3SG → /SkelRoot/Group/Looks/PxrDisneyBsdf3SG/UsdPreviewSurface/lambert18 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export :    [WIRE-NG-DIRECT] PxrDisneyBsdf18SG → /SkelRoot/Group/Looks/PxrDisneyBsdf18SG/UsdPreviewSurface/lambert19 (bypassing NodeGraph)
+// src.services.usd.usd_pipeline_export : [FIX] Wired outputs:surface on 30 materials (22 via NodeGraph, 8 direct)
 // src.services.usd.usd_pipeline_export : [FIX] Maya mesh→SG map: 124 entries
-// src.services.usd.usd_pipeline_export : [FIX] Material binding: 29 Mesh + 8 GeomSubset relationships written
+// src.services.usd.usd_pipeline_export : [FIX] Material binding: 26 Mesh + 8 GeomSubset relationships written
+// src.services.usd.usd_pipeline_export : [FIX-DEDUP] Deactivated deformed-origin duplicate: model_Body_Geo_usdExport
 // src.services.usd.usd_pipeline_export : [FIX] Deactivated 50 root-level blendshape Mesh prims, 8 FaceGroup/duplicate Mesh prims
-// src.services.usd.usd_pipeline_export : [FIX] Bind skeleton: /SkelRoot/Group/FitSkeleton/Root
-// src.services.usd.usd_pipeline_export : [FIX] Re-typed 120 Skeleton→Xform, deactivated 120 orphan SkelAnimation prims
+// src.services.usd.usd_pipeline_export : [FIX] 1 Skeleton(s) bound to meshes via BindingAPI; largest: /SkelRoot/Group/DeformationSystem/Root_M (85 joints)
+// src.services.usd.usd_pipeline_export : [FIX] Re-typed 119 Skeleton→Xform, deactivated 119 orphan SkelAnimation prims
+// src.services.usd.usd_pipeline_export : [FIX] Sanitized 17 absolute shader asset paths → package-relative (./textures/)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under asClusterControlShaderSG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under Pupils_MatSG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under Sclera_MatSG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under Iris_MatSG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under Cornea_Mat_SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf1SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf17SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf11SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf16SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf15SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf14SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf13SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf12SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf2SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf10SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf9SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf8SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf7SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf6SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf5SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf3SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX-NG] Deactivated NodeGraph 'rendermanForMaya' under PxrDisneyBsdf18SG (non-standard shader: PxrMayaLambert)
+// src.services.usd.usd_pipeline_export : [FIX] Deactivated 22 NodeGraph(s) with non-standard shader IDs → USDZ validator compatible
 // src.services.usd.usd_pipeline_export : [FIX] Structural fix-up complete → Veteran_Rig.usdc
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT] initialShadingGroup.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/initialShadingGroup/PreviewSurface.outputs:surface')]
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT] asRedSG.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/asRedSG/PreviewSurface.outputs:surface')]
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT] asGreenSG.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/asGreenSG/PreviewSurface.outputs:surface')]
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT-BYPASS-NG] asClusterControlShaderSG.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/asClusterControlShaderSG/UsdPreviewSurface/asClusterControlShader.outputs:surface')]
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT-BYPASS-NG] Pupils_MatSG.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/Pupils_MatSG/UsdPreviewSurface/Pupils_Mat_lambert.outputs:surface')]
+// src.services.usd.usd_pipeline_export : [VALIDATE-DIRECT-BYPASS-NG] Sclera_MatSG.outputs:surface → [Sdf.Path('/SkelRoot/Group/Looks/Sclera_MatSG/UsdPreviewSurface/Sclera_Mat_lambert.outputs:surface')]
 // src.services.usd.usd_pipeline_export : [INFO] Starting USD validation for: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.usdc
 // src.services.usd.usd_pipeline_export : [INFO] USD_AVAILABLE: True, file exists: True
 // src.services.usd.usd_pipeline_export : [INFO] Opening USD stage...
 // src.services.usd.usd_pipeline_export : [INFO] USD stage opened, counting prims...
 // src.services.usd.usd_pipeline_export : [INFO] Found 21 meshes in USD
-// src.services.usd.usd_pipeline_export : [INFO] Found 39 joints in 1 skeleton(s)
+// src.services.usd.usd_pipeline_export : [INFO] Found 124 joints in 2 skeleton(s)
 // src.services.usd.usd_pipeline_export : [INFO] SkelRoot: /SkelRoot
 // src.services.usd.usd_pipeline_export :    Children: ['Group', 'model_Veteran_Geo_Grp', 'BlendShapes']
 // src.services.usd.usd_pipeline_export : [INFO] Found 18 skin bindings in USD
 // src.services.usd.usd_pipeline_export : [INFO] Found 30 materials in USD
 // src.services.usd.usd_pipeline_export : [INFO] Found 63 blendshapes in USD
-// src.services.usd.usd_pipeline_export : [INFO] Found 1 SkelAnimation prims (rest pose only)
-// src.services.usd.usd_pipeline_export : [INFO] All prim types in USD: {'BlendShape', 'Mesh', 'GeomSubset', 'SkelAnimation', 'Skeleton', 'NodeGraph', 'Scope', 'SkelRoot', 'Xform', 'Material', 'Shader'}
+// src.services.usd.usd_pipeline_export : [INFO] Found 2 SkelAnimation prims (rest pose only)
+// src.services.usd.usd_pipeline_export : [INFO] All prim types in USD: {'Material', 'Xform', 'NodeGraph', 'GeomSubset', 'SkelRoot', 'Scope', 'Mesh', 'Skeleton', 'SkelAnimation', 'BlendShape', 'Shader'}
 // src.services.usd.usd_pipeline_export : [INFO] USD validation complete
 // src.services.usd.usd_pipeline_export : [OK] USD exported: Veteran_Rig.usdc
-// src.services.usd.usd_pipeline_export : [PACKAGE] Added rig backup to USDZ: Veteran_Rig.rig.mb
-// src.services.usd.usd_pipeline_export : [BUNDLE] USDZ package: Veteran_Rig.usdz (57.7 MB)
+// src.services.usd.usd_pipeline_export : [PACKAGE] Bundled 17 texture(s) into USDZ: Body_Base_color.png, Chain_Base_color.png, LfButton_01_Base_color.png, LfButton_02_Base_color.png, LfButton_03_Base_color.png...
+// src.services.usd.usd_pipeline_export : [BUNDLE] USDZ package: Veteran_Rig.usdz (73.8 MB)
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK] Archive entries (18): Veteran_Rig.usdc (first)
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   Veteran_Rig.usdc  size=34321444  STORED  header_offset=0  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/Body_Base_color.png  size=1493863  STORED  header_offset=34321508  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/Chain_Base_color.png  size=50416  STORED  header_offset=35815463  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LfButton_01_Base_color.png  size=2268414  STORED  header_offset=35865968  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LfButton_02_Base_color.png  size=1599626  STORED  header_offset=38134462  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LfButton_03_Base_color.png  size=2757797  STORED  header_offset=39734154  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LfButton_04_Base_color.png  size=3145211  STORED  header_offset=42492069  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LfZipper_Base_color.png  size=3904304  STORED  header_offset=45637371  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/LwrTeeth_3_Base_color.png  size=301881  STORED  header_offset=49541744  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/MainMesh_Base_color.png  size=4054476  STORED  header_offset=49843705  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/RtButton_01_Base_color.png  size=1994931  STORED  header_offset=53898252  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/RtButton_02_Base_color.png  size=2453824  STORED  header_offset=55893299  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/RtButton_03_Base_color.png  size=2939329  STORED  header_offset=58347200  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/RtButton_04_Base_color.png  size=3195638  STORED  header_offset=61286657  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/RtZipper_Base_color.png  size=3928360  STORED  header_offset=64482422  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/Tags_Base_color.png  size=32814  STORED  header_offset=68410856  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/Tongue_Geo_Tongue_BaseColor.1001.png  size=8620386  STORED  header_offset=68443758  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK]   textures/UprTeeth_Base_color.png  size=304578  STORED  header_offset=77064226  aligned=YES
+// src.services.usd.usd_pipeline_export : [USDZ-CHECK] All entries 64-byte aligned — compatible with Apple USDZ spec
 // src.services.usd.usd_pipeline_export : [OK] USDZ package created: Veteran_Rig.usdz
 // src.services.usd.usd_pipeline_export : [CLEANUP] Cleaned up intermediate: Veteran_Rig.usdc
-// src.services.usd.usd_pipeline_export : [CLEANUP] Cleaned up intermediate: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline_export : [CLEANUP] Rig backup kept alongside USDZ: Veteran_Rig.rig.mb
 // src.services.usd.usd_pipeline_export : [OK] Intermediate files cleaned up (bundled in USDZ)
 [OK] USD export: Export successful
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 # [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
 // Saving stage
 // Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitForeHead|FaceFitForeHeadGeo|ForeHeadAreaMesh|ForeHeadAreaMeshShape. Skipping... -- and 69 similar
-// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1653
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1618

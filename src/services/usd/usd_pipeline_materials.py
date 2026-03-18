@@ -241,6 +241,14 @@ class MaterialsMixin:
                     except Exception:
                         pass
 
+            # ── Store resolved path before PIL sampling ────────────────────────
+            # Capture the path now so _convert_renderman_materials_to_usd_preview
+            # can wire a UsdUVTexture even when PIL/OIIO sampling fails below.
+            # Only cache non-.tex paths — bare RenderMan .tex files are not
+            # displayable by standard USD image loaders.
+            if not tex_path.lower().endswith('.tex') and os.path.isfile(tex_path):
+                self._last_resolved_tex_path = tex_path
+
             # ── Attempt 0: user-supplied texture folder ───────────────────────
             # The user points us at a folder of source PNGs — either the flat
             # project renderman folder (Substance Painter exports) or the
@@ -787,6 +795,13 @@ class MaterialsMixin:
             # zippers, buttons) render with correct PBR properties instead of
             # looking like flat plastic.
             sg_to_pbr: dict = {}
+            # Parallel dict: sg_name → [pxr_node_full_names]
+            # Populated by Phase B Pxr node scan.  Used in the metal keyword
+            # override pass: RfM auto-names SGs as PxrDisneyBsdf[N]SG which has no
+            # semantic content, but the underlying Pxr node (e.g. Veteran_Chain_Bsdf)
+            # does.  Must be initialised here so the injection loop can reference it
+            # even when cmds is None.
+            _sg_to_pxr_map: dict = {}
             if cmds is not None:
                 try:
                     # ----------------------------------------------------------
@@ -858,12 +873,20 @@ class MaterialsMixin:
                     # e.g. "SomeRef:PxrDisneyBsdf1" is stored under key "PxrDisneyBsdf1".
                     _pxr_short_to_full: dict = {}
                     try:
+                        # Per-type sweep — finds shader nodes by TYPE regardless of name
+                        # (actual Bsdf nodes are named 'Veteran_Body_Bsdf', not 'Pxr*').
+                        # Guard each type with a registration check to skip unregistered
+                        # variants (PxrDisneyBSDF, PxrLMDiffuse) that would emit
+                        # "Unknown object type" warnings in this Maya/RfM version.
+                        _registered_node_types = set(cmds.allNodeTypes() or [])
                         for _pxr_type in RFM_SHADER_TYPES:
+                            if _pxr_type not in _registered_node_types:
+                                continue  # type not registered → skip silently
                             for _n in (cmds.ls(type=_pxr_type) or []):
                                 _short = _n.split(":")[-1]
                                 _pxr_short_to_full.setdefault(_short, _n)
-                        # Broad sweep: catch any Pxr* node regardless of type name
-                        # (handles unknown RfM versions or non-standard registrations).
+                        # Broad name sweep: catches nodes with Pxr* prefix (e.g. SGs,
+                        # any variant not covered by the registered-type check above).
                         for _n in (cmds.ls("Pxr*") or []) + (cmds.ls("*:Pxr*") or []):
                             _short = _n.split(":")[-1]
                             _pxr_short_to_full.setdefault(_short, _n)
@@ -916,6 +939,14 @@ class MaterialsMixin:
                     # .rmanSurface attribute on one SG never aborts the loop.
                     for sg in (cmds.ls(type="shadingEngine") or []):
                         if sg in sg_to_color:
+                            continue
+                        # Skip numbered Maya duplicate SGs (e.g. PxrDisneyBsdf18SG1,
+                        # PxrDisneyBsdf18SG2) when their un-numbered base was already
+                        # processed.  These duplicates have no corresponding USD
+                        # Material prim so their color values are never used.
+                        import re as _re_phb  # noqa: PLC0415 (local import, intentional)
+                        _dup_match = _re_phb.match(r'^(.+SG)\d+$', sg)
+                        if _dup_match and _dup_match.group(1) in sg_to_color:
                             continue
                         try:
                             # RfM primary connection point (.rmanSurface may not
@@ -1385,22 +1416,28 @@ class MaterialsMixin:
                 )
 
                 if lambert_color is None or (is_rfm_name and is_near_black):
-                    # For RfM texture-driven materials use a mid-grey fallback so
-                    # the mesh is at least visible in VP2.  Without a surface output
-                    # VP2 renders the mesh as white/unshaded; without a non-black
-                    # diffuseColor VP2 renders it as solid black.
-                    if is_rfm_name:
+                    # Apply name-hash fallback to:
+                    #   a) Any material Phase B identified as RfM-owned (matched_sg
+                    #      is set, even when the stored value was None meaning
+                    #      "texture-driven but sampling failed") — covers body/skin/
+                    #      clothing SGs whose USD prim names never start with "Pxr*".
+                    #   b) Materials whose USD prim name explicitly starts with a
+                    #      Pxr* shader type (legacy path).
+                    # Materials with no SG match at all (matched_sg is None AND not
+                    # is_rfm_name) are left untouched — mayaUSD may have converted
+                    # them correctly already.
+                    if matched_sg is not None or is_rfm_name:
                         # Texture sampling failed — generate a unique, deterministic
                         # color from the material name so each part of the rig is
-                        # visually distinct in VP2 rather than uniform mid-grey.
+                        # visually distinct in USD viewers rather than showing white.
                         lambert_color = self._rfm_name_color(usd_mat_name)
-                        matched_sg = "[fallback:RfM-name-hash]"
+                        matched_sg = "[fallback:name-hash]"
                         self.logger.info(
                             f"   [FALLBACK] {usd_mat_name} — texture unreadable, "
                             f"using name-hash color: {lambert_color}"
                         )
                     else:
-                        continue  # Non-RfM material with no color source — skip
+                        continue  # Unknown material with no SG match — skip
 
                 # RfM auto-names SGs after the shader node (e.g. PxrDisneyBsdf1SG).
                 if is_rfm_name:
@@ -1439,7 +1476,8 @@ class MaterialsMixin:
                         if (
                             _tex_src and os.path.isfile(_tex_src)
                             and self._wire_diffuse_texture(
-                                stage, prim, preview_shader, _tex_src, usd_path.parent
+                                stage, prim, preview_shader, _tex_src, usd_path.parent,
+                                lambert_color,
                             )
                         ):
                             self.logger.info(
@@ -1459,11 +1497,33 @@ class MaterialsMixin:
                     # Ensure material's universal 'surface' output is connected.
                     # The RenderMan exporter only creates ri:surface — VP2 needs
                     # the renderContext-free 'surface' output to find the shader.
+                    # Wire through the NodeGraph when the shader is inside one,
+                    # otherwise some USD viewers reject the cross-boundary link.
                     surface_out = material.GetSurfaceOutput()
                     if not surface_out or not surface_out.HasConnectedSource():
-                        material.CreateSurfaceOutput().ConnectToSource(
-                            preview_shader.ConnectableAPI(), "surface"
-                        )
+                        _sp = preview_shader.GetPrim()
+                        _pp = _sp.GetParent()
+                        if (
+                            _pp.IsValid()
+                            and _pp.GetTypeName() == 'NodeGraph'
+                            and _pp.GetPath() != prim.GetPath()
+                        ):
+                            _ng = UsdShade.NodeGraph(_pp)
+                            _ng_out = _ng.CreateOutput(
+                                'surface', Sdf.ValueTypeNames.Token
+                            )
+                            _ng_out.ConnectToSource(
+                                preview_shader.ConnectableAPI(), 'surface'
+                            )
+                            # Wire Material.outputs:surface directly to the inner
+                            # shader — same bypass approach as _fix_exported_usdc.
+                            material.CreateSurfaceOutput().ConnectToSource(
+                                preview_shader.ConnectableAPI(), 'surface'
+                            )
+                        else:
+                            material.CreateSurfaceOutput().ConnectToSource(
+                                preview_shader.ConnectableAPI(), "surface"
+                            )
                         self.logger.debug(
                             f"   [FIX] {usd_mat_name} — wired surface output for VP2"
                         )
@@ -1477,7 +1537,8 @@ class MaterialsMixin:
                     if (
                         _tex_src and os.path.isfile(_tex_src)
                         and self._wire_diffuse_texture(
-                            stage, prim, shader, _tex_src, usd_path.parent
+                            stage, prim, shader, _tex_src, usd_path.parent,
+                            lambert_color,
                         )
                     ):
                         self.logger.info(
@@ -1493,6 +1554,7 @@ class MaterialsMixin:
                         )
                     shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
                     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                    shader.CreateOutput('surface', Sdf.ValueTypeNames.Token)
                     material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
                     materials_converted += 1
                     _active_shader = shader
@@ -1504,6 +1566,14 @@ class MaterialsMixin:
                 # iris / pupil metallic reset).
                 if _active_shader is not None:
                     _name_lo = usd_mat_name.lower()
+                    # Augment keyword checks with semantic Pxr shader node names.
+                    # RfM auto-names SGs as PxrDisneyBsdf[N]SG (no semantic content);
+                    # the Pxr node itself (e.g. Veteran_Chain_Bsdf) carries the meaning.
+                    _pxr_nodes = _sg_to_pxr_map.get(matched_sg, []) if matched_sg else []
+                    _name_check = (
+                        _name_lo + ' '
+                        + ' '.join(n.split(':')[-1].lower() for n in _pxr_nodes)
+                    )
                     # Transfer PBR values from PxrDisney scan
                     _pbr = sg_to_pbr.get(matched_sg) if matched_sg else None
                     if _pbr:
@@ -1519,7 +1589,15 @@ class MaterialsMixin:
                         )
                     # Eye material name-based overrides
                     if 'cornea' in _name_lo:
-                        # Cornea is transparent glass — opacity=0 lets iris/pupil show
+                        # Cornea = transparent glass.
+                        # opacity=0.0 → fully transparent in QuickLook / full USD renderers.
+                        # diffuseColor set to a near-clear water tint so that viewers
+                        # which do NOT support opacity (render everything as opaque) still
+                        # show a plausible glossy white eye-surface rather than a muddy grey.
+                        # roughness=0.02 → near-mirror wet-glass specular highlight.
+                        _active_shader.CreateInput(
+                            "diffuseColor", Sdf.ValueTypeNames.Color3f
+                        ).Set(Gf.Vec3f(0.95, 0.97, 1.0))   # near-clear water tint
                         _active_shader.CreateInput(
                             "opacity", Sdf.ValueTypeNames.Float
                         ).Set(0.0)
@@ -1528,9 +1606,10 @@ class MaterialsMixin:
                         ).Set(0.0)
                         _active_shader.CreateInput(
                             "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.05)
+                        ).Set(0.02)                          # near-mirror gloss → reads as glass
                         self.logger.info(
-                            f"   [EYE] {usd_mat_name} — opacity=0 (transparent cornea)"
+                            f"   [EYE] {usd_mat_name} — opacity=0 glass cornea, "
+                            f"diffuse=clear-water, roughness=0.02"
                         )
                     elif 'sclera' in _name_lo:
                         # Force white regardless of Lambert proxy color
@@ -1547,6 +1626,13 @@ class MaterialsMixin:
                             f"   [EYE] {usd_mat_name} — white sclera, metallic=0"
                         )
                     elif 'iris' in _name_lo:
+                        # The Lambert proxy colour for iris is near-black (~0.06)
+                        # which is unusable.  Force a warm hazel-brown so the iris
+                        # ring is clearly visible against both the white sclera and
+                        # the black pupil in all USD viewers.
+                        _active_shader.CreateInput(
+                            "diffuseColor", Sdf.ValueTypeNames.Color3f
+                        ).Set(Gf.Vec3f(0.35, 0.20, 0.05))
                         _active_shader.CreateInput(
                             "metallic", Sdf.ValueTypeNames.Float
                         ).Set(0.0)
@@ -1554,7 +1640,7 @@ class MaterialsMixin:
                             "roughness", Sdf.ValueTypeNames.Float
                         ).Set(0.2)
                         self.logger.info(
-                            f"   [EYE] {usd_mat_name} -- iris non-metallic, roughness=0.2"
+                            f"   [EYE] {usd_mat_name} -- iris hazel-brown, roughness=0.2"
                         )
                     elif 'pupil' in _name_lo:
                         _active_shader.CreateInput(
@@ -1568,46 +1654,54 @@ class MaterialsMixin:
                         )
                     # Metal accessory overrides — PxrDisney metallic=0 in Maya
                     # means chain/tags/zippers look like flat plastic in USD.
-                    # Override by name so they get realistic metal PBR values.
-                    elif 'chain' in _name_lo:
+                    # _name_check combines the USD mat name with the underlying Pxr
+                    # shader node name (e.g. 'veteran_chain_bsdf') so keywords fire
+                    # even when the SG is generically named PxrDisneyBsdf[N]SG.
+                    #
+                    # metallic values are capped at ~0.45 so accessories remain
+                    # visible in viewers without an IBL environment.  Full metallic
+                    # (0.9+) suppresses all diffuse contribution leaving pure black
+                    # in flat-lit web viewers.  0.45 still reads as metallic while
+                    # keeping enough diffuse/texture contribution to show colour.
+                    elif 'chain' in _name_check:
                         _active_shader.CreateInput(
                             "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.9)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.2)
-                        self.logger.info(
-                            f"   [METAL] {usd_mat_name} -- chain override metallic=0.9, roughness=0.2"
-                        )
-                    elif 'tag' in _name_lo:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.85)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.15)
-                        self.logger.info(
-                            f"   [METAL] {usd_mat_name} -- dog tag override metallic=0.85, roughness=0.15"
-                        )
-                    elif 'zipr' in _name_lo or 'zipper' in _name_lo:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.85)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.25)
-                        self.logger.info(
-                            f"   [METAL] {usd_mat_name} -- zipper override metallic=0.85, roughness=0.25"
-                        )
-                    elif 'butn' in _name_lo or 'button' in _name_lo:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.75)
+                        ).Set(0.45)
                         _active_shader.CreateInput(
                             "roughness", Sdf.ValueTypeNames.Float
                         ).Set(0.3)
                         self.logger.info(
-                            f"   [METAL] {usd_mat_name} -- button override metallic=0.75, roughness=0.3"
+                            f"   [METAL] {usd_mat_name} -- chain override metallic=0.45, roughness=0.3"
+                        )
+                    elif 'tag' in _name_check:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.4)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.25)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- dog tag override metallic=0.4, roughness=0.25"
+                        )
+                    elif 'zipr' in _name_check or 'zipper' in _name_check:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.4)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.35)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- zipper override metallic=0.4, roughness=0.35"
+                        )
+                    elif 'butn' in _name_check or 'button' in _name_check:
+                        _active_shader.CreateInput(
+                            "metallic", Sdf.ValueTypeNames.Float
+                        ).Set(0.35)
+                        _active_shader.CreateInput(
+                            "roughness", Sdf.ValueTypeNames.Float
+                        ).Set(0.4)
+                        self.logger.info(
+                            f"   [METAL] {usd_mat_name} -- button override metallic=0.35, roughness=0.4"
                         )
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
@@ -1640,6 +1734,10 @@ class MaterialsMixin:
            UsdPreviewSurface shaders inside render-context NodeGraphs but forgets to
            connect the material's universal ``outputs:surface`` output.  Any viewer that
            uses the universal surface output (everything except RenderMan) sees grey.
+           CRITICAL: Material.outputs:surface must connect DIRECTLY to the Shader prim
+           (even when nested inside a NodeGraph) — web viewers (needle.tools, trellis3d,
+           three.js / Babylon.js USDZ loaders) do NOT traverse NodeGraph outputs to find
+           shaders; they only resolve direct Material→Shader connections.
 
         2. material:binding  — mayaUSD's ``useRegistry`` shading mode skips writing
            material:binding relationships on skinned meshes when the source shaders are
@@ -1701,20 +1799,78 @@ class MaterialsMixin:
                 f"{len(mat_path_to_shader)} with UsdPreviewSurface shaders"
             )
 
-            # ── Fix 1: Wire outputs:surface for all materials that are missing it ──
+            # ── Fix 1: Wire outputs:surface to the UsdPreviewSurface shader ────────
+            # mayaUSD places UsdPreviewSurface shaders inside render-context
+            # NodeGraphs (e.g. /Mat/preview/ShaderName).  A direct Material →
+            # Shader connection that crosses a NodeGraph boundary is rejected
+            # by many USD viewers (needle.tools, three.js, Babylon, etc.).
+            #
+            # Spec-compliant wiring when a NodeGraph is present:
+            #   Material.outputs:surface  →  NodeGraph.outputs:surface
+            #   NodeGraph.outputs:surface →  Shader.outputs:surface
+            #
+            # When the shader lives directly under the Material (INJECT path)
+            # we wire directly — no NodeGraph boundary to cross.
             surface_wired = 0
+            ng_wired = 0
+            direct_wired = 0
             for mat_path, preview_shader in mat_path_to_shader.items():
                 mat_prim = stage.GetPrimAtPath(mat_path)
                 if not mat_prim.IsValid():
                     continue
-                surf_attr = mat_prim.GetAttribute('outputs:surface')
-                if surf_attr.IsValid() and surf_attr.HasAuthoredConnections():
-                    continue  # Already properly wired
-                UsdShade.Material(mat_prim).CreateSurfaceOutput().ConnectToSource(
-                    preview_shader.ConnectableAPI(), 'surface'
-                )
+                material = UsdShade.Material(mat_prim)
+                shader_prim = preview_shader.GetPrim()
+                parent_prim = shader_prim.GetParent()
+
+                # Ensure the shader's outputs:surface is explicitly authored.
+                # Some USDZ viewers only resolve connections to attributes that
+                # exist on the target prim — a dangling path reference is ignored.
+                preview_shader.CreateOutput('surface', Sdf.ValueTypeNames.Token)
+
+                if (
+                    parent_prim.IsValid()
+                    and parent_prim.GetTypeName() == 'NodeGraph'
+                    and parent_prim.GetPath() != mat_prim.GetPath()
+                ):
+                    # Shader is inside a NodeGraph.
+                    # Wire NodeGraph.outputs:surface → shader (for NG-aware renderers).
+                    node_graph = UsdShade.NodeGraph(parent_prim)
+                    ng_output = node_graph.CreateOutput(
+                        'surface', Sdf.ValueTypeNames.Token
+                    )
+                    ng_output.ConnectToSource(
+                        preview_shader.ConnectableAPI(), 'surface'
+                    )
+                    # CRITICAL: wire Material.outputs:surface DIRECTLY to the shader
+                    # inside the NodeGraph, bypassing the NodeGraph boundary.
+                    # Web viewers (needle.tools, trellis3d, three.js / Babylon.js
+                    # USDZ loaders) only follow Material→Shader DIRECT connections;
+                    # they do not traverse NodeGraph outputs to find nested shaders.
+                    # Without this direct wire, ALL NodeGraph-wrapped materials are
+                    # invisible in every web viewer.
+                    material.CreateSurfaceOutput().ConnectToSource(
+                        preview_shader.ConnectableAPI(), 'surface'
+                    )
+                    ng_wired += 1
+                    self.logger.info(
+                        f"   [WIRE-NG-DIRECT] {mat_prim.GetName()} → "
+                        f"{shader_prim.GetPath()} (bypassing NodeGraph)"
+                    )
+                else:
+                    # Shader is directly under the Material — wire directly.
+                    material.CreateSurfaceOutput().ConnectToSource(
+                        preview_shader.ConnectableAPI(), 'surface'
+                    )
+                    direct_wired += 1
+                    self.logger.info(
+                        f"   [WIRE-DIRECT] {mat_prim.GetName()} → "
+                        f"{shader_prim.GetPath()}"
+                    )
                 surface_wired += 1
-            self.logger.info(f"[FIX] Wired outputs:surface on {surface_wired} materials")
+            self.logger.info(
+                f"[FIX] Wired outputs:surface on {surface_wired} materials "
+                f"({ng_wired} via NodeGraph, {direct_wired} direct)"
+            )
 
             # ── Fix 2: Build Maya mesh→SG map (cmds available at export time) ───────
             mesh_to_sg = {}   # USD Mesh prim transform name → Maya shading group name
@@ -1765,13 +1921,22 @@ class MaterialsMixin:
                     bind_api = UsdShade.MaterialBindingAPI(prim)
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
-                        continue  # Already has a binding
-                    # Don't write a mesh-level binding for multi-material meshes
-                    # that have GeomSubset children (e.g. the inner eyeball with
-                    # Sclera / Iris / Pupil face groups).  A mesh-level binding
-                    # would compete with the per-face GeomSubset bindings and
-                    # cause solid wrong-color eyes in many viewers.
-                    if any(c.GetTypeName() == 'GeomSubset' for c in prim.GetChildren()):
+                        # Binding exists — but the MaterialBindingAPI schema
+                        # may not be applied.  USDZ viewers (needle.tools,
+                        # Apple Quick Look, etc.) silently ignore bindings
+                        # without the schema applied on the prim.
+                        UsdShade.MaterialBindingAPI.Apply(prim)
+                        continue
+                    # Only skip mesh-level binding when the mesh has GeomSubset children
+                    # that are actual per-face material assignments (i.e. named after a
+                    # Material prim in the stage).  Topology/blendshape subsets such as
+                    # 'blendShape1', 'bottom', 'front', 'left', 'right', 'top' must NOT
+                    # block a valid whole-mesh material binding from being written —
+                    # those subsets exist for skinning or UV partitioning, not shading.
+                    if any(
+                        c.GetTypeName() == 'GeomSubset' and c.GetName() in mat_name_to_path
+                        for c in prim.GetChildren()
+                    ):
                         continue
                     prim_name = prim.GetName()
                     sg_name = mesh_to_sg.get(prim_name)
@@ -1790,7 +1955,15 @@ class MaterialsMixin:
                             bind_api.Bind(UsdShade.Material(mat_prim))
                             bindings_written += 1
                 elif ptype == 'GeomSubset':
-                    # mayaUSD names GeomSubsets after the shading group they represent.
+                    # Only process GeomSubsets that represent per-face material
+                    # assignments.  mayaUSD names these subsets after the shading
+                    # group (e.g. 'Pupils_MatSG', 'PxrDisneyBsdf1SG').  Topology
+                    # subsets ('blendShape1', 'bottom', 'front', …) are NOT material
+                    # subsets and must be skipped — setting familyName='materialBind'
+                    # on them would confuse USD-compliant viewers.
+                    subset_name = prim.GetName()
+                    if subset_name not in mat_name_to_path:
+                        continue
                     # Ensure the subset is declared as a face-element materialBind
                     # family so USD-compliant viewers treat it as a per-face binding.
                     _gs = UsdGeom.Subset(prim)
@@ -1802,14 +1975,13 @@ class MaterialsMixin:
                     bind_api = UsdShade.MaterialBindingAPI(prim)
                     existing, _ = bind_api.ComputeBoundMaterial()
                     if existing and existing.GetPrim().IsValid():
+                        UsdShade.MaterialBindingAPI.Apply(prim)
                         continue
-                    subset_name = prim.GetName()
-                    if subset_name in mat_name_to_path:
-                        mat_prim = stage.GetPrimAtPath(mat_name_to_path[subset_name])
-                        if mat_prim.IsValid():
-                            UsdShade.MaterialBindingAPI.Apply(prim)
-                            bind_api.Bind(UsdShade.Material(mat_prim))
-                            subset_bindings += 1
+                    mat_prim = stage.GetPrimAtPath(mat_name_to_path[subset_name])
+                    if mat_prim.IsValid():
+                        UsdShade.MaterialBindingAPI.Apply(prim)
+                        bind_api.Bind(UsdShade.Material(mat_prim))
+                        subset_bindings += 1
 
             self.logger.info(
                 f"[FIX] Material binding: {bindings_written} Mesh + "
@@ -1826,21 +1998,49 @@ class MaterialsMixin:
             #   with a secondary corrective cluster); deactivate the redundant copy.
             fit_geo_keywords = ('FaceGroup', 'FaceFit', 'FitEye', 'FitLip', 'FitFore')
             deactivated_extra = 0
+
+            # Two-pass _usdExport duplicate resolution.
+            # When a mesh has both a deformed shape node (e.g. Body_GeoShapeDeformed)
+            # and the actual model shape (e.g. model:Body_GeoShape), mayaUSD bakes
+            # both.  The deformed-origin prim claims the base name first:
+            #   Body_GeoShapeDeformed  → model_Body_Geo_usdExport   (NO material binding)
+            #   model:Body_GeoShape    → model_Body_Geo_usdExport1  (HAS SG / material)
+            # The previous logic deactivated all numbered variants — this killed the
+            # material-bound mesh and left the white un-bound one visible.
+            # Correct rule: when un-numbered AND numbered counterpart both exist,
+            # deactivate the UN-NUMBERED (deformed-origin, no material) and keep the
+            # NUMBERED one (model-origin, has material binding).
+            import re as _re_dedup
+            _usd_export_by_base = {}  # stripped_base → [(name, prim), ...]
+
             for prim in stage.Traverse():
                 if prim.GetTypeName() != 'Mesh':
                     continue
                 p_str = str(prim.GetPath())
-                # FaceGroup fit-geometry
+                # FaceGroup fit-geometry — always deactivate immediately
                 if any(kw in p_str for kw in fit_geo_keywords):
                     prim.SetActive(False)
                     deactivated_extra += 1
                     continue
-                # Numbered duplicate: name ends with a digit suffix on '_usdExport'
-                # e.g. model_Body_Geo_usdExport1 vs model_Body_Geo_usdExport
                 name = prim.GetName()
-                if name.endswith(tuple('0123456789')) and '_usdExport' in name:
-                    prim.SetActive(False)
-                    deactivated_extra += 1
+                if '_usdExport' in name:
+                    # Strip trailing digits to get the base export name
+                    # "model_Body_Geo_usdExport1" → "model_Body_Geo_usdExport"
+                    base = _re_dedup.sub(r'\d+$', '', name)
+                    _usd_export_by_base.setdefault(base, []).append((name, prim))
+
+            # Deactivate un-numbered (deformed-origin) when numbered counterpart exists.
+            # If only one variant exists (numbered or not), keep it unchanged.
+            for base, variants in _usd_export_by_base.items():
+                if len(variants) > 1:
+                    for vname, vprim in variants:
+                        if vname == base:  # exact un-numbered = deformed-origin
+                            vprim.SetActive(False)
+                            deactivated_extra += 1
+                            self.logger.info(
+                                f"[FIX-DEDUP] Deactivated deformed-origin duplicate: {vname}"
+                            )
+
             for path in root_mesh_paths:
                 stage.GetPrimAtPath(path).SetActive(False)
             self.logger.info(
@@ -1863,42 +2063,66 @@ class MaterialsMixin:
                     f"[FIX] Set purpose=guide on {len(nurbs_patched)} NurbsPatch prims"
                 )
 
-            # ── Fix 5: Find the bind skeleton ────────────────────────────────────────
-            # Prefer FitSkeleton by name (mGear / Advanced Skeleton convention).
-            # Fallback: the Skeleton prim with the most joints = bind skeleton.
+            # ── Fix 5: Collect Skeleton paths BOUND to mesh prims ───────────────────────────
+            # mayaUSDExport attaches UsdSkelBindingAPI to each skinned Mesh/SkelRoot prim
+            # with a 'skel:skeleton' rel pointing to the actual Skeleton.  We keep ONLY
+            # those Skeletons — they genuinely drive mesh deformation.  All other Skeleton
+            # prims (FK/IK controls, unbound fit-rig hierarchy) are re-typed to Xform.
+            bound_skeleton_paths: set = set()
+            for prim in stage.Traverse():
+                try:
+                    skel_binding = UsdSkel.BindingAPI(prim)
+                    skel_rel = skel_binding.GetSkeletonRel()
+                    if skel_rel and skel_rel.HasAuthoredTargets():
+                        for target_path in skel_rel.GetTargets():
+                            bound_skeleton_paths.add(target_path)
+                except Exception:
+                    pass
+
+            # Pick the 'primary' bind skeleton (most joints) for info logging.
             bind_skeleton_path = None
             max_joints = 0
-            for prim in stage.Traverse():
-                if prim.GetTypeName() != 'Skeleton':
+            for skel_path in bound_skeleton_paths:
+                skel_prim = stage.GetPrimAtPath(skel_path)
+                if not (skel_prim and skel_prim.IsValid()):
                     continue
-                if 'FitSkeleton' in str(prim.GetPath()):
-                    bind_skeleton_path = prim.GetPath()
-                    break
-                sk = UsdSkel.Skeleton(prim)
+                sk = UsdSkel.Skeleton(skel_prim)
                 joints_attr = sk.GetJointsAttr()
                 joints = joints_attr.Get() if joints_attr else None
                 count = len(joints) if joints else 0
                 if count > max_joints:
                     max_joints = count
-                    bind_skeleton_path = prim.GetPath()
+                    bind_skeleton_path = skel_path
 
-            bind_skel_str = str(bind_skeleton_path) if bind_skeleton_path else ''
-            self.logger.info(f"[FIX] Bind skeleton: {bind_skeleton_path}")
+            self.logger.info(
+                f"[FIX] {len(bound_skeleton_paths)} Skeleton(s) bound to meshes via "
+                f"BindingAPI; largest: {bind_skeleton_path} ({max_joints} joints)"
+            )
 
-            # ── Fix 6: Re-type FK-rig Skeleton prims → Xform ────────────────────────
-            # Collect first, then modify (safe with pxr's traversal model)
+            # ── Fix 6: Re-type unbound Skeleton prims → Xform ───────────────────────────────
+            # Keep: (1) all Skeletons referenced via BindingAPI (drive mesh deformation),
+            #        (2) any FitSkeleton prim (Advanced Skeleton face rig).
+            # Re-type: FK/IK control Skeletons that no mesh is bound to.
+            # Deactivate: SkelAnimations NOT under any kept Skeleton.
             skeletons_to_retype = []
             skel_anims_to_deactivate = []
             for prim in stage.Traverse():
                 ptype = prim.GetTypeName()
                 if ptype == 'Skeleton':
-                    if bind_skeleton_path and prim.GetPath() == bind_skeleton_path:
-                        continue  # Keep the real bind skeleton
-                    skeletons_to_retype.append(prim.GetPath())
+                    ppath = prim.GetPath()
+                    ppath_str = str(ppath)
+                    if ppath in bound_skeleton_paths:
+                        continue  # Mesh-bound — keep
+                    if 'FitSkeleton' in ppath_str:
+                        continue  # Advanced Skeleton face rig — keep
+                    skeletons_to_retype.append(ppath)
                 elif ptype == 'SkelAnimation':
                     ppath_str = str(prim.GetPath())
-                    # Keep SkelAnimations that live directly under the bind skeleton
-                    if bind_skel_str and not ppath_str.startswith(bind_skel_str + '/'):
+                    # Keep SkelAnimations that live under ANY bound Skeleton or FitSkeleton
+                    is_under_bound = any(
+                        ppath_str.startswith(str(bp) + '/') for bp in bound_skeleton_paths
+                    )
+                    if not is_under_bound and 'FitSkeleton' not in ppath_str:
                         skel_anims_to_deactivate.append(prim.GetPath())
 
             for path in skeletons_to_retype:
@@ -1911,8 +2135,167 @@ class MaterialsMixin:
                 f"deactivated {len(skel_anims_to_deactivate)} orphan SkelAnimation prims"
             )
 
+            # ── Fix 7: Sanitize absolute asset-path references ────────────────────
+            # mayaUSD writes RenderMan shader nodes (inside the 'rendermanForMaya'
+            # render context) with host-absolute file paths, e.g.
+            #   D:\Maya\projects\...\Body_Base_color.png
+            # Apple's USDZ spec requires ALL asset references inside the package to
+            # be package-relative.  An absolute external path causes Apple Quick Look
+            # and usdzviewer.com to reject the entire USDZ (0 polygons / 0 textures).
+            # Fix: replace any absolute path with './textures/<filename>' which is
+            # the correct package-relative path for our texture layout.
+            import os.path as _osp_fix
+            n_abs_fixed = 0
+            for _fprim in stage.Traverse():
+                if _fprim.GetTypeName() != 'Shader':
+                    continue
+                _fs = UsdShade.Shader(_fprim)
+                _fid = _fs.GetIdAttr()
+                if not (_fid and _fid.Get() == 'UsdUVTexture'):
+                    continue
+                _finp = _fs.GetInput('file')
+                if not _finp:
+                    continue
+                _fval = _finp.Get()
+                if _fval is None:
+                    continue
+                _fraw = _fval.path  # Sdf.AssetPath.path — no surrounding '@' signs
+                # Detect Windows absolute path (D:\...) or Unix absolute path (/...)
+                if not ((len(_fraw) >= 2 and _fraw[1] == ':') or _fraw.startswith('/')):
+                    continue  # Already relative — leave untouched
+                _fname = _osp_fix.basename(_fraw.replace('\\', '/'))
+                if not _fname:
+                    continue
+                _finp.Set(Sdf.AssetPath(f'./textures/{_fname}'))
+                n_abs_fixed += 1
+            if n_abs_fixed:
+                self.logger.info(
+                    f"[FIX] Sanitized {n_abs_fixed} absolute shader asset paths "
+                    f"→ package-relative (./textures/)"
+                )
+
+            # ── Fix 8: Deactivate ALL NodeGraphs with non-standard USD shader IDs ───
+            # Standard USD Preview Material shader IDs — any other shader ID is
+            # assumed viewer-incompatible (Pxr*, Arnold, MaterialX, etc.) and will
+            # cause strict USDZ validators (Apple Quick Look, usdzviewer.com) to
+            # reject the ENTIRE archive.  We scan every active NodeGraph regardless
+            # of name ('rendermanForMaya', 'preview', 'renderContext', etc.) so that
+            # any shader graph variant introduced by different Maya/RenderMan configs
+            # is caught.  Deactivating the NodeGraph removes the unknown prims from
+            # the scene graph without touching the UsdPreviewSurface wiring from Fix 1.
+            _STANDARD_USD_SHADER_IDS = {
+                'UsdPreviewSurface', 'UsdUVTexture', 'UsdTransform2d',
+                'UsdPrimvarReader_float2', 'UsdPrimvarReader_float',
+                'UsdPrimvarReader_float3', 'UsdPrimvarReader_float4',
+                'UsdPrimvarReader_int', 'UsdPrimvarReader_string',
+                'UsdPrimvarReader_normal', 'UsdPrimvarReader_point',
+                'UsdPrimvarReader_vector', 'UsdPrimvarReader_matrix',
+            }
+            _rman_ng_deactivated = 0
+            _ng_bad: list = []
+            for _ngprim in stage.Traverse():
+                if _ngprim.GetTypeName() != 'NodeGraph' or not _ngprim.IsActive():
+                    continue
+                _first_bad_id: str = ''
+                for _child in _ngprim.GetAllChildren():
+                    if _child.GetTypeName() != 'Shader':
+                        continue
+                    _cshader = UsdShade.Shader(_child)
+                    _cid_attr = _cshader.GetIdAttr()
+                    if not _cid_attr:
+                        continue
+                    _cid = _cid_attr.Get() or ''
+                    # Strip any namespace / path prefix
+                    # (e.g. 'rendermanForMaya:PxrMayaFile', 'Pxr/PxrSurface')
+                    _bare_id = _cid.split(':')[-1].split('/')[-1]
+                    if _bare_id not in _STANDARD_USD_SHADER_IDS:
+                        _first_bad_id = _cid
+                        break
+                if _first_bad_id:
+                    _ng_bad.append((_ngprim, _first_bad_id))
+            for _ngprim, _first_bad_id in _ng_bad:
+                _ngprim.SetActive(False)
+                _rman_ng_deactivated += 1
+                self.logger.info(
+                    f"[FIX-NG] Deactivated NodeGraph '{_ngprim.GetName()}' under "
+                    f"{_ngprim.GetParent().GetName()} "
+                    f"(non-standard shader: {_first_bad_id})"
+                )
+            if _rman_ng_deactivated:
+                self.logger.info(
+                    f"[FIX] Deactivated {_rman_ng_deactivated} NodeGraph(s) with "
+                    f"non-standard shader IDs → USDZ validator compatible"
+                )
+
             stage.Save()
             self.logger.info(f"[FIX] Structural fix-up complete → {usd_path.name}")
+
+            # ── Post-save validation: dump connection chain for first few materials ──
+            # Re-open the saved stage and verify outputs:surface connections
+            # so the log proves whether NodeGraph wire-through is actually persisted.
+            try:
+                vstage = Usd.Stage.Open(str(usd_path))
+                # Use three separate counters so each category gets log coverage.
+                # DIRECT       = shader directly under Material (8 plain mats)
+                # BYPASS-NG    = shader inside a NodeGraph, bypassed directly (22 RfM mats)
+                # UNEXPECTED   = target is NOT a Shader — flags a regression
+                plain_direct_samples = 0
+                bypass_ng_samples = 0
+                unexpected_samples = 0
+                for vprim in vstage.Traverse():
+                    if vprim.GetTypeName() != 'Material':
+                        continue
+                    vmat = UsdShade.Material(vprim)
+                    vsurf = vmat.GetSurfaceOutput()
+                    if not vsurf:
+                        self.logger.info(
+                            f"[VALIDATE] {vprim.GetName()} — no outputs:surface"
+                        )
+                        continue
+                    conns = vsurf.GetAttr().GetConnections()
+                    is_direct_shader = False
+                    bypasses_ng = False
+                    target_prim = None
+                    if conns:
+                        target_path = conns[0].GetPrimPath()
+                        target_prim = vstage.GetPrimAtPath(target_path)
+                        is_direct_shader = (
+                            target_prim.IsValid()
+                            and target_prim.GetTypeName() == 'Shader'
+                        )
+                        bypasses_ng = (
+                            is_direct_shader
+                            and target_prim.GetParent().GetTypeName() == 'NodeGraph'
+                        )
+                    if bypasses_ng and bypass_ng_samples < 3:
+                        self.logger.info(
+                            f"[VALIDATE-DIRECT-BYPASS-NG] "
+                            f"{vprim.GetName()}.outputs:surface → {conns}"
+                        )
+                        bypass_ng_samples += 1
+                    elif is_direct_shader and not bypasses_ng and plain_direct_samples < 3:
+                        self.logger.info(
+                            f"[VALIDATE-DIRECT] "
+                            f"{vprim.GetName()}.outputs:surface → {conns}"
+                        )
+                        plain_direct_samples += 1
+                    elif not is_direct_shader and unexpected_samples < 3:
+                        ttype = (
+                            target_prim.GetTypeName()
+                            if target_prim and target_prim.IsValid()
+                            else "invalid"
+                        )
+                        self.logger.info(
+                            f"[VALIDATE-UNEXPECTED] "
+                            f"{vprim.GetName()}.outputs:surface → {conns} "
+                            f"(target type: {ttype})"
+                        )
+                        unexpected_samples += 1
+                    if plain_direct_samples >= 3 and bypass_ng_samples >= 3:
+                        break
+                del vstage
+            except Exception as ve:
+                self.logger.debug(f"[VALIDATE] Connection validation skipped: {ve}")
 
         except Exception as e:
             self.logger.warning(f"[FIX] Post-export fix-up failed: {e}")
@@ -1966,6 +2349,7 @@ class MaterialsMixin:
         surface_shader,
         png_src_path: str,
         usd_dir,
+        fallback_color=None,
     ) -> bool:
         """
         Create a UsdUVTexture + UsdPrimvarReader_float2 shader network and
@@ -1974,7 +2358,7 @@ class MaterialsMixin:
         Also copies the source PNG into ``usd_dir/textures/`` so that
         ``_create_usdz_package`` can bundle it automatically.
 
-        The relative asset path ``./textures/<basename>`` written into the
+        The relative asset path ``textures/<basename>`` written into the
         USD is resolved by any USDZ viewer from the archive root — no
         hardcoded paths, no rig-specific logic.  Works for any character
         whose RenderMan Lambert proxy nodes point to real PNG files.
@@ -1993,25 +2377,39 @@ class MaterialsMixin:
             if not dst_png.exists():
                 shutil.copy2(png_src_path, str(dst_png))
 
-            mat_path = str(mat_prim.GetPath())
+            # Place helper shaders in the SAME scope as the UsdPreviewSurface.
+            # When mayaUSD wraps shaders in a render-context NodeGraph (e.g.
+            # /Mat/preview/Shader), creating the texture shaders at the Material
+            # root (e.g. /Mat/DiffuseTexture) would produce a cross-NodeGraph
+            # connection that many USD viewers refuse to follow.  Using the
+            # shader's own parent scope keeps every connection within one scope.
+            shader_scope = str(surface_shader.GetPrim().GetParent().GetPath())
 
             # UV reader — provides the mesh's 'st' primvar to the texture
             st_reader = UsdShade.Shader.Define(
-                stage, f"{mat_path}/TexCoordReader"
+                stage, f"{shader_scope}/TexCoordReader"
             )
             st_reader.CreateIdAttr("UsdPrimvarReader_float2")
             st_reader.CreateInput(
                 "varname", Sdf.ValueTypeNames.Token
             ).Set("st")
+            # When the mesh has no 'st' primvar exported (e.g. procedural chain/
+            # button accessories without UV sets), the reader returns the fallback
+            # value instead of (0,0).  Sampling at the texture CENTER (0.5, 0.5)
+            # is far more likely to return the correct metal colour than the
+            # bottom-left corner pixel (0,0) which is often black or near-black.
+            st_reader.CreateInput(
+                "fallback", Sdf.ValueTypeNames.Float2
+            ).Set(Gf.Vec2f(0.5, 0.5))
 
             # Diffuse texture — reads the source PNG via relative USDZ path
             tex_shader = UsdShade.Shader.Define(
-                stage, f"{mat_path}/DiffuseTexture"
+                stage, f"{shader_scope}/DiffuseTexture"
             )
             tex_shader.CreateIdAttr("UsdUVTexture")
             tex_shader.CreateInput(
                 "file", Sdf.ValueTypeNames.Asset
-            ).Set(Sdf.AssetPath(f"./textures/{tex_basename}"))
+            ).Set(Sdf.AssetPath(f"textures/{tex_basename}"))
             tex_shader.CreateInput(
                 "wrapS", Sdf.ValueTypeNames.Token
             ).Set("repeat")
@@ -2021,9 +2419,27 @@ class MaterialsMixin:
             tex_shader.CreateInput(
                 "sourceColorSpace", Sdf.ValueTypeNames.Token
             ).Set("sRGB")
+            # Texture-file-not-found fallback — use the Phase B sampled colour so
+            # the material shows a reasonable flat colour rather than black if the
+            # PNG is missing from the USDZ (e.g. packaging edge-case).
+            if fallback_color is not None:
+                tex_shader.CreateInput(
+                    "fallback", Sdf.ValueTypeNames.Float4
+                ).Set(Gf.Vec4f(
+                    float(fallback_color[0]),
+                    float(fallback_color[1]),
+                    float(fallback_color[2]),
+                    1.0,
+                ))
             tex_shader.CreateInput(
                 "st", Sdf.ValueTypeNames.Float2
             ).ConnectToSource(st_reader.ConnectableAPI(), "result")
+
+            # Explicitly author the output attributes so strict USD validators
+            # and online USDZ viewers (which require outputs to be authored,
+            # not just schema-defined) can resolve these connections.
+            st_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2)
+            tex_shader.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f)
 
             # Wire texture RGB output → PreviewSurface diffuseColor
             surface_shader.CreateInput(
@@ -2046,36 +2462,56 @@ class MaterialsMixin:
         usdz_path: Path
     ) -> bool:
         """
-        Create USDZ package containing USD, texture PNGs, and .rig.mb backup.
+        Create USDZ package with 64-byte aligned data payloads.
 
-        Build order ensures everything is already fully converted before this
-        method is called (mayaUSD export → blendshapes → material conversion
-        → structural fix → layered USD).  This method only packages what the
-        conversion steps produced.
+        The Apple/Pixar USDZ spec requires every file's DATA (not header) to
+        start at a 64-byte boundary within the ZIP archive.  This allows
+        implementations to memory-map entries directly without copying —
+        required by Apple's USD WebAssembly engine (usdzviewer.com, AR Quick
+        Look) and by any viewer built on the C++ USD runtime.  needle.tools
+        (pure JS/WASM parser) also benefits from the structured layout.
+
+        Alignment is achieved by padding the ``extra`` field in each local
+        file header with NUL bytes until the data payload starts on a 64-byte
+        boundary.  This is the identical approach used by Apple's own usdzip
+        command-line tool and Pixar's USD toolkit.
+
+        The rig backup (.rig.mb) is kept ALONGSIDE the USDZ — non-USD file
+        types cause strict validators to reject the archive.
         """
+        # ── Inner helper: write a single file with 64-byte aligned data ──────────
+        _USDZ_ALIGN = 64
+
+        def _write_aligned(zf: zipfile.ZipFile, src: Path, arcname: str) -> None:
+            """Add src to zf with its data payload starting on a 64-byte boundary."""
+            data = src.read_bytes()
+            info = zipfile.ZipInfo(arcname)
+            info.compress_type = zipfile.ZIP_STORED
+            # Local file header layout (ZIP spec §4.3.7):
+            #   30 bytes fixed signature + filename_utf8 + extra
+            #   data payload follows immediately.
+            # We need: (fp.tell() + 30 + len(filename) + len(extra)) % 64 == 0
+            assert zf.fp is not None, "ZipFile.fp is None — file not open for writing"
+            current_pos = zf.fp.tell()
+            fname_len = len(arcname.encode('utf-8'))
+            base_hdr = 30 + fname_len
+            pad = (_USDZ_ALIGN - (current_pos + base_hdr) % _USDZ_ALIGN) % _USDZ_ALIGN
+            info.extra = b'\x00' * pad
+            zf.writestr(info, data)
+
         try:
             with zipfile.ZipFile(str(usdz_path), 'w', zipfile.ZIP_STORED) as zf:
-                # Add USD file (must be first for USDZ spec compliance)
-                zf.write(str(usd_path), usd_path.name)
-
-                # Add .rig.mb backup if exists
-                if rig_mb_path and rig_mb_path.exists():
-                    zf.write(str(rig_mb_path), rig_mb_path.name)
-                    self.logger.info(f"[PACKAGE] Added rig backup to USDZ: {rig_mb_path.name}")
+                # USDZ spec: root USD layer must be the FIRST archive entry.
+                _write_aligned(zf, usd_path, usd_path.name)
 
                 # Bundle texture PNGs staged by _wire_diffuse_texture.
-                # The material conversion step copies every referenced PNG
-                # into usd_dir/textures/ and writes relative
-                # './textures/<name>' asset paths into the USD — USDZ
-                # viewers resolve those paths from the archive root.
-                # Works for any rig, not just this one.
                 textures_dir = usd_path.parent / "textures"
                 if textures_dir.is_dir():
                     tex_files = sorted(
                         f for f in textures_dir.iterdir() if f.is_file()
                     )
                     for tex_file in tex_files:
-                        zf.write(str(tex_file), f"textures/{tex_file.name}")
+                        _write_aligned(zf, tex_file, f"textures/{tex_file.name}")
                     if tex_files:
                         self.logger.info(
                             f"[PACKAGE] Bundled {len(tex_files)} texture(s) "
@@ -2085,6 +2521,49 @@ class MaterialsMixin:
 
             file_size = usdz_path.stat().st_size / (1024 * 1024)
             self.logger.info(f"[BUNDLE] USDZ package: {usdz_path.name} ({file_size:.1f} MB)")
+
+            # Post-packaging validation: verify contents and 64-byte alignment
+            try:
+                all_aligned = True
+                with zipfile.ZipFile(str(usdz_path), 'r') as zcheck:
+                    entries = zcheck.namelist()
+                    self.logger.info(
+                        f"[USDZ-CHECK] Archive entries ({len(entries)}): "
+                        f"{entries[0]} (first)"
+                    )
+                    for info in zcheck.infolist():
+                        comp = "STORED" if info.compress_type == 0 else "DEFLATED"
+                        # Data starts after: local header (30) + filename + extra
+                        fname_bytes = info.filename.encode('utf-8')
+                        extra_bytes = info.extra if info.extra else b''
+                        data_offset = (
+                            info.header_offset + 30
+                            + len(fname_bytes) + len(extra_bytes)
+                        )
+                        aligned = "YES" if data_offset % _USDZ_ALIGN == 0 else (
+                            f"NO (data_offset={data_offset}, "
+                            f"mod64={data_offset % _USDZ_ALIGN})"
+                        )
+                        if "NO" in aligned:
+                            all_aligned = False
+                        self.logger.info(
+                            f"[USDZ-CHECK]   {info.filename}  "
+                            f"size={info.file_size}  {comp}  "
+                            f"header_offset={info.header_offset}  aligned={aligned}"
+                        )
+                if all_aligned:
+                    self.logger.info(
+                        "[USDZ-CHECK] All entries 64-byte aligned — "
+                        "compatible with Apple USDZ spec"
+                    )
+                else:
+                    self.logger.warning(
+                        "[USDZ-CHECK] Alignment failures detected — "
+                        "usdzviewer.com / AR Quick Look may not load this file"
+                    )
+            except Exception as zce:
+                self.logger.warning(f"[USDZ-CHECK] Validation failed: {zce}")
+
             return True
 
         except Exception as e:
@@ -2097,21 +2576,23 @@ class MaterialsMixin:
         rig_mb_path: Optional[Path]
     ) -> None:
         """
-        Delete intermediate .usdc and .rig.mb files after USDZ packaging.
+        Delete intermediate files after USDZ packaging.
 
-        The USDZ already contains these files, so we can clean up
-        to avoid file clutter.
+        The rig backup (.rig.mb) is kept alongside the USDZ — it is NOT
+        bundled inside the archive because non-USD file types cause strict
+        online validators to reject the entire package.
         """
         try:
-            # Delete .usdc file
+            # Delete .usdc file (already packaged inside the USDZ)
             if usd_path.exists():
                 usd_path.unlink()
                 self.logger.info(f"[CLEANUP] Cleaned up intermediate: {usd_path.name}")
 
-            # Delete .rig.mb file
+            # Log where the rig backup lives (alongside USDZ, not inside)
             if rig_mb_path and rig_mb_path.exists():
-                rig_mb_path.unlink()
-                self.logger.info(f"[CLEANUP] Cleaned up intermediate: {rig_mb_path.name}")
+                self.logger.info(
+                    f"[CLEANUP] Rig backup kept alongside USDZ: {rig_mb_path.name}"
+                )
 
             self.logger.info("[OK] Intermediate files cleaned up (bundled in USDZ)")
 
