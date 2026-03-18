@@ -440,13 +440,29 @@ class ImportMixin:
                 # Enable proxy drawing
                 cmds.setAttr(f"{proxy_shape}.loadPayloads", True)
 
-                # IMPORTANT: For skinned meshes, set draw modes
+                # IMPORTANT: For skinned meshes, set draw modes.
+                # drawDefaultPurpose = True is critical: character mesh prims are
+                # authored with "default" USD purpose (no explicit purpose opinion),
+                # so they must be included in both VP2 and the RenderMan USD procedural.
                 try:
                     cmds.setAttr(f"{proxy_shape}.drawProxyPurpose", True)
                     cmds.setAttr(f"{proxy_shape}.drawRenderPurpose", True)
                     cmds.setAttr(f"{proxy_shape}.drawGuidePurpose", False)
                 except Exception:
                     pass  # Attribute may not exist in all Maya versions
+                try:
+                    cmds.setAttr(f"{proxy_shape}.drawDefaultPurpose", True)
+                except Exception:
+                    pass
+
+                # Explicitly set render visibility on the transform — ensures
+                # RfM's Maya translator includes this shape in the RIB export.
+                try:
+                    cmds.setAttr(f"{proxy_transform}.primaryVisibility", True)
+                    cmds.setAttr(f"{proxy_transform}.castsShadows", True)
+                    cmds.setAttr(f"{proxy_transform}.receiveShadows", True)
+                except Exception:
+                    pass
 
                 # WORKAROUND: Force stage reload to ensure skeleton bindings resolve correctly
                 # Toggling the file path forces a clean reload.
@@ -528,6 +544,22 @@ class ImportMixin:
                         "[SKEL] Skeleton managed by UsdSkelImaging inside proxy shape "
                         "(set convert_skeleton_to_maya=True to extract as Maya joints)"
                     )
+
+                # ── RfM 27.2 render integration ──────────────────────────────
+                # After creating the proxy shape interactively (not at file-open
+                # time), RfM's scene graph observer may not have registered it yet.
+                # rfmUpdateUI triggers a lightweight scene rescan so RfM includes
+                # this proxy in the next IPR/batch render via the PxrUSD procedural.
+                # This is a no-op if RfM is not loaded; errors are silenced.
+                try:
+                    import maya.mel as mel_m
+                    mel_m.eval('rfmUpdateUI')
+                    self.logger.info(
+                        "[RFM] Scene graph refreshed \u2014 USD proxy registered "
+                        "for RenderMan IPR and XPU rendering"
+                    )
+                except Exception:
+                    pass  # RfM not loaded or rfmUpdateUI not available — harmless
 
             except Exception as proxy_err:
                 self.logger.error(f"mayaUsdProxyShape creation failed: {proxy_err}")
@@ -931,10 +963,19 @@ class ImportMixin:
             for name in layer_names:
                 layer_path = base_dir / f"{asset_name}.{name}.usda"
                 # Re-import safe: Sdf.Layer.CreateNew fails if file exists.
-                # Find the layer in the cache first; if not open, delete stale
-                # file so CreateNew can write a fresh copy.
+                # Two cases:
+                #   a) Layer is in the Sdf registry cache from a previous import
+                #      in this Maya session — call Clear() to wipe stale specs so
+                #      we don't accumulate conflicting PxrPreviewSurface definitions
+                #      from old runs.  The layer object (and its cache entry) is
+                #      preserved so any USD stages already holding a reference to it
+                #      continue to work.
+                #   b) Layer file exists on disk but is not in the cache — delete
+                #      the file and call CreateNew to start fresh.
                 layer = Sdf.Layer.Find(str(layer_path))
-                if layer is None:
+                if layer is not None:
+                    layer.Clear()   # wipe stale content; keep cache entry intact
+                else:
                     if layer_path.exists():
                         try:
                             layer_path.unlink()
@@ -1695,6 +1736,12 @@ class ImportMixin:
 
                 # ── Author override in materials sublayer ─────────────────────
                 mat_override = sub_stage.OverridePrim(mat_path)
+                # Apply the UsdShade Material API schema to this over prim.
+                # OverridePrim creates a typeless prim (specifier=over, type='').
+                # UsdShade.Material(typeless_over).CreateSurfaceOutput('ri') may
+                # silently no-op on an invalid Material object — Apply() ensures
+                # the schema is registered so CreateSurfaceOutput works correctly.
+                UsdShade.Material.Apply(mat_override)
 
                 # PxrPreviewSurface — RenderMan 27.x ships this shader in
                 # $RMANTREE/lib/shaders/ as a first-class RIS surface shader
