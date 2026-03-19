@@ -22,7 +22,7 @@ try:
     MAYA_AVAILABLE = True
 except ImportError:
     cmds = None   # type: ignore[assignment]
-    mel  = None   # type: ignore[assignment]
+    mel = None   # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
@@ -248,7 +248,6 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.error(f"Import failed: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             result.error_message = str(e)
 
@@ -270,8 +269,6 @@ class ImportMixin:
             (usd_path, rig_mb_path, extract_dir) or (None, None, None) on failure
         """
         try:
-            import zipfile
-
             # Persistent sibling directory — survives Maya restarts
             extract_dir = usdz_path.parent / (usdz_path.stem + "_usd")
             extract_dir.mkdir(parents=True, exist_ok=True)
@@ -365,7 +362,6 @@ class ImportMixin:
 
             if USD_AVAILABLE:
                 try:
-                    from pxr import Usd, UsdSkel  # type: ignore
                     stage = Usd.Stage.Open(str(usd_path))
                     if stage:
                         # Find the default prim or root
@@ -616,7 +612,6 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.error(f"USD import failed: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             return False
 
@@ -670,8 +665,6 @@ class ImportMixin:
             return
 
         try:
-            from pxr import Usd  # pyright: ignore[reportMissingImports]
-
             # ── Get the live stage from the proxy shape ──
             stage = None
 
@@ -701,7 +694,6 @@ class ImportMixin:
             root_layer = stage.GetRootLayer()
             for sublayer_path in root_layer.subLayerPaths:
                 if "animation" in sublayer_path.lower():
-                    from pxr import Sdf  # pyright: ignore[reportMissingImports]
                     anim_layer = Sdf.Layer.FindOrOpen(
                         root_layer.ComputeAbsolutePath(sublayer_path)
                     )
@@ -758,8 +750,6 @@ class ImportMixin:
         if not USD_AVAILABLE:
             return
         try:
-            from pxr import Usd, UsdShade, UsdGeom, Gf, Vt  # type: ignore
-
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
                 self.logger.debug("[BOOST] Could not open USD for colour boost")
@@ -947,8 +937,6 @@ class ImportMixin:
             Path to root .usda on success, None on failure.
         """
         try:
-            from pxr import Usd, Sdf, UsdGeom  # pyright: ignore[reportMissingImports]
-
             base_dir = base_usd_path.parent
             asset_name = base_usd_path.stem  # e.g. "Veteran_Rig"
 
@@ -1100,7 +1088,6 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.error(f"[LAYER] Failed to build layered stage: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             return None
 
@@ -1394,7 +1381,6 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.error(f"[RIG] Controller extraction failed: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
             return None
 
@@ -1412,10 +1398,6 @@ class ImportMixin:
         - Custom attribute: assetManager:drivenJoints
         """
         try:
-            from pxr import (  # pyright: ignore[reportMissingImports]
-                Gf, Sdf, UsdGeom, Vt
-            )
-
             controllers = rig_data.get("controllers", [])
             mappings = rig_data.get("mappings", {})
 
@@ -1530,7 +1512,6 @@ class ImportMixin:
             self.logger.warning(
                 f"[LAYER] Could not populate controllers sublayer: {e}"
             )
-            import traceback
             self.logger.debug(traceback.format_exc())
 
     def _populate_skeleton_metadata(
@@ -1546,9 +1527,6 @@ class ImportMixin:
         without needing the .rig.mb at runtime.
         """
         try:
-            import json
-            from pxr import Usd, Sdf, UsdSkel  # pyright: ignore[reportMissingImports]
-
             mappings = rig_data.get("mappings", {})
             if not mappings:
                 return
@@ -1606,7 +1584,6 @@ class ImportMixin:
             self.logger.warning(
                 f"[LAYER] Could not populate skeleton metadata: {e}"
             )
-            import traceback
             self.logger.debug(traceback.format_exc())
 
     def _populate_rfm_materials_sublayer(
@@ -1640,8 +1617,6 @@ class ImportMixin:
         if not USD_AVAILABLE:
             return
         try:
-            from pxr import Usd, UsdShade, Sdf, Gf  # type: ignore
-
             base_stage = Usd.Stage.Open(str(base_usd_path))
             if not base_stage:
                 self.logger.warning("[RFM] Could not open base USDC for RfM materials")
@@ -1832,6 +1807,4 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
-            import traceback
             self.logger.debug(traceback.format_exc())
-
