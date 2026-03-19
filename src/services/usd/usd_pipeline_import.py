@@ -546,20 +546,27 @@ class ImportMixin:
                     )
 
                 # ── RfM 27.2 render integration ──────────────────────────────
-                # After creating the proxy shape interactively (not at file-open
-                # time), RfM's scene graph observer may not have registered it yet.
-                # rfmUpdateUI triggers a lightweight scene rescan so RfM includes
-                # this proxy in the next IPR/batch render via the PxrUSD procedural.
-                # This is a no-op if RfM is not loaded; errors are silenced.
+                # Trigger a lightweight RfM scene rescan so the proxy is included
+                # in the next IPR / batch render via the PxrUSD procedural.
+                # rfmUpdateUI was removed in rfm2 (RfM 24+); guard with whatIs
+                # to avoid a Maya console error.  Fall back to the rfm2 Python API.
                 try:
                     import maya.mel as mel_m
-                    mel_m.eval('rfmUpdateUI')
+                    # whatIs returns 'Unknown' when the procedure does not exist
+                    if mel_m.eval('whatIs "rfmUpdateUI"') not in ('Unknown', ''):
+                        mel_m.eval('rfmUpdateUI')
+                    else:
+                        try:
+                            import rfm2
+                            rfm2.api.RfM().refresh()
+                        except Exception:
+                            pass  # rfm2 not loaded — scene updater will fire on its own
                     self.logger.info(
                         "[RFM] Scene graph refreshed \u2014 USD proxy registered "
                         "for RenderMan IPR and XPU rendering"
                     )
                 except Exception:
-                    pass  # RfM not loaded or rfmUpdateUI not available — harmless
+                    pass  # RfM not loaded — harmless
 
             except Exception as proxy_err:
                 self.logger.error(f"mayaUsdProxyShape creation failed: {proxy_err}")
@@ -1736,12 +1743,13 @@ class ImportMixin:
 
                 # ── Author override in materials sublayer ─────────────────────
                 mat_override = sub_stage.OverridePrim(mat_path)
-                # Apply the UsdShade Material API schema to this over prim.
-                # OverridePrim creates a typeless prim (specifier=over, type='').
-                # UsdShade.Material(typeless_over).CreateSurfaceOutput('ri') may
-                # silently no-op on an invalid Material object — Apply() ensures
-                # the schema is registered so CreateSurfaceOutput works correctly.
-                UsdShade.Material.Apply(mat_override)
+                # Give the over prim the 'Material' typed schema so that
+                # UsdShade.Material(mat_override).CreateSurfaceOutput('ri')
+                # operates on a valid Material object.
+                # UsdShade.Material is a *typed* schema (not an API schema) —
+                # it has no .Apply() class method.  SetTypeName is the correct
+                # way to assign the type opinion to an existing prim.
+                mat_override.SetTypeName("Material")
 
                 # PxrPreviewSurface — RenderMan 27.x ships this shader in
                 # $RMANTREE/lib/shaders/ as a first-class RIS surface shader

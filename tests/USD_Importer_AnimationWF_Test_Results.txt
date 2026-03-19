@@ -48,7 +48,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  5.9 seconds.
+# Read 2 files in  5.8 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -285,7 +285,7 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.controllers.usda
-// src.services.usd.usd_pipeline_export : [RFM] Wrote PxrPreviewSurface ri:surface for 30 materials (17 with PxrTexture diffuse) in materials.usda — renderable in RenderMan for Maya 27.2+ via IPR (.it) and XPU batch render
+// Warning: src.services.usd.usd_pipeline_export : [RFM] RfM materials sublayer population failed: type object 'Material' has no attribute 'Apply'
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote controller→joint mappings for 1 skeleton(s) — 116 joints mapped
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
@@ -304,6 +304,7 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [CAMERA] Selected and framed USD proxy in viewport
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Enabled material display in 4 viewport(s) (VP2, smoothShaded, useDefaultMaterial=False)
 // src.services.usd.usd_pipeline_export : [SKEL] Skeleton managed by UsdSkelImaging inside proxy shape (set convert_skeleton_to_maya=True to extract as Maya joints)
+// Error: line 1: Cannot find procedure "rfmUpdateUI".
 // src.services.usd.usd_pipeline_export : [PACKAGE] USD proxy shape(s) created: 1
 // src.services.usd.usd_pipeline_export : 📚 USD contains 7 layers:
 // src.services.usd.usd_pipeline_export :    Root: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda
