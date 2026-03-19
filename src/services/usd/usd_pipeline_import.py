@@ -479,24 +479,33 @@ class ImportMixin:
                 except Exception:
                     pass
 
-                # ── RfM 27.2: Register proxy shape with RenderMan translator ──────
-                # rmanAddAttr adds the rman__* render attributes (visibility,
-                # trace, shading) that rfm2's rfmGeoCachePlugin translator reads
-                # to decide whether to include this shape in the RIB export.
-                # Without this call, rfm2 has no render attribute record for the
-                # shape and the geometry never makes it into IPR or batch renders.
-                # This MUST be called after filePath is set to its final value so
-                # rfm2's DG callbacks see the correct state.
+                # ── RfM 27.2: Optional rmanAddAttr registration ──────────────────
+                # rmanAddAttr was a legacy rfm1 MEL command (pre-RfM 24). In
+                # rfm2 (RfM 24+ / 27.2) it no longer exists — rfm2 auto-discovers
+                # all Maya shape nodes (including mayaUsdProxyShape) via its
+                # registered translator plugins. Calling it in RfM 27.2 causes a
+                # "Cannot find procedure" MEL error even though that error is
+                # harmless. Guard with whatIs so the error never prints.
                 try:
                     if mel is not None:
-                        prev_sel = cmds.ls(selection=True) or []
-                        cmds.select(proxy_shape, replace=True)
-                        mel.eval('rmanAddAttr')
-                        if prev_sel:
-                            cmds.select(prev_sel, replace=True)
+                        _proc_exists = mel.eval('whatIs "rmanAddAttr"') not in ('Unknown', '')
+                        if _proc_exists:
+                            # rfm1-style session (very old RfM) — call legacy proc
+                            prev_sel = cmds.ls(selection=True) or []
+                            cmds.select(proxy_shape, replace=True)
+                            mel.eval('rmanAddAttr')
+                            if prev_sel:
+                                cmds.select(prev_sel, replace=True)
+                            else:
+                                cmds.select(clear=True)
+                            self.logger.info("[RFM] rmanAddAttr — proxy shape registered with RenderMan translator")
                         else:
-                            cmds.select(clear=True)
-                        self.logger.info("[RFM] rmanAddAttr — proxy shape registered with RenderMan translator")
+                            # rfm2 27.2: translator auto-discovers mayaUsdProxyShape —
+                            # visibility/shading set above is all that's required.
+                            self.logger.info(
+                                "[RFM] rfm2 27.2 — proxy shape auto-discovered by translator "
+                                "(rmanAddAttr is rfm1-only; not needed in RfM 24+)"
+                            )
                 except Exception:
                     pass
 
