@@ -431,7 +431,10 @@ class ImportMixin:
                 # Loading the file path triggers USD stage composition.
                 # Maya will print "# Using V3 Lighting API for UsdPreviewSurface shading."
                 # confirming the optionVar above was respected.
-                cmds.setAttr(f"{proxy_shape}.filePath", str(usd_path), type='string')
+                # NOTE: Always use forward slashes — pathlib.Path on Windows gives
+                # backslashes, but PxrUSD procedural and Sdf expect POSIX separators.
+                usd_path_fwd = str(usd_path).replace('\\', '/')
+                cmds.setAttr(f"{proxy_shape}.filePath", usd_path_fwd, type='string')
 
                 # Enable proxy drawing
                 cmds.setAttr(f"{proxy_shape}.loadPayloads", True)
@@ -461,16 +464,47 @@ class ImportMixin:
                     pass
 
                 # WORKAROUND: Force stage reload to ensure skeleton bindings resolve correctly
-                # Toggling the file path forces a clean reload.
+                # Toggling the file path forces a clean USD stage recomposition.
+                # IMPORTANT: After this, we must call rmanAddAttr + dgdirty to
+                # recover rfm2's render scene graph — clearing filePath causes
+                # rfm2's DG callback to unregister the shape; the callbacks below
+                # re-register it with the correct (non-empty) path.
                 try:
-                    # Store the path
                     file_path = cmds.getAttr(f"{proxy_shape}.filePath")
-                    # Clear and reset to force reload
                     cmds.setAttr(f"{proxy_shape}.filePath", "", type='string')
                     cmds.refresh()
                     cmds.setAttr(f"{proxy_shape}.filePath", file_path, type='string')
                     cmds.refresh()
                     self.logger.info("[REFRESH] Forced stage reload for skeleton imaging")
+                except Exception:
+                    pass
+
+                # ── RfM 27.2: Register proxy shape with RenderMan translator ──────
+                # rmanAddAttr adds the rman__* render attributes (visibility,
+                # trace, shading) that rfm2's rfmGeoCachePlugin translator reads
+                # to decide whether to include this shape in the RIB export.
+                # Without this call, rfm2 has no render attribute record for the
+                # shape and the geometry never makes it into IPR or batch renders.
+                # This MUST be called after filePath is set to its final value so
+                # rfm2's DG callbacks see the correct state.
+                try:
+                    if mel is not None:
+                        prev_sel = cmds.ls(selection=True) or []
+                        cmds.select(proxy_shape, replace=True)
+                        mel.eval('rmanAddAttr')
+                        if prev_sel:
+                            cmds.select(prev_sel, replace=True)
+                        else:
+                            cmds.select(clear=True)
+                        self.logger.info("[RFM] rmanAddAttr — proxy shape registered with RenderMan translator")
+                except Exception:
+                    pass
+
+                # Dirty the DG so rfm2's scene graph callbacks re-fire with the
+                # correct filePath.  This recovers registration that was lost
+                # during the blank-path force-reload step above.
+                try:
+                    cmds.dgdirty(proxy_shape, allPlugs=True)
                 except Exception:
                     pass
 
@@ -542,27 +576,40 @@ class ImportMixin:
                     )
 
                 # ── RfM 27.2 render integration ──────────────────────────────
-                # Trigger a lightweight RfM scene rescan so the proxy is included
-                # in the next IPR / batch render via the PxrUSD procedural.
-                # rfmUpdateUI was removed in rfm2 (RfM 24+); guard with whatIs
-                # to avoid a Maya console error.  Fall back to the rfm2 Python API.
+                # Force rfm2 to re-scan the scene and include the USD proxy in
+                # the next IPR / batch render via the PxrUSD procedural.
+                #
+                # rfm2 (RfM 24+) architecture notes:
+                #   - rfmUpdateUI was removed; rfm2 uses DG callbacks instead
+                #   - rfm2.api.RfM().refresh() only refreshes UI state, not renders
+                #   - The correct approach: dirty the specific plugs rfm2 watches,
+                #     then use rfm2.scene_updater to trigger a full scene rebuild.
                 try:
                     import maya.mel as mel_m
-                    # whatIs returns 'Unknown' when the procedure does not exist
                     if mel_m.eval('whatIs "rfmUpdateUI"') not in ('Unknown', ''):
+                        # rfm1-style session (very old RfM) — use legacy command
                         mel_m.eval('rfmUpdateUI')
                     else:
+                        # rfm2 (RfM 24+ / 27.2) — DG dirty is the correct trigger.
+                        # Mark the transform and shape dirty so rfm2's registered
+                        # MDGMessage::kAttributeChanged callbacks re-process them.
+                        cmds.dgdirty(proxy_transform, allPlugs=True)
+                        cmds.dgdirty(proxy_shape, allPlugs=True)
+                        # Also attempt the rfm2.scene_updater path if importable.
+                        # scene_updater is the module that fired update_lama_nodes,
+                        # update_disney_nodes etc. — its update_rman_globals resets
+                        # the global render state which causes a full scene re-scan.
                         try:
-                            import rfm2
-                            rfm2.api.RfM().refresh()
+                            import rfm2.scene_updater as rfm2_su
+                            rfm2_su.update_rman_globals({})
                         except Exception:
-                            pass  # rfm2 not loaded — scene updater will fire on its own
+                            pass  # rfm2 not installed or wrong signature — DG dirty above is sufficient
                     self.logger.info(
                         "[RFM] Scene graph refreshed \u2014 USD proxy registered "
                         "for RenderMan IPR and XPU rendering"
                     )
                 except Exception:
-                    pass  # RfM not loaded — harmless
+                    pass  # RfM not loaded \u2014 harmless
 
             except Exception as proxy_err:
                 self.logger.error(f"mayaUsdProxyShape creation failed: {proxy_err}")
