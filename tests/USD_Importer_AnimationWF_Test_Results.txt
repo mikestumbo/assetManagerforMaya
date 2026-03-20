@@ -33,7 +33,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  5.6 seconds.
+# Read 2 files in  5.7 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -298,8 +298,8 @@ requires "stereoCamera" "10.0";
 [REFRESH] Populating asset list with 0 assets
 [OK] Populated asset list with 0 unique assets
 [FAVORITE] Populated favorites tab with 0 items
-// src.services.usd.usd_pipeline_export : [REFRESH] Forced stage reload for skeleton imaging
-// Error: line 1: Cannot find procedure "rmanAddAttr".
+// src.services.usd.usd_pipeline_export : [USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)
+// src.services.usd.usd_pipeline_export : [RFM] rfm2 27.2 — proxy shape auto-discovered by translator (rmanAddAttr is rfm1-only; not needed in RfM 24+)
 // src.services.usd.usd_pipeline_export : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
 // src.services.usd.usd_pipeline_export : [FILE] Loading USD file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd\Veteran_Rig.root.usda
 // src.services.usd.usd_pipeline_export : [CAMERA] Selected and framed USD proxy in viewport
