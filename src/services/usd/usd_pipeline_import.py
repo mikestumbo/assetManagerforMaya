@@ -147,11 +147,12 @@ class ImportMixin:
                         f"[OK] USD Proxy created: {result.usd_meshes} meshes, "
                         f"{result.usd_joints} joints in USD"
                     )
-                    # Materials live inside the USD stage — rendered by VP2, not Maya Hypershade
+                    # VP2 uses USD-native UsdPreviewSurface; RenderMan uses Maya PxrSurface
+                    # shaders created by _create_rfm_maya_shaders inside _import_with_mayausd.
                     if result.usd_materials > 0:
                         self.logger.info(
-                            f"[LOOKDEV] {result.usd_materials} USD materials rendered via VP2 "
-                            f"(UsdPreviewSurface — these are USD-native, not Maya Hypershade shaders)"
+                            f"[LOOKDEV] {result.usd_materials} USD materials: VP2 via "
+                            f"UsdPreviewSurface + RenderMan via Maya PxrSurface (Hypershade)"
                         )
                     if options.open_layer_editor:
                         self.logger.info(
@@ -672,6 +673,14 @@ class ImportMixin:
                     self.logger.info(
                         "[INFO] Complex skeleton detected - USD proxy will display skinned meshes via UsdSkelImaging"
                     )
+
+                # ── Create Maya PxrSurface shaders (Hypershade + rfm2 RIS) ────────────
+                # Creates real Maya DG PxrSurface + PxrTexture nodes visible in
+                # Hypershade and rendered by rfm2's standard RIS translation path.
+                # This runs AFTER the stage is loaded so the proxy shape already
+                # exists and mesh→material bindings are resolvable from the stage.
+                if USD_AVAILABLE and result.usd_materials > 0:
+                    self._create_rfm_maya_shaders(usd_path, proxy_transform, proxy_shape)
 
                 # Open USD Layer Editor if requested (Option B animation authoring)
                 if options.open_layer_editor:
@@ -1743,6 +1752,326 @@ class ImportMixin:
                 )
         except Exception as e:
             self.logger.warning(f"[GEOM] Primvar index sanitization skipped: {e}")
+
+    def _create_rfm_maya_shaders(
+        self,
+        usd_path: Path,
+        proxy_transform: str,
+        proxy_shape: str,
+    ) -> int:
+        """Create Maya PxrSurface + PxrTexture shaders from USD materials.
+
+        For every Material prim that has a ``UsdPreviewSurface`` in the USD
+        stage, this method creates matching Maya ``PxrSurface`` nodes (with
+        optional ``PxrTexture`` for the diffuse channel) directly in the Maya
+        DG.  The resulting shading groups are immediately visible in Hypershade
+        and are rendered by rfm2's standard RIS translation path — solving both
+        "no shaders in Hypershade" and "nothing renders in RenderMan IPR/IT".
+
+        Each Maya shading group is also assigned to the matching USD mesh prims
+        through the proxy shape using MayaUSD's ``|transform|shape,/PrimPath``
+        selection syntax, mirroring the USD material bindings into Maya.
+
+        Args:
+            usd_path: Path to the composed root ``.usda`` (or base ``.usdc``).
+            proxy_transform: Name of the Maya transform above the proxy shape.
+            proxy_shape: Name of the ``mayaUsdProxyShape`` node.
+
+        Returns:
+            Number of Maya shading groups successfully created.
+        """
+        if cmds is None or not USD_AVAILABLE:
+            return 0
+
+        # Verify rfm2 is loaded — PxrSurface only exists when rfm2 is active.
+        try:
+            _probe = cmds.shadingNode('PxrSurface', asShader=True, name='__rfm_probe__')
+            cmds.delete(_probe)
+        except Exception:
+            self.logger.info(
+                "[RFM] PxrSurface unavailable — rfm2 may not be loaded; "
+                "skipping Maya Hypershade shader creation"
+            )
+            return 0
+
+        try:
+            stage = Usd.Stage.Open(str(usd_path))
+            if not stage:
+                return 0
+
+            usd_dir = usd_path.parent
+
+            # ── Collect materials, their UsdPreviewSurface shaders, and ─────────
+            # mesh→material bindings from the composed stage.
+            mat_preview: Dict[str, Any] = {}       # mat_path_str → UsdShade.Shader
+            mat_textures: Dict[str, List] = {}     # mat_path_str → [UsdShade.Shader, …]
+            mesh_bindings: Dict[str, str] = {}     # mesh_path_str → mat_path_str
+
+            for prim in stage.Traverse():
+                ptype = prim.GetTypeName()
+
+                if ptype == 'Mesh':
+                    binding_api = UsdShade.MaterialBindingAPI(prim)
+                    binding = binding_api.GetDirectBinding()
+                    bound_mat = binding.GetMaterial()
+                    if bound_mat and bound_mat.GetPrim().IsValid():
+                        mesh_bindings[str(prim.GetPath())] = (
+                            str(bound_mat.GetPrim().GetPath())
+                        )
+                    continue
+
+                if ptype != 'Shader':
+                    continue
+
+                shader = UsdShade.Shader(prim)
+                try:
+                    sid = shader.GetShaderId() or ''
+                except Exception:
+                    try:
+                        sid = shader.GetIdAttr().Get() or ''
+                    except Exception:
+                        sid = ''
+
+                if sid not in ('UsdPreviewSurface', 'UsdUVTexture'):
+                    continue
+
+                # Walk up the hierarchy to find the enclosing Material prim.
+                ancestor = prim.GetParent()
+                mat_prim: Any = None
+                while ancestor and ancestor.IsValid():
+                    if ancestor.GetTypeName() == 'Material':
+                        mat_prim = ancestor
+                        break
+                    ancestor = ancestor.GetParent()
+                if mat_prim is None:
+                    continue
+
+                mat_key = str(mat_prim.GetPath())
+                if sid == 'UsdPreviewSurface':
+                    if mat_key not in mat_preview:
+                        mat_preview[mat_key] = shader
+                elif sid == 'UsdUVTexture':
+                    mat_textures.setdefault(mat_key, []).append(shader)
+
+            if not mat_preview:
+                self.logger.info(
+                    "[RFM] No UsdPreviewSurface materials — nothing to import as Maya shaders"
+                )
+                return 0
+
+            created_count = 0
+            tex_count = 0
+            mat_path_to_sg: Dict[str, str] = {}  # USD mat path → Maya SG name
+
+            for mat_key, preview_shader in mat_preview.items():
+                mat_name = Sdf.Path(mat_key).name
+                safe = (
+                    mat_name.replace(' ', '_').replace(':', '_').replace('.', '_')
+                )
+
+                # ── Resolve diffuse texture path ───────────────────────────────
+                diffuse_tex: Optional[str] = None
+                try:
+                    dc_inp = preview_shader.GetInput('diffuseColor')
+                    if dc_inp and dc_inp.HasConnectedSource():
+                        for conn in dc_inp.GetAttr().GetConnections():
+                            src_prim = stage.GetPrimAtPath(conn.GetPrimPath())
+                            if not (src_prim and src_prim.IsValid()):
+                                continue
+                            src_sh = UsdShade.Shader(src_prim)
+                            try:
+                                src_id = src_sh.GetShaderId() or ''
+                            except Exception:
+                                src_id = ''
+                            if src_id != 'UsdUVTexture':
+                                continue
+                            f_inp = src_sh.GetInput('file')
+                            if not f_inp:
+                                continue
+                            asset = f_inp.Get()
+                            if asset:
+                                diffuse_tex = str(asset.path)
+                            break
+                except Exception:
+                    pass
+
+                # Fallback: first non-normal texture in the material's UVTexture list.
+                if not diffuse_tex:
+                    for uv_sh in mat_textures.get(mat_key, []):
+                        cname = uv_sh.GetPrim().GetName().lower()
+                        if any(t in cname for t in ('normal', 'nrm', 'nml', 'bump', 'spec')):
+                            continue
+                        f_inp = uv_sh.GetInput('file')
+                        if not f_inp:
+                            continue
+                        asset = f_inp.Get()
+                        if asset:
+                            diffuse_tex = str(asset.path)
+                            break
+
+                # Resolve relative → absolute path.
+                if diffuse_tex and not Path(diffuse_tex).is_absolute():
+                    resolved = (usd_dir / diffuse_tex).resolve()
+                    diffuse_tex = (
+                        str(resolved).replace('\\', '/') if resolved.exists() else None
+                    )
+                elif diffuse_tex:
+                    diffuse_tex = diffuse_tex.replace('\\', '/')
+                    if not Path(diffuse_tex).exists():
+                        diffuse_tex = None
+
+                # ── Read scalar PBR properties from UsdPreviewSurface ──────────
+                roughness = 0.5
+                metallic = 0.0
+                try:
+                    r_inp = preview_shader.GetInput('roughness')
+                    if r_inp and not r_inp.HasConnectedSource():
+                        v = r_inp.Get()
+                        if v is not None:
+                            roughness = max(0.0, min(float(v), 1.0))
+                except Exception:
+                    pass
+                try:
+                    m_inp = preview_shader.GetInput('metallic')
+                    if m_inp and not m_inp.HasConnectedSource():
+                        v = m_inp.Get()
+                        if v is not None:
+                            metallic = max(0.0, min(float(v), 1.0))
+                except Exception:
+                    pass
+
+                # ── Create Maya PxrSurface node + shading group ────────────────
+                try:
+                    pxr_surf = cmds.shadingNode(
+                        'PxrSurface', asShader=True, name=f'rfm_{safe}'
+                    )
+                    sg = cmds.sets(
+                        renderable=True,
+                        noSurfaceShader=True,
+                        empty=True,
+                        name=f'rfm_{safe}SG'
+                    )
+                    cmds.connectAttr(
+                        f'{pxr_surf}.outColor', f'{sg}.surfaceShader', force=True
+                    )
+
+                    # Specular roughness (UsdPreviewSurface roughness → PxrSurface)
+                    try:
+                        cmds.setAttr(f'{pxr_surf}.specularRoughness', roughness)
+                    except Exception:
+                        pass
+
+                    # Metallic approximation: reduce diffuse gain for metallic surfaces.
+                    if metallic > 0.1:
+                        try:
+                            cmds.setAttr(f'{pxr_surf}.diffuseGain', max(0.05, 1.0 - metallic))
+                        except Exception:
+                            pass
+
+                    # ── Diffuse: PxrTexture node or static color ───────────────
+                    if diffuse_tex:
+                        pxr_tex = cmds.shadingNode(
+                            'PxrTexture', asTexture=True, name=f'rfm_tex_{safe}'
+                        )
+                        # Set texture file path
+                        try:
+                            cmds.setAttr(f'{pxr_tex}.filename', diffuse_tex, type='string')
+                        except Exception:
+                            pass
+                        # Convert sRGB → linear for physically correct shading
+                        try:
+                            cmds.setAttr(f'{pxr_tex}.linearize', 1)
+                        except Exception:
+                            pass
+                        # Connect PxrTexture.resultRGB → PxrSurface.diffuseColor
+                        try:
+                            cmds.connectAttr(
+                                f'{pxr_tex}.resultRGB', f'{pxr_surf}.diffuseColor',
+                                force=True
+                            )
+                            tex_count += 1
+                        except Exception:
+                            pass
+                    else:
+                        # No texture: copy static diffuseColor from UsdPreviewSurface
+                        try:
+                            dc_inp = preview_shader.GetInput('diffuseColor')
+                            if dc_inp and not dc_inp.HasConnectedSource():
+                                dc_val = dc_inp.Get()
+                                if dc_val is not None:
+                                    cmds.setAttr(
+                                        f'{pxr_surf}.diffuseColor',
+                                        float(dc_val[0]),
+                                        float(dc_val[1]),
+                                        float(dc_val[2]),
+                                        type='double3'
+                                    )
+                        except Exception:
+                            pass
+
+                    mat_path_to_sg[mat_key] = sg
+                    created_count += 1
+
+                except Exception as node_err:
+                    self.logger.debug(
+                        f"[RFM] Maya shader creation skipped for {mat_name}: {node_err}"
+                    )
+                    continue
+
+            if created_count == 0:
+                return 0
+
+            tex_label = f'{tex_count} with PxrTexture' if tex_count else 'static colors'
+            self.logger.info(
+                f"[RFM] Created {created_count} Maya PxrSurface shaders "
+                f"({tex_label}) — visible in Hypershade + renderable via rfm2 RIS"
+            )
+
+            # ── Assign Maya SGs to USD mesh prims via proxy shape ──────────────
+            # MayaUSD selection syntax: |transform|shape,/UsdPrimPath
+            # Assigning a Maya SG to a selected USD prim writes a material
+            # binding opinion to the proxy shape's session layer.
+            assigned = 0
+            prev_sel = cmds.ls(selection=True, long=True) or []
+            try:
+                for mesh_path_str, mat_key in mesh_bindings.items():
+                    sg = mat_path_to_sg.get(mat_key)
+                    if not sg:
+                        continue
+                    sel_target = f"|{proxy_transform}|{proxy_shape},{mesh_path_str}"
+                    try:
+                        cmds.select(sel_target, replace=True)
+                        cmds.hyperShade(assign=sg)
+                        assigned += 1
+                    except Exception:
+                        pass  # USD prim may not support cmds.select — user assigns manually
+            finally:
+                try:
+                    if prev_sel:
+                        cmds.select(prev_sel, replace=True)
+                    else:
+                        cmds.select(clear=True)
+                except Exception:
+                    pass
+
+            if assigned:
+                self.logger.info(
+                    f"[RFM] Auto-assigned {assigned}/{len(mesh_bindings)} "
+                    f"PxrSurface shaders to USD proxy prims — rig is now renderable"
+                )
+            else:
+                self.logger.info(
+                    "[RFM] Shaders available in Hypershade — to assign per-mesh: "
+                    "select USD prim in viewport → Hypershade → RMB → Assign Material. "
+                    "Or use Rendering > Assign New Material after selecting prims."
+                )
+
+            return created_count
+
+        except Exception as e:
+            self.logger.warning(f"[RFM] Maya shader creation failed: {e}")
+            self.logger.debug(traceback.format_exc())
+            return 0
 
     def _populate_rfm_materials_sublayer(
         self,
