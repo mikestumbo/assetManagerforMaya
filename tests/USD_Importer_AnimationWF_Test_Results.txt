@@ -11,21 +11,6 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
-// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
 // src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
 // src.services.usd.usd_pipeline_export : [EXTRACT] 17 texture file(s) extracted
@@ -48,7 +33,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  5.8 seconds.
+# Read 2 files in  5.6 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -285,7 +270,7 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.controllers.usda
-// Warning: src.services.usd.usd_pipeline_export : [RFM] RfM materials sublayer population failed: type object 'Material' has no attribute 'Apply'
+// src.services.usd.usd_pipeline_export : [RFM] Wrote PxrPreviewSurface ri:surface for 30 materials (17 with PxrTexture diffuse) in materials.usda — renderable in RenderMan for Maya 27.2+ via IPR (.it) and XPU batch render
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote controller→joint mappings for 1 skeleton(s) — 116 joints mapped
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
@@ -298,13 +283,29 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
 // src.services.usd.usd_pipeline_export : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
 # Using V3 Lighting API for UsdPreviewSurface shading.
+# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [REFRESH] Forced stage reload for skeleton imaging
+// Error: line 1: Cannot find procedure "rmanAddAttr".
 // src.services.usd.usd_pipeline_export : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
 // src.services.usd.usd_pipeline_export : [FILE] Loading USD file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd\Veteran_Rig.root.usda
 // src.services.usd.usd_pipeline_export : [CAMERA] Selected and framed USD proxy in viewport
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Enabled material display in 4 viewport(s) (VP2, smoothShaded, useDefaultMaterial=False)
 // src.services.usd.usd_pipeline_export : [SKEL] Skeleton managed by UsdSkelImaging inside proxy shape (set convert_skeleton_to_maya=True to extract as Maya joints)
-// Error: line 1: Cannot find procedure "rfmUpdateUI".
+// src.services.usd.usd_pipeline_export : [RFM] Scene graph refreshed — USD proxy registered for RenderMan IPR and XPU rendering
 // src.services.usd.usd_pipeline_export : [PACKAGE] USD proxy shape(s) created: 1
 // src.services.usd.usd_pipeline_export : 📚 USD contains 7 layers:
 // src.services.usd.usd_pipeline_export :    Root: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda
