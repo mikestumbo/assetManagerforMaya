@@ -436,6 +436,20 @@ class ImportMixin:
                 usd_path_fwd = str(usd_path).replace('\\', '/')
                 cmds.setAttr(f"{proxy_shape}.filePath", usd_path_fwd, type='string')
 
+                # ── CRITICAL for RfM 27.2 rendering ───────────────────────────
+                # primPath tells rfm2's translator which USD prim to use as the
+                # root object for the PxrUSD procedural.
+                # When primPath is empty (the default), rfm2 outputs:
+                #   Procedural2 "DynamicLoad" "PxrUSD" "string object" [""]
+                # PxrUSD interprets an empty object as the pseudo-root — which
+                # has no geometry — so nothing renders in IPR or IT.
+                # Setting it to '/' causes rfm2 to output:
+                #   Procedural2 "DynamicLoad" "PxrUSD" "string object" ["/"]
+                # PxrUSD then traverses the full USD hierarchy, finds /SkelRoot
+                # and all its children (meshes, skeleton, materials) and renders
+                # them correctly.
+                cmds.setAttr(f"{proxy_shape}.primPath", '/', type='string')
+
                 # Enable proxy drawing
                 cmds.setAttr(f"{proxy_shape}.loadPayloads", True)
 
@@ -463,21 +477,17 @@ class ImportMixin:
                 except Exception:
                     pass
 
-                # WORKAROUND: Force stage reload to ensure skeleton bindings resolve correctly
-                # Toggling the file path forces a clean USD stage recomposition.
-                # IMPORTANT: After this, we must call rmanAddAttr + dgdirty to
-                # recover rfm2's render scene graph — clearing filePath causes
-                # rfm2's DG callback to unregister the shape; the callbacks below
-                # re-register it with the correct (non-empty) path.
-                try:
-                    file_path = cmds.getAttr(f"{proxy_shape}.filePath")
-                    cmds.setAttr(f"{proxy_shape}.filePath", "", type='string')
-                    cmds.refresh()
-                    cmds.setAttr(f"{proxy_shape}.filePath", file_path, type='string')
-                    cmds.refresh()
-                    self.logger.info("[REFRESH] Forced stage reload for skeleton imaging")
-                except Exception:
-                    pass
+                # NOTE: The blank-filePath force-reload was REMOVED.
+                # Setting filePath to "" triggered rfm2's MDGMessage::kAttributeSet
+                # callback with an empty path, which caused rfm2 to unregister
+                # the shape from its internal render scene.  Restoring the path
+                # afterward was insufficient — rfm2 had already removed the shape.
+                # The USD stage composes correctly on the first setAttr filePath
+                # call; no reload is needed.  The primPath='/' set above ensures
+                # rfm2 renders the full hierarchy.  A dgdirty below handles any
+                # deferred DG evaluation that needs to pick up these attributes.
+                cmds.refresh()
+                self.logger.info("[USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)")
 
                 # ── RfM 27.2: Optional rmanAddAttr registration ──────────────────
                 # rmanAddAttr was a legacy rfm1 MEL command (pre-RfM 24). In
@@ -542,9 +552,15 @@ class ImportMixin:
                     configured = 0
                     for panel in panels_to_configure:
                         try:
-                            # Switch to VP2.0 if needed
+                            # Switch to VP2.0 if the panel is using an unknown
+                            # renderer.  PRESERVE RenderMan's viewport renderer
+                            # ('renderManForMaya') if the user has it active —
+                            # overriding it with VP2 would break RenderMan viewport
+                            # rendering.  Both VP2 and RenderMan VP2 can display
+                            # the USD proxy shape with materials.
                             renderer = cmds.modelEditor(panel, query=True, rendererName=True)
-                            if renderer != 'vp2Renderer':
+                            _rman_vp = {'renderManForMaya', 'myRenderView', 'renderManXPU'}
+                            if renderer not in _rman_vp and renderer != 'vp2Renderer':
                                 cmds.modelEditor(panel, edit=True, rendererName='vp2Renderer')
 
                             # Enable shaded+material display.
