@@ -1077,6 +1077,15 @@ class ImportMixin:
                 if name == "materials":
                     self._populate_rfm_materials_sublayer(sub_stage, base_usd_path)
 
+                # Populate geometry sublayer with primvar index fixes.
+                # The source .usdc sometimes contains mesh primvars whose index
+                # arrays reference slots beyond the values array length.  MayaUSD
+                # emits "Invalid primvar indices" warnings for each such mesh.
+                # Writing clamped-index opinions here (stronger sublayer) silences
+                # those warnings completely without touching the source asset.
+                if name == "geometry":
+                    self._populate_geometry_primvar_fixes(sub_stage, base_usd_path)
+
                 sub_stage.Save()
                 created_layers.append(layer_path)
                 self.logger.info(f"   [LAYER] {layer_path.name}")
@@ -1657,6 +1666,83 @@ class ImportMixin:
                 f"[LAYER] Could not populate skeleton metadata: {e}"
             )
             self.logger.debug(traceback.format_exc())
+
+    def _populate_geometry_primvar_fixes(
+        self,
+        geo_stage: Any,
+        base_usd_path: Path,
+    ) -> None:
+        """Fix invalid primvar index arrays in the geometry override sublayer.
+
+        The base .usdc may contain mesh prims whose indexed primvar arrays
+        (typically UV sets) have out-of-range indices — i.e. an index value
+        that is >= the length of the values array.  MayaUSD logs one
+        ``Warning: Invalid primvar indices`` message per affected mesh when the
+        proxy shape loads.
+
+        This method opens the base USDC as a read-only stage, scans every
+        ``UsdGeom.Mesh`` prim, and for each indexed primvar with at least one
+        bad index it authors a corrected ``primvars:<name>:indices`` opinion
+        into *geo_stage* (the writable ``geometry.usda`` sublayer).  Because
+        ``geometry.usda`` sits above the base USDC in the root sublayer stack,
+        its opinions win at composition time — eliminating the warnings without
+        modifying the source file.
+
+        Args:
+            geo_stage: The ``Usd.Stage`` backed by ``geometry.usda`` (writable).
+            base_usd_path: Path to the monolithic ``.usdc`` (read-only source).
+        """
+        if not USD_AVAILABLE:
+            return
+        try:
+            base_stage = Usd.Stage.Open(str(base_usd_path))
+            if not base_stage:
+                return
+
+            fix_count = 0
+            for prim in base_stage.Traverse():
+                if not prim.IsA(UsdGeom.Mesh):
+                    continue
+                pvars_api = UsdGeom.PrimvarsAPI(prim)
+                for pv in pvars_api.GetPrimvars():
+                    if not pv.IsIndexed():
+                        continue
+                    indices = pv.GetIndices()   # Vt.IntArray
+                    values = pv.Get()           # Vt values array
+                    if not indices or not values:
+                        continue
+                    max_valid = len(values) - 1
+                    if not any(i < 0 or i > max_valid for i in indices):
+                        continue
+
+                    # Author clamped indices into the geometry override layer.
+                    override_prim = geo_stage.OverridePrim(str(prim.GetPath()))
+                    idx_attr_name = f"primvars:{pv.GetPrimvarName()}:indices"
+                    idx_attr = override_prim.GetAttribute(idx_attr_name)
+                    if not idx_attr.IsValid():
+                        idx_attr = override_prim.CreateAttribute(
+                            idx_attr_name,
+                            Sdf.ValueTypeNames.IntArray,
+                            False,  # not a custom attribute
+                        )
+                    fixed = Vt.IntArray(
+                        [max(0, min(int(i), max_valid)) for i in indices]
+                    )
+                    idx_attr.Set(fixed)
+                    fix_count += 1
+                    self.logger.debug(
+                        f"[GEOM] Clamped primvar '{pv.GetPrimvarName()}' "
+                        f"indices on {prim.GetPath()}"
+                    )
+
+            if fix_count:
+                self.logger.info(
+                    f"[GEOM] Sanitized {fix_count} invalid primvar index "
+                    f"array(s) → geometry.usda — "
+                    f"'Invalid primvar indices' warnings suppressed"
+                )
+        except Exception as e:
+            self.logger.warning(f"[GEOM] Primvar index sanitization skipped: {e}")
 
     def _populate_rfm_materials_sublayer(
         self,
