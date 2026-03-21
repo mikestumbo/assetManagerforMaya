@@ -2028,21 +2028,25 @@ class ImportMixin:
                 f"({tex_label}) — visible in Hypershade + renderable via rfm2 RIS"
             )
 
-            # ── Bind Maya SGs to USD mesh prims ─────────────────────────────
-            # USD prims inside a proxy shape are NOT Maya mesh shapes — the
-            # standard cmds.hyperShade(assign=sg) approach silently fails
-            # ("No renderable object is selected for assignment").  We use
-            # three strategies in order of reliability.
-            assigned = 0
+            # ── Bind materials to USD mesh prims + register proxy with rfm2 ──
+            #
+            # rfm2 translates a mayaUsdProxyShape as a single PxrUSD procedural.
+            # The PxrUSD procedural opens the USD stage at render time and uses
+            # material:binding + outputs:ri:surface (authored in materials.usda)
+            # to resolve per-mesh RenderMan shaders.  Maya SG membership does
+            # NOT drive per-mesh materials — but the proxy shape itself MUST be
+            # a member of a RenderMan SG (not initialShadingGroup) for rfm2 to
+            # include it in the RIB and mark it as "uses RenderMan materials".
+            #
+            # Two-phase approach:
+            #   Phase A: Session-layer material:binding (for Hydra VP2 display)
+            #   Phase B: Always assign proxy shape to a PxrSurface SG (for rfm2)
+
+            # ── Phase A: Session-layer material:binding for VP2 Hydra ──────────
+            bound = 0
             total_bindings = sum(
                 1 for mk in mesh_bindings.values() if mk in mat_path_to_sg
             )
-            prev_sel = cmds.ls(selection=True, long=True) or []
-
-            # ── Strategy 1: Write material:binding overrides on the proxy
-            #    shape's session layer via MayaUSD's Python API.  This is
-            #    the authoritative USD path — the PxrUSD procedural reads
-            #    material:binding relationships at render time.
             try:
                 import mayaUsd.lib as mayaUsdLib  # type: ignore[import-unresolved]
 
@@ -2067,53 +2071,65 @@ class ImportMixin:
                                 and mat_prim
                                 and mat_prim.IsValid()
                             ):
-                                api = UsdShade.MaterialBindingAPI.Apply(mesh_prim)
+                                api = UsdShade.MaterialBindingAPI.Apply(
+                                    mesh_prim
+                                )
                                 api.Bind(UsdShade.Material(mat_prim))
-                                assigned += 1
+                                bound += 1
                     finally:
                         live_stage.SetEditTarget(prev_target)
             except ImportError:
-                pass  # mayaUsd.lib unavailable — try Strategy 2
-            except Exception as strat1_err:
+                pass  # mayaUsd.lib unavailable — session bindings skipped
+            except Exception as phase_a_err:
                 self.logger.debug(
-                    f"[RFM] Session-layer binding (Strategy 1): {strat1_err}"
+                    f"[RFM] Session-layer binding: {phase_a_err}"
                 )
 
-            # ── Strategy 2: cmds.sets(forceElement) per prim selection.
-            #    MayaUSD hooks into Maya's set-membership command for USD
-            #    prim selections in some builds / versions.
-            if assigned == 0:
-                for mesh_path_str, mat_key in mesh_bindings.items():
-                    sg = mat_path_to_sg.get(mat_key)
-                    if not sg:
-                        continue
-                    sel_path = (
-                        f"|{proxy_transform}|{proxy_shape},{mesh_path_str}"
-                    )
-                    try:
-                        cmds.select(sel_path, replace=True)
-                        cmds.sets(edit=True, forceElement=sg)
-                        assigned += 1
-                    except Exception:
-                        continue
+            if bound > 0:
+                self.logger.info(
+                    f"[RFM] Bound {bound}/{total_bindings} materials "
+                    f"to USD mesh prims (session layer — VP2 Hydra display)"
+                )
 
-            # ── Strategy 3: Assign the proxy shape itself to the first SG.
-            #    This gives at least one visible Hypershade connection
-            #    without affecting PxrUSD procedural rendering (PxrUSD uses
-            #    USD material:binding, not Maya SG membership).
-            if assigned == 0 and mat_path_to_sg:
+            # ── Phase B: Assign proxy shape to PxrSurface SG for rfm2 ─────────
+            # MANDATORY — rfm2's Maya translator checks SG membership on the
+            # shape node.  If the shape is in `initialShadingGroup` (Lambert),
+            # rfm2 never emits a RenderMan surface, and the PxrUSD procedural
+            # renders with no material (solid grey / invisible).
+            #
+            # By moving the proxy to a PxrSurface SG, rfm2 marks the shape as
+            # "has RenderMan shading" in the RIB.  The PxrUSD procedural then
+            # uses the USD-authored outputs:ri:surface (in materials.usda) for
+            # per-mesh material resolution — the Maya SG is only used to flag
+            # the shape, not to drive per-mesh assignments.
+            proxy_assigned_sg = False
+            if mat_path_to_sg:
+                first_sg = next(iter(mat_path_to_sg.values()))
                 try:
-                    first_sg = next(iter(mat_path_to_sg.values()))
-                    cmds.sets(proxy_shape, edit=True, forceElement=first_sg)
-                    self.logger.info(
-                        f"[RFM] Proxy shape assigned to {first_sg} "
-                        f"(Hypershade connection) — per-mesh materials "
-                        f"driven by USD outputs:ri:surface in materials.usda"
+                    # Remove from initialShadingGroup so rfm2 doesn't see Lambert
+                    try:
+                        cmds.sets(
+                            proxy_shape, remove='initialShadingGroup'
+                        )
+                    except Exception:
+                        pass  # may not be a member
+
+                    cmds.sets(
+                        proxy_shape, edit=True, forceElement=first_sg
                     )
-                except Exception:
-                    pass
+                    proxy_assigned_sg = True
+                    self.logger.info(
+                        f"[RFM] Proxy shape → {first_sg} "
+                        f"(rfm2 RenderMan shading enabled; per-mesh materials "
+                        f"driven by USD outputs:ri:surface in materials.usda)"
+                    )
+                except Exception as sg_err:
+                    self.logger.warning(
+                        f"[RFM] Could not assign proxy shape to SG: {sg_err}"
+                    )
 
             # Restore viewport selection
+            prev_sel = cmds.ls(selection=True, long=True) or []
             try:
                 if prev_sel:
                     cmds.select(prev_sel, replace=True)
@@ -2122,18 +2138,12 @@ class ImportMixin:
             except Exception:
                 pass
 
-            if assigned > 0:
+            if not proxy_assigned_sg:
                 self.logger.info(
-                    f"[RFM] Bound {assigned}/{total_bindings} materials "
-                    f"to USD mesh prims via session-layer overrides"
-                )
-            else:
-                self.logger.info(
-                    "[RFM] PxrSurface shaders available in Hypershade. "
-                    "Per-mesh materials use USD outputs:ri:surface in "
-                    "materials.usda (resolved by PxrUSD procedural at "
-                    "render time). To manually assign: select USD prim "
-                    "in viewport → RMB → Assign Existing Material."
+                    "[RFM] PxrSurface shaders in Hypershade. "
+                    "Per-mesh materials use USD outputs:ri:surface "
+                    "(materials.usda). To connect to viewport rendering: "
+                    "select proxy shape → RMB → Assign Existing Material."
                 )
 
             return created_count
