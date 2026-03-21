@@ -2104,7 +2104,39 @@ class ImportMixin:
             # the shape, not to drive per-mesh assignments.
             proxy_assigned_sg = False
             if mat_path_to_sg:
-                first_sg = next(iter(mat_path_to_sg.values()))
+                # Prefer a SG whose PxrSurface has a PxrTexture on diffuseColor
+                # (i.e. a textured "skin" or clothing material rather than the
+                # grey fallback `initialShadingGroup` equivalent).  This makes
+                # the proxy shape's representative Hypershade material meaningful
+                # and ensures any unbound-mesh fallback is a textured surface.
+                best_sg: Optional[str] = None
+                for _candidate_key, sg_candidate in mat_path_to_sg.items():
+                    try:
+                        surf_nodes = cmds.listConnections(
+                            f'{sg_candidate}.surfaceShader',
+                            source=True,
+                            destination=False,
+                        ) or []
+                        for surf in surf_nodes:
+                            if cmds.nodeType(surf) != 'PxrSurface':
+                                continue
+                            tex_inputs = cmds.listConnections(
+                                f'{surf}.diffuseColor',
+                                source=True,
+                                destination=False,
+                            ) or []
+                            if any(
+                                cmds.nodeType(t) == 'PxrTexture'
+                                for t in tex_inputs
+                            ):
+                                best_sg = sg_candidate
+                                break
+                    except Exception:
+                        pass
+                    if best_sg:
+                        break
+                first_sg = best_sg or next(iter(mat_path_to_sg.values()))
+
                 try:
                     # Remove from initialShadingGroup so rfm2 doesn't see Lambert
                     try:
@@ -2118,8 +2150,9 @@ class ImportMixin:
                         proxy_shape, edit=True, forceElement=first_sg
                     )
                     proxy_assigned_sg = True
+                    tex_flag = " [textured]" if best_sg else ""
                     self.logger.info(
-                        f"[RFM] Proxy shape → {first_sg} "
+                        f"[RFM] Proxy shape → {first_sg}{tex_flag} "
                         f"(rfm2 RenderMan shading enabled; per-mesh materials "
                         f"driven by USD outputs:ri:surface in materials.usda)"
                     )
