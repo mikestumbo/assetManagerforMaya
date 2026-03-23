@@ -1510,39 +1510,63 @@ class ImportMixin:
             return None
         import tempfile as _tempfile
         try:
-            # ── Collect all SGs with a RenderMan Pxr* surface shader ─────────
-            all_sgs = cmds.ls(f'{namespace}:*', type='shadingEngine') or []
+            # ── Collect all SGs across top-level AND nested reference namespaces ──
+            # Veteran_Model_Final.ma is a nested ref inside .rig.mb, so its SGs
+            # live at   _rigExtract_:<sub-ns>:*   not at   _rigExtract_:*
+            all_sgs: list = (
+                (cmds.ls(f'{namespace}:*', type='shadingEngine') or [])
+                + (cmds.ls(f'{namespace}:*:*', type='shadingEngine') or [])
+                + (cmds.ls(f'{namespace}:*:*:*', type='shadingEngine') or [])
+            )
+            self.logger.info(
+                f"[RFM] Shader cache scan: found {len(all_sgs)} SG(s) under "
+                f"'{namespace}' (top + 2 nested-ref levels)"
+            )
             rfm_sgs: list = []
             for sg in all_sgs:
-                surf = (
-                    cmds.listConnections(
-                        f'{sg}.surfaceShader', source=True, destination=False
-                    ) or []
-                )
-                if not surf:
-                    # rfm2 may wire shaders to .rman__shader instead of the
-                    # standard .surfaceShader.  Use try/except rather than
-                    # attributeQuery because attributeQuery returns False for
-                    # dynamic attributes on Maya reference nodes, which would
-                    # silently skip every rfm2 SG.  Maya raises RuntimeError
-                    # with 'No object matches name' when the attribute is truly
-                    # absent (e.g. asBlackSG).
+                # Wrap every per-SG probe in its own guard so a single bad node
+                # (e.g. asBlackSG missing .surfaceShader/.rman__shader) can
+                # never abort the whole scan.
+                try:
+                    surf: list = []
+                    # ① Standard Maya surfaceShader plug
                     try:
                         surf = (
                             cmds.listConnections(
-                                f'{sg}.rman__shader',
+                                f'{sg}.surfaceShader',
                                 source=True, destination=False,
+                                plugs=False,
                             ) or []
                         )
-                    except RuntimeError:
+                    except Exception:
                         surf = []
-                if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
-                    rfm_sgs.append(sg)
+                    # ② rfm2 uses .rman__shader on its custom SG types
+                    if not surf:
+                        try:
+                            surf = (
+                                cmds.listConnections(
+                                    f'{sg}.rman__shader',
+                                    source=True, destination=False,
+                                    plugs=False,
+                                ) or []
+                            )
+                        except Exception:
+                            surf = []
+                    # Accept only Pxr* shader nodes
+                    if surf:
+                        try:
+                            if cmds.nodeType(surf[0]).startswith('Pxr'):
+                                rfm_sgs.append(sg)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass  # malformed SG — skip silently
 
             if not rfm_sgs:
-                self.logger.debug(
-                    f"[RFM] Shader cache: scanned {len(all_sgs)} SG(s) in "
-                    f"'{namespace}:*' — none had a Pxr* surface shader"
+                self.logger.info(
+                    f"[RFM] Shader cache: scanned {len(all_sgs)} SG(s) under "
+                    f"'{namespace}' — none had a Pxr* surface shader; "
+                    f"Strategy 2 (USD-derived shaders) will be used"
                 )
                 return None
 
@@ -1644,25 +1668,38 @@ class ImportMixin:
             all_sgs = cmds.ls(f'{NS_PREFIX}*', type='shadingEngine') or []
             rfm_sgs: dict = {}  # base_name (no namespace) → sg_full_name
             for sg in all_sgs:
-                surf = (
-                    cmds.listConnections(
-                        f'{sg}.surfaceShader', source=True, destination=False
-                    ) or []
-                )
-                if not surf:
-                    # Same strategy as _export_rfm_shaders_from_reference.
+                try:
+                    surf: list = []
                     try:
                         surf = (
                             cmds.listConnections(
-                                f'{sg}.rman__shader',
+                                f'{sg}.surfaceShader',
                                 source=True, destination=False,
+                                plugs=False,
                             ) or []
                         )
-                    except RuntimeError:
+                    except Exception:
                         surf = []
-                if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
-                    base = sg[len(NS_PREFIX):]  # strip namespace
-                    rfm_sgs[base] = sg
+                    if not surf:
+                        try:
+                            surf = (
+                                cmds.listConnections(
+                                    f'{sg}.rman__shader',
+                                    source=True, destination=False,
+                                    plugs=False,
+                                ) or []
+                            )
+                        except Exception:
+                            surf = []
+                    if surf:
+                        try:
+                            if cmds.nodeType(surf[0]).startswith('Pxr'):
+                                base = sg[len(NS_PREFIX):]  # strip namespace
+                                rfm_sgs[base] = sg
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
 
             # ── Delete all DAG transforms (geometry, joints, curves) ──────────
             # Shader/texture DG nodes have no DAG parents and survive this step.
