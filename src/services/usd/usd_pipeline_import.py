@@ -1517,11 +1517,25 @@ class ImportMixin:
                 surf = (
                     cmds.listConnections(
                         f'{sg}.surfaceShader', source=True, destination=False
-                    ) or
-                    cmds.listConnections(
-                        f'{sg}.rman__shader', source=True, destination=False
                     ) or []
                 )
+                if not surf:
+                    # rfm2 may wire shaders to .rman__shader instead.
+                    # Only check if the attribute actually exists on this SG
+                    # to avoid 'No object matches name' errors on nodes like
+                    # asBlackSG that never have this attribute.
+                    try:
+                        if cmds.attributeQuery(
+                            'rman__shader', node=sg, exists=True
+                        ):
+                            surf = (
+                                cmds.listConnections(
+                                    f'{sg}.rman__shader',
+                                    source=True, destination=False,
+                                ) or []
+                            )
+                    except Exception:
+                        pass
                 if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
                     rfm_sgs.append(sg)
 
@@ -1629,11 +1643,23 @@ class ImportMixin:
                 surf = (
                     cmds.listConnections(
                         f'{sg}.surfaceShader', source=True, destination=False
-                    ) or
-                    cmds.listConnections(
-                        f'{sg}.rman__shader', source=True, destination=False
                     ) or []
                 )
+                if not surf:
+                    # Same guard as in _export_rfm_shaders_from_reference:
+                    # only probe .rman__shader when the attribute exists.
+                    try:
+                        if cmds.attributeQuery(
+                            'rman__shader', node=sg, exists=True
+                        ):
+                            surf = (
+                                cmds.listConnections(
+                                    f'{sg}.rman__shader',
+                                    source=True, destination=False,
+                                ) or []
+                            )
+                    except Exception:
+                        pass
                 if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
                     base = sg[len(NS_PREFIX):]  # strip namespace
                     rfm_sgs[base] = sg
