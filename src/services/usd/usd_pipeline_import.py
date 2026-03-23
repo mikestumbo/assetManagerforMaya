@@ -1233,6 +1233,13 @@ class ImportMixin:
                 "compatibility messages below.  These are harmless."
             )
 
+            # Snapshot scene SGs before loading the reference.  Veteran_Model_Final.ma
+            # is a nested reference inside .rig.mb that may use mergeWithRoot, placing
+            # all PxrDisney/PxrSurface SGs at the ROOT namespace rather than under
+            # _rigExtract_:*.  Comparing post-load SGs to this snapshot lets us find
+            # them regardless of where Maya actually puts them.
+            pre_load_sgs: set = set(cmds.ls(type='shadingEngine') or [])
+
             try:
                 cmds.file(
                     str(rig_mb_path),
@@ -1447,7 +1454,7 @@ class ImportMixin:
                 # roughness, normal maps, subsurface, etc.) instead of synthetic
                 # USD-approximation PxrSurface nodes.
                 self._rfm_shader_cache_path: Optional[Path] = (
-                    self._export_rfm_shaders_from_reference(namespace)
+                    self._export_rfm_shaders_from_reference(namespace, pre_load_sgs)
                 )
                 if self._rfm_shader_cache_path:
                     self.logger.info(
@@ -1490,18 +1497,23 @@ class ImportMixin:
             self.logger.error(traceback.format_exc())
             return None
 
-    def _export_rfm_shaders_from_reference(self, namespace: str) -> Optional[Path]:
+    def _export_rfm_shaders_from_reference(
+        self, namespace: str, pre_load_sgs: Optional[set] = None
+    ) -> Optional[Path]:
         """BFS-export all RenderMan shader networks from a loaded reference to a temp .mb.
 
         Called while the Maya reference ``namespace:*`` is still live (before
-        ``removeReference``).  Walks upstream from every ``shadingEngine`` whose
-        ``surfaceShader`` is a RenderMan Pxr* shader and exports the full
-        connected network (PxrTexture, PxrNormalMap, PxrManifold2D, etc.) to a
-        temporary ``.mb`` file.  The file is consumed — and then deleted — by
-        :meth:`_import_rfm_shaders_from_cache` during shader setup.
+        ``removeReference``).  Uses a snapshot-diff strategy to find new SGs
+        introduced by the reference load — this is robust to ``mergeWithRoot``
+        nested references (like ``Veteran_Model_Final.ma``) which place their
+        Pxr* SGs at the ROOT namespace rather than under ``namespace:*``.
 
         Args:
             namespace: The Maya reference namespace (without trailing colon).
+            pre_load_sgs: Set of shadingEngine node names that existed in the
+                scene BEFORE the reference was loaded.  New SGs (post minus pre)
+                are the reference-sourced ones.  If ``None``, falls back to
+                scanning ``namespace:*`` and ``namespace:*:*``.
 
         Returns:
             Path to the temp ``.mb`` file on success, ``None`` on failure.
@@ -1510,20 +1522,37 @@ class ImportMixin:
             return None
         import tempfile as _tempfile
         try:
-            # ── Collect all SGs across top-level AND nested reference namespaces ──
-            # Veteran_Model_Final.ma is a nested ref inside .rig.mb, so its SGs
-            # live at   _rigExtract_:<sub-ns>:*   not at   _rigExtract_:*
-            all_sgs: list = (
-                (cmds.ls(f'{namespace}:*', type='shadingEngine') or [])
-                + (cmds.ls(f'{namespace}:*:*', type='shadingEngine') or [])
-                + (cmds.ls(f'{namespace}:*:*:*', type='shadingEngine') or [])
-            )
+            # ── Strategy: snapshot-diff to locate SGs from the reference ─────
+            # Veteran_Model_Final.ma is a nested ref inside .rig.mb.  Depending
+            # on how .rig.mb saved the nested reference (bare namespace vs.
+            # mergeWithRoot), the Pxr* SGs may land at ROOT namespace, under
+            # _rigExtract_:*, or under _rigExtract_:sub_ns:*.
+            # Using post−pre diff catches all three cases.
+            post_load_all_sgs: list = cmds.ls(type='shadingEngine') or []
+            if pre_load_sgs is not None:
+                # New SGs introduced by the reference load (any namespace)
+                new_sgs: list = [
+                    sg for sg in post_load_all_sgs
+                    if sg not in pre_load_sgs
+                ]
+            else:
+                # Fallback: namespace-prefix scan (3 levels deep)
+                new_sgs = (
+                    (cmds.ls(f'{namespace}:*', type='shadingEngine') or [])
+                    + (cmds.ls(f'{namespace}:*:*', type='shadingEngine') or [])
+                    + (cmds.ls(f'{namespace}:*:*:*', type='shadingEngine') or [])
+                )
             self.logger.info(
-                f"[RFM] Shader cache scan: found {len(all_sgs)} SG(s) under "
-                f"'{namespace}' (top + 2 nested-ref levels)"
+                f"[RFM] Shader cache scan: {len(post_load_all_sgs)} total scene SGs, "
+                f"{len(new_sgs)} new SG(s) from reference load"
             )
+            if new_sgs:
+                # Log first 10 names so we can see what Maya actually named them
+                sample = new_sgs[:10]
+                self.logger.info(f"[RFM] New SG names (first 10): {sample}")
+
             rfm_sgs: list = []
-            for sg in all_sgs:
+            for sg in new_sgs:
                 # Wrap every per-SG probe in its own guard so a single bad node
                 # (e.g. asBlackSG missing .surfaceShader/.rman__shader) can
                 # never abort the whole scan.
@@ -1552,21 +1581,42 @@ class ImportMixin:
                             )
                         except Exception:
                             surf = []
+                    # ③ rfm2 also uses .rman__surface (different from rman__shader)
+                    if not surf:
+                        try:
+                            surf = (
+                                cmds.listConnections(
+                                    f'{sg}.rman__surface',
+                                    source=True, destination=False,
+                                    plugs=False,
+                                ) or []
+                            )
+                        except Exception:
+                            surf = []
                     # Accept only Pxr* shader nodes
                     if surf:
                         try:
-                            if cmds.nodeType(surf[0]).startswith('Pxr'):
+                            node_type = cmds.nodeType(surf[0])
+                            if node_type.startswith('Pxr'):
                                 rfm_sgs.append(sg)
+                            else:
+                                self.logger.debug(
+                                    f"[RFM] SG '{sg}' → shader type '{node_type}' "
+                                    f"(skipped — not Pxr*)"
+                                )
                         except Exception:
                             pass
+                    else:
+                        self.logger.debug(
+                            f"[RFM] SG '{sg}' → no surfaceShader/rman__shader/rman__surface"
+                        )
                 except Exception:
                     pass  # malformed SG — skip silently
 
             if not rfm_sgs:
                 self.logger.info(
-                    f"[RFM] Shader cache: scanned {len(all_sgs)} SG(s) under "
-                    f"'{namespace}' — none had a Pxr* surface shader; "
-                    f"Strategy 2 (USD-derived shaders) will be used"
+                    f"[RFM] Shader cache: scanned {len(new_sgs)} new SG(s) — "
+                    f"none had a Pxr* surface shader; Strategy 2 (USD-derived shaders) will be used"
                 )
                 return None
 
