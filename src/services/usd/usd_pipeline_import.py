@@ -1520,26 +1520,30 @@ class ImportMixin:
                     ) or []
                 )
                 if not surf:
-                    # rfm2 may wire shaders to .rman__shader instead.
-                    # Only check if the attribute actually exists on this SG
-                    # to avoid 'No object matches name' errors on nodes like
-                    # asBlackSG that never have this attribute.
+                    # rfm2 may wire shaders to .rman__shader instead of the
+                    # standard .surfaceShader.  Use try/except rather than
+                    # attributeQuery because attributeQuery returns False for
+                    # dynamic attributes on Maya reference nodes, which would
+                    # silently skip every rfm2 SG.  Maya raises RuntimeError
+                    # with 'No object matches name' when the attribute is truly
+                    # absent (e.g. asBlackSG).
                     try:
-                        if cmds.attributeQuery(
-                            'rman__shader', node=sg, exists=True
-                        ):
-                            surf = (
-                                cmds.listConnections(
-                                    f'{sg}.rman__shader',
-                                    source=True, destination=False,
-                                ) or []
-                            )
-                    except Exception:
-                        pass
+                        surf = (
+                            cmds.listConnections(
+                                f'{sg}.rman__shader',
+                                source=True, destination=False,
+                            ) or []
+                        )
+                    except RuntimeError:
+                        surf = []
                 if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
                     rfm_sgs.append(sg)
 
             if not rfm_sgs:
+                self.logger.debug(
+                    f"[RFM] Shader cache: scanned {len(all_sgs)} SG(s) in "
+                    f"'{namespace}:*' — none had a Pxr* surface shader"
+                )
                 return None
 
             # ── BFS: collect the full upstream shader network ─────────────────
@@ -1646,20 +1650,16 @@ class ImportMixin:
                     ) or []
                 )
                 if not surf:
-                    # Same guard as in _export_rfm_shaders_from_reference:
-                    # only probe .rman__shader when the attribute exists.
+                    # Same strategy as _export_rfm_shaders_from_reference.
                     try:
-                        if cmds.attributeQuery(
-                            'rman__shader', node=sg, exists=True
-                        ):
-                            surf = (
-                                cmds.listConnections(
-                                    f'{sg}.rman__shader',
-                                    source=True, destination=False,
-                                ) or []
-                            )
-                    except Exception:
-                        pass
+                        surf = (
+                            cmds.listConnections(
+                                f'{sg}.rman__shader',
+                                source=True, destination=False,
+                            ) or []
+                        )
+                    except RuntimeError:
+                        surf = []
                 if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
                     base = sg[len(NS_PREFIX):]  # strip namespace
                     rfm_sgs[base] = sg
