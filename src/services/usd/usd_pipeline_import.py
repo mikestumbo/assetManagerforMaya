@@ -1440,6 +1440,21 @@ class ImportMixin:
                     f"any .atlasStyle errors above are harmless RfM 27.1\u219227.2 noise"
                 )
 
+                # ── Cache RfM shader networks for use in _create_rfm_maya_shaders ──
+                # While the reference is still live, BFS-export all PxrSurface / PxrDisney
+                # SG networks to a temp .mb file.  _create_rfm_maya_shaders() imports this
+                # cache to give the USD proxy the REAL original shaders (correct textures,
+                # roughness, normal maps, subsurface, etc.) instead of synthetic
+                # USD-approximation PxrSurface nodes.
+                self._rfm_shader_cache_path: Optional[Path] = (
+                    self._export_rfm_shaders_from_reference(namespace)
+                )
+                if self._rfm_shader_cache_path:
+                    self.logger.info(
+                        "[RFM] RfM shader cache written \u2014 "
+                        "original PxrSurface/PxrDisney nodes will be used on import"
+                    )
+
             finally:
                 # ── Remove the reference ──
                 try:
@@ -1474,6 +1489,235 @@ class ImportMixin:
             self.logger.error(f"[RIG] Controller extraction failed: {e}")
             self.logger.error(traceback.format_exc())
             return None
+
+    def _export_rfm_shaders_from_reference(self, namespace: str) -> Optional[Path]:
+        """BFS-export all RenderMan shader networks from a loaded reference to a temp .mb.
+
+        Called while the Maya reference ``namespace:*`` is still live (before
+        ``removeReference``).  Walks upstream from every ``shadingEngine`` whose
+        ``surfaceShader`` is a RenderMan Pxr* shader and exports the full
+        connected network (PxrTexture, PxrNormalMap, PxrManifold2D, etc.) to a
+        temporary ``.mb`` file.  The file is consumed — and then deleted — by
+        :meth:`_import_rfm_shaders_from_cache` during shader setup.
+
+        Args:
+            namespace: The Maya reference namespace (without trailing colon).
+
+        Returns:
+            Path to the temp ``.mb`` file on success, ``None`` on failure.
+        """
+        if cmds is None:
+            return None
+        import tempfile as _tempfile
+        try:
+            # ── Collect all SGs with a RenderMan Pxr* surface shader ─────────
+            all_sgs = cmds.ls(f'{namespace}:*', type='shadingEngine') or []
+            rfm_sgs: list = []
+            for sg in all_sgs:
+                surf = (
+                    cmds.listConnections(
+                        f'{sg}.surfaceShader', source=True, destination=False
+                    ) or
+                    cmds.listConnections(
+                        f'{sg}.rman__shader', source=True, destination=False
+                    ) or []
+                )
+                if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
+                    rfm_sgs.append(sg)
+
+            if not rfm_sgs:
+                return None
+
+            # ── BFS: collect the full upstream shader network ─────────────────
+            visited: set = set()
+            stack = list(rfm_sgs)
+            while stack:
+                node = stack.pop()
+                if node in visited:
+                    continue
+                visited.add(node)
+                upstream = (
+                    cmds.listConnections(
+                        node, source=True, destination=False,
+                        skipConversionNodes=False,
+                    ) or []
+                )
+                stack.extend(upstream)
+
+            # ── Export to temp file ───────────────────────────────────────────
+            tmp_path = Path(
+                _tempfile.mktemp(suffix='_rfm_shaders.mb')
+            )
+            cmds.select(list(visited), replace=True)
+            cmds.file(
+                str(tmp_path),
+                exportSelected=True,
+                type='mayaBinary',
+                force=True,
+                preserveReferences=False,
+            )
+            cmds.select(clear=True)
+            self.logger.debug(
+                f"[RFM] Shader cache: exported {len(rfm_sgs)} SGs "
+                f"({len(visited)} nodes) \u2192 {tmp_path.name}"
+            )
+            return tmp_path
+
+        except Exception as err:
+            self.logger.warning(f"[RFM] Shader cache export failed: {err}")
+            try:
+                cmds.select(clear=True)
+            except Exception:
+                pass
+            return None
+
+    def _import_rfm_shaders_from_cache(
+        self, mat_prim_paths: set
+    ) -> dict:
+        """Import the RfM shader cache created by ``_export_rfm_shaders_from_reference``.
+
+        Imports the temp ``.mb`` under a fresh namespace, deletes all DAG
+        transforms (geometry / joints / curves) from that namespace so only
+        DG shader nodes remain, then name-matches each imported
+        ``shadingEngine`` to a USD material prim path.
+
+        Args:
+            mat_prim_paths: Set of USD material prim path strings
+                (e.g. ``{'/Materials/PxrDisneyBsdf1', ...}``).
+
+        Returns:
+            ``{mat_path_str: sg_node_name}`` mapping on success; empty dict
+            if the cache does not exist or the import fails.
+        """
+        if cmds is None:
+            return {}
+
+        cache_path: Optional[Path] = getattr(self, '_rfm_shader_cache_path', None)
+        if not cache_path or not cache_path.exists():
+            return {}
+
+        IMPORT_NS = 'rfmMat'
+        try:
+            cmds.file(
+                str(cache_path),
+                i=True,
+                type='mayaBinary',
+                namespace=IMPORT_NS,
+                ignoreVersion=True,
+                importTimeRange='none',
+            )
+        except Exception as import_err:
+            self.logger.warning(
+                f"[RFM] Shader cache import failed: {import_err}"
+            )
+            return {}
+        finally:
+            # Always delete the temp file and clear the cache pointer.
+            try:
+                cache_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            self._rfm_shader_cache_path = None
+
+        NS_PREFIX = f'{IMPORT_NS}:'
+
+        try:
+            # ── Collect SGs with Pxr* surface shaders ────────────────────────
+            all_sgs = cmds.ls(f'{NS_PREFIX}*', type='shadingEngine') or []
+            rfm_sgs: dict = {}  # base_name (no namespace) → sg_full_name
+            for sg in all_sgs:
+                surf = (
+                    cmds.listConnections(
+                        f'{sg}.surfaceShader', source=True, destination=False
+                    ) or
+                    cmds.listConnections(
+                        f'{sg}.rman__shader', source=True, destination=False
+                    ) or []
+                )
+                if surf and cmds.nodeType(surf[0]).startswith('Pxr'):
+                    base = sg[len(NS_PREFIX):]  # strip namespace
+                    rfm_sgs[base] = sg
+
+            # ── Delete all DAG transforms (geometry, joints, curves) ──────────
+            # Shader/texture DG nodes have no DAG parents and survive this step.
+            dag_transforms = (
+                cmds.ls(f'{NS_PREFIX}*', type='transform', long=True) or []
+            )
+            if dag_transforms:
+                try:
+                    cmds.delete(dag_transforms)
+                except Exception:
+                    pass
+
+            # ── Build USD material path → Maya SG mapping ────────────────────
+            # USD material names: /Materials/PxrDisneyBsdf1  → 'PxrDisneyBsdf1'
+            # Maya SG base names: 'PxrDisneyBsdf1SG'         → strip 'SG' → 'PxrDisneyBsdf1'
+            sg_lookup: dict = {}  # lower(stripped_name) → sg_full_name
+            for base_name, sg_node in rfm_sgs.items():
+                # Try both {name}SG and just {name} (some rigs don't append SG)
+                stripped = base_name[:-2] if base_name.lower().endswith('sg') else base_name
+                sg_lookup[stripped.lower()] = sg_node
+                sg_lookup[base_name.lower()] = sg_node
+
+            mat_path_to_sg: dict = {}
+            for mat_path_str in mat_prim_paths:
+                mat_name = Sdf.Path(mat_path_str).name
+                candidate = (
+                    sg_lookup.get(mat_name.lower()) or
+                    sg_lookup.get((mat_name + 'SG').lower())
+                )
+                if candidate:
+                    mat_path_to_sg[mat_path_str] = candidate
+
+            # ── Rename nodes to drop the rfmMat: namespace prefix ────────────
+            # This gives clean Hypershade node names (PxrDisneyBsdf1SG, etc.).
+            remaining_ns = cmds.ls(f'{NS_PREFIX}*') or []
+            renamed: dict = {}  # old_name → new_name
+            for node in remaining_ns:
+                base = node[len(NS_PREFIX):]
+                try:
+                    new_name = cmds.rename(node, base)
+                    renamed[node] = new_name
+                except Exception:
+                    renamed[node] = node  # keep prefixed name on collision
+
+            # Update mat_path_to_sg with renamed SG names
+            for mat_path, sg in list(mat_path_to_sg.items()):
+                if sg in renamed:
+                    mat_path_to_sg[mat_path] = renamed[sg]
+
+            return mat_path_to_sg
+
+        except Exception as err:
+            self.logger.warning(
+                f"[RFM] Shader cache processing failed: {err}"
+            )
+            return {}
+
+    def _sg_has_texture(self, sg_name: str) -> bool:
+        """Return True if the SG's surface shader has a PxrTexture on diffuseColor."""
+        if cmds is None:
+            return False
+        try:
+            surf_nodes = (
+                cmds.listConnections(
+                    f'{sg_name}.surfaceShader', source=True, destination=False
+                ) or []
+            )
+            for surf in surf_nodes:
+                tex_inputs = (
+                    cmds.listConnections(
+                        f'{surf}.diffuseColor', source=True, destination=False
+                    ) or []
+                )
+                if any(
+                    cmds.nodeType(t) in ('PxrTexture', 'PxrManifoldFile')
+                    for t in tex_inputs
+                ):
+                    return True
+        except Exception:
+            pass
+        return False
 
     def _populate_controllers_sublayer(
         self, stage, rig_data: dict
@@ -1864,7 +2108,36 @@ class ImportMixin:
             tex_count = 0
             mat_path_to_sg: Dict[str, str] = {}  # USD mat path → Maya SG name
 
+            # ── Strategy 1: Import REAL RfM shaders from .rig.mb cache ────────
+            # During _extract_rig_controllers the reference was used to export
+            # the complete original PxrSurface / PxrDisney shader networks to a
+            # temp .mb cache file (self._rfm_shader_cache_path).  Importing
+            # that cache gives the scene the REAL materials from the original
+            # Maya scene — correct textures, roughness, normal maps, subsurface,
+            # etc. — instead of the lossy USD→PxrSurface reconstruction below.
+            mat_prim_paths = set(mat_preview.keys()) | set(mesh_bindings.values())
+            mat_path_to_sg = self._import_rfm_shaders_from_cache(mat_prim_paths)
+
+            if mat_path_to_sg:
+                created_count = len(mat_path_to_sg)
+                tex_count = sum(
+                    1 for sg in mat_path_to_sg.values()
+                    if self._sg_has_texture(sg)
+                )
+                self.logger.info(
+                    f"[RFM] Imported {created_count} original RfM shaders from "
+                    f".rig.mb ({tex_count} textured) \u2014 exact settings from "
+                    f"original Maya scene (PxrDisney/PxrSurface with full texture maps)"
+                )
+            _cache_used: bool = bool(mat_path_to_sg)  # True when Strategy 1 succeeded
+            # ── Strategy 2: Synthetic PxrSurface from USD data (fallback) ──────
+            # Runs for any material that was NOT found in the .rig.mb shader cache.
+            # If Strategy 1 filled mat_path_to_sg completely, this loop is a no-op.
             for mat_key, preview_shader in mat_preview.items():
+                if mat_key in mat_path_to_sg:
+                    # Real shader already imported from .rig.mb cache — skip.
+                    continue
+
                 mat_name = Sdf.Path(mat_key).name
                 safe = (
                     mat_name.replace(' ', '_').replace(':', '_').replace('.', '_')
@@ -2022,11 +2295,15 @@ class ImportMixin:
             if created_count == 0:
                 return 0
 
-            tex_label = f'{tex_count} with PxrTexture' if tex_count else 'static colors'
-            self.logger.info(
-                f"[RFM] Created {created_count} Maya PxrSurface shaders "
-                f"({tex_label}) — visible in Hypershade + renderable via rfm2 RIS"
-            )
+            if not _cache_used:
+                # Strategy 2 (synthetic) ran — log what was created
+                tex_label = (
+                    f'{tex_count} with PxrTexture' if tex_count else 'static colors'
+                )
+                self.logger.info(
+                    f"[RFM] Created {created_count} Maya PxrSurface shaders from USD "
+                    f"data ({tex_label}) \u2014 visible in Hypershade + renderable via rfm2 RIS"
+                )
 
             # ── Bind materials to USD mesh prims + register proxy with rfm2 ──
             #
