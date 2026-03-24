@@ -1623,12 +1623,24 @@ class ImportMixin:
             )
 
             # ── BFS: collect the full upstream shader network ─────────────────
+            # IMPORTANT: skip DAG nodes (geometry, transforms, joints).
+            # A shadingEngine's .dagSetMembers connections point back to every
+            # mesh that uses the material.  Without this guard the BFS walks
+            # the entire character mesh + skeleton, producing a bloated temp
+            # .mb that Maya can't cleanly re-import (raises "Error reading file.").
             visited: set = set()
             stack = list(rfm_sgs)
             while stack:
                 node = stack.pop()
                 if node in visited:
                     continue
+                try:
+                    if cmds.ls(node, dagObjects=True):
+                        # DAG node — geometry, transform, joint, etc.  Skip it
+                        # so the BFS stays within the shader DG graph only.
+                        continue
+                except Exception:
+                    pass
                 visited.add(node)
                 upstream = (
                     cmds.listConnections(
@@ -1691,6 +1703,7 @@ class ImportMixin:
             return {}
 
         IMPORT_NS = 'rfmMat'
+        _file_import_err: Optional[Exception] = None
         try:
             cmds.file(
                 str(cache_path),
@@ -1700,10 +1713,16 @@ class ImportMixin:
                 ignoreVersion=True,
             )
         except Exception as import_err:
-            self.logger.warning(
-                f"[RFM] Shader cache import failed: {import_err}"
+            # Maya sometimes raises RuntimeError("Error reading file.") even when
+            # shader DG nodes WERE successfully imported — non-fatal rig-model
+            # reference errors (e.g. .atlasStyle, missing blendShapes) get
+            # re-raised by cmds.file even though the Pxr* network loaded fine.
+            # Store the error and continue — we'll attempt to recover any rfmMat:
+            # SGs that made it into the scene; only bail out if truly nothing imported.
+            _file_import_err = import_err
+            self.logger.debug(
+                f"[RFM] Shader cache import raised — will attempt node recovery: {import_err}"
             )
-            return {}
         finally:
             # Always delete the temp file and clear the cache pointer.
             try:
@@ -1830,6 +1849,18 @@ class ImportMixin:
                 f"[RFM] Shader cache processing failed: {err}"
             )
             return {}
+
+        # ── Recovery check ────────────────────────────────────────────────────
+        # If cmds.file raised but we still found SGs (partial import succeeded),
+        # proceed with what we have.  Only bail if NOTHING was recovered.
+        if _file_import_err and not mat_path_to_sg:
+            self.logger.warning(
+                f"[RFM] Shader cache import failed — no rfmMat: shader nodes "
+                f"recovered: {_file_import_err}"
+            )
+            return {}
+
+        return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
         """Return True if the SG's surface shader has a PxrTexture on diffuseColor."""
@@ -2357,11 +2388,15 @@ class ImportMixin:
                     pxr_surf = cmds.shadingNode(
                         'PxrSurface', asShader=True, name=f'rfm_{safe}'
                     )
+                    # Strip any trailing 'SG'/'sg' from safe before appending 'SG'
+                    # so USD mat names like 'PxrDisneyBsdf1SG' don't become
+                    # 'rfm_PxrDisneyBsdf1SGSG' — the SG suffix is added here.
+                    safe_no_sg = safe[:-2] if safe.lower().endswith('sg') else safe
                     sg = cmds.sets(
                         renderable=True,
                         noSurfaceShader=True,
                         empty=True,
-                        name=f'rfm_{safe}SG'
+                        name=f'rfm_{safe_no_sg}SG'
                     )
                     cmds.connectAttr(
                         f'{pxr_surf}.outColor', f'{sg}.surfaceShader', force=True
