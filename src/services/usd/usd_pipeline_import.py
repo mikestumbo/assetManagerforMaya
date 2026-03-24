@@ -1698,7 +1698,6 @@ class ImportMixin:
                 type='mayaBinary',
                 namespace=IMPORT_NS,
                 ignoreVersion=True,
-                importTimeRange='none',
             )
         except Exception as import_err:
             self.logger.warning(
@@ -1721,33 +1720,33 @@ class ImportMixin:
             rfm_sgs: dict = {}  # base_name (no namespace) → sg_full_name
             for sg in all_sgs:
                 try:
-                    surf: list = []
-                    try:
-                        surf = (
-                            cmds.listConnections(
-                                f'{sg}.surfaceShader',
-                                source=True, destination=False,
-                                plugs=False,
-                            ) or []
-                        )
-                    except Exception:
-                        surf = []
-                    if not surf:
+                    found_pxr: bool = False
+                    sg_base = sg[len(NS_PREFIX):]  # strip 'rfmMat:' prefix
+
+                    # ① Name-pattern fast-path — rfm2 names SGs after the shader
+                    if sg_base.startswith('Pxr'):
+                        rfm_sgs[sg_base] = sg
+                        found_pxr = True
+
+                    if not found_pxr:
+                        # ② Broad scan — accept SG if any connected source node
+                        #   is a Pxr* type (covers .rman_materials_out[N] etc.)
                         try:
-                            surf = (
+                            all_sources = (
                                 cmds.listConnections(
-                                    f'{sg}.rman__shader',
+                                    sg,
                                     source=True, destination=False,
                                     plugs=False,
                                 ) or []
                             )
-                        except Exception:
-                            surf = []
-                    if surf:
-                        try:
-                            if cmds.nodeType(surf[0]).startswith('Pxr'):
-                                base = sg[len(NS_PREFIX):]  # strip namespace
-                                rfm_sgs[base] = sg
+                            for src_node in all_sources:
+                                try:
+                                    if cmds.nodeType(src_node).startswith('Pxr'):
+                                        rfm_sgs[sg_base] = sg
+                                        found_pxr = True
+                                        break
+                                except Exception:
+                                    pass
                         except Exception:
                             pass
                 except Exception:
