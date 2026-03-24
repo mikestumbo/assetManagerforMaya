@@ -1704,6 +1704,16 @@ class ImportMixin:
 
         IMPORT_NS = 'rfmMat'
         _file_import_err: Optional[Exception] = None
+
+        # ── Pre-import snapshot ───────────────────────────────────────────────
+        # Use snapshot-diff (same strategy as the export side) so we catch ALL
+        # newly imported SGs regardless of namespace depth.  When the temp .mb
+        # was exported from a mergeWithRoot reference, some nodes may land at
+        # rfmMat:subNS:SgName rather than rfmMat:SgName, making a
+        # 'rfmMat:*' wildcard scan miss them entirely.
+        pre_sgs: set = set(cmds.ls(type='shadingEngine') or [])
+        pre_transforms: set = set(cmds.ls(type='transform', long=True) or [])
+
         try:
             cmds.file(
                 str(cache_path),
@@ -1734,13 +1744,22 @@ class ImportMixin:
         NS_PREFIX = f'{IMPORT_NS}:'
 
         try:
+            # ── Post-import snapshot diff ─────────────────────────────────────
+            # Finds every SG and transform that was introduced by the import,
+            # regardless of how deep the namespace nesting is.
+            post_sgs: set = set(cmds.ls(type='shadingEngine') or [])
+            post_transforms: set = set(cmds.ls(type='transform', long=True) or [])
+            all_sgs: list = [sg for sg in post_sgs if sg not in pre_sgs]
+            new_transforms: list = [t for t in post_transforms if t not in pre_transforms]
+
             # ── Collect SGs with Pxr* surface shaders ────────────────────────
-            all_sgs = cmds.ls(f'{NS_PREFIX}*', type='shadingEngine') or []
-            rfm_sgs: dict = {}  # base_name (no namespace) → sg_full_name
+            rfm_sgs: dict = {}  # leaf_name (no namespace) → sg_full_name
             for sg in all_sgs:
                 try:
                     found_pxr: bool = False
-                    sg_base = sg[len(NS_PREFIX):]  # strip 'rfmMat:' prefix
+                    # Use the leaf name (last component after ':') so we work
+                    # correctly even for nested namespaces like rfmMat:sub:SgName.
+                    sg_base = sg.split(':')[-1]
 
                     # ① Name-pattern fast-path — rfm2 names SGs after the shader
                     if sg_base.startswith('Pxr'):
@@ -1771,14 +1790,11 @@ class ImportMixin:
                 except Exception:
                     pass
 
-            # ── Delete all DAG transforms (geometry, joints, curves) ──────────
+            # ── Delete all DAG transforms imported alongside the shaders ──────
             # Shader/texture DG nodes have no DAG parents and survive this step.
-            dag_transforms = (
-                cmds.ls(f'{NS_PREFIX}*', type='transform', long=True) or []
-            )
-            if dag_transforms:
+            if new_transforms:
                 try:
-                    cmds.delete(dag_transforms)
+                    cmds.delete(new_transforms)
                 except Exception:
                     pass
 
@@ -1822,17 +1838,24 @@ class ImportMixin:
                 f"USD material paths to imported SGs"
             )
 
-            # ── Rename nodes to drop the rfmMat: namespace prefix ────────────
+            # ── Rename nodes to drop the entire namespace prefix ─────────────
             # This gives clean Hypershade node names (PxrDisneyBsdf1SG, etc.).
-            remaining_ns = cmds.ls(f'{NS_PREFIX}*') or []
+            # We rename ALL non-DAG nodes introduced by the import using the
+            # snapshot-diff set.  Using the leaf name (split(':')[-1]) correctly
+            # handles nodes at any namespace depth (rfmMat:sub:Name → Name).
+            all_new_nodes: list = [
+                n for n in (cmds.ls(type='shadingEngine') or []) + (cmds.ls() or [])
+                if n not in pre_sgs and n not in pre_transforms
+                and n.startswith(NS_PREFIX)
+            ]
             renamed: dict = {}  # old_name → new_name
-            for node in remaining_ns:
-                base = node[len(NS_PREFIX):]
+            for node in all_new_nodes:
+                leaf = node.split(':')[-1]
                 try:
-                    new_name = cmds.rename(node, base)
+                    new_name = cmds.rename(node, leaf)
                     renamed[node] = new_name
                 except Exception:
-                    renamed[node] = node  # keep prefixed name on collision
+                    renamed[node] = node  # keep qualified name on collision
 
             # Update mat_path_to_sg with renamed SG names
             for mat_path, sg in list(mat_path_to_sg.items()):
@@ -1863,26 +1886,56 @@ class ImportMixin:
         return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
-        """Return True if the SG's surface shader has a PxrTexture on diffuseColor."""
+        """Return True if the SG has any Pxr* shader with a texture input.
+
+        Uses a broad two-pass scan that works for both standard Maya
+        ``.surfaceShader`` wiring AND rfm2-style ``PxrDisneyBsdf`` connections
+        (which wire via ``.rman__surface`` / ``.rman_materials_out[N]``, NOT
+        ``.surfaceShader``).
+
+        Pass 1: any direct source of the SG is a ``PxrTexture*`` node.
+        Pass 2: find Pxr* surface shaders connected to the SG, then check their
+                colour inputs (``diffuseColor``, ``baseColor``, ``color``) for
+                upstream Pxr* nodes.
+        """
         if cmds is None:
             return False
         try:
-            surf_nodes = (
+            all_sources = (
                 cmds.listConnections(
-                    f'{sg_name}.surfaceShader', source=True, destination=False
+                    sg_name, source=True, destination=False, plugs=False
                 ) or []
             )
-            for surf in surf_nodes:
-                tex_inputs = (
-                    cmds.listConnections(
-                        f'{surf}.diffuseColor', source=True, destination=False
-                    ) or []
-                )
-                if any(
-                    cmds.nodeType(t) in ('PxrTexture', 'PxrManifoldFile')
-                    for t in tex_inputs
-                ):
-                    return True
+            # Pass 1: direct PxrTexture* fast-path
+            for src in all_sources:
+                try:
+                    if cmds.nodeType(src) in (
+                        'PxrTexture', 'PxrManifoldFile', 'PxrTextureObject'
+                    ):
+                        return True
+                except Exception:
+                    pass
+            # Pass 2: surface-shader colour inputs (rfm2 PxrDisney* aware)
+            for surf in all_sources:
+                try:
+                    if not cmds.nodeType(surf).startswith('Pxr'):
+                        continue
+                except Exception:
+                    continue
+                for colour_attr in ('diffuseColor', 'baseColor', 'color'):
+                    try:
+                        tex_inputs = (
+                            cmds.listConnections(
+                                f'{surf}.{colour_attr}',
+                                source=True, destination=False,
+                            ) or []
+                        )
+                        if any(
+                            cmds.nodeType(t).startswith('Pxr') for t in tex_inputs
+                        ):
+                            return True
+                    except Exception:
+                        pass
         except Exception:
             pass
         return False
