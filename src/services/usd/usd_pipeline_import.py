@@ -1798,6 +1798,42 @@ class ImportMixin:
                 except Exception:
                     pass
 
+            # ── Diagnostic: total vs filtered ────────────────────────────────
+            self.logger.info(
+                f"[RFM] Import: snapshot-diff found {len(all_sgs)} total new SGs; "
+                f"Pxr* filter accepted {len(rfm_sgs)}; "
+                f"supplemental lookup will fill the remainder"
+            )
+
+            # ── Supplemental lookup: fill any SGs missed by snapshot-diff ────
+            # When the .rig.mb reference is removed, some nested-reference SGs
+            # from Veteran_Model_Final.ma may survive at ROOT namespace (Maya
+            # doesn't always clean up mergeWithRoot nested-ref nodes).  Those
+            # SGs are in pre_sgs so the diff misses them.  Check by name:
+            #   a) root namespace  (survived ref cleanup) — e.g. PxrDisneyBsdf1SG
+            #   b) rfmMat: namespace (imported but missed by diff for any reason)
+            supplemental_added: int = 0
+            for mat_path_s in (str(p) for p in mat_prim_paths):
+                mat_leaf = Sdf.Path(mat_path_s).name   # e.g. 'PxrDisneyBsdf1SG'
+                if mat_leaf in rfm_sgs:
+                    continue   # already found via snapshot-diff
+                # (a) root namespace
+                if cmds.ls(mat_leaf, type='shadingEngine'):
+                    rfm_sgs[mat_leaf] = mat_leaf
+                    supplemental_added += 1
+                    continue
+                # (b) rfmMat: namespace
+                ns_candidate = f'{NS_PREFIX}{mat_leaf}'
+                if cmds.ls(ns_candidate, type='shadingEngine'):
+                    rfm_sgs[mat_leaf] = ns_candidate
+                    supplemental_added += 1
+
+            if supplemental_added:
+                self.logger.info(
+                    f"[RFM] Import: supplemental lookup added {supplemental_added} "
+                    f"SGs that were in pre_sgs (survived .rig.mb ref cleanup)"
+                )
+
             # ── Build USD material path → Maya SG mapping ────────────────────
             # USD material names: /Looks/PxrDisneyBsdf1SG  → name = 'PxrDisneyBsdf1SG'
             # Maya SG base names: 'PxrDisneyBsdf1SG'  (exact match via base_name key)
@@ -1886,56 +1922,45 @@ class ImportMixin:
         return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
-        """Return True if the SG has any Pxr* shader with a texture input.
+        """BFS the upstream shader graph for any recognised texture node.
 
-        Uses a broad two-pass scan that works for both standard Maya
-        ``.surfaceShader`` wiring AND rfm2-style ``PxrDisneyBsdf`` connections
-        (which wire via ``.rman__surface`` / ``.rman_materials_out[N]``, NOT
-        ``.surfaceShader``).
+        Walks ALL source connections upstream from ``sg_name`` (shadingEngine)
+        regardless of intermediate relay nodes.  This handles:
 
-        Pass 1: any direct source of the SG is a ``PxrTexture*`` node.
-        Pass 2: find Pxr* surface shaders connected to the SG, then check their
-                colour inputs (``diffuseColor``, ``baseColor``, ``color``) for
-                upstream Pxr* nodes.
+        * Standard Maya ``.surfaceShader`` wiring (PxrSurface → SG)
+        * rfm2 27.2 ``.rman__surface`` / ``.rman_materials_out[N]`` wiring
+          (PxrDisneyBsdf → rmanShading → SG)
+        * Any other relay topology used by RenderMan for Maya
+
+        The BFS terminates when a ``PxrTexture``, ``PxrNormalMap``,
+        ``PxrPtexture``, ``PxrManifoldFile``, or ``PxrTextureObject`` node is
+        found, or when the entire upstream graph has been visited.
         """
         if cmds is None:
             return False
+        _TEXTURE_TYPES: frozenset = frozenset({
+            'PxrTexture', 'PxrNormalMap', 'PxrPtexture',
+            'PxrManifoldFile', 'PxrTextureObject',
+        })
         try:
-            all_sources = (
-                cmds.listConnections(
-                    sg_name, source=True, destination=False, plugs=False
-                ) or []
-            )
-            # Pass 1: direct PxrTexture* fast-path
-            for src in all_sources:
+            visited: set = {sg_name}
+            queue: list = [sg_name]
+            while queue:
+                node = queue.pop(0)
                 try:
-                    if cmds.nodeType(src) in (
-                        'PxrTexture', 'PxrManifoldFile', 'PxrTextureObject'
-                    ):
+                    if cmds.nodeType(node) in _TEXTURE_TYPES:
                         return True
+                    sources = (
+                        cmds.listConnections(
+                            node, source=True, destination=False, plugs=False,
+                        ) or []
+                    )
+                    for src in sources:
+                        if src not in visited:
+                            visited.add(src)
+                            queue.append(src)
                 except Exception:
                     pass
-            # Pass 2: surface-shader colour inputs (rfm2 PxrDisney* aware)
-            for surf in all_sources:
-                try:
-                    if not cmds.nodeType(surf).startswith('Pxr'):
-                        continue
-                except Exception:
-                    continue
-                for colour_attr in ('diffuseColor', 'baseColor', 'color'):
-                    try:
-                        tex_inputs = (
-                            cmds.listConnections(
-                                f'{surf}.{colour_attr}',
-                                source=True, destination=False,
-                            ) or []
-                        )
-                        if any(
-                            cmds.nodeType(t).startswith('Pxr') for t in tex_inputs
-                        ):
-                            return True
-                    except Exception:
-                        pass
         except Exception:
             pass
         return False
@@ -2612,58 +2637,27 @@ class ImportMixin:
             # the shape, not to drive per-mesh assignments.
             proxy_assigned_sg = False
             if mat_path_to_sg:
-                # Prefer a SG whose PxrSurface has a PxrTexture on diffuseColor
-                # (i.e. a textured "skin" or clothing material rather than the
-                # grey fallback `initialShadingGroup` equivalent).  This makes
-                # the proxy shape's representative Hypershade material meaningful
-                # and ensures any unbound-mesh fallback is a textured surface.
+                # Prefer a Strategy-1 (real rfm2) SG with a texture — use the
+                # shared BFS _sg_has_texture so the logic is maintained in one
+                # place and works for all rfm2 wiring styles.
                 best_sg: Optional[str] = None
+
+                # Priority 1: any Strategy-1 SG (not rfm_ prefixed) with texture
                 for _candidate_key, sg_candidate in mat_path_to_sg.items():
-                    try:
-                        # Broad scan: any Pxr* node connected to the SG
-                        all_surf_nodes = (
-                            cmds.listConnections(
-                                sg_candidate,
-                                source=True,
-                                destination=False,
-                                plugs=False,
-                            ) or []
-                        )
-                        for surf in all_surf_nodes:
-                            try:
-                                surf_type = cmds.nodeType(surf)
-                            except Exception:
-                                continue
-                            if not surf_type.startswith('Pxr'):
-                                continue
-                            # Check for any texture connected to a colour input
-                            # (diffuseColor for PxrSurface/PxrDisney, baseColor
-                            # for PxrDisneyBsdf, color for PxrTexture passthrough)
-                            for colour_attr in (
-                                'diffuseColor', 'baseColor', 'color'
-                            ):
-                                try:
-                                    tex_inputs = (
-                                        cmds.listConnections(
-                                            f'{surf}.{colour_attr}',
-                                            source=True,
-                                            destination=False,
-                                        ) or []
-                                    )
-                                    if any(
-                                        cmds.nodeType(t).startswith('Pxr')
-                                        for t in tex_inputs
-                                    ):
-                                        best_sg = sg_candidate
-                                        break
-                                except Exception:
-                                    pass
-                            if best_sg:
-                                break
-                    except Exception:
-                        pass
-                    if best_sg:
+                    base_leaf = sg_candidate.split(':')[-1]
+                    if base_leaf.startswith('rfm_'):
+                        continue   # skip synthetic Strategy-2 nodes for now
+                    if self._sg_has_texture(sg_candidate):
+                        best_sg = sg_candidate
                         break
+
+                # Priority 2: fallback to any textured SG (Strategy-1 or -2)
+                if not best_sg:
+                    for _candidate_key, sg_candidate in mat_path_to_sg.items():
+                        if self._sg_has_texture(sg_candidate):
+                            best_sg = sg_candidate
+                            break
+
                 first_sg = best_sg or next(iter(mat_path_to_sg.values()))
 
                 try:
