@@ -1557,68 +1557,70 @@ class ImportMixin:
                 # (e.g. asBlackSG missing .surfaceShader/.rman__shader) can
                 # never abort the whole scan.
                 try:
-                    surf: list = []
-                    # ① Standard Maya surfaceShader plug
-                    try:
-                        surf = (
-                            cmds.listConnections(
-                                f'{sg}.surfaceShader',
-                                source=True, destination=False,
-                                plugs=False,
-                            ) or []
+                    found_pxr: bool = False
+
+                    # ① Name-pattern fast-path: rfm2 consistently names its
+                    #   shadingEngines after the shader — 'PxrDisneyBsdf1SG',
+                    #   'PxrSurface3SG', etc.  The SG name itself is the most
+                    #   reliable indicator when attribute connections vary across
+                    #   rfm2 versions / rig setups.
+                    sg_base = sg.split(':')[-1]  # strip any namespace prefix
+                    if sg_base.startswith('Pxr'):
+                        rfm_sgs.append(sg)
+                        self.logger.debug(
+                            f"[RFM] SG '{sg}' → accepted via name-pattern (Pxr* prefix)"
                         )
-                    except Exception:
-                        surf = []
-                    # ② rfm2 uses .rman__shader on its custom SG types
-                    if not surf:
+                        found_pxr = True
+
+                    if not found_pxr:
+                        # ② Broad attribute scan: query ALL source nodes connected
+                        #   to this SG and check if any are Pxr* type.  This covers
+                        #   .surfaceShader, .rman__shader, .rman__surface,
+                        #   .rman_materials_out[N], and any future rfm2 attributes
+                        #   without needing to enumerate them explicitly.
                         try:
-                            surf = (
+                            all_sources = (
                                 cmds.listConnections(
-                                    f'{sg}.rman__shader',
+                                    sg,
                                     source=True, destination=False,
                                     plugs=False,
                                 ) or []
                             )
-                        except Exception:
-                            surf = []
-                    # ③ rfm2 also uses .rman__surface (different from rman__shader)
-                    if not surf:
-                        try:
-                            surf = (
-                                cmds.listConnections(
-                                    f'{sg}.rman__surface',
-                                    source=True, destination=False,
-                                    plugs=False,
-                                ) or []
-                            )
-                        except Exception:
-                            surf = []
-                    # Accept only Pxr* shader nodes
-                    if surf:
-                        try:
-                            node_type = cmds.nodeType(surf[0])
-                            if node_type.startswith('Pxr'):
-                                rfm_sgs.append(sg)
-                            else:
-                                self.logger.debug(
-                                    f"[RFM] SG '{sg}' → shader type '{node_type}' "
-                                    f"(skipped — not Pxr*)"
-                                )
+                            for src_node in all_sources:
+                                try:
+                                    if cmds.nodeType(src_node).startswith('Pxr'):
+                                        rfm_sgs.append(sg)
+                                        self.logger.debug(
+                                            f"[RFM] SG '{sg}' → accepted via "
+                                            f"broad-scan (node '{src_node}' is "
+                                            f"type '{cmds.nodeType(src_node)}')"
+                                        )
+                                        found_pxr = True
+                                        break
+                                except Exception:
+                                    pass
                         except Exception:
                             pass
-                    else:
+
+                    if not found_pxr:
                         self.logger.debug(
-                            f"[RFM] SG '{sg}' → no surfaceShader/rman__shader/rman__surface"
+                            f"[RFM] SG '{sg}' (base='{sg_base}') → "
+                            f"no Pxr* shader found via name-pattern or broad-scan"
                         )
                 except Exception:
                     pass  # malformed SG — skip silently
 
             if not rfm_sgs:
                 self.logger.info(
-                    f"[RFM] Shader cache: scanned {len(new_sgs)} new SG(s) — "
-                    f"none had a Pxr* surface shader; Strategy 2 (USD-derived shaders) will be used"
+                    f"[RFM] Shader cache: scanned {len(new_sgs)} new SG(s) via "
+                    f"name-pattern + broad-scan — none qualified as Pxr* SGs; "
+                    f"Strategy 2 (USD-derived shaders) will be used"
                 )
                 return None
+            self.logger.info(
+                f"[RFM] Shader cache: {len(rfm_sgs)} Pxr* SG(s) accepted "
+                f"(sample: {rfm_sgs[:5]})"
+            )
 
             # ── BFS: collect the full upstream shader network ─────────────────
             visited: set = set()
