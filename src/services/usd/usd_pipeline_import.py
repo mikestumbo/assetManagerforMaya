@@ -1764,17 +1764,32 @@ class ImportMixin:
                     pass
 
             # ── Build USD material path → Maya SG mapping ────────────────────
-            # USD material names: /Materials/PxrDisneyBsdf1  → 'PxrDisneyBsdf1'
-            # Maya SG base names: 'PxrDisneyBsdf1SG'         → strip 'SG' → 'PxrDisneyBsdf1'
-            sg_lookup: dict = {}  # lower(stripped_name) → sg_full_name
+            # USD material names: /Looks/PxrDisneyBsdf1SG  → name = 'PxrDisneyBsdf1SG'
+            # Maya SG base names: 'PxrDisneyBsdf1SG'  (exact match via base_name key)
+            # Also try stripping trailing 'SG' in case USD name omits it.
+            sg_lookup: dict = {}  # lower(name) → sg_full_name
             for base_name, sg_node in rfm_sgs.items():
                 # Try both {name}SG and just {name} (some rigs don't append SG)
                 stripped = base_name[:-2] if base_name.lower().endswith('sg') else base_name
                 sg_lookup[stripped.lower()] = sg_node
                 sg_lookup[base_name.lower()] = sg_node
 
-            mat_path_to_sg: dict = {}
-            for mat_path_str in mat_prim_paths:
+            self.logger.info(
+                f"[RFM] Import: {len(rfm_sgs)} SGs collected; "
+                f"sg_lookup has {len(sg_lookup)} keys; "
+                f"sample keys: {list(sg_lookup)[:6]}"
+            )
+
+            # Normalise all mat_prim_paths to str so Sdf.Path vs str
+            # key types never cause silent dict-lookup misses.
+            mat_path_strs: list = [str(p) for p in mat_prim_paths]
+            self.logger.info(
+                f"[RFM] Import: {len(mat_path_strs)} mat_prim_paths; "
+                f"sample: {mat_path_strs[:4]}"
+            )
+
+            mat_path_to_sg: dict = {}   # str(USD mat path) → maya SG name
+            for mat_path_str in mat_path_strs:
                 mat_name = Sdf.Path(mat_path_str).name
                 candidate = (
                     sg_lookup.get(mat_name.lower()) or
@@ -1782,6 +1797,11 @@ class ImportMixin:
                 )
                 if candidate:
                     mat_path_to_sg[mat_path_str] = candidate
+
+            self.logger.info(
+                f"[RFM] Import: name-matched {len(mat_path_to_sg)}/{len(mat_path_strs)} "
+                f"USD material paths to imported SGs"
+            )
 
             # ── Rename nodes to drop the rfmMat: namespace prefix ────────────
             # This gives clean Hypershade node names (PxrDisneyBsdf1SG, etc.).
@@ -1800,7 +1820,10 @@ class ImportMixin:
                 if sg in renamed:
                     mat_path_to_sg[mat_path] = renamed[sg]
 
-            return mat_path_to_sg
+            self.logger.info(
+                f"[RFM] Import: final mat_path_to_sg has {len(mat_path_to_sg)} entries; "
+                f"sample: {dict(list(mat_path_to_sg.items())[:3])}"
+            )
 
         except Exception as err:
             self.logger.warning(
@@ -2247,7 +2270,8 @@ class ImportMixin:
             # ── Strategy 2: Synthetic PxrSurface from USD data (fallback) ──────
             # Runs for any material that was NOT found in the .rig.mb shader cache.
             # If Strategy 1 filled mat_path_to_sg completely, this loop is a no-op.
-            for mat_key, preview_shader in mat_preview.items():
+            for _sdf_mat_key, preview_shader in mat_preview.items():
+                mat_key: str = str(_sdf_mat_key)  # normalise to str
                 if mat_key in mat_path_to_sg:
                     # Real shader already imported from .rig.mb cache — skip.
                     continue
@@ -2285,7 +2309,7 @@ class ImportMixin:
 
                 # Fallback: first non-normal texture in the material's UVTexture list.
                 if not diffuse_tex:
-                    for uv_sh in mat_textures.get(mat_key, []):
+                    for uv_sh in mat_textures.get(_sdf_mat_key, []):
                         cname = uv_sh.GetPrim().GetName().lower()
                         if any(t in cname for t in ('normal', 'nrm', 'nml', 'bump', 'spec')):
                             continue
@@ -2397,7 +2421,7 @@ class ImportMixin:
                         except Exception:
                             pass
 
-                    mat_path_to_sg[mat_key] = sg
+                    mat_path_to_sg[str(mat_key)] = sg
                     created_count += 1
 
                 except Exception as node_err:
@@ -2434,9 +2458,14 @@ class ImportMixin:
             #   Phase B: Always assign proxy shape to a PxrSurface SG (for rfm2)
 
             # ── Phase A: Session-layer material:binding for VP2 Hydra ──────────
+            # Normalise mesh_bindings mat-path values to str to match the
+            # str keys now stored in mat_path_to_sg (Strategy 1 or 2).
+            mesh_bindings_str: dict = {
+                str(mesh): str(mat) for mesh, mat in mesh_bindings.items()
+            }
             bound = 0
             total_bindings = sum(
-                1 for mk in mesh_bindings.values() if mk in mat_path_to_sg
+                1 for mk in mesh_bindings_str.values() if mk in mat_path_to_sg
             )
             try:
                 import mayaUsd.lib as mayaUsdLib  # type: ignore[import-unresolved]
@@ -2450,7 +2479,7 @@ class ImportMixin:
                     prev_target = live_stage.GetEditTarget()
                     live_stage.SetEditTarget(Usd.EditTarget(session))
                     try:
-                        for mesh_path_str, mat_key in mesh_bindings.items():
+                        for mesh_path_str, mat_key in mesh_bindings_str.items():
                             sg = mat_path_to_sg.get(mat_key)
                             if not sg:
                                 continue
@@ -2503,24 +2532,45 @@ class ImportMixin:
                 best_sg: Optional[str] = None
                 for _candidate_key, sg_candidate in mat_path_to_sg.items():
                     try:
-                        surf_nodes = cmds.listConnections(
-                            f'{sg_candidate}.surfaceShader',
-                            source=True,
-                            destination=False,
-                        ) or []
-                        for surf in surf_nodes:
-                            if cmds.nodeType(surf) != 'PxrSurface':
-                                continue
-                            tex_inputs = cmds.listConnections(
-                                f'{surf}.diffuseColor',
+                        # Broad scan: any Pxr* node connected to the SG
+                        all_surf_nodes = (
+                            cmds.listConnections(
+                                sg_candidate,
                                 source=True,
                                 destination=False,
+                                plugs=False,
                             ) or []
-                            if any(
-                                cmds.nodeType(t) == 'PxrTexture'
-                                for t in tex_inputs
+                        )
+                        for surf in all_surf_nodes:
+                            try:
+                                surf_type = cmds.nodeType(surf)
+                            except Exception:
+                                continue
+                            if not surf_type.startswith('Pxr'):
+                                continue
+                            # Check for any texture connected to a colour input
+                            # (diffuseColor for PxrSurface/PxrDisney, baseColor
+                            # for PxrDisneyBsdf, color for PxrTexture passthrough)
+                            for colour_attr in (
+                                'diffuseColor', 'baseColor', 'color'
                             ):
-                                best_sg = sg_candidate
+                                try:
+                                    tex_inputs = (
+                                        cmds.listConnections(
+                                            f'{surf}.{colour_attr}',
+                                            source=True,
+                                            destination=False,
+                                        ) or []
+                                    )
+                                    if any(
+                                        cmds.nodeType(t).startswith('Pxr')
+                                        for t in tex_inputs
+                                    ):
+                                        best_sg = sg_candidate
+                                        break
+                                except Exception:
+                                    pass
+                            if best_sg:
                                 break
                     except Exception:
                         pass
