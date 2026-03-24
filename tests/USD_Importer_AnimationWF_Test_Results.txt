@@ -11,6 +11,21 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
 // src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
 // src.services.usd.usd_pipeline_export : [EXTRACT] 17 texture file(s) extracted
@@ -33,7 +48,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  5.7 seconds.
+# Read 2 files in  5.9 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -266,6 +281,9 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [RIG] .rig.mb reference loaded successfully
 // src.services.usd.usd_pipeline_export : [RIG] Found 642 NURBS curves, 548 joints
 // src.services.usd.usd_pipeline_export : [RIG-OK] Extracted 642 controllers, 360 controller→joint mappings — any .atlasStyle errors above are harmless RfM 27.1→27.2 noise
+// src.services.usd.usd_pipeline_export : [RFM] Shader cache scan: 40 total scene SGs, 38 new SG(s) from reference load
+// src.services.usd.usd_pipeline_export : [RFM] New SG names (first 10): ['Cornea_Mat_SG', 'Iris_MatSG', 'Pupils_MatSG', 'PxrDisneyBsdf1SG', 'PxrDisneyBsdf2SG', 'PxrDisneyBsdf3SG', 'PxrDisneyBsdf5SG', 'PxrDisneyBsdf6SG', 'PxrDisneyBsdf7SG', 'PxrDisneyBsdf8SG']
+// src.services.usd.usd_pipeline_export : [RFM] Shader cache: scanned 38 new SG(s) — none had a Pxr* surface shader; Strategy 2 (USD-derived shaders) will be used
 // src.services.usd.usd_pipeline_export : [RIG] Removed .rig.mb reference
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
@@ -274,6 +292,7 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote controller→joint mappings for 1 skeleton(s) — 116 joints mapped
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
+// src.services.usd.usd_pipeline_export : [GEOM] Sanitized 6 invalid primvar index array(s) → geometry.usda — 'Invalid primvar indices' warnings suppressed
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.geometry.usda
 // src.services.usd.usd_pipeline_export : [OK] Layered stage: Veteran_Rig.root.usda → 6 sublayers (642 controllers, 360 joint mappings from .rig.mb)
 // src.services.usd.usd_pipeline_export : [OK] Proxy will load layered stage: Veteran_Rig.root.usda
@@ -283,21 +302,6 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
 // src.services.usd.usd_pipeline_export : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
 # Using V3 Lighting API for UsdPreviewSurface shading.
-# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)
 // src.services.usd.usd_pipeline_export : [RFM] rfm2 27.2 — proxy shape auto-discovered by translator (rmanAddAttr is rfm1-only; not needed in RfM 24+)
 // src.services.usd.usd_pipeline_export : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
@@ -319,18 +323,19 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 13 with non-black diffuseColor
 // src.services.usd.usd_pipeline_export : 📚 Total USD layers loaded: 7
 // src.services.usd.usd_pipeline_export : [OK] USD Stage loaded - 21 meshes, 2 skeleton rig(s) / 124 joints, 642 curves, 30 materials
+// src.services.usd.usd_pipeline_export : [RFM] Created 30 Maya PxrSurface shaders from USD data (17 with PxrTexture) — visible in Hypershade + renderable via rfm2 RIS
+// src.services.usd.usd_pipeline_export : [RFM] Bound 19/19 materials to USD mesh prims (session layer — VP2 Hydra display)
+// src.services.usd.usd_pipeline_export : [RFM] Proxy shape → rfm_PxrDisneyBsdf1SGSG [textured] (rfm2 RenderMan shading enabled; per-mesh materials driven by USD outputs:ri:surface in materials.usda)
 // src.services.usd.usd_pipeline_export : [LAYER] Edit target set to 'animation' sublayer — keyframes will be authored here
 // src.services.usd.usd_pipeline_export : [TIP] Select USD prims in viewport → press S to set keyframes on the animation layer
 mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda";
 // src.services.usd.usd_pipeline_export : [LAYER] Opened mayaUSD Layer Editor — author animation as USD layers (Option B)
 // src.services.usd.usd_pipeline_export : [OK] USD Proxy created: 21 meshes, 124 joints in USD
-// src.services.usd.usd_pipeline_export : [LOOKDEV] 30 USD materials rendered via VP2 (UsdPreviewSurface — these are USD-native, not Maya Hypershade shaders)
+// src.services.usd.usd_pipeline_export : [LOOKDEV] 30 USD materials: VP2 via UsdPreviewSurface + RenderMan via Maya PxrSurface (Hypershade)
 // src.services.usd.usd_pipeline_export : [TIP] USD Layer Editor opened — author animation as a non-destructive layer (Option B)
 # [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
-// Warning: Invalid primvar indices
-// Warning: Invalid primvar indices
-// Warning: Invalid primvar indices
-// Warning: Invalid primvar indices
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1618
+[OK] Window state saved: 1389x795
+[OK] Asset Manager singleton reference cleared
