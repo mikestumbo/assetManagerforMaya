@@ -1767,22 +1767,33 @@ class ImportMixin:
                         found_pxr = True
 
                     if not found_pxr:
-                        # ② Broad scan — accept SG if any connected source node
-                        #   is a Pxr* type (covers .rman_materials_out[N] etc.)
+                        # ② BFS upstream from the SG — catch Pxr* shaders that
+                        #   connect through rfm2 relay nodes (rmanShading etc.).
+                        #   Skip DAG nodes so we don't walk the scene geometry.
+                        #   Cap at 150 nodes to bound runtime on complex rigs.
                         try:
-                            all_sources = (
-                                cmds.listConnections(
-                                    sg,
-                                    source=True, destination=False,
-                                    plugs=False,
-                                ) or []
-                            )
-                            for src_node in all_sources:
+                            _bfs_vis: set = {sg}
+                            _bfs_q: list = [sg]
+                            _MAX = 150
+                            while _bfs_q and not found_pxr and len(_bfs_vis) < _MAX:
+                                cur = _bfs_q.pop(0)
                                 try:
-                                    if cmds.nodeType(src_node).startswith('Pxr'):
+                                    if cmds.ls(cur, dagObjects=True):
+                                        continue  # skip DAG (mesh/transform)
+                                    if cur != sg and cmds.nodeType(cur).startswith('Pxr'):
                                         rfm_sgs[sg_base] = sg
                                         found_pxr = True
                                         break
+                                    for _src in (
+                                        cmds.listConnections(
+                                            cur,
+                                            source=True, destination=False,
+                                            plugs=False,
+                                        ) or []
+                                    ):
+                                        if _src not in _bfs_vis:
+                                            _bfs_vis.add(_src)
+                                            _bfs_q.append(_src)
                                 except Exception:
                                     pass
                         except Exception:
@@ -1879,11 +1890,19 @@ class ImportMixin:
             # We rename ALL non-DAG nodes introduced by the import using the
             # snapshot-diff set.  Using the leaf name (split(':')[-1]) correctly
             # handles nodes at any namespace depth (rfmMat:sub:Name → Name).
-            all_new_nodes: list = [
+            #
+            # IMPORTANT: deduplicate before iterating.  `cmds.ls(type='shadingEngine')`
+            # and `cmds.ls()` both return SG nodes, so the same rfmMat:XXX node can
+            # appear TWICE.  Without dedup, the first loop renames it successfully
+            # and stores `renamed[old] = new`.  The second loop tries to rename the
+            # now-gone old name, raises an exception, and overwrites `renamed[old]`
+            # with the stale `old` value — making mat_path_to_sg keep the rfmMat:
+            # prefix and causing _sg_has_texture to be called on a dead node name.
+            all_new_nodes: list = list(dict.fromkeys(
                 n for n in (cmds.ls(type='shadingEngine') or []) + (cmds.ls() or [])
                 if n not in pre_sgs and n not in pre_transforms
                 and n.startswith(NS_PREFIX)
-            ]
+            ))
             renamed: dict = {}  # old_name → new_name
             for node in all_new_nodes:
                 leaf = node.split(':')[-1]
