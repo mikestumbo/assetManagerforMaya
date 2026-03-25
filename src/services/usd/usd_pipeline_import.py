@@ -1767,33 +1767,20 @@ class ImportMixin:
                         found_pxr = True
 
                     if not found_pxr:
-                        # ② BFS upstream from the SG — catch Pxr* shaders that
-                        #   connect through rfm2 relay nodes (rmanShading etc.).
-                        #   Skip DAG nodes so we don't walk the scene geometry.
-                        #   Cap at 150 nodes to bound runtime on complex rigs.
+                        # ② listHistory upstream from the SG — handles ALL rfm2
+                        #   wiring styles (direct surfaceShader, rmanShading relay,
+                        #   rman__surface, rman_materials_out[N], etc.) without
+                        #   needing to enumerate connection attribute names.
+                        #   pruneDagObjects=True keeps geometry/joints out of the
+                        #   result so we only inspect DG shader nodes.
                         try:
-                            _bfs_vis: set = {sg}
-                            _bfs_q: list = [sg]
-                            _MAX = 150
-                            while _bfs_q and not found_pxr and len(_bfs_vis) < _MAX:
-                                cur = _bfs_q.pop(0)
+                            _hist = cmds.listHistory(sg, pruneDagObjects=True) or []
+                            for _h_node in _hist:
                                 try:
-                                    if cmds.ls(cur, dagObjects=True):
-                                        continue  # skip DAG (mesh/transform)
-                                    if cur != sg and cmds.nodeType(cur).startswith('Pxr'):
+                                    if cmds.nodeType(_h_node).startswith('Pxr'):
                                         rfm_sgs[sg_base] = sg
                                         found_pxr = True
                                         break
-                                    for _src in (
-                                        cmds.listConnections(
-                                            cur,
-                                            source=True, destination=False,
-                                            plugs=False,
-                                        ) or []
-                                    ):
-                                        if _src not in _bfs_vis:
-                                            _bfs_vis.add(_src)
-                                            _bfs_q.append(_src)
                                 except Exception:
                                     pass
                         except Exception:
@@ -1941,19 +1928,18 @@ class ImportMixin:
         return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
-        """BFS the upstream shader graph for any recognised texture node.
+        """Return True when *sg_name* has any recognised RfM texture node upstream.
 
-        Walks ALL source connections upstream from ``sg_name`` (shadingEngine)
-        regardless of intermediate relay nodes.  This handles:
+        Uses ``cmds.listHistory(pruneDagObjects=True)`` so Maya's own dependency
+        traversal handles every rfm2 27.2 wiring style:
 
-        * Standard Maya ``.surfaceShader`` wiring (PxrSurface → SG)
-        * rfm2 27.2 ``.rman__surface`` / ``.rman_materials_out[N]`` wiring
-          (PxrDisneyBsdf → rmanShading → SG)
-        * Any other relay topology used by RenderMan for Maya
+        * Standard ``.surfaceShader`` wiring  (PxrSurface → SG)
+        * rfm2 relay topology  (PxrDisneyBsdf → rmanShading → SG)
+        * ``.rman__surface`` / ``.rman_materials_out[N]``  connection points
+        * Any other intermediate relay node introduced by future rfm2 versions
 
-        The BFS terminates when a ``PxrTexture``, ``PxrNormalMap``,
-        ``PxrPtexture``, ``PxrManifoldFile``, or ``PxrTextureObject`` node is
-        found, or when the entire upstream graph has been visited.
+        ``pruneDagObjects=True`` keeps geometry and joints out of the history
+        so only DG shader / texture nodes are inspected.
         """
         if cmds is None:
             return False
@@ -1962,22 +1948,13 @@ class ImportMixin:
             'PxrManifoldFile', 'PxrTextureObject',
         })
         try:
-            visited: set = {sg_name}
-            queue: list = [sg_name]
-            while queue:
-                node = queue.pop(0)
+            if not cmds.ls(sg_name):
+                return False  # node no longer exists
+            history: list = cmds.listHistory(sg_name, pruneDagObjects=True) or []
+            for node in history:
                 try:
                     if cmds.nodeType(node) in _TEXTURE_TYPES:
                         return True
-                    sources = (
-                        cmds.listConnections(
-                            node, source=True, destination=False, plugs=False,
-                        ) or []
-                    )
-                    for src in sources:
-                        if src not in visited:
-                            visited.add(src)
-                            queue.append(src)
                 except Exception:
                     pass
         except Exception:
