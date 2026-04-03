@@ -11,24 +11,9 @@
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
-// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
 // src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
-// src.services.usd.usd_pipeline_export : [EXTRACT] 17 texture file(s) extracted
+// src.services.usd.usd_pipeline_export : [EXTRACT] 34 texture file(s) extracted
 // src.services.usd.usd_pipeline_export : [RIG] Found sibling rig file: Veteran_Rig.rig.mb
 // src.services.usd.usd_pipeline_export : [USD] USD PROXY MODE ACTIVATED (Experimental)
 // src.services.usd.usd_pipeline_export : [BOOST] Colour boost applied: 10 hue-boosted, 3 name-hashed, 17 texture-skipped | 21 mesh primvars:displayColor set
@@ -48,7 +33,7 @@ requires "stereoCamera" "10.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  5.9 seconds.
+# Read 2 files in  6.1 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -283,7 +268,8 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [RIG-OK] Extracted 642 controllers, 360 controller→joint mappings — any .atlasStyle errors above are harmless RfM 27.1→27.2 noise
 // src.services.usd.usd_pipeline_export : [RFM] Shader cache scan: 40 total scene SGs, 38 new SG(s) from reference load
 // src.services.usd.usd_pipeline_export : [RFM] New SG names (first 10): ['Cornea_Mat_SG', 'Iris_MatSG', 'Pupils_MatSG', 'PxrDisneyBsdf1SG', 'PxrDisneyBsdf2SG', 'PxrDisneyBsdf3SG', 'PxrDisneyBsdf5SG', 'PxrDisneyBsdf6SG', 'PxrDisneyBsdf7SG', 'PxrDisneyBsdf8SG']
-// src.services.usd.usd_pipeline_export : [RFM] Shader cache: scanned 38 new SG(s) — none had a Pxr* surface shader; Strategy 2 (USD-derived shaders) will be used
+// src.services.usd.usd_pipeline_export : [RFM] Shader cache: 23 Pxr* SG(s) accepted (sample: ['Cornea_Mat_SG', 'Iris_MatSG', 'Pupils_MatSG', 'PxrDisneyBsdf1SG', 'PxrDisneyBsdf2SG'])
+// src.services.usd.usd_pipeline_export : [RFM] RfM shader cache written — original PxrSurface/PxrDisney nodes will be used on import
 // src.services.usd.usd_pipeline_export : [RIG] Removed .rig.mb reference
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
@@ -302,6 +288,21 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [ANIMATION] Creating USD Stage (mayaUsdProxyShape)...
 // src.services.usd.usd_pipeline_export : [SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API
 # Using V3 Lighting API for UsdPreviewSurface shading.
+# Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 // src.services.usd.usd_pipeline_export : [USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)
 // src.services.usd.usd_pipeline_export : [RFM] rfm2 27.2 — proxy shape auto-discovered by translator (rmanAddAttr is rfm1-only; not needed in RfM 24+)
 // src.services.usd.usd_pipeline_export : [OK] Created USD proxy shape: Veteran_Rig_root_USDShape
@@ -323,9 +324,21 @@ requires "stereoCamera" "10.0";
 // src.services.usd.usd_pipeline_export : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 13 with non-black diffuseColor
 // src.services.usd.usd_pipeline_export : 📚 Total USD layers loaded: 7
 // src.services.usd.usd_pipeline_export : [OK] USD Stage loaded - 21 meshes, 2 skeleton rig(s) / 124 joints, 642 curves, 30 materials
-// src.services.usd.usd_pipeline_export : [RFM] Created 30 Maya PxrSurface shaders from USD data (17 with PxrTexture) — visible in Hypershade + renderable via rfm2 RIS
+requires -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
+requires "stereoCamera" "10.0";
+requires -nodeType "PxrBlend" -nodeType "PxrDispTransform" -nodeType "PxrManifold2D" -nodeType "PxrMatteID" -nodeType "PxrNormalMap" -nodeType "PxrRamp" -nodeType "PxrTexture" -nodeType "PxrBlack" -nodeType "PxrDisneyBsdf" -nodeType "PxrDisplace" -nodeType "PxrSurface" "RenderMan_for_Maya.py" "27.2 @ 2396366";
+requires "stereoCamera" "10.0";
+# File read in  2.9 seconds.
+// Error: rfmMat:_rigExtract_:IKCurveInfoSpine_M (Curve Info): No valid NURBS curve
+// src.services.usd.usd_pipeline_export : [RFM] Import: snapshot-diff found 25 total new SGs; Pxr* filter accepted 16; supplemental lookup will fill the remainder
+// src.services.usd.usd_pipeline_export : [RFM] Import: supplemental lookup added 2 SGs that were in pre_sgs (survived .rig.mb ref cleanup)
+// src.services.usd.usd_pipeline_export : [RFM] Import: 18 SGs collected; sg_lookup has 35 keys; sample keys: ['pxrdisneybsdf12', 'pxrdisneybsdf12sg', 'pxrdisneybsdf5', 'pxrdisneybsdf5sg', 'pxrdisneybsdf16', 'pxrdisneybsdf16sg']
+// src.services.usd.usd_pipeline_export : [RFM] Import: 30 mat_prim_paths; sample: ['/SkelRoot/Group/Looks/PxrDisneyBsdf7SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf10SG', '/SkelRoot/Group/Looks/asGreenSG', '/SkelRoot/Group/Looks/PxrDisneyBsdf17SG']
+// src.services.usd.usd_pipeline_export : [RFM] Import: name-matched 18/30 USD material paths to imported SGs
+// src.services.usd.usd_pipeline_export : [RFM] Import: final mat_path_to_sg has 18 entries; sample: {'/SkelRoot/Group/Looks/PxrDisneyBsdf7SG': 'PxrDisneyBsdf7SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf10SG': 'PxrDisneyBsdf10SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf17SG': 'PxrDisneyBsdf17SG'}
+// src.services.usd.usd_pipeline_export : [RFM] Imported 18 original RfM shaders from .rig.mb (0 textured) — exact settings from original Maya scene (PxrDisney/PxrSurface with full texture maps)
 // src.services.usd.usd_pipeline_export : [RFM] Bound 19/19 materials to USD mesh prims (session layer — VP2 Hydra display)
-// src.services.usd.usd_pipeline_export : [RFM] Proxy shape → rfm_PxrDisneyBsdf1SGSG [textured] (rfm2 RenderMan shading enabled; per-mesh materials driven by USD outputs:ri:surface in materials.usda)
+// src.services.usd.usd_pipeline_export : [RFM] Proxy shape → rfm_PxrDisneyBsdf18SG1 [textured] (rfm2 RenderMan shading enabled; per-mesh materials driven by USD outputs:ri:surface in materials.usda)
 // src.services.usd.usd_pipeline_export : [LAYER] Edit target set to 'animation' sublayer — keyframes will be authored here
 // src.services.usd.usd_pipeline_export : [TIP] Select USD prims in viewport → press S to set keyframes on the animation layer
 mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda";
@@ -336,6 +349,6 @@ mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_
 # [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
 # [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
+# [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
+// [rfm]     INFO:  (txmgr_worker_0)  core tx_make_process: Converted in 00m:04s : 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/textures\\Tongue_Geo_Tongue_BaseColor_srgbtex_acescg.1001.png.tex'
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1618
-[OK] Window state saved: 1389x795
-[OK] Asset Manager singleton reference cleared

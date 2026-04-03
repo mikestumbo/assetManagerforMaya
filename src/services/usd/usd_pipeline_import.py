@@ -1767,20 +1767,29 @@ class ImportMixin:
                         found_pxr = True
 
                     if not found_pxr:
-                        # ② listHistory upstream from the SG — handles ALL rfm2
-                        #   wiring styles (direct surfaceShader, rmanShading relay,
-                        #   rman__surface, rman_materials_out[N], etc.) without
-                        #   needing to enumerate connection attribute names.
-                        #   pruneDagObjects=True keeps geometry/joints out of the
-                        #   result so we only inspect DG shader nodes.
+                        # ② Bidirectional BFS — handles rfm2 27.2 relay topology
+                        #   where the SG is wired as SOURCE going TO the relay
+                        #   (destination-direction connection).  listHistory and
+                        #   source-only listConnections both miss this hop.  Using
+                        #   cmds.listConnections without source/dest filter finds
+                        #   all neighbours regardless of connection direction.
+                        #   DAG nodes pruned; capped at 150 nodes.
                         try:
-                            _hist = cmds.listHistory(sg, pruneDagObjects=True) or []
-                            for _h_node in _hist:
+                            _bfs_vis: set = {sg}
+                            _bfs_q: list = [sg]
+                            while _bfs_q and not found_pxr and len(_bfs_vis) < 150:
+                                cur = _bfs_q.pop(0)
                                 try:
-                                    if cmds.nodeType(_h_node).startswith('Pxr'):
+                                    if cmds.ls(cur, dagObjects=True):
+                                        continue  # skip mesh/transform/joint
+                                    if cur != sg and cmds.nodeType(cur).startswith('Pxr'):
                                         rfm_sgs[sg_base] = sg
                                         found_pxr = True
                                         break
+                                    for _nbr in (cmds.listConnections(cur, plugs=False) or []):
+                                        if _nbr not in _bfs_vis:
+                                            _bfs_vis.add(_nbr)
+                                            _bfs_q.append(_nbr)
                                 except Exception:
                                     pass
                         except Exception:
@@ -1928,18 +1937,22 @@ class ImportMixin:
         return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
-        """Return True when *sg_name* has any recognised RfM texture node upstream.
+        """Return True when *sg_name* has any recognised RfM texture node nearby.
 
-        Uses ``cmds.listHistory(pruneDagObjects=True)`` so Maya's own dependency
-        traversal handles every rfm2 27.2 wiring style:
+        Uses a **bidirectional** BFS via ``cmds.listConnections`` (no
+        source/destination filter) so rfm2 27.2's non-standard wiring is
+        traversed correctly:
 
         * Standard ``.surfaceShader`` wiring  (PxrSurface → SG)
-        * rfm2 relay topology  (PxrDisneyBsdf → rmanShading → SG)
-        * ``.rman__surface`` / ``.rman_materials_out[N]``  connection points
-        * Any other intermediate relay node introduced by future rfm2 versions
+        * rfm2 relay topology where the SG is wired as the **source** going
+          *to* the relay (``SG.rman__surface → rmanShading.message``).  A
+          source-only traversal from the SG misses this because the relay is
+          connected as a *destination* from the SG, not a source into it.
+        * Any other intermediate relay used by future rfm2 versions
 
-        ``pruneDagObjects=True`` keeps geometry and joints out of the history
-        so only DG shader / texture nodes are inspected.
+        DAG nodes (mesh/transform/joint) are pruned to keep the BFS inside
+        the shader DG graph.  The BFS is capped at 400 visited nodes to
+        bound runtime on complex rigs.
         """
         if cmds is None:
             return False
@@ -1947,14 +1960,28 @@ class ImportMixin:
             'PxrTexture', 'PxrNormalMap', 'PxrPtexture',
             'PxrManifoldFile', 'PxrTextureObject',
         })
+        _MAX_NODES = 400
         try:
             if not cmds.ls(sg_name):
                 return False  # node no longer exists
-            history: list = cmds.listHistory(sg_name, pruneDagObjects=True) or []
-            for node in history:
+            visited: set = {sg_name}
+            queue: list = [sg_name]
+            while queue and len(visited) < _MAX_NODES:
+                node = queue.pop(0)
                 try:
-                    if cmds.nodeType(node) in _TEXTURE_TYPES:
+                    node_type = cmds.nodeType(node)
+                    if node_type in _TEXTURE_TYPES:
                         return True
+                    # Skip DAG nodes (mesh/transform/joint/curve)
+                    if cmds.ls(node, dagObjects=True):
+                        continue
+                    # Bidirectional — returns all connected nodes regardless of
+                    # which end is source/destination.  This catches rfm2's
+                    # SG→relay destination-direction connections.
+                    for nbr in (cmds.listConnections(node, plugs=False) or []):
+                        if nbr not in visited:
+                            visited.add(nbr)
+                            queue.append(nbr)
                 except Exception:
                     pass
         except Exception:
@@ -2633,21 +2660,33 @@ class ImportMixin:
             # the shape, not to drive per-mesh assignments.
             proxy_assigned_sg = False
             if mat_path_to_sg:
-                # Prefer a Strategy-1 (real rfm2) SG with a texture — use the
-                # shared BFS _sg_has_texture so the logic is maintained in one
-                # place and works for all rfm2 wiring styles.
+                # Prefer a Strategy-1 (real rfm2) SG — these are the original
+                # PxrDisney/PxrSurface nodes from the .rig.mb cache and are
+                # always better than synthetic Strategy-2 rfm_ nodes.
                 best_sg: Optional[str] = None
 
-                # Priority 1: any Strategy-1 SG (not rfm_ prefixed) with texture
+                # Priority 0: any Strategy-1 SG (no rfm_ prefix) — real rfm2
+                # nodes imported from the .rig.mb shader cache.  This is picked
+                # WITHOUT requiring _sg_has_texture to succeed, because rfm2
+                # 27.2's non-standard DG wiring (SG→relay destination-direction
+                # connections) makes texture detection unreliable.  A real
+                # PxrDisneyBsdf SG is ALWAYS better than a synthetic rfm_ node.
                 for _candidate_key, sg_candidate in mat_path_to_sg.items():
                     base_leaf = sg_candidate.split(':')[-1]
-                    if base_leaf.startswith('rfm_'):
-                        continue   # skip synthetic Strategy-2 nodes for now
-                    if self._sg_has_texture(sg_candidate):
+                    if not base_leaf.startswith('rfm_'):
                         best_sg = sg_candidate
                         break
 
-                # Priority 2: fallback to any textured SG (Strategy-1 or -2)
+                # Priority 1: textured Strategy-1 SG (upgrade Priority 0 choice
+                # if _sg_has_texture now works with bidirectional BFS)
+                if best_sg and not self._sg_has_texture(best_sg):
+                    for _candidate_key, sg_candidate in mat_path_to_sg.items():
+                        base_leaf = sg_candidate.split(':')[-1]
+                        if not base_leaf.startswith('rfm_') and self._sg_has_texture(sg_candidate):
+                            best_sg = sg_candidate
+                            break
+
+                # Priority 2: fallback to any textured SG (Strategy-2 synthetic)
                 if not best_sg:
                     for _candidate_key, sg_candidate in mat_path_to_sg.items():
                         if self._sg_has_texture(sg_candidate):
