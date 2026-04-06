@@ -1937,22 +1937,22 @@ class ImportMixin:
         return mat_path_to_sg
 
     def _sg_has_texture(self, sg_name: str) -> bool:
-        """Return True when *sg_name* has any recognised RfM texture node nearby.
+        """Return True when *sg_name* has any recognised RfM texture node in its shader network.
 
-        Uses a **bidirectional** BFS via ``cmds.listConnections`` (no
-        source/destination filter) so rfm2 27.2's non-standard wiring is
-        traversed correctly:
+        Strategy (rfm2 27.2 compatible):
 
-        * Standard ``.surfaceShader`` wiring  (PxrSurface → SG)
-        * rfm2 relay topology where the SG is wired as the **source** going
-          *to* the relay (``SG.rman__surface → rmanShading.message``).  A
-          source-only traversal from the SG misses this because the relay is
-          connected as a *destination* from the SG, not a source into it.
-        * Any other intermediate relay used by future rfm2 versions
-
-        DAG nodes (mesh/transform/joint) are pruned to keep the BFS inside
-        the shader DG graph.  The BFS is capped at 400 visited nodes to
-        bound runtime on complex rigs.
+        1. Probe the SG's surface-shader attributes (``rman__surface``,
+           ``surfaceShader``, ``volumeShader``, ``displacementShader``) to
+           find the directly-connected shader node.  This avoids the tricky
+           SG→relay direction issue entirely — we don't start from the SG's
+           generic BFS.
+        2. Call ``cmds.listHistory(shader, pruneDagObjects=True)`` on that
+           shader node.  The history traversal goes upstream (toward texture
+           nodes) without ever touching the SG→relay connection, so rfm2
+           27.2's non-standard relay wiring cannot block it.
+        3. Fall back to a source-only ``listConnections`` BFS from the SG
+           if no shader is found via the attribute probe (handles any
+           edge-case geometries or future rfm2 topologies).
         """
         if cmds is None:
             return False
@@ -1960,30 +1960,67 @@ class ImportMixin:
             'PxrTexture', 'PxrNormalMap', 'PxrPtexture',
             'PxrManifoldFile', 'PxrTextureObject',
         })
-        _MAX_NODES = 400
+        _SG_SURFACE_ATTRS = ('rman__surface', 'surfaceShader',
+                             'volumeShader', 'displacementShader')
         try:
             if not cmds.ls(sg_name):
                 return False  # node no longer exists
-            visited: set = {sg_name}
-            queue: list = [sg_name]
-            while queue and len(visited) < _MAX_NODES:
-                node = queue.pop(0)
+
+            # ── Step 1: probe surface-shader attributes to find the shader ────
+            shader_nodes: list = []
+            for attr in _SG_SURFACE_ATTRS:
                 try:
-                    node_type = cmds.nodeType(node)
-                    if node_type in _TEXTURE_TYPES:
-                        return True
-                    # Skip DAG nodes (mesh/transform/joint/curve)
-                    if cmds.ls(node, dagObjects=True):
-                        continue
-                    # Bidirectional — returns all connected nodes regardless of
-                    # which end is source/destination.  This catches rfm2's
-                    # SG→relay destination-direction connections.
-                    for nbr in (cmds.listConnections(node, plugs=False) or []):
-                        if nbr not in visited:
-                            visited.add(nbr)
-                            queue.append(nbr)
+                    conn = cmds.listConnections(
+                        f'{sg_name}.{attr}',
+                        source=True, destination=False, plugs=False,
+                    ) or []
+                    shader_nodes.extend(conn)
                 except Exception:
                     pass
+
+            # ── Step 2: listHistory on each connected shader → texture hunt ────
+            for shader in set(shader_nodes):
+                try:
+                    history = cmds.listHistory(
+                        shader, pruneDagObjects=True
+                    ) or []
+                    for h_node in history:
+                        try:
+                            if cmds.nodeType(h_node) in _TEXTURE_TYPES:
+                                return True
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            # ── Step 3: fallback source-BFS from the SG itself ────────────────
+            # Catches custom topologies where rman__surface is unwired but
+            # PxrTexture nodes exist upstream via other connections.
+            if not shader_nodes:
+                _MAX_NODES = 200
+                visited: set = {sg_name}
+                queue: list = list(
+                    cmds.listConnections(
+                        sg_name, source=True, destination=False, plugs=False,
+                    ) or []
+                )
+                visited.update(queue)
+                while queue and len(visited) < _MAX_NODES:
+                    node = queue.pop(0)
+                    try:
+                        if cmds.nodeType(node) in _TEXTURE_TYPES:
+                            return True
+                        if cmds.ls(node, dagObjects=True):
+                            continue
+                        for nbr in (cmds.listConnections(
+                            node, source=True, destination=False, plugs=False
+                        ) or []):
+                            if nbr not in visited:
+                                visited.add(nbr)
+                                queue.append(nbr)
+                    except Exception:
+                        pass
+
         except Exception:
             pass
         return False
@@ -2708,7 +2745,9 @@ class ImportMixin:
                         proxy_shape, edit=True, forceElement=first_sg
                     )
                     proxy_assigned_sg = True
-                    tex_flag = " [textured]" if best_sg else ""
+                    _is_rfm2_sg = best_sg and not best_sg.split(':')[-1].startswith('rfm_')
+                    _has_tex = best_sg and self._sg_has_texture(best_sg)
+                    tex_flag = " [textured]" if _has_tex else " [rfm2-unverified]" if _is_rfm2_sg else ""
                     self.logger.info(
                         f"[RFM] Proxy shape → {first_sg}{tex_flag} "
                         f"(rfm2 RenderMan shading enabled; per-mesh materials "
