@@ -1622,12 +1622,22 @@ class ImportMixin:
                 f"(sample: {rfm_sgs[:5]})"
             )
 
-            # ── BFS: collect the full upstream shader network ─────────────────
-            # IMPORTANT: skip DAG nodes (geometry, transforms, joints).
-            # A shadingEngine's .dagSetMembers connections point back to every
-            # mesh that uses the material.  Without this guard the BFS walks
-            # the entire character mesh + skeleton, producing a bloated temp
-            # .mb that Maya can't cleanly re-import (raises "Error reading file.").
+            # ── BFS: collect the full shader network (bidirectional) ──────────
+            # Uses bidirectional listConnections (no source/destination filter)
+            # so the rfm2 27.2 relay topology is traversed correctly:
+            #
+            #   PxrTexture → PxrDisneyBsdf → relay ← SG.rman__surface
+            #
+            # The connection between SG and relay is DESTINATION-direction from
+            # the SG (SG.rman__surface is the SOURCE, relay.message is the
+            # DESTINATION).  A source-only BFS from the SG finds nothing because
+            # the relay is an outgoing destination — it is not a source flowing
+            # into the SG.  Bidirectional traversal catches SG→relay, then
+            # relay→PxrDisneyBsdf (source direction into relay), and continues
+            # upstream to PxrTexture/PxrNormalMap nodes.
+            #
+            # DAG nodes (geometry, transforms, joints, curves) are pruned to
+            # keep the BFS inside the shader DG graph only.
             visited: set = set()
             stack = list(rfm_sgs)
             while stack:
@@ -1642,13 +1652,12 @@ class ImportMixin:
                 except Exception:
                     pass
                 visited.add(node)
-                upstream = (
-                    cmds.listConnections(
-                        node, source=True, destination=False,
-                        skipConversionNodes=False,
-                    ) or []
+                # Bidirectional — no source/destination filter so we traverse
+                # both incoming AND outgoing connections from every node.
+                connected = (
+                    cmds.listConnections(node, plugs=False) or []
                 )
-                stack.extend(upstream)
+                stack.extend(connected)
 
             # ── Export to temp file ───────────────────────────────────────────
             tmp_path = Path(
@@ -1939,20 +1948,28 @@ class ImportMixin:
     def _sg_has_texture(self, sg_name: str) -> bool:
         """Return True when *sg_name* has any recognised RfM texture node in its shader network.
 
-        Strategy (rfm2 27.2 compatible):
+        rfm2 27.2 topology (confirmed):
 
-        1. Probe the SG's surface-shader attributes (``rman__surface``,
-           ``surfaceShader``, ``volumeShader``, ``displacementShader``) to
-           find the directly-connected shader node.  This avoids the tricky
-           SG→relay direction issue entirely — we don't start from the SG's
-           generic BFS.
-        2. Call ``cmds.listHistory(shader, pruneDagObjects=True)`` on that
-           shader node.  The history traversal goes upstream (toward texture
-           nodes) without ever touching the SG→relay connection, so rfm2
-           27.2's non-standard relay wiring cannot block it.
-        3. Fall back to a source-only ``listConnections`` BFS from the SG
-           if no shader is found via the attribute probe (handles any
-           edge-case geometries or future rfm2 topologies).
+            PxrTexture → PxrDisneyBsdf → relay.someAttr   (source → dest)
+                                     SG.rman__surface → relay.message  (source → dest)
+
+        The SG has NO INCOMING source connections from PxrDisneyBsdf.  The
+        shader connects into the **relay** node, not directly into the SG.
+        The SG's ``rman__surface`` attribute is itself the SOURCE of a
+        connection going OUT to the relay — not a destination receiving from
+        a shader.
+
+        Strategy:
+          A. Follow ``SG.rman__surface`` as a *source* attribute to its
+             destination(s) = relay node(s).  (destination=True)
+          B. From each relay, collect all *source* connections = connected
+             shaders (PxrDisneyBsdf, PxrSurface, etc.) plus other SGs.
+          C. Run ``listHistory(shader, pruneDagObjects=True)`` on each shader
+             to walk upstream toward PxrTexture/PxrNormalMap nodes.
+          D. Fallback: standard incoming ``.surfaceShader`` probe in case the
+             rig uses a direct SG→shader connection instead of the relay.
+          E. Final safety net: bidirectional BFS (cap 100) which covers any
+             other topology variant.
         """
         if cmds is None:
             return False
@@ -1960,66 +1977,99 @@ class ImportMixin:
             'PxrTexture', 'PxrNormalMap', 'PxrPtexture',
             'PxrManifoldFile', 'PxrTextureObject',
         })
-        _SG_SURFACE_ATTRS = ('rman__surface', 'surfaceShader',
-                             'volumeShader', 'displacementShader')
         try:
             if not cmds.ls(sg_name):
                 return False  # node no longer exists
 
-            # ── Step 1: probe surface-shader attributes to find the shader ────
-            shader_nodes: list = []
-            for attr in _SG_SURFACE_ATTRS:
-                try:
-                    conn = cmds.listConnections(
-                        f'{sg_name}.{attr}',
-                        source=True, destination=False, plugs=False,
+            # ── A: SG.rman__surface → relay (destination direction) ───────────
+            try:
+                relay_list = (
+                    cmds.listConnections(
+                        f'{sg_name}.rman__surface',
+                        source=False, destination=True, plugs=False,
                     ) or []
-                    shader_nodes.extend(conn)
-                except Exception:
-                    pass
+                )
+                for relay in set(relay_list):
+                    try:
+                        for src in (
+                            cmds.listConnections(
+                                relay, source=True, destination=False,
+                                plugs=False,
+                            ) or []
+                        ):
+                            if src == sg_name:
+                                continue
+                            try:
+                                if cmds.ls(src, dagObjects=True):
+                                    continue
+                                for h_node in (
+                                    cmds.listHistory(
+                                        src, pruneDagObjects=True
+                                    ) or []
+                                ):
+                                    try:
+                                        if cmds.nodeType(h_node) in _TEXTURE_TYPES:
+                                            return True
+                                    except Exception:
+                                        pass
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
-            # ── Step 2: listHistory on each connected shader → texture hunt ────
-            for shader in set(shader_nodes):
+            # ── B/D: standard incoming surface-shader attrs ───────────────────
+            for attr in ('surfaceShader', 'rman__surface',
+                         'volumeShader', 'displacementShader'):
                 try:
-                    history = cmds.listHistory(
-                        shader, pruneDagObjects=True
-                    ) or []
-                    for h_node in history:
+                    for shader in (
+                        cmds.listConnections(
+                            f'{sg_name}.{attr}',
+                            source=True, destination=False, plugs=False,
+                        ) or []
+                    ):
                         try:
-                            if cmds.nodeType(h_node) in _TEXTURE_TYPES:
-                                return True
+                            for h_node in (
+                                cmds.listHistory(
+                                    shader, pruneDagObjects=True
+                                ) or []
+                            ):
+                                try:
+                                    if cmds.nodeType(h_node) in _TEXTURE_TYPES:
+                                        return True
+                                except Exception:
+                                    pass
                         except Exception:
                             pass
                 except Exception:
                     pass
 
-            # ── Step 3: fallback source-BFS from the SG itself ────────────────
-            # Catches custom topologies where rman__surface is unwired but
-            # PxrTexture nodes exist upstream via other connections.
-            if not shader_nodes:
-                _MAX_NODES = 200
-                visited: set = {sg_name}
-                queue: list = list(
-                    cmds.listConnections(
-                        sg_name, source=True, destination=False, plugs=False,
-                    ) or []
-                )
-                visited.update(queue)
-                while queue and len(visited) < _MAX_NODES:
-                    node = queue.pop(0)
-                    try:
-                        if cmds.nodeType(node) in _TEXTURE_TYPES:
-                            return True
-                        if cmds.ls(node, dagObjects=True):
-                            continue
-                        for nbr in (cmds.listConnections(
-                            node, source=True, destination=False, plugs=False
-                        ) or []):
-                            if nbr not in visited:
-                                visited.add(nbr)
-                                queue.append(nbr)
-                    except Exception:
-                        pass
+            # ── E: bidirectional BFS safety net ──────────────────────────────
+            # Covers future rfm2 topology variants.  Now that the export BFS
+            # is also bidirectional, the imported .mb contains the relay and
+            # shader nodes, so this BFS reaches PxrTexture quickly (3-4 hops).
+            _MAX_NODES = 100
+            visited: set = {sg_name}
+            queue: list = list(
+                cmds.listConnections(sg_name, plugs=False) or []
+            )
+            visited.update(queue)
+            while queue and len(visited) < _MAX_NODES:
+                node = queue.pop(0)
+                try:
+                    if cmds.nodeType(node) in _TEXTURE_TYPES:
+                        return True
+                    if cmds.ls(node, dagObjects=True):
+                        continue
+                    for nbr in (
+                        cmds.listConnections(node, plugs=False) or []
+                    ):
+                        if nbr not in visited:
+                            visited.add(nbr)
+                            queue.append(nbr)
+                except Exception:
+                    pass
 
         except Exception:
             pass
