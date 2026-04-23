@@ -3,6 +3,7 @@ USD-stage manipulation mixin: merge skeleton prims, animation layers, blendshape
 
 Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-split.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,17 +18,19 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
-    import maya.cmds as cmds          # type: ignore[import-unresolved]
-    import maya.mel as mel            # type: ignore[import-unresolved]
+    import maya.cmds as cmds  # type: ignore[import-unresolved]
+    import maya.mel as mel  # type: ignore[import-unresolved]
+
     MAYA_AVAILABLE = True
 except ImportError:
-    cmds = None   # type: ignore[assignment]
-    mel  = None   # type: ignore[assignment]
+    cmds = None  # type: ignore[assignment]
+    mel = None  # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
 try:
     from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, UsdSkel, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -94,7 +97,9 @@ class StagesMixin:
                 self.logger.info("[OK] Single or no skeleton - merge not needed")
                 return True
 
-            self.logger.info(f"[SKEL] Merging {len(all_skeletons)} Skeleton prims into unified skeleton...")
+            self.logger.info(
+                f"[SKEL] Merging {len(all_skeletons)} Skeleton prims into unified skeleton..."
+            )
 
             # Collect all joint data from all skeletons
             all_joints = []  # List of joint paths (relative to skeleton)
@@ -113,7 +118,7 @@ class StagesMixin:
 
                 for i, joint in enumerate(joints):
                     # Get the short name (last part of path)
-                    joint_name = str(joint).split('/')[-1] if '/' in str(joint) else str(joint)
+                    joint_name = str(joint).split("/")[-1] if "/" in str(joint) else str(joint)
 
                     # Skip duplicates (same joint bound in multiple skinClusters)
                     if joint_name in joint_to_skeleton:
@@ -195,12 +200,14 @@ class StagesMixin:
                     rot = xform.ExtractRotation()
                     quat = rot.GetQuat()
                     # USD uses (real, i, j, k) format
-                    rotations.append(Gf.Quatf(
-                        quat.GetReal(),
-                        quat.GetImaginary()[0],
-                        quat.GetImaginary()[1],
-                        quat.GetImaginary()[2]
-                    ))
+                    rotations.append(
+                        Gf.Quatf(
+                            quat.GetReal(),
+                            quat.GetImaginary()[0],
+                            quat.GetImaginary()[1],
+                            quat.GetImaginary()[2],
+                        )
+                    )
 
                     # Default scale
                     scales.append(Gf.Vec3h(1.0, 1.0, 1.0))
@@ -214,7 +221,7 @@ class StagesMixin:
             # Update all skin bindings to reference unified skeleton
             binding_count = 0
             for prim in stage.Traverse():
-                if prim.GetTypeName() == 'Mesh':
+                if prim.GetTypeName() == "Mesh":
                     # Check if mesh has skeleton binding
                     binding_api = UsdSkel.BindingAPI(prim)
                     if binding_api:
@@ -248,14 +255,12 @@ class StagesMixin:
         except Exception as e:
             self.logger.warning(f"[WARNING] Skeleton merge failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
     def _create_animation_layers(
-        self,
-        base_usd_path: Path,
-        options: ExportOptions,
-        result: ExportResult
+        self, base_usd_path: Path, options: ExportOptions, result: ExportResult
     ) -> bool:
         """
         Clean up USD for animation workflow (Phase 3.3).
@@ -306,7 +311,7 @@ class StagesMixin:
                 "DeformationSystem/Root_M",
                 "DeformationSystem/Root",
                 "Root_M",
-                "Skeleton"
+                "Skeleton",
             ]
 
             for skel_prim in all_skeletons:
@@ -336,7 +341,9 @@ class StagesMixin:
                         deform_skeleton = skel_prim
                         deform_skeleton_path = skel_prim.GetPath()
 
-                self.logger.info(f"   [SKEL] Using skeleton with most joints: {deform_skeleton_path}")
+                self.logger.info(
+                    f"   [SKEL] Using skeleton with most joints: {deform_skeleton_path}"
+                )
                 self.logger.info(f"      └─ Joint count: {max_joints}")
 
             # ================================================================
@@ -361,7 +368,9 @@ class StagesMixin:
                         if len(joints) >= 50:
                             deform_animation = prim
                             deform_animation_path = prim.GetPath()
-                            self.logger.info(f"   [ANIMATION] Found deformation animation: {anim_path_str}")
+                            self.logger.info(
+                                f"   [ANIMATION] Found deformation animation: {anim_path_str}"
+                            )
                             break
 
             # If no animation found, look for one with matching joint count
@@ -376,7 +385,9 @@ class StagesMixin:
                         if len(anim_joints) == len(skel_joints):
                             deform_animation = prim
                             deform_animation_path = prim.GetPath()
-                            self.logger.info(f"   [ANIMATION] Found matching animation: {prim.GetPath()}")
+                            self.logger.info(
+                                f"   [ANIMATION] Found matching animation: {prim.GetPath()}"
+                            )
                             break
 
             # ================================================================
@@ -385,7 +396,7 @@ class StagesMixin:
             binding_updates = 0
 
             for prim in stage.Traverse():
-                if prim.GetTypeName() == 'Mesh':
+                if prim.GetTypeName() == "Mesh":
                     binding_api = UsdSkel.BindingAPI(prim)
                     skel_rel = binding_api.GetSkeletonRel()
 
@@ -439,7 +450,9 @@ class StagesMixin:
                         del parent_spec.nameChildren[prim_spec.name]
                         deleted_count += 1
 
-            self.logger.info(f"   [DELETE]  Deleted {deleted_count} unused skeleton/animation prims")
+            self.logger.info(
+                f"   [DELETE]  Deleted {deleted_count} unused skeleton/animation prims"
+            )
 
             # ================================================================
             # Step 5: Save the cleaned USD
@@ -463,6 +476,7 @@ class StagesMixin:
         except Exception as e:
             self.logger.error(f"Animation cleanup failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
@@ -533,7 +547,9 @@ class StagesMixin:
 
             if fixed_count > 0:
                 stage.GetRootLayer().Save()
-                self.logger.info(f"[SUCCESS] Added geomBindTransform to {fixed_count} skinned meshes")
+                self.logger.info(
+                    f"[SUCCESS] Added geomBindTransform to {fixed_count} skinned meshes"
+                )
             else:
                 self.logger.info("[SUCCESS] All skinned meshes already have geomBindTransform")
 
@@ -542,6 +558,7 @@ class StagesMixin:
         except Exception as e:
             self.logger.warning(f"[WARNING] geomBindTransform fix failed (non-fatal): {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
             return True  # Non-fatal
 
@@ -595,7 +612,7 @@ class StagesMixin:
             UsdGeom.Scope.Define(stage, blend_shapes_path)
 
             # Get all Maya blendShape nodes
-            blendshape_nodes = cmds.ls(type='blendShape') or []
+            blendshape_nodes = cmds.ls(type="blendShape") or []
             if not blendshape_nodes:
                 self.logger.info("   No Maya blendShapes found to export")
                 return 0
@@ -631,15 +648,17 @@ class StagesMixin:
 
                     # Skip non-mesh geometries (NURBS curves, surfaces)
                     # USD exports these as NurbsPatch, not Mesh
-                    if cmds.nodeType(base_mesh) != 'mesh':
-                        self.logger.debug(f"   Skipping non-mesh geometry: {base_mesh} ({cmds.nodeType(base_mesh)})")
+                    if cmds.nodeType(base_mesh) != "mesh":
+                        self.logger.debug(
+                            f"   Skipping non-mesh geometry: {base_mesh} ({cmds.nodeType(base_mesh)})"
+                        )
                         continue
 
                     # Find corresponding USD mesh
                     # Strip namespace and 'Shape' suffix from Maya name
-                    mesh_short_name = base_mesh.split('|')[-1]  # Remove path
-                    mesh_short_name = mesh_short_name.split(':')[-1]  # Remove namespace
-                    if mesh_short_name.endswith('Shape'):
+                    mesh_short_name = base_mesh.split("|")[-1]  # Remove path
+                    mesh_short_name = mesh_short_name.split(":")[-1]  # Remove namespace
+                    if mesh_short_name.endswith("Shape"):
                         mesh_short_name = mesh_short_name[:-5]  # Remove 'Shape' suffix
 
                     # Try multiple matching strategies
@@ -654,14 +673,16 @@ class StagesMixin:
                         usd_mesh = usd_mesh_map[f"{mesh_short_name}_Geo"]
 
                     # Strategy 3: Name without _Geo if it has it
-                    elif mesh_short_name.endswith('_Geo') and mesh_short_name[:-4] in usd_mesh_map:
+                    elif mesh_short_name.endswith("_Geo") and mesh_short_name[:-4] in usd_mesh_map:
                         usd_mesh = usd_mesh_map[mesh_short_name[:-4]]
 
                     # Strategy 4: Try transform parent name
                     if not usd_mesh:
                         parent_transform = cmds.listRelatives(base_mesh, parent=True)
                         if parent_transform:
-                            transform_short_name = parent_transform[0].split('|')[-1].split(':')[-1]
+                            transform_short_name = (
+                                parent_transform[0].split("|")[-1].split(":")[-1]
+                            )
                             if transform_short_name in usd_mesh_map:
                                 usd_mesh = usd_mesh_map[transform_short_name]
 
@@ -673,7 +694,9 @@ class StagesMixin:
                                 break
 
                     if not usd_mesh:
-                        self.logger.warning(f"   Could not find USD mesh for {base_mesh} (searched: {mesh_short_name})")
+                        self.logger.warning(
+                            f"   Could not find USD mesh for {base_mesh} (searched: {mesh_short_name})"
+                        )
                         continue
 
                     # Get blendShape targets (aliases)
@@ -684,8 +707,8 @@ class StagesMixin:
                         alias_name = alias_list[i]
                         weight_attr = alias_list[i + 1]
                         # Extract index from weight attribute (e.g., "weight[0]" -> 0)
-                        if 'weight[' in weight_attr:
-                            target_idx = int(weight_attr.split('[')[1].split(']')[0])
+                        if "weight[" in weight_attr:
+                            target_idx = int(weight_attr.split("[")[1].split("]")[0])
                             target_aliases[target_idx] = alias_name
 
                     if not target_aliases:
@@ -735,15 +758,17 @@ class StagesMixin:
                                 continue  # No actual deltas
 
                             # Create USD BlendShape prim
-                            sanitized_name = target_name.replace('.', '_').replace(':', '_')
+                            sanitized_name = target_name.replace(".", "_").replace(":", "_")
                             blend_shape_path = blend_shapes_path.AppendChild(sanitized_name)
                             blend_shape_prim = UsdSkel.BlendShape.Define(stage, blend_shape_path)
 
                             # Write offsets as Vec3fArray
-                            offsets_vt = Vt.Vec3fArray([
-                                Gf.Vec3f(offsets[i], offsets[i+1], offsets[i+2])
-                                for i in range(0, len(offsets), 3)
-                            ])
+                            offsets_vt = Vt.Vec3fArray(
+                                [
+                                    Gf.Vec3f(offsets[i], offsets[i + 1], offsets[i + 2])
+                                    for i in range(0, len(offsets), 3)
+                                ]
+                            )
 
                             blend_shape_prim.CreateOffsetsAttr(offsets_vt)
 
@@ -752,7 +777,9 @@ class StagesMixin:
 
                             # Link blendShape to mesh via skel:blendShapes relationship
                             # Use core relationship API (compatible with all USD versions)
-                            blend_shapes_rel = usd_mesh.GetPrim().CreateRelationship("skel:blendShapes")
+                            blend_shapes_rel = usd_mesh.GetPrim().CreateRelationship(
+                                "skel:blendShapes"
+                            )
                             blend_shapes_rel.AddTarget(blend_shape_path)
 
                             total_targets += 1
@@ -764,7 +791,9 @@ class StagesMixin:
                             continue
 
                 except Exception as bs_error:
-                    self.logger.warning(f"   [WARNING] Failed blendShape node {bs_node}: {bs_error}")
+                    self.logger.warning(
+                        f"   [WARNING] Failed blendShape node {bs_node}: {bs_error}"
+                    )
                     continue
 
             # Save USD stage
@@ -779,6 +808,7 @@ class StagesMixin:
         except Exception as e:
             self.logger.warning(f"[WARNING] BlendShape export failed (non-fatal): {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
             return 0
 
@@ -787,7 +817,7 @@ class StagesMixin:
         usd_path: Path,
         options: ExportOptions,
         result: ExportResult,
-        num_skin_clusters: int = 0
+        num_skin_clusters: int = 0,
     ) -> None:
         """
         Validate what was actually exported to USD and record conversion results
@@ -799,7 +829,9 @@ class StagesMixin:
             num_skin_clusters: Number of skinClusters in the original Maya scene
         """
         self.logger.info(f"[INFO] Starting USD validation for: {usd_path}")
-        self.logger.info(f"[INFO] USD_AVAILABLE: {USD_AVAILABLE}, file exists: {usd_path.exists()}")
+        self.logger.info(
+            f"[INFO] USD_AVAILABLE: {USD_AVAILABLE}, file exists: {usd_path.exists()}"
+        )
 
         if not USD_AVAILABLE:
             self.logger.warning("[INFO] USD Python API not available, skipping validation")
@@ -820,31 +852,34 @@ class StagesMixin:
 
             # Count meshes - check prim type properly
             if options.export_geometry:
-                meshes = [p for p in stage.Traverse() if p.GetTypeName() == 'Mesh']
-                result.conversions['Geometry'] = ConversionResult(
-                    component_type='Geometry',
+                meshes = [p for p in stage.Traverse() if p.GetTypeName() == "Mesh"]
+                result.conversions["Geometry"] = ConversionResult(
+                    component_type="Geometry",
                     status=ConversionStatus.SUCCESS if meshes else ConversionStatus.FAILED,
                     usd_count=len(meshes),
-                    message=f"{len(meshes)} meshes exported"
+                    message=f"{len(meshes)} meshes exported",
                 )
                 self.logger.info(f"[INFO] Found {len(meshes)} meshes in USD")
 
             # Count NURBS curves - check for NurbsCurves or BasisCurves types
             if options.export_nurbs_curves:
-                curves = [p for p in stage.Traverse()
-                          if p.GetTypeName() in ('NurbsCurves', 'BasisCurves')]
-                result.conversions['NURBS Curves'] = ConversionResult(
-                    component_type='NURBS Curves',
+                curves = [
+                    p
+                    for p in stage.Traverse()
+                    if p.GetTypeName() in ("NurbsCurves", "BasisCurves")
+                ]
+                result.conversions["NURBS Curves"] = ConversionResult(
+                    component_type="NURBS Curves",
                     status=ConversionStatus.SUCCESS if curves else ConversionStatus.FALLBACK,
                     usd_count=len(curves),
                     fallback_count=0 if curves else 1,  # Will use .rig.mb
-                    message=f"{len(curves)} curves exported"
+                    message=f"{len(curves)} curves exported",
                 )
                 self.logger.info(f"[INFO] Found {len(curves)} NURBS curves in USD")
 
             # Count skeleton joints - check for Skeleton type
             if options.export_skeleton:
-                skeletons = [p for p in stage.Traverse() if p.GetTypeName() == 'Skeleton']
+                skeletons = [p for p in stage.Traverse() if p.GetTypeName() == "Skeleton"]
                 joint_count = 0
                 for skel_prim in skeletons:
                     skel = UsdSkel.Skeleton(skel_prim)
@@ -852,75 +887,94 @@ class StagesMixin:
                     if joints:
                         joint_count += len(joints)
 
-                result.conversions['Skeleton'] = ConversionResult(
-                    component_type='Skeleton',
-                    status=ConversionStatus.SUCCESS if joint_count > 0 else ConversionStatus.FALLBACK,
+                result.conversions["Skeleton"] = ConversionResult(
+                    component_type="Skeleton",
+                    status=(
+                        ConversionStatus.SUCCESS if joint_count > 0 else ConversionStatus.FALLBACK
+                    ),
                     usd_count=joint_count,
-                    message=f"{joint_count} joints in {len(skeletons)} skeleton(s)"
+                    message=f"{joint_count} joints in {len(skeletons)} skeleton(s)",
                 )
-                self.logger.info(f"[INFO] Found {joint_count} joints in {len(skeletons)} skeleton(s)")
+                self.logger.info(
+                    f"[INFO] Found {joint_count} joints in {len(skeletons)} skeleton(s)"
+                )
 
                 # Log SkelRoot scope (critical for deformation)
-                skel_roots = [p for p in stage.Traverse() if p.GetTypeName() == 'SkelRoot']
+                skel_roots = [p for p in stage.Traverse() if p.GetTypeName() == "SkelRoot"]
                 for sr in skel_roots:
                     self.logger.info(f"[INFO] SkelRoot: {sr.GetPath()}")
                     # List children under SkelRoot to show scope
                     children = [c.GetName() for c in sr.GetChildren()]
                     if children:
-                        self.logger.info(f"   Children: {children[:5]}{'...' if len(children) > 5 else ''}")
+                        self.logger.info(
+                            f"   Children: {children[:5]}{'...' if len(children) > 5 else ''}"
+                        )
 
                 # Count skin bindings - meshes with UsdSkelBindingAPI
                 skin_binding_count = 0
                 for prim in stage.Traverse():
-                    if prim.GetTypeName() == 'Mesh':
+                    if prim.GetTypeName() == "Mesh":
                         binding = UsdSkel.BindingAPI(prim)
                         if binding:
                             # Check if mesh has actual skin weight primvars
-                            indices_attr = prim.GetAttribute('primvars:skel:jointIndices')
-                            weights_attr = prim.GetAttribute('primvars:skel:jointWeights')
-                            if indices_attr and indices_attr.HasValue() and weights_attr and weights_attr.HasValue():
+                            indices_attr = prim.GetAttribute("primvars:skel:jointIndices")
+                            weights_attr = prim.GetAttribute("primvars:skel:jointWeights")
+                            if (
+                                indices_attr
+                                and indices_attr.HasValue()
+                                and weights_attr
+                                and weights_attr.HasValue()
+                            ):
                                 skin_binding_count += 1
 
                 # Determine skin status based on viewport_friendly option
                 if options.viewport_friendly_skeleton:
                     # Viewport-friendly: skin preserved in .rig.mb fallback
-                    result.conversions['Skin'] = ConversionResult(
-                        component_type='Skin',
-                        status=ConversionStatus.FALLBACK if skin_binding_count == 0 else ConversionStatus.SUCCESS,
+                    result.conversions["Skin"] = ConversionResult(
+                        component_type="Skin",
+                        status=(
+                            ConversionStatus.FALLBACK
+                            if skin_binding_count == 0
+                            else ConversionStatus.SUCCESS
+                        ),
                         usd_count=skin_binding_count,
                         fallback_count=num_skin_clusters if skin_binding_count == 0 else 0,
-                        message=f"Viewport-friendly: {num_skin_clusters} skinClusters in .rig.mb"
+                        message=f"Viewport-friendly: {num_skin_clusters} skinClusters in .rig.mb",
                     )
                 else:
                     # Full export: skin bindings in USD
-                    result.conversions['Skin'] = ConversionResult(
-                        component_type='Skin',
-                        status=ConversionStatus.SUCCESS if skin_binding_count > 0 else ConversionStatus.FALLBACK,
+                    result.conversions["Skin"] = ConversionResult(
+                        component_type="Skin",
+                        status=(
+                            ConversionStatus.SUCCESS
+                            if skin_binding_count > 0
+                            else ConversionStatus.FALLBACK
+                        ),
                         usd_count=skin_binding_count,
                         fallback_count=0,
-                        message=f"{skin_binding_count} skin bindings exported"
+                        message=f"{skin_binding_count} skin bindings exported",
                     )
                 self.logger.info(f"[INFO] Found {skin_binding_count} skin bindings in USD")
 
             # Count materials - check for Material type
             if options.export_materials:
-                materials = [p for p in stage.Traverse() if p.GetTypeName() == 'Material']
-                result.conversions['Materials'] = ConversionResult(
-                    component_type='Materials',
+                materials = [p for p in stage.Traverse() if p.GetTypeName() == "Material"]
+                result.conversions["Materials"] = ConversionResult(
+                    component_type="Materials",
                     status=ConversionStatus.SUCCESS if materials else ConversionStatus.FALLBACK,
                     usd_count=len(materials),
-                    message=f"{len(materials)} materials exported"
+                    message=f"{len(materials)} materials exported",
                 )
                 self.logger.info(f"[INFO] Found {len(materials)} materials in USD")
 
             # Count blendshapes (Maya 2026) - check for BlendShape type
             if options.export_blendshapes:
-                blendshapes = [p for p in stage.Traverse() if p.GetTypeName() == 'BlendShape']
-                result.conversions['Blendshapes'] = ConversionResult(
-                    component_type='Blendshapes',
+                blendshapes = [p for p in stage.Traverse() if p.GetTypeName() == "BlendShape"]
+                result.conversions["Blendshapes"] = ConversionResult(
+                    component_type="Blendshapes",
                     status=ConversionStatus.SUCCESS if blendshapes else ConversionStatus.FALLBACK,
                     usd_count=len(blendshapes),
-                    message=f"{len(blendshapes)} blendshapes exported"
+                    message=f"{len(blendshapes)} blendshapes exported",
                 )
                 self.logger.info(f"[INFO] Found {len(blendshapes)} blendshapes in USD")
 
@@ -928,25 +982,25 @@ class StagesMixin:
             # Note: USD uses SkelAnimation for rigging, while Alembic (.abc) is often
             # used for baked deformation caches. mayaUSD exports to SkelAnimation.
             # SkelAnimation prims exist even without explicit animation (rest pose)
-            skel_animations = [p for p in stage.Traverse() if p.GetTypeName() == 'SkelAnimation']
+            skel_animations = [p for p in stage.Traverse() if p.GetTypeName() == "SkelAnimation"]
 
             # Get frame range from stage
             frame_range = (0, 0)
             has_time_samples = False
             start_time = stage.GetStartTimeCode()
             end_time = stage.GetEndTimeCode()
-            if start_time != float('inf') and end_time != float('-inf'):
+            if start_time != float("inf") and end_time != float("-inf"):
                 frame_range = (int(start_time), int(end_time))
                 has_time_samples = (frame_range[1] - frame_range[0]) > 0
 
             if options.export_animation and has_time_samples:
                 # Actual animation was exported
-                result.conversions['Animation'] = ConversionResult(
-                    component_type='Animation',
+                result.conversions["Animation"] = ConversionResult(
+                    component_type="Animation",
                     status=ConversionStatus.SUCCESS,
                     usd_count=len(skel_animations),
                     message=f"{len(skel_animations)} SkelAnimation(s), "
-                            f"frames {frame_range[0]}-{frame_range[1]}"
+                    f"frames {frame_range[0]}-{frame_range[1]}",
                 )
                 self.logger.info(
                     f"[INFO] Found {len(skel_animations)} SkelAnimation prims "
@@ -954,20 +1008,22 @@ class StagesMixin:
                 )
             elif skel_animations:
                 # Rest pose only (no animation checkbox or no time samples)
-                result.conversions['Animation'] = ConversionResult(
-                    component_type='Animation',
+                result.conversions["Animation"] = ConversionResult(
+                    component_type="Animation",
                     status=ConversionStatus.PARTIAL,
                     usd_count=len(skel_animations),
-                    message=f"{len(skel_animations)} SkelAnimation(s) (rest pose only)"
+                    message=f"{len(skel_animations)} SkelAnimation(s) (rest pose only)",
                 )
-                self.logger.info(f"[INFO] Found {len(skel_animations)} SkelAnimation prims (rest pose only)")
+                self.logger.info(
+                    f"[INFO] Found {len(skel_animations)} SkelAnimation prims (rest pose only)"
+                )
             else:
                 # No animation data at all
-                result.conversions['Animation'] = ConversionResult(
-                    component_type='Animation',
+                result.conversions["Animation"] = ConversionResult(
+                    component_type="Animation",
                     status=ConversionStatus.SKIPPED,
                     usd_count=0,
-                    message="No animation exported"
+                    message="No animation exported",
                 )
                 self.logger.info("[INFO] No SkelAnimation prims in USD")
 
@@ -980,5 +1036,5 @@ class StagesMixin:
         except Exception as e:
             self.logger.warning(f"USD validation error: {e}")
             import traceback
-            self.logger.warning(f"USD validation traceback: {traceback.format_exc()}")
 
+            self.logger.warning(f"USD validation traceback: {traceback.format_exc()}")

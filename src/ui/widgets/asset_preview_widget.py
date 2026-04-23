@@ -12,9 +12,17 @@ from pathlib import Path
 
 # PySide6 for Maya 2022+
 try:
-    from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QScrollArea, QHBoxLayout, QPushButton
+    from PySide6.QtWidgets import (
+        QWidget,
+        QVBoxLayout,
+        QLabel,
+        QScrollArea,
+        QHBoxLayout,
+        QPushButton,
+    )
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QPixmap, QIcon
+
     PYSIDE_AVAILABLE = True
     PYSIDE_VERSION = "PySide6"
 except ImportError as e:
@@ -70,7 +78,9 @@ except ImportError:
     def get_container():  # type: ignore
         return None
 
+
 if PYSIDE_AVAILABLE and QWidget is not None:
+
     class AssetPreviewWidget(QWidget):  # type: ignore
         """
         Asset Preview Widget - Single Responsibility for asset preview
@@ -92,6 +102,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 # Try service factory as backup
                 try:
                     from ...core.service_factory import get_service_factory
+
                     factory = get_service_factory()
                     self._thumbnail_service = factory.create_thumbnail_service()
                     if self._thumbnail_service:
@@ -117,11 +128,13 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _create_fallback_thumbnail_service(self):
             """Create enhanced fallback thumbnail service for preview widget"""
+
             class FallbackThumbnailService:
                 def __init__(self):
                     self._cache_dir = None
                     try:
                         import tempfile
+
                         self._cache_dir = Path(tempfile.gettempdir()) / "asset_manager_preview"
                         self._cache_dir.mkdir(exist_ok=True)
                     except Exception:
@@ -148,13 +161,22 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         painter.setFont(QFont("Arial", 12))
 
                         # Draw file extension
-                        file_ext = Path(file_path).suffix.upper() if hasattr(Path(file_path), 'suffix') else "FILE"
-                        painter.drawText(pixmap.rect(), 0x0004, file_ext)  # Qt.AlignCenter equivalent
+                        file_ext = (
+                            Path(file_path).suffix.upper()
+                            if hasattr(Path(file_path), "suffix")
+                            else "FILE"
+                        )
+                        painter.drawText(
+                            pixmap.rect(), 0x0004, file_ext
+                        )  # Qt.AlignCenter equivalent
                         painter.end()
 
                         # Save to cache if possible
                         if self._cache_dir:
-                            cache_file = self._cache_dir / f"fallback_{hash(str(file_path))}_{size[0]}x{size[1]}.png"
+                            cache_file = (
+                                self._cache_dir
+                                / f"fallback_{hash(str(file_path))}_{size[0]}x{size[1]}.png"
+                            )
                             pixmap.save(str(cache_file))
                             return str(cache_file)
 
@@ -177,7 +199,10 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 if "assetManager" in str(current_file):
                     # Navigate up to find the assetManager root directory
                     asset_manager_root = current_file
-                    while asset_manager_root.name != "assetManager" and asset_manager_root.parent != asset_manager_root:
+                    while (
+                        asset_manager_root.name != "assetManager"
+                        and asset_manager_root.parent != asset_manager_root
+                    ):
                         asset_manager_root = asset_manager_root.parent
 
                     # Check for icon in the assetManager directory
@@ -196,8 +221,19 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 try:
                     home = Path.home()
                     maya_paths = [
-                        home / "OneDrive" / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png",
-                        home / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png"
+                        home
+                        / "OneDrive"
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
+                        home
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
                     ]
 
                     for maya_path in maya_paths:
@@ -442,7 +478,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             scaled_pixmap = self._original_pixmap.scaled(  # type: ignore
                 new_size,
                 Qt.KeepAspectRatio,  # type: ignore
-                Qt.SmoothTransformation  # type: ignore
+                Qt.SmoothTransformation,  # type: ignore
             )
 
             # Set pixmap and let scroll area handle sizing
@@ -452,7 +488,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _update_zoom_label(self) -> None:
             """Update zoom percentage label"""
-            if hasattr(self, '_zoom_label'):
+            if hasattr(self, "_zoom_label"):
                 percentage = int(self._zoom_factor * 100)
                 self._zoom_label.setText(f"{percentage}%")  # type: ignore
 
@@ -470,9 +506,10 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Capture Maya viewport screenshot - Enhanced User Experience"""
             if not self._current_asset:
                 # Show user-friendly message
-                if hasattr(self, 'parent') and self.parent():
+                if hasattr(self, "parent") and self.parent():
                     try:
                         from PySide6.QtWidgets import QMessageBox  # type: ignore
+
                         msg = "Please select an asset first to capture a screenshot thumbnail."
                         QMessageBox.information(self.parent(), "No Asset Selected", msg)  # type: ignore
                     except ImportError:
@@ -481,7 +518,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             try:
                 # Validate current asset before opening dialog
-                if not hasattr(self._current_asset, 'file_path'):
+                if not hasattr(self._current_asset, "file_path"):
                     asset_type = type(self._current_asset)
                     raise TypeError(
                         f"Cannot open screenshot dialog: asset is type {asset_type}, "
@@ -499,13 +536,15 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             except Exception as e:
                 import traceback
+
                 print(f"Error opening screenshot dialog: {e}")
                 print(f"Asset type: {type(self._current_asset)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
                 # Fallback: Show error message if available
-                if hasattr(self, 'parent') and self.parent():
+                if hasattr(self, "parent") and self.parent():
                     try:
                         from PySide6.QtWidgets import QMessageBox  # type: ignore
+
                         error_msg = f"Failed to open screenshot capture:\n{str(e)}"
                         QMessageBox.warning(self.parent(), "Screenshot Error", error_msg)  # type: ignore
                     except ImportError:
@@ -515,7 +554,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Refresh preview after screenshot capture - Callback for enhanced UX"""
             try:
                 # Force thumbnail regeneration by clearing cache if possible
-                if self._thumbnail_service and self._current_asset and self._current_asset.file_path:
+                if (
+                    self._thumbnail_service
+                    and self._current_asset
+                    and self._current_asset.file_path
+                ):
                     # Clear cache for this specific asset using EMSA interface
                     try:
                         asset_path = Path(self._current_asset.file_path)

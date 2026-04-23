@@ -3,6 +3,7 @@ Skeleton/rigging mixin: USD→Maya conversion, joint proxies, skin weights.
 
 Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-split.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,17 +18,19 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
-    import maya.cmds as cmds          # type: ignore[import-unresolved]
-    import maya.mel as mel            # type: ignore[import-unresolved]
+    import maya.cmds as cmds  # type: ignore[import-unresolved]
+    import maya.mel as mel  # type: ignore[import-unresolved]
+
     MAYA_AVAILABLE = True
 except ImportError:
-    cmds = None   # type: ignore[assignment]
-    mel  = None   # type: ignore[assignment]
+    cmds = None  # type: ignore[assignment]
+    mel = None  # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
 try:
     from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, UsdSkel, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -68,6 +71,7 @@ class SkeletonMixin:
             # Import mayaUSD if available
             try:
                 import mayaUsd.lib as mayaUsdLib  # pyright: ignore
+
                 has_mayausd = True
             except ImportError:
                 has_mayausd = False
@@ -86,12 +90,14 @@ class SkeletonMixin:
 
                     # Try MEL-based duplicate (this is what the UI uses)
                     # This command converts selected USD prims to Maya data
-                    mel.eval('mayaUsdMenu_duplicateAsBase()')
+                    mel.eval("mayaUsdMenu_duplicateAsBase()")
 
                     # Check if skeleton joints were created (look for joint nodes under proxy)
-                    children = cmds.listRelatives(proxy_transform, children=True, type='joint')
+                    children = cmds.listRelatives(proxy_transform, children=True, type="joint")
                     if children:
-                        self.logger.info(f"[OK] Converted USD Skeleton to Maya joints: {len(children)} root joint(s)")
+                        self.logger.info(
+                            f"[OK] Converted USD Skeleton to Maya joints: {len(children)} root joint(s)"
+                        )
                     else:
                         # MEL command didn't create joints - try Python fallback
                         self.logger.info(
@@ -102,8 +108,12 @@ class SkeletonMixin:
 
                 except AttributeError:
                     # mayaUSD commands not available in this version
-                    self.logger.warning("[WARNING] Skeleton conversion not available in mayaUSD v0.35.0")
-                    self.logger.info("[TIP] Upgrade to mayaUSD v0.27+ for automatic skeleton conversion")
+                    self.logger.warning(
+                        "[WARNING] Skeleton conversion not available in mayaUSD v0.35.0"
+                    )
+                    self.logger.info(
+                        "[TIP] Upgrade to mayaUSD v0.27+ for automatic skeleton conversion"
+                    )
                     # Try Python fallback
                     self._extract_skeleton_via_python(proxy_shape, usd_path)
 
@@ -114,8 +124,12 @@ class SkeletonMixin:
                     self._extract_skeleton_via_python(proxy_shape, usd_path)
             else:
                 # No mayaUSD available at all
-                self.logger.warning("[WARNING] mayaUSD plugin not available - cannot convert skeleton")
-                self.logger.info("[TIP] Load mayaUSD plugin: Window > Settings/Preferences > Plug-in Manager")
+                self.logger.warning(
+                    "[WARNING] mayaUSD plugin not available - cannot convert skeleton"
+                )
+                self.logger.info(
+                    "[TIP] Load mayaUSD plugin: Window > Settings/Preferences > Plug-in Manager"
+                )
 
         except Exception as e:
             self.logger.warning(f"[WARNING] Could not convert skeleton: {e}")
@@ -172,10 +186,14 @@ class SkeletonMixin:
                 bind_transforms = bind_transforms_attr.Get() if bind_transforms_attr else None
 
                 if not bind_transforms or len(bind_transforms) != len(joint_names):
-                    self.logger.warning(f"[WARNING] Skeleton {skel_prim.GetPath()} missing valid bind transforms")
+                    self.logger.warning(
+                        f"[WARNING] Skeleton {skel_prim.GetPath()} missing valid bind transforms"
+                    )
                     continue
 
-                self.logger.debug(f"[SKEL] Creating {len(joint_names)} Maya joints from {skel_prim.GetPath()}")
+                self.logger.debug(
+                    f"[SKEL] Creating {len(joint_names)} Maya joints from {skel_prim.GetPath()}"
+                )
 
                 # Create Maya joints from USD skeleton data
                 joint_map = {}
@@ -183,9 +201,9 @@ class SkeletonMixin:
                     joint_name = str(joint_token)
 
                     # Parse hierarchy (joint names use "/" as separator)
-                    parts = joint_name.split('/')
+                    parts = joint_name.split("/")
                     clean_name = parts[-1]  # Use last part as joint name
-                    parent_path = '/'.join(parts[:-1]) if len(parts) > 1 else None
+                    parent_path = "/".join(parts[:-1]) if len(parts) > 1 else None
 
                     # Extract transform from matrix
                     matrix = bind_xform
@@ -200,12 +218,14 @@ class SkeletonMixin:
                     cmds.xform(
                         maya_joint,
                         translation=[translation[0], translation[1], translation[2]],
-                        worldSpace=True
+                        worldSpace=True,
                     )
 
                     # Set rotation from quaternion
                     euler = rotation.GetImaginary()  # Simplified - proper conversion needed
-                    cmds.xform(maya_joint, rotation=[euler[0], euler[1], euler[2]], worldSpace=True)
+                    cmds.xform(
+                        maya_joint, rotation=[euler[0], euler[1], euler[2]], worldSpace=True
+                    )
 
                     # Store in map for hierarchy building
                     joint_map[joint_name] = maya_joint
@@ -218,23 +238,23 @@ class SkeletonMixin:
 
                 # Parent root joint(s) under proxy transform
                 for joint_name, maya_joint in joint_map.items():
-                    if '/' not in joint_name:  # Root joint
+                    if "/" not in joint_name:  # Root joint
                         cmds.parent(maya_joint, proxy_transform)
 
             if created_joints:
-                self.logger.info(f"[OK] Created {len(created_joints)} Maya joints from USD skeletons")
+                self.logger.info(
+                    f"[OK] Created {len(created_joints)} Maya joints from USD skeletons"
+                )
             else:
                 self.logger.warning("[WARNING] No joints created from USD skeleton data")
 
         except Exception as e:
             self.logger.warning(f"[WARNING] Python USD skeleton extraction failed: {e}")
-            self.logger.info("[TIP] Right-click USD proxy > 'Duplicate As Maya Data' to convert manually")
+            self.logger.info(
+                "[TIP] Right-click USD proxy > 'Duplicate As Maya Data' to convert manually"
+            )
 
-    def _count_usd_prims_in_proxy(
-        self,
-        proxy_shapes: List[str],
-        result: ImportResult
-    ) -> None:
+    def _count_usd_prims_in_proxy(self, proxy_shapes: List[str], result: ImportResult) -> None:
         """Count USD prims inside proxy shape(s) using the Pixar USD API"""
         if not USD_AVAILABLE:
             self.logger.warning("USD Python API not available for prim counting")
@@ -281,17 +301,17 @@ class SkeletonMixin:
                     for prim in stage.Traverse():
                         prim_type = prim.GetTypeName()
 
-                        if prim_type == 'Mesh':
+                        if prim_type == "Mesh":
                             total_meshes += 1
-                        elif prim_type == 'Skeleton':
+                        elif prim_type == "Skeleton":
                             total_skeletons += 1
-                        elif prim_type in ('NurbsCurves', 'BasisCurves'):
+                        elif prim_type in ("NurbsCurves", "BasisCurves"):
                             total_curves += 1
-                        elif prim_type == 'Material':
+                        elif prim_type == "Material":
                             total_materials += 1
-                        elif prim_type == 'BlendShape':
+                        elif prim_type == "BlendShape":
                             total_blendshapes += 1
-                        elif prim_type == 'SkelAnimation':
+                        elif prim_type == "SkelAnimation":
                             # Skeletal animation data
                             pass
 
@@ -341,10 +361,10 @@ class SkeletonMixin:
             preview_shaders = []
             colored_shaders = []
             for prim in stage.Traverse():
-                if prim.GetTypeName() != 'Shader':
+                if prim.GetTypeName() != "Shader":
                     continue
                 shader = UsdShade.Shader(prim)
-                if shader.GetShaderId() != 'UsdPreviewSurface':
+                if shader.GetShaderId() != "UsdPreviewSurface":
                     continue
                 diffuse_input = shader.GetInput("diffuseColor")
                 if diffuse_input:
@@ -366,11 +386,7 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.warning(f"[LOOKDEV] Material color verification failed: {e}")
 
-    def _count_imported_components(
-        self,
-        nodes: List[str],
-        result: ImportResult
-    ) -> None:
+    def _count_imported_components(self, nodes: List[str], result: ImportResult) -> None:
         """Count what was actually imported - scan entire scene, not just returned nodes"""
         if cmds is None:
             return
@@ -379,42 +395,51 @@ class SkeletonMixin:
         # Use cmds.ls to find all imported content types
 
         # Count meshes
-        all_meshes = cmds.ls(type='mesh', dag=True) or []
+        all_meshes = cmds.ls(type="mesh", dag=True) or []
         result.meshes_imported = len(all_meshes)
 
         # Count joints
-        all_joints = cmds.ls(type='joint', dag=True) or []
+        all_joints = cmds.ls(type="joint", dag=True) or []
         result.joints_imported = len(all_joints)
 
         # Count NURBS curves
-        all_curves = cmds.ls(type='nurbsCurve', dag=True) or []
+        all_curves = cmds.ls(type="nurbsCurve", dag=True) or []
         result.curves_imported = len(all_curves)
 
         # Count materials (various shader types)
         material_types = [
-            'lambert', 'blinn', 'phong', 'standardSurface',
-            'PxrSurface', 'PxrDisney', 'aiStandardSurface'
+            "lambert",
+            "blinn",
+            "phong",
+            "standardSurface",
+            "PxrSurface",
+            "PxrDisney",
+            "aiStandardSurface",
         ]
         all_materials = []
         for mat_type in material_types:
             mats = cmds.ls(type=mat_type) or []
             all_materials.extend(mats)
         # Exclude default materials
-        default_mats = {'lambert1', 'particleCloud1'}
+        default_mats = {"lambert1", "particleCloud1"}
         result.materials_imported = len([m for m in all_materials if m not in default_mats])
 
         # Count skin clusters
-        all_skin_clusters = cmds.ls(type='skinCluster') or []
+        all_skin_clusters = cmds.ls(type="skinCluster") or []
         result.skin_clusters_imported = len(all_skin_clusters)
 
         # Count blendshapes
-        all_blendshapes = cmds.ls(type='blendShape') or []
+        all_blendshapes = cmds.ls(type="blendShape") or []
         result.blendshapes_imported = len(all_blendshapes)
 
         # Count constraints
         constraint_types = [
-            'parentConstraint', 'orientConstraint', 'pointConstraint',
-            'aimConstraint', 'scaleConstraint', 'poleVectorConstraint'
+            "parentConstraint",
+            "orientConstraint",
+            "pointConstraint",
+            "aimConstraint",
+            "scaleConstraint",
+            "poleVectorConstraint",
         ]
         all_constraints = []
         for const_type in constraint_types:
@@ -428,11 +453,7 @@ class SkeletonMixin:
             f"Materials: {result.materials_imported}, SkinClusters: {result.skin_clusters_imported}"
         )
 
-    def _import_rig_mb_fallback(
-        self,
-        rig_mb_path: Path,
-        result: ImportResult
-    ) -> bool:
+    def _import_rig_mb_fallback(self, rig_mb_path: Path, result: ImportResult) -> bool:
         """Import complete rig from .rig.mb fallback"""
         try:
             if cmds is None:
@@ -445,7 +466,7 @@ class SkeletonMixin:
                 type="mayaBinary",
                 returnNewNodes=True,
                 preserveReferences=True,
-                ignoreVersion=True
+                ignoreVersion=True,
             )
 
             if imported_nodes:
@@ -462,11 +483,7 @@ class SkeletonMixin:
             return False
 
     def _import_hybrid(
-        self,
-        usd_path: Path,
-        rig_mb_path: Path,
-        options: ImportOptions,
-        result: ImportResult
+        self, usd_path: Path, rig_mb_path: Path, options: ImportOptions, result: ImportResult
     ) -> bool:
         """
         HYBRID WORKFLOW - Convert USD to Maya + Import NURBS Controllers
@@ -496,10 +513,10 @@ class SkeletonMixin:
             self.logger.info("   • Materials → RenderMan/Maya shaders")
 
             # Store scene state before import
-            before_meshes = set(cmds.ls(type='mesh', long=True) or [])
-            before_joints = set(cmds.ls(type='joint', long=True) or [])
-            before_skins = set(cmds.ls(type='skinCluster') or [])
-            before_blends = set(cmds.ls(type='blendShape') or [])
+            before_meshes = set(cmds.ls(type="mesh", long=True) or [])
+            before_joints = set(cmds.ls(type="joint", long=True) or [])
+            before_skins = set(cmds.ls(type="skinCluster") or [])
+            before_blends = set(cmds.ls(type="blendShape") or [])
 
             try:
                 # Use mayaUSDImport to convert entire USD to native Maya
@@ -507,15 +524,15 @@ class SkeletonMixin:
 
                 imported_nodes = cmds.mayaUSDImport(
                     file=str(usd_path),
-                    primPath="/",                    # Import everything
-                    readAnimData=True,               # Import animation
-                    importInstances=True,            # Import instances
-                    importUSDZTextures=True,         # Extract textures from USDZ
+                    primPath="/",  # Import everything
+                    readAnimData=True,  # Import animation
+                    importInstances=True,  # Import instances
+                    importUSDZTextures=True,  # Extract textures from USDZ
                     preferredMaterial="usdPreviewSurface",  # Try USD materials first
-                    shadingMode=[                    # Import shading
+                    shadingMode=[  # Import shading
                         ["useRegistry", "UsdPreviewSurface"],
-                        ["useRegistry", "rendermanForMaya"]
-                    ]
+                        ["useRegistry", "rendermanForMaya"],
+                    ],
                 )
 
                 if not imported_nodes:
@@ -527,14 +544,15 @@ class SkeletonMixin:
             except Exception as import_err:
                 self.logger.error(f"[ERROR] USD import failed: {import_err}")
                 import traceback
+
                 self.logger.error(traceback.format_exc())
                 return False
 
             # Count what was imported
-            after_meshes = set(cmds.ls(type='mesh', long=True) or [])
-            after_joints = set(cmds.ls(type='joint', long=True) or [])
-            after_skins = set(cmds.ls(type='skinCluster') or [])
-            after_blends = set(cmds.ls(type='blendShape') or [])
+            after_meshes = set(cmds.ls(type="mesh", long=True) or [])
+            after_joints = set(cmds.ls(type="joint", long=True) or [])
+            after_skins = set(cmds.ls(type="skinCluster") or [])
+            after_blends = set(cmds.ls(type="blendShape") or [])
 
             new_meshes = after_meshes - before_meshes
             new_joints = after_joints - before_joints
@@ -569,13 +587,12 @@ class SkeletonMixin:
             self.logger.info("")
             self.logger.info("🎮 Phase 2: Importing NURBS controllers...")
 
-            controllers_imported = self._import_nurbs_controllers(
-                rig_mb_path,
-                result
-            )
+            controllers_imported = self._import_nurbs_controllers(rig_mb_path, result)
 
             if not controllers_imported:
-                self.logger.warning("[WARNING] No controllers imported - skeleton can be animated directly")
+                self.logger.warning(
+                    "[WARNING] No controllers imported - skeleton can be animated directly"
+                )
                 self.logger.warning("[TIP] Controllers are optional for hybrid workflow")
             else:
                 self.logger.info(f"[OK] Imported {controllers_imported} NURBS controllers")
@@ -619,14 +636,11 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"Hybrid import failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
-    def _convert_proxy_to_maya(
-        self,
-        proxy_shape: str,
-        result: ImportResult
-    ) -> bool:
+    def _convert_proxy_to_maya(self, proxy_shape: str, result: ImportResult) -> bool:
         """
         Convert USD proxy shape content to native Maya data.
 
@@ -660,18 +674,19 @@ class SkeletonMixin:
             try:
                 # Try the Python command first
                 import mayaUsd.lib as mayaUsdLib  # type: ignore[import-unresolved]
-                if hasattr(mayaUsdLib, 'PrimUpdater'):
+
+                if hasattr(mayaUsdLib, "PrimUpdater"):
                     # Modern mayaUSD API
-                    mel.eval('mayaUsdEditAsMaya')
+                    mel.eval("mayaUsdEditAsMaya")
                     self.logger.info("[OK] Converted via mayaUsdEditAsMaya")
                 else:
                     # Fallback to MEL
-                    mel.eval('mayaUsdMenu_editAsMaya()')
+                    mel.eval("mayaUsdMenu_editAsMaya()")
                     self.logger.info("[OK] Converted via MEL command")
             except Exception as mel_err:
                 # Try alternative MEL commands
                 try:
-                    mel.eval('mayaUsdDuplicate -importMaya')
+                    mel.eval("mayaUsdDuplicate -importMaya")
                     self.logger.info("[OK] Converted via mayaUsdDuplicate")
                 except Exception:
                     self.logger.warning(f"[WARNING] MEL conversion failed: {mel_err}")
@@ -680,9 +695,9 @@ class SkeletonMixin:
 
             # Count what was converted
             cmds.refresh()
-            native_meshes = cmds.ls(type='mesh', dag=True) or []
-            native_joints = cmds.ls(type='joint', dag=True) or []
-            native_skins = cmds.ls(type='skinCluster') or []
+            native_meshes = cmds.ls(type="mesh", dag=True) or []
+            native_joints = cmds.ls(type="joint", dag=True) or []
+            native_skins = cmds.ls(type="skinCluster") or []
 
             self.logger.info(
                 f"[OK] Converted to Maya: {len(native_meshes)} meshes, "
@@ -699,11 +714,7 @@ class SkeletonMixin:
             self.logger.error(f"[ERROR] Conversion to Maya failed: {e}")
             return False
 
-    def _convert_skinned_meshes_to_maya(
-        self,
-        proxy_shape: str,
-        result: ImportResult
-    ) -> bool:
+    def _convert_skinned_meshes_to_maya(self, proxy_shape: str, result: ImportResult) -> bool:
         """
         Convert only skinned USD meshes to native Maya while keeping USD proxy.
 
@@ -753,7 +764,9 @@ class SkeletonMixin:
                 self.logger.info("[OK] No skinned meshes found - nothing to convert")
                 return True
 
-            self.logger.info(f"[REFRESH] Converting {len(skinned_mesh_paths)} skinned meshes to Maya...")
+            self.logger.info(
+                f"[REFRESH] Converting {len(skinned_mesh_paths)} skinned meshes to Maya..."
+            )
 
             # Get proxy parent transform
             proxy_parent = cmds.listRelatives(proxy_shape, parent=True)
@@ -768,7 +781,8 @@ class SkeletonMixin:
             # Method 1: Try mayaUsd Python API (most reliable)
             try:
                 import mayaUsd.lib as mayaUsdLib  # type: ignore[import-unresolved]
-                if hasattr(mayaUsdLib, 'PrimUpdaterManager'):
+
+                if hasattr(mayaUsdLib, "PrimUpdaterManager"):
                     self.logger.info("   Using mayaUsd.lib.PrimUpdaterManager...")
                     # This is the proper API for edit-as-maya
                     for mesh_path in skinned_mesh_paths:
@@ -777,7 +791,7 @@ class SkeletonMixin:
                             prim_path_str = f"{proxy_parent},{mesh_path}"
                             cmds.select(prim_path_str, replace=True)
                             # Try to duplicate as Maya
-                            mel.eval('mayaUsdDuplicate -importMaya')
+                            mel.eval("mayaUsdDuplicate -importMaya")
                             converted_count += 1
                             mesh_name = mesh_path.split("/")[-1]
                             self.logger.info(f"   [OK] {mesh_name}")
@@ -795,7 +809,9 @@ class SkeletonMixin:
 
                     # Try mayaUsdImport command to import entire stage as Maya
                     import_opts = "preferredMaterial=none;importInstances=1"
-                    mel_cmd = f'file -import -type "USD Import" -options "{import_opts}" "{usd_path}"'
+                    mel_cmd = (
+                        f'file -import -type "USD Import" -options "{import_opts}" "{usd_path}"'
+                    )
                     mel.eval(mel_cmd)
                     converted_count = len(skinned_mesh_paths)
                     self.logger.info("   [OK] Bulk import successful")
@@ -808,9 +824,7 @@ class SkeletonMixin:
                 try:
                     # Use mayaUSDImport command directly
                     import_result = cmds.mayaUSDImport(
-                        file=str(usd_path),
-                        primPath="/",
-                        importInstances=True
+                        file=str(usd_path), primPath="/", importInstances=True
                     )
                     if import_result:
                         converted_count = len(skinned_mesh_paths)
@@ -830,7 +844,7 @@ class SkeletonMixin:
                         file=str(usd_path),
                         primPath="/SkelRoot",
                         readAnimData=True,
-                        importInstances=True
+                        importInstances=True,
                     )
                     converted_count = len(skinned_mesh_paths)
                     self.logger.info("   [OK] Re-import as native Maya successful")
@@ -842,8 +856,8 @@ class SkeletonMixin:
 
                 # Count native Maya objects created
                 cmds.refresh()
-                native_meshes = cmds.ls(type='mesh', dag=True) or []
-                native_skins = cmds.ls(type='skinCluster') or []
+                native_meshes = cmds.ls(type="mesh", dag=True) or []
+                native_skins = cmds.ls(type="skinCluster") or []
 
                 # Update result with native mesh count (use existing attributes)
                 result.meshes_imported = len(native_meshes)
@@ -861,14 +875,12 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Skinned mesh conversion failed: {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
             return False
 
     def _create_usd_skin_bindings(
-        self,
-        proxy_shape: str,
-        usd_path: Path,
-        result: ImportResult
+        self, proxy_shape: str, usd_path: Path, result: ImportResult
     ) -> bool:
         """
         Create USD skeleton bindings for meshes using UsdSkel API.
@@ -925,8 +937,8 @@ class SkeletonMixin:
                     meshes_with_binding += 1
 
                 # Check for weight primvars
-                indices_attr = mesh_prim.GetAttribute('primvars:skel:jointIndices')
-                weights_attr = mesh_prim.GetAttribute('primvars:skel:jointWeights')
+                indices_attr = mesh_prim.GetAttribute("primvars:skel:jointIndices")
+                weights_attr = mesh_prim.GetAttribute("primvars:skel:jointWeights")
                 if indices_attr and weights_attr:
                     if indices_attr.Get() and weights_attr.Get():
                         meshes_with_weights += 1
@@ -938,7 +950,7 @@ class SkeletonMixin:
 
                 # Check for empty geometry (multi-skinCluster corruption)
                 empty_mesh_count = 0
-                for mesh_prim in meshes[:min(5, len(meshes))]:  # Sample first 5
+                for mesh_prim in meshes[: min(5, len(meshes))]:  # Sample first 5
                     mesh_api = UsdGeom.Mesh(mesh_prim)
                     points = mesh_api.GetPointsAttr().Get()
                     if not points or len(points) == 0:
@@ -955,7 +967,9 @@ class SkeletonMixin:
                         "   This usually means the USD was exported with "
                         "multi-skinCluster corruption"
                     )
-                    self.logger.warning("   [FIX] FIX: Re-export character with the updated exporter")
+                    self.logger.warning(
+                        "   [FIX] FIX: Re-export character with the updated exporter"
+                    )
                     self.logger.warning(
                         "   The exporter now auto-fixes multi-skinCluster meshes during export"
                     )
@@ -967,7 +981,7 @@ class SkeletonMixin:
             self.logger.info("📝 No existing bindings found - creating new ones...")
 
             # Create anonymous layer for bindings
-            anim_layer = Sdf.Layer.CreateAnonymous('skin_bindings')
+            anim_layer = Sdf.Layer.CreateAnonymous("skin_bindings")
             stage.GetRootLayer().subLayerPaths.append(anim_layer.identifier)
             stage.SetEditTarget(anim_layer)
 
@@ -1006,14 +1020,12 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Binding creation failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
     def _create_maya_joint_proxies(
-        self,
-        usd_path: Path,
-        proxy_shape: str,
-        result: ImportResult
+        self, usd_path: Path, proxy_shape: str, result: ImportResult
     ) -> bool:
         """
         Phase 2: Create Maya joints that mirror USD skeleton for manipulation.
@@ -1059,7 +1071,7 @@ class SkeletonMixin:
                 return False
 
             # Extract just the joint names (last component of path)
-            usd_joint_names = set(str(jp).split('/')[-1] for jp in usd_joint_paths)
+            usd_joint_names = set(str(jp).split("/")[-1] for jp in usd_joint_paths)
             self.logger.info(f"[SKEL] USD skeleton has {len(usd_joint_names)} joints")
 
             # Check for left/right naming patterns to detect if mirroring is needed
@@ -1102,7 +1114,7 @@ class SkeletonMixin:
                     ra=True,
                     mergeNamespacesOnClash=False,
                     namespace=namespace,
-                    loadReferenceDepth="none"  # Skip referenced file (RenderMan shader issues)
+                    loadReferenceDepth="none",  # Skip referenced file (RenderMan shader issues)
                 )
                 self.logger.info("[OK] Maya rig imported (references deferred)")
             except Exception as import_error:
@@ -1129,10 +1141,10 @@ class SkeletonMixin:
             def has_side_suffix(name):
                 """Check if joint name has left/right suffix (not middle/center)."""
                 lower = name.lower()
-                for suffix in ['_l', '_r', '_left', '_right', '_lf', '_rt']:
+                for suffix in ["_l", "_r", "_left", "_right", "_lf", "_rt"]:
                     if lower.endswith(suffix):
                         return True
-                for prefix in ['l_', 'r_', 'left_', 'right_', 'lf_', 'rt_']:
+                for prefix in ["l_", "r_", "left_", "right_", "lf_", "rt_"]:
                     if lower.startswith(prefix):
                         return True
                 return False
@@ -1142,13 +1154,37 @@ class SkeletonMixin:
                 """Strip common left/right/middle suffixes to match against USD skeleton."""
                 lower = name.lower()
                 # Check for common prefixes (case-insensitive)
-                for prefix in ['l_', 'r_', 'left_', 'right_', 'lf_', 'rt_', 'm_', 'mid_', 'middle_', 'c_', 'center_']:
+                for prefix in [
+                    "l_",
+                    "r_",
+                    "left_",
+                    "right_",
+                    "lf_",
+                    "rt_",
+                    "m_",
+                    "mid_",
+                    "middle_",
+                    "c_",
+                    "center_",
+                ]:
                     if lower.startswith(prefix):
-                        return name[len(prefix):]
+                        return name[len(prefix) :]
                 # Check for common suffixes (including _M for middle/center joints)
-                for suffix in ['_l', '_r', '_left', '_right', '_lf', '_rt', '_m', '_mid', '_middle', '_c', '_center']:
+                for suffix in [
+                    "_l",
+                    "_r",
+                    "_left",
+                    "_right",
+                    "_lf",
+                    "_rt",
+                    "_m",
+                    "_mid",
+                    "_middle",
+                    "_c",
+                    "_center",
+                ]:
                     if lower.endswith(suffix):
-                        return name[:-len(suffix)]
+                        return name[: -len(suffix)]
                 return name
 
             # First pass: collect all matching joints and track which have sided variants
@@ -1160,10 +1196,10 @@ class SkeletonMixin:
             # Helper to check if joint has center suffix
             def has_center_suffix(name):
                 lower = name.lower()
-                for suffix in ['_m', '_mid', '_middle', '_c', '_center']:
+                for suffix in ["_m", "_mid", "_middle", "_c", "_center"]:
                     if lower.endswith(suffix):
                         return True
-                for prefix in ['m_', 'mid_', 'middle_', 'c_', 'center_']:
+                for prefix in ["m_", "mid_", "middle_", "c_", "center_"]:
                     if lower.startswith(prefix):
                         return True
                 return False
@@ -1199,9 +1235,24 @@ class SkeletonMixin:
 
             # Joints that are truly center (spine/torso) - should NOT be mirrored
             true_center_joints = {
-                'root', 'spine', 'spine1', 'spine2', 'spine3', 'spine4',
-                'chest', 'neck', 'neck1', 'neck2', 'head', 'jaw',
-                'pelvis', 'hips', 'waist', 'torso', 'body', 'cog',
+                "root",
+                "spine",
+                "spine1",
+                "spine2",
+                "spine3",
+                "spine4",
+                "chest",
+                "neck",
+                "neck1",
+                "neck2",
+                "head",
+                "jaw",
+                "pelvis",
+                "hips",
+                "waist",
+                "torso",
+                "body",
+                "cog",
             }
 
             # Track unsided joints that need mirroring (foot/limb joints without L/R)
@@ -1232,16 +1283,25 @@ class SkeletonMixin:
                 maya_joint_name = maya_joint.split(":")[-1]
                 maya_joint_lower = maya_joint_name.lower()
                 stripped = strip_side_prefix(maya_joint_name).lower()
-                if maya_joint_lower not in matched_names_lower and stripped not in matched_stripped:
+                if (
+                    maya_joint_lower not in matched_names_lower
+                    and stripped not in matched_stripped
+                ):
                     if maya_joint_name not in [f.split(" ")[0] for f in filtered_out]:
                         filtered_out.append(maya_joint_name)
 
             if not all_joints:
-                self.logger.error("[ERROR] No matching joints found between Maya rig and USD skeleton")
-                self.logger.info(f"   Maya has {len(all_maya_joints)} joints, USD expects {len(usd_joint_names)}")
+                self.logger.error(
+                    "[ERROR] No matching joints found between Maya rig and USD skeleton"
+                )
+                self.logger.info(
+                    f"   Maya has {len(all_maya_joints)} joints, USD expects {len(usd_joint_names)}"
+                )
                 return False
 
-            self.logger.info(f"[TARGET] Filtered to {len(all_joints)} joints matching USD skeleton")
+            self.logger.info(
+                f"[TARGET] Filtered to {len(all_joints)} joints matching USD skeleton"
+            )
 
             # Log joints that will be mirrored (unsided foot/limb joints)
             if joints_to_mirror:
@@ -1250,14 +1310,16 @@ class SkeletonMixin:
 
             # Count left/right/center joints for diagnostics
             left_count = sum(
-                1 for j in all_joints
-                if j.split(":")[-1].lower().startswith(('l_', 'left_', 'lf_'))
-                or j.split(":")[-1].lower().endswith(('_l', '_left', '_lf'))
+                1
+                for j in all_joints
+                if j.split(":")[-1].lower().startswith(("l_", "left_", "lf_"))
+                or j.split(":")[-1].lower().endswith(("_l", "_left", "_lf"))
             )
             right_count = sum(
-                1 for j in all_joints
-                if j.split(":")[-1].lower().startswith(('r_', 'right_', 'rt_'))
-                or j.split(":")[-1].lower().endswith(('_r', '_right', '_rt'))
+                1
+                for j in all_joints
+                if j.split(":")[-1].lower().startswith(("r_", "right_", "rt_"))
+                or j.split(":")[-1].lower().endswith(("_r", "_right", "_rt"))
             )
             center_count = len(all_joints) - left_count - right_count
             mirrored_count = len(joints_to_mirror) * 2  # Each mirrored joint becomes L and R
@@ -1272,7 +1334,7 @@ class SkeletonMixin:
 
             # Log first few filtered out joints for debugging
             if filtered_out and len(filtered_out) < 20:
-                joint_list = ', '.join(filtered_out[:10])
+                joint_list = ", ".join(filtered_out[:10])
                 self.logger.info(f"[DEBUG] Filtered out {len(filtered_out)} joints: {joint_list}")
             elif filtered_out:
                 self.logger.info(
@@ -1330,7 +1392,9 @@ class SkeletonMixin:
                         # Check full path match
                         if parent in all_joints_set:
                             if debug:
-                                self.logger.info(f"   Found ancestor (full): {parent.split(':')[-1]}")
+                                self.logger.info(
+                                    f"   Found ancestor (full): {parent.split(':')[-1]}"
+                                )
                             return parent
 
                         # Check short name match (handles namespace differences)
@@ -1344,7 +1408,9 @@ class SkeletonMixin:
                         parent_stripped = strip_side_prefix(parent_short).lower()
                         if parent_stripped in stripped_to_full:
                             if debug:
-                                self.logger.info(f"   Found ancestor (stripped): {parent_short} -> {parent_stripped}")
+                                self.logger.info(
+                                    f"   Found ancestor (stripped): {parent_short} -> {parent_stripped}"
+                                )
                             return stripped_to_full[parent_stripped]
 
                     # Keep walking up (whether joint or not)
@@ -1356,7 +1422,7 @@ class SkeletonMixin:
 
             # Count root joints for debugging
             root_count = 0
-            debug_joints = ['Hip_L', 'Scapula_L']  # Debug these specific joints
+            debug_joints = ["Hip_L", "Scapula_L"]  # Debug these specific joints
             for source_joint in all_joints:
                 joint_short = source_joint.split(":")[-1]
                 do_debug = joint_short in debug_joints
@@ -1376,7 +1442,9 @@ class SkeletonMixin:
 
             # Log root joints for debugging
             root_joints = [j.split(":")[-1] for j, p in hierarchy_map.items() if p is None]
-            self.logger.info(f"[OK] Built hierarchy map for {len(all_joints)} joints ({root_count} roots)")
+            self.logger.info(
+                f"[OK] Built hierarchy map for {len(all_joints)} joints ({root_count} roots)"
+            )
             self.logger.info(f"[DEBUG] Root joints: {root_joints[:10]}")
 
             # Create mirrored joints for unsided foot/limb joints
@@ -1393,23 +1461,27 @@ class SkeletonMixin:
 
                 # Create LEFT version (_L)
                 left_pos = (abs(original_x), world_pos[1], world_pos[2])
-                mirrored_joints_data.append({
-                    'original': mirror_joint,
-                    'name': f"{mirror_name}_L",
-                    'side': 'L',
-                    'position': left_pos,
-                    'orientation': joint_orient
-                })
+                mirrored_joints_data.append(
+                    {
+                        "original": mirror_joint,
+                        "name": f"{mirror_name}_L",
+                        "side": "L",
+                        "position": left_pos,
+                        "orientation": joint_orient,
+                    }
+                )
 
                 # Create RIGHT version (_R) - mirror X
                 right_pos = (-abs(original_x), world_pos[1], world_pos[2])
-                mirrored_joints_data.append({
-                    'original': mirror_joint,
-                    'name': f"{mirror_name}_R",
-                    'side': 'R',
-                    'position': right_pos,
-                    'orientation': joint_orient  # Mirror orientation too if needed
-                })
+                mirrored_joints_data.append(
+                    {
+                        "original": mirror_joint,
+                        "name": f"{mirror_name}_R",
+                        "side": "R",
+                        "position": right_pos,
+                        "orientation": joint_orient,  # Mirror orientation too if needed
+                    }
+                )
 
                 self.logger.info(
                     f"[REFRESH] Mirroring {mirror_name}: L@{left_pos[0]:.3f}, R@{right_pos[0]:.3f}"
@@ -1434,10 +1506,7 @@ class SkeletonMixin:
 
                 # Create proxy joint
                 cmds.select(clear=True)
-                maya_joint = cmds.joint(
-                    name=f"proxy_{joint_name}",
-                    position=(tx, ty, tz)
-                )
+                maya_joint = cmds.joint(name=f"proxy_{joint_name}", position=(tx, ty, tz))
 
                 # Apply joint orientation from source
                 joint_orient = joint_orientations[source_joint]
@@ -1453,20 +1522,17 @@ class SkeletonMixin:
             mirrored_proxy_joints = {}  # Maps (original_joint, side) → proxy_joint
 
             for mirror_data in mirrored_joints_data:
-                orig_joint = mirror_data['original']
-                name = mirror_data['name']
-                side = mirror_data['side']
-                pos = mirror_data['position']
-                orient = mirror_data['orientation']
+                orig_joint = mirror_data["original"]
+                name = mirror_data["name"]
+                side = mirror_data["side"]
+                pos = mirror_data["position"]
+                orient = mirror_data["orientation"]
 
                 cmds.select(clear=True)
-                mirror_proxy = cmds.joint(
-                    name=f"proxy_{name}",
-                    position=pos
-                )
+                mirror_proxy = cmds.joint(name=f"proxy_{name}", position=pos)
 
                 # Apply orientation (mirror Y and Z for right side)
-                if side == 'R':
+                if side == "R":
                     cmds.setAttr(f"{mirror_proxy}.jointOrientX", orient[0])
                     cmds.setAttr(f"{mirror_proxy}.jointOrientY", -orient[1])
                     cmds.setAttr(f"{mirror_proxy}.jointOrientZ", -orient[2])
@@ -1502,7 +1568,7 @@ class SkeletonMixin:
             # Parent mirrored joints to their sided parent (e.g., Ankle_L, Ankle_R)
             for (orig_joint, side), mirror_proxy in mirrored_proxy_joints.items():
                 # Query the parent directly from Maya (orig_joint still exists)
-                maya_parent = cmds.listRelatives(orig_joint, parent=True, type='joint')
+                maya_parent = cmds.listRelatives(orig_joint, parent=True, type="joint")
 
                 if maya_parent:
                     parent_short = maya_parent[0].split(":")[-1]
@@ -1543,12 +1609,16 @@ class SkeletonMixin:
                         f"{usd_transform.split('|')[-1]}"
                     )
                 else:
-                    self.logger.warning("[WARNING] Could not find USD proxy transform, skeleton at world level")
+                    self.logger.warning(
+                        "[WARNING] Could not find USD proxy transform, skeleton at world level"
+                    )
 
             # Store imported joints for weight extraction (Phase 3.2)
             # We'll delete them after extracting skinCluster weights
             result._imported_joints = all_joints + joints_to_mirror
-            result._proxy_joints = list(maya_joints.values()) + list(mirrored_proxy_joints.values())
+            result._proxy_joints = list(maya_joints.values()) + list(
+                mirrored_proxy_joints.values()
+            )
             result._source_to_proxy = source_to_proxy
 
             # Select root joints for easy visualization
@@ -1571,14 +1641,11 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Joint proxy creation failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
-    def _connect_proxy_to_usd_skeleton(
-        self,
-        proxy_shape: str,
-        result: ImportResult
-    ) -> bool:
+    def _connect_proxy_to_usd_skeleton(self, proxy_shape: str, result: ImportResult) -> bool:
         """
         Phase 3.2: Connect Maya proxy joints to USD skeleton.
 
@@ -1595,7 +1662,7 @@ class SkeletonMixin:
         try:
             self.logger.info("🔗 Phase 3.2: Connecting proxy joints to USD skeleton...")
 
-            proxy_joints = getattr(result, '_proxy_joints', None)
+            proxy_joints = getattr(result, "_proxy_joints", None)
             if not proxy_joints:
                 self.logger.warning("[WARNING] No proxy joints found")
                 return False
@@ -1605,6 +1672,7 @@ class SkeletonMixin:
             # Get USD stage via mayaUsd (live stage, not file-based)
             try:
                 import mayaUsd.ufe as mayaUsdUfe  # type: ignore[import-unresolved]
+
                 # Try with shape name, then full path if that fails
                 try:
                     stage = mayaUsdUfe.getStage(proxy_shape)
@@ -1617,7 +1685,9 @@ class SkeletonMixin:
                     else:
                         raise
             except (ImportError, RuntimeError) as e:
-                self.logger.warning(f"[WARNING] mayaUsd.ufe getStage failed ({e}), using file-based stage")
+                self.logger.warning(
+                    f"[WARNING] mayaUsd.ufe getStage failed ({e}), using file-based stage"
+                )
                 stage = None
 
             if not stage:
@@ -1626,6 +1696,7 @@ class SkeletonMixin:
                     self.logger.error("[ERROR] Could not get USD stage")
                     return False
                 from pxr import Usd
+
                 stage = Usd.Stage.Open(stage_path)
 
             if not stage:
@@ -1652,7 +1723,7 @@ class SkeletonMixin:
             usd_joint_map = {}
             usd_joint_indices = {}
             for idx, joint_path in enumerate(usd_joints):
-                joint_name = str(joint_path).split('/')[-1].lower()
+                joint_name = str(joint_path).split("/")[-1].lower()
                 usd_joint_map[joint_name] = str(joint_path)
                 usd_joint_indices[joint_name] = idx
 
@@ -1672,8 +1743,8 @@ class SkeletonMixin:
                     continue
 
                 # Extract joint name (remove "proxy_" prefix)
-                proxy_name = proxy_joint.split('|')[-1]
-                joint_name = proxy_name[6:] if proxy_name.startswith('proxy_') else proxy_name
+                proxy_name = proxy_joint.split("|")[-1]
+                joint_name = proxy_name[6:] if proxy_name.startswith("proxy_") else proxy_name
 
                 # Match to USD joint (exact, then stripped)
                 joint_name_lower = joint_name.lower()
@@ -1714,15 +1785,13 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Proxy connection failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
             return False
 
     def _create_proxy_driver_expressions(
-        self,
-        proxy_shape: str,
-        joint_mapping: dict,
-        skeleton_prim
+        self, proxy_shape: str, joint_mapping: dict, skeleton_prim
     ) -> int:
         """
         Create Maya expressions that drive USD skeleton transforms.
@@ -1758,27 +1827,27 @@ class SkeletonMixin:
             self.logger.debug(f"Driver will manage {len(joint_mapping)} joint connections")
 
             # Store joint data as Maya attributes for expression access
-            driver_grp = cmds.createNode('transform', name='USD_Skeleton_Driver')
-            cmds.addAttr(driver_grp, ln='proxyShape', dt='string')
-            cmds.setAttr(f'{driver_grp}.proxyShape', proxy_shape, type='string')
+            driver_grp = cmds.createNode("transform", name="USD_Skeleton_Driver")
+            cmds.addAttr(driver_grp, ln="proxyShape", dt="string")
+            cmds.setAttr(f"{driver_grp}.proxyShape", proxy_shape, type="string")
 
             # Create driver attributes for each mapped joint
             for proxy_joint, (_usd_path, _usd_idx) in joint_mapping.items():
                 if not cmds.objExists(proxy_joint):
                     continue
 
-                joint_short = proxy_joint.split('|')[-1]
+                joint_short = proxy_joint.split("|")[-1]
 
                 # Connect proxy joint transforms to driver group
                 # This creates a dependency that Maya's DG will evaluate
-                for attr in ['rotateX', 'rotateY', 'rotateZ']:
+                for attr in ["rotateX", "rotateY", "rotateZ"]:
                     src = f"{proxy_joint}.{attr}"
                     if cmds.objExists(src):
                         try:
                             # Create proxy attribute on driver
                             proxy_attr = f"{joint_short}_{attr}"
                             if not cmds.attributeQuery(proxy_attr, node=driver_grp, exists=True):
-                                cmds.addAttr(driver_grp, ln=proxy_attr, at='double')
+                                cmds.addAttr(driver_grp, ln=proxy_attr, at="double")
                             cmds.connectAttr(src, f"{driver_grp}.{proxy_attr}", force=True)
                             drivers_created += 1
                         except Exception:
@@ -1797,10 +1866,7 @@ class SkeletonMixin:
             return 0
 
     def _try_mayausd_attr_proxy(
-        self,
-        proxy_shape: str,
-        proxy_transform: str,
-        joint_mapping: dict
+        self, proxy_shape: str, proxy_transform: str, joint_mapping: dict
     ) -> bool:
         """
         Attempt to use mayaUsd's native attribute proxy for direct USD driving.
@@ -1830,11 +1896,7 @@ class SkeletonMixin:
 
                     if attr_proxy:
                         # Connect Maya joint rotation to USD rotation
-                        cmds.connectAttr(
-                            f"{proxy_joint}.rotate",
-                            attr_proxy,
-                            force=True
-                        )
+                        cmds.connectAttr(f"{proxy_joint}.rotate", attr_proxy, force=True)
                         connections_made += 1
 
                 except Exception:
@@ -1853,10 +1915,7 @@ class SkeletonMixin:
             return False
 
     def _register_skeleton_sync_callback(
-        self,
-        driver_grp: str,
-        joint_mapping: dict,
-        proxy_shape: str
+        self, driver_grp: str, joint_mapping: dict, proxy_shape: str
     ) -> None:
         """
         Register a callback to sync proxy joint transforms to USD skeleton.
@@ -1888,16 +1947,18 @@ class SkeletonMixin:
                             # Build rotation array from proxy joints
                             rotations = []
                             for joint_path in joints:
-                                joint_name = str(joint_path).split('/')[-1]
+                                joint_name = str(joint_path).split("/")[-1]
                                 proxy_name = f"proxy_{joint_name}"
 
                                 if cmds.objExists(proxy_name):
                                     rot = cmds.getAttr(f"{proxy_name}.rotate")[0]
-                                    rotations.append(Gf.Quatf(
-                                        Gf.Rotation(Gf.Vec3d(1, 0, 0), rot[0]) *
-                                        Gf.Rotation(Gf.Vec3d(0, 1, 0), rot[1]) *
-                                        Gf.Rotation(Gf.Vec3d(0, 0, 1), rot[2])
-                                    ))
+                                    rotations.append(
+                                        Gf.Quatf(
+                                            Gf.Rotation(Gf.Vec3d(1, 0, 0), rot[0])
+                                            * Gf.Rotation(Gf.Vec3d(0, 1, 0), rot[1])
+                                            * Gf.Rotation(Gf.Vec3d(0, 0, 1), rot[2])
+                                        )
+                                    )
                                 else:
                                     rotations.append(Gf.Quatf(1, 0, 0, 0))
 
@@ -1912,9 +1973,7 @@ class SkeletonMixin:
 
             # Register for time change (playback) and attribute change
             cmds.scriptJob(
-                event=['timeChanged', sync_skeleton_transforms],
-                protected=True,
-                parent=driver_grp
+                event=["timeChanged", sync_skeleton_transforms], protected=True, parent=driver_grp
             )
 
             self.logger.info("[OK] Registered skeleton sync callback")
@@ -1923,10 +1982,7 @@ class SkeletonMixin:
             self.logger.warning(f"[WARNING] Could not register sync callback: {e}")
 
     def _transfer_skin_weights_full(
-        self,
-        usd_path: Path,
-        result: ImportResult,
-        load_references: bool = True
+        self, usd_path: Path, result: ImportResult, load_references: bool = True
     ) -> bool:
         """
         Phase 3.2 (Alternate): Verify and activate USD skin bindings.
@@ -2009,8 +2065,8 @@ class SkeletonMixin:
                 has_binding = skel_rel.HasAuthoredTargets() if skel_rel else False
 
                 # Check for skin binding primvars
-                indices_attr = prim.GetAttribute('primvars:skel:jointIndices')
-                weights_attr = prim.GetAttribute('primvars:skel:jointWeights')
+                indices_attr = prim.GetAttribute("primvars:skel:jointIndices")
+                weights_attr = prim.GetAttribute("primvars:skel:jointWeights")
 
                 has_weights = False
                 if indices_attr and weights_attr:
@@ -2023,9 +2079,7 @@ class SkeletonMixin:
                         total_weight_values += len(weights)
 
                         if meshes_with_weights <= 5:
-                            self.logger.info(
-                                f"   [OK] {mesh_name}: {len(weights)} weights"
-                            )
+                            self.logger.info(f"   [OK] {mesh_name}: {len(weights)} weights")
 
                 # Check for geomBindTransform (required for proper deformation)
                 geom_bind = binding_api.GetGeomBindTransformAttr()
@@ -2050,17 +2104,19 @@ class SkeletonMixin:
 
             if meshes_with_weights == 0:
                 self.logger.warning("[WARNING] No meshes with skin weights found in USD")
-                self.logger.info("[TIP] Was USDZ exported with 'Viewport-friendly skeleton' UNCHECKED?")
+                self.logger.info(
+                    "[TIP] Was USDZ exported with 'Viewport-friendly skeleton' UNCHECKED?"
+                )
                 self.logger.info("[TIP] Falling back to proxy joint connection...")
                 return False
 
             # Store binding info for potential repair
             result._usd_binding_info = {
-                'meshes_with_weights': meshes_with_weights,
-                'meshes_with_binding': meshes_with_binding,
-                'binding_issues': binding_issues,
-                'skeleton_path': str(skeleton_prim.GetPath()),
-                'skel_root': str(skel_roots[0].GetPath()) if skel_roots else None
+                "meshes_with_weights": meshes_with_weights,
+                "meshes_with_binding": meshes_with_binding,
+                "binding_issues": binding_issues,
+                "skeleton_path": str(skeleton_prim.GetPath()),
+                "skel_root": str(skel_roots[0].GetPath()) if skel_roots else None,
             }
 
             self.logger.info("\n[OK] Phase 3.2 Complete: USD skin bindings verified")
@@ -2085,14 +2141,11 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Binding verification failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False
 
-    def _repair_usd_skin_bindings(
-        self,
-        usd_path: Path,
-        result: ImportResult
-    ) -> bool:
+    def _repair_usd_skin_bindings(self, usd_path: Path, result: ImportResult) -> bool:
         """
         Repair missing UsdSkel bindings on skinned meshes.
 
@@ -2109,8 +2162,8 @@ class SkeletonMixin:
         try:
             from pxr import Usd, UsdSkel, UsdGeom, Sdf  # type: ignore
 
-            binding_info = getattr(result, '_usd_binding_info', None)
-            if not binding_info or not binding_info.get('binding_issues'):
+            binding_info = getattr(result, "_usd_binding_info", None)
+            if not binding_info or not binding_info.get("binding_issues"):
                 self.logger.info("[OK] No binding repairs needed")
                 return True
 
@@ -2122,7 +2175,7 @@ class SkeletonMixin:
                 self.logger.error("[ERROR] Could not open USD stage")
                 return False
 
-            skeleton_path = binding_info.get('skeleton_path')
+            skeleton_path = binding_info.get("skeleton_path")
             if not skeleton_path:
                 self.logger.error("[ERROR] No skeleton path for binding")
                 return False
@@ -2134,8 +2187,8 @@ class SkeletonMixin:
                     continue
 
                 # Check if this mesh needs repair
-                indices_attr = prim.GetAttribute('primvars:skel:jointIndices')
-                weights_attr = prim.GetAttribute('primvars:skel:jointWeights')
+                indices_attr = prim.GetAttribute("primvars:skel:jointIndices")
+                weights_attr = prim.GetAttribute("primvars:skel:jointWeights")
 
                 if not (indices_attr and weights_attr):
                     continue
@@ -2167,11 +2220,7 @@ class SkeletonMixin:
             self.logger.error(f"[ERROR] Binding repair failed: {e}")
             return False
 
-    def _transfer_skin_weights(
-        self,
-        usd_path: Path,
-        result: ImportResult
-    ) -> bool:
+    def _transfer_skin_weights(self, usd_path: Path, result: ImportResult) -> bool:
         """
         Phase 3.2: Transfer skin weights from Maya rig to USD skeleton.
 
@@ -2191,13 +2240,13 @@ class SkeletonMixin:
             self.logger.info("[BLEND] Phase 3.2: Transferring skin weights...")
 
             # Check if we have imported joints to extract from
-            imported_joints = getattr(result, '_imported_joints', None)
+            imported_joints = getattr(result, "_imported_joints", None)
             if not imported_joints:
                 self.logger.warning("[WARNING] No imported joints found for weight extraction")
                 return False
 
             # Find all skinClusters in the scene (from the imported rig)
-            skin_clusters = cmds.ls(type='skinCluster') or []
+            skin_clusters = cmds.ls(type="skinCluster") or []
             if not skin_clusters:
                 self.logger.warning("[WARNING] No skinClusters found in imported rig")
                 self._cleanup_imported_rig(result)
@@ -2230,7 +2279,7 @@ class SkeletonMixin:
 
             # Create joint name mapping (USD joint path -> index)
             # USD joints are paths like "Root/Spine1/Chest"
-            usd_joint_names = [str(j).split('/')[-1].lower() for j in usd_joints]
+            usd_joint_names = [str(j).split("/")[-1].lower() for j in usd_joints]
             usd_joint_index = {name: i for i, name in enumerate(usd_joint_names)}
 
             self.logger.info(f"[SKEL] USD skeleton has {len(usd_joints)} joints")
@@ -2245,7 +2294,7 @@ class SkeletonMixin:
                 if not geometry:
                     continue
 
-                mesh_name = geometry[0].split('|')[-1].split(':')[-1]
+                mesh_name = geometry[0].split("|")[-1].split(":")[-1]
                 self.logger.info(f"[PACKAGE] Processing weights for: {mesh_name}")
 
                 # Get influence joints
@@ -2269,13 +2318,15 @@ class SkeletonMixin:
                     for _inf_idx, influence in enumerate(influences):
                         # Get weight for this vertex from this influence
                         weight = cmds.skinPercent(
-                            skin_cluster, f"{geometry[0]}.vtx[{vtx_idx}]",
-                            transform=influence, query=True
+                            skin_cluster,
+                            f"{geometry[0]}.vtx[{vtx_idx}]",
+                            transform=influence,
+                            query=True,
                         )
 
                         if weight > 0.001:  # Skip near-zero weights
                             # Map Maya influence name to USD joint index
-                            inf_name = influence.split('|')[-1].split(':')[-1]
+                            inf_name = influence.split("|")[-1].split(":")[-1]
                             inf_name_stripped = self._strip_side_suffix(inf_name).lower()
 
                             # Try exact match first, then stripped match
@@ -2299,9 +2350,7 @@ class SkeletonMixin:
                 if mesh_weights:
                     weights_transferred += len(mesh_weights)
                     meshes_processed += 1
-                    self.logger.info(
-                        f"   [OK] Extracted {len(mesh_weights)} weight values"
-                    )
+                    self.logger.info(f"   [OK] Extracted {len(mesh_weights)} weight values")
 
             # Clean up imported rig now that we've extracted weights
             self._cleanup_imported_rig(result)
@@ -2321,6 +2370,7 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Weight transfer failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
             return False
@@ -2328,14 +2378,14 @@ class SkeletonMixin:
     def _strip_side_suffix(self, name: str) -> str:
         """Strip L/R/M side suffixes for joint name matching."""
         lower = name.lower()
-        for suffix in ['_l', '_r', '_m', '_left', '_right', '_mid']:
+        for suffix in ["_l", "_r", "_m", "_left", "_right", "_mid"]:
             if lower.endswith(suffix):
-                return name[:-len(suffix)]
+                return name[: -len(suffix)]
         return name
 
     def _cleanup_imported_rig(self, result: ImportResult) -> None:
         """Clean up the imported rig nodes after weight extraction."""
-        imported_joints = getattr(result, '_imported_joints', None)
+        imported_joints = getattr(result, "_imported_joints", None)
         if imported_joints:
             try:
                 self.logger.info("[DELETE] Removing imported rig (kept proxy hierarchy)...")
@@ -2347,12 +2397,12 @@ class SkeletonMixin:
                     # Find top-level reference nodes to delete
                     ref_roots = set()
                     for node in ref_nodes:
-                        if '|' in node:
-                            root = node.split('|')[1]
+                        if "|" in node:
+                            root = node.split("|")[1]
                         else:
-                            root = node.split(':')[-1] if ':' in node else node
+                            root = node.split(":")[-1] if ":" in node else node
                         # Get the actual root with namespace
-                        full_root = f"RIG_REFERENCE:{root}" if ':' not in root else root
+                        full_root = f"RIG_REFERENCE:{root}" if ":" not in root else root
                         if cmds.objExists(full_root):
                             ref_roots.add(full_root)
 
@@ -2373,14 +2423,14 @@ class SkeletonMixin:
                         # Get the top-level parent
                         parents = cmds.ls(j, long=True)
                         if parents:
-                            root = parents[0].split('|')[1] if '|' in parents[0] else j
+                            root = parents[0].split("|")[1] if "|" in parents[0] else j
                             if root not in roots_to_delete and cmds.objExists(root):
                                 roots_to_delete.append(root)
 
                 # Delete unique roots
                 deleted_count = 0
                 for root in set(roots_to_delete):
-                    if cmds.objExists(root) and not root.startswith('proxy_'):
+                    if cmds.objExists(root) and not root.startswith("proxy_"):
                         try:
                             cmds.delete(root)
                             deleted_count += 1
@@ -2394,11 +2444,7 @@ class SkeletonMixin:
             except Exception as e:
                 self.logger.warning(f"[WARNING] Cleanup warning: {e}")
 
-    def _import_nurbs_controllers(
-        self,
-        rig_mb_path: Path,
-        result: ImportResult
-    ) -> int:
+    def _import_nurbs_controllers(self, rig_mb_path: Path, result: ImportResult) -> int:
         """
         Import NURBS controllers from .rig.mb file.
 
@@ -2413,7 +2459,7 @@ class SkeletonMixin:
             self.logger.info(f"[PACKAGE] Importing controllers from: {rig_mb_path.name}")
 
             # Count NURBS curves before import
-            before_curves = set(cmds.ls(type='nurbsCurve', long=True) or [])
+            before_curves = set(cmds.ls(type="nurbsCurve", long=True) or [])
 
             # Import the .rig.mb file
             imported_nodes = cmds.file(
@@ -2424,7 +2470,7 @@ class SkeletonMixin:
                 preserveReferences=True,
                 ignoreVersion=True,
                 namespaceOption=":",  # Import to root namespace
-                mergeNamespacesOnClash=True
+                mergeNamespacesOnClash=True,
             )
 
             if not imported_nodes:
@@ -2432,7 +2478,7 @@ class SkeletonMixin:
                 return 0
 
             # Filter to only NURBS curves
-            after_curves = set(cmds.ls(type='nurbsCurve', long=True) or [])
+            after_curves = set(cmds.ls(type="nurbsCurve", long=True) or [])
             new_curves = after_curves - before_curves
 
             if not new_curves:
@@ -2470,20 +2516,22 @@ class SkeletonMixin:
 
                 # Keep transforms that have NURBS curves
                 node_type = cmds.nodeType(node)
-                if node_type == 'nurbsCurve':
+                if node_type == "nurbsCurve":
                     continue  # Keep curve shapes
 
-                if node_type == 'transform':
+                if node_type == "transform":
                     # Check if this transform has a NURBS curve child
                     shapes = cmds.listRelatives(node, shapes=True, fullPath=True) or []
-                    has_curve = any(cmds.nodeType(s) == 'nurbsCurve' for s in shapes)
+                    has_curve = any(cmds.nodeType(s) == "nurbsCurve" for s in shapes)
                     if has_curve:
                         continue  # Keep controller transforms
 
                     # Check if any descendants have NURBS curves
-                    descendants = cmds.listRelatives(node, allDescendents=True, fullPath=True) or []
+                    descendants = (
+                        cmds.listRelatives(node, allDescendents=True, fullPath=True) or []
+                    )
                     has_curve_descendant = any(
-                        cmds.nodeType(d) == 'nurbsCurve' for d in descendants if cmds.objExists(d)
+                        cmds.nodeType(d) == "nurbsCurve" for d in descendants if cmds.objExists(d)
                     )
                     if has_curve_descendant:
                         continue  # Keep parent transforms of controllers
@@ -2500,20 +2548,20 @@ class SkeletonMixin:
                         pass
 
             if nodes_to_delete:
-                self.logger.info(f"   [DELETE] Cleaned up {len(nodes_to_delete)} non-controller nodes")
+                self.logger.info(
+                    f"   [DELETE] Cleaned up {len(nodes_to_delete)} non-controller nodes"
+                )
 
             return len(controller_transforms)
 
         except Exception as e:
             self.logger.error(f"[ERROR] Controller import failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return 0
 
-    def _connect_controllers_to_skeleton(
-        self,
-        result: ImportResult
-    ) -> int:
+    def _connect_controllers_to_skeleton(self, result: ImportResult) -> int:
         """
         Connect imported NURBS controllers to converted USD skeleton.
 
@@ -2527,8 +2575,8 @@ class SkeletonMixin:
             return 0
 
         try:
-            controllers = getattr(result, '_controllers', [])
-            converted_joints = getattr(result, '_converted_joints', [])
+            controllers = getattr(result, "_controllers", [])
+            converted_joints = getattr(result, "_converted_joints", [])
 
             if not controllers:
                 self.logger.warning("[WARNING] No controllers to connect")
@@ -2538,7 +2586,9 @@ class SkeletonMixin:
                 self.logger.warning("[WARNING] No skeleton joints to connect to")
                 return 0
 
-            self.logger.info(f"🔗 Matching {len(controllers)} controllers to {len(converted_joints)} joints...")
+            self.logger.info(
+                f"🔗 Matching {len(controllers)} controllers to {len(converted_joints)} joints..."
+            )
 
             # Build joint name lookup (remove namespace and path, lowercase for matching)
             joint_map = {}
@@ -2546,7 +2596,7 @@ class SkeletonMixin:
                 if not cmds.objExists(joint):
                     continue
                 # Get short name without namespace
-                short_name = joint.split('|')[-1].split(':')[-1].lower()
+                short_name = joint.split("|")[-1].split(":")[-1].lower()
                 joint_map[short_name] = joint
 
             # Try to match controllers to joints
@@ -2556,7 +2606,7 @@ class SkeletonMixin:
                     continue
 
                 # Get controller name
-                ctrl_name = controller.split('|')[-1].split(':')[-1]
+                ctrl_name = controller.split("|")[-1].split(":")[-1]
 
                 # Try different matching strategies
                 joint_to_connect = None
@@ -2569,9 +2619,9 @@ class SkeletonMixin:
                 # Strategy 2: Strip common controller suffixes (_ctrl, _CTRL, Ctrl, etc.)
                 if not joint_to_connect:
                     stripped_name = ctrl_name_lower
-                    for suffix in ['_ctrl', '_control', '_con', '_c', 'ctrl', 'control']:
+                    for suffix in ["_ctrl", "_control", "_con", "_c", "ctrl", "control"]:
                         if stripped_name.endswith(suffix):
-                            stripped_name = stripped_name[:-len(suffix)]
+                            stripped_name = stripped_name[: -len(suffix)]
                             if stripped_name in joint_map:
                                 joint_to_connect = joint_map[stripped_name]
                                 break
@@ -2588,14 +2638,13 @@ class SkeletonMixin:
                     try:
                         # Parent constraint: controller drives joint
                         constraint = cmds.parentConstraint(
-                            controller,
-                            joint_to_connect,
-                            maintainOffset=False,
-                            weight=1.0
+                            controller, joint_to_connect, maintainOffset=False, weight=1.0
                         )
                         if constraint:
                             connections_made += 1
-                            self.logger.info(f"   [OK] {ctrl_name} → {joint_to_connect.split('|')[-1]}")
+                            self.logger.info(
+                                f"   [OK] {ctrl_name} → {joint_to_connect.split('|')[-1]}"
+                            )
                     except Exception as e:
                         self.logger.warning(f"   [WARNING] Could not connect {ctrl_name}: {e}")
                 else:
@@ -2606,14 +2655,12 @@ class SkeletonMixin:
         except Exception as e:
             self.logger.error(f"[ERROR] Controller connection failed: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return 0
 
     def _supplement_from_rig_mb(
-        self,
-        rig_mb_path: Path,
-        options: ImportOptions,
-        result: ImportResult
+        self, rig_mb_path: Path, options: ImportOptions, result: ImportResult
     ) -> bool:
         """
         Check if .rig.mb fallback is needed.
@@ -2628,7 +2675,7 @@ class SkeletonMixin:
             return False
 
         # Check if we have USD proxy shapes with content
-        proxy_shapes = cmds.ls(type='mayaUsdProxyShape') or []
+        proxy_shapes = cmds.ls(type="mayaUsdProxyShape") or []
         has_usd_content = len(proxy_shapes) > 0 and result.usd_meshes > 0
 
         if has_usd_content:
@@ -2643,7 +2690,9 @@ class SkeletonMixin:
             return True
 
         # USD import failed or created no content - use .rig.mb fallback
-        self.logger.warning("[WARNING] USD import created no proxy content - using .rig.mb fallback")
+        self.logger.warning(
+            "[WARNING] USD import created no proxy content - using .rig.mb fallback"
+        )
 
         try:
             self.logger.info("[REFRESH] Importing .rig.mb as fallback...")
@@ -2652,16 +2701,16 @@ class SkeletonMixin:
             imported_nodes = cmds.file(
                 str(rig_mb_path),
                 i=True,
-                type="mayaBinary" if str(rig_mb_path).endswith('.mb') else "mayaAscii",
+                type="mayaBinary" if str(rig_mb_path).endswith(".mb") else "mayaAscii",
                 returnNewNodes=True,
                 preserveReferences=True,
-                ignoreVersion=True
+                ignoreVersion=True,
             )
 
             if imported_nodes:
                 self.logger.info(f"[OK] Imported {len(imported_nodes)} nodes from rig backup")
                 result.used_rig_mb_fallback = True
-                result.fallback_components = ['Full rig']
+                result.fallback_components = ["Full rig"]
 
                 # Re-count components after importing .rig.mb
                 self._count_imported_components(imported_nodes, result)
@@ -2677,4 +2726,3 @@ class SkeletonMixin:
 # =========================================================================
 # CONVENIENCE FUNCTIONS
 # =========================================================================
-

@@ -40,7 +40,9 @@ class USDExportOptions:
     export_blend_shapes: bool = True
     preserve_bind_pose: bool = True
     export_nurbs_curves: bool = True  # NEW: Export rig controls (NURBS curves) - INDUSTRY FIRST!
-    nurbs_curves_renderable: bool = False  # Whether NURBS curves should be renderable (default: guide purpose)
+    nurbs_curves_renderable: bool = (
+        False  # Whether NURBS curves should be renderable (default: guide purpose)
+    )
     export_rig_connections: bool = True  # NEW: Export functional rig connections - INDUSTRY FIRST!
 
     # Packaging options (v1.5.0)
@@ -71,11 +73,7 @@ class IUSDExportService(ABC):
     """
 
     @abstractmethod
-    def export_maya_scene(
-        self,
-        maya_file: Path,
-        options: USDExportOptions
-    ) -> bool:
+    def export_maya_scene(self, maya_file: Path, options: USDExportOptions) -> bool:
         """
         Export complete Maya scene to USD
 
@@ -91,9 +89,7 @@ class IUSDExportService(ABC):
 
     @abstractmethod
     def export_selected_objects(
-        self,
-        options: USDExportOptions,
-        object_names: Optional[List[str]] = None
+        self, options: USDExportOptions, object_names: Optional[List[str]] = None
     ) -> bool:
         """
         Export selected Maya objects to USD (requires Maya session)
@@ -134,11 +130,7 @@ class IUSDExportService(ABC):
         """
 
     @abstractmethod
-    def estimate_export_time(
-        self,
-        maya_file: Path,
-        options: USDExportOptions
-    ) -> float:
+    def estimate_export_time(self, maya_file: Path, options: USDExportOptions) -> float:
         """
         Estimate export time in seconds (for progress UI)
 

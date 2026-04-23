@@ -14,6 +14,7 @@ from enum import Enum
 
 class EventType(Enum):
     """Event types for the asset manager system"""
+
     ASSET_SELECTED = "asset_selected"
     ASSET_IMPORTED = "asset_imported"
     ASSET_FAVORITED = "asset_favorited"

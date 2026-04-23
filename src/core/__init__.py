@@ -8,4 +8,4 @@ Author: Mike Stumbo
 
 from .container import get_container, configure_services
 
-__all__ = ['get_container', 'configure_services']
+__all__ = ["get_container", "configure_services"]

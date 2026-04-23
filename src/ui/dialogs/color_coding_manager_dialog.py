@@ -11,12 +11,21 @@ from typing import Dict, Optional
 
 # PySide6 for Maya 2022+
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QListWidget, QListWidgetItem, QColorDialog, QGroupBox,
-    QMessageBox, QSplitter
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QListWidget,
+    QListWidgetItem,
+    QColorDialog,
+    QGroupBox,
+    QMessageBox,
+    QSplitter,
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QPixmap, QPainter, QBrush
+
 # Import the unified theme
 from ..theme import UITheme
 
@@ -37,29 +46,29 @@ class ColorCodingManagerDialog(QDialog):
         # Color schemes data
         self._color_schemes: Dict[str, Dict[str, QColor]] = {
             "Default": {
-                "Maya Scene": QColor(255, 150, 50),     # Orange
-                "3D Model": QColor(150, 255, 150),      # Green
-                "Image": QColor(100, 150, 255),         # Blue
-                "Video": QColor(255, 100, 150),         # Pink
-                "Material": QColor(200, 100, 255),      # Purple
-                "Archive": QColor(150, 150, 150)        # Gray
+                "Maya Scene": QColor(255, 150, 50),  # Orange
+                "3D Model": QColor(150, 255, 150),  # Green
+                "Image": QColor(100, 150, 255),  # Blue
+                "Video": QColor(255, 100, 150),  # Pink
+                "Material": QColor(200, 100, 255),  # Purple
+                "Archive": QColor(150, 150, 150),  # Gray
             },
             "Professional": {
-                "Maya Scene": QColor(230, 126, 34),     # Professional Orange
-                "3D Model": QColor(46, 204, 113),       # Professional Green
-                "Image": QColor(52, 152, 219),          # Professional Blue
-                "Video": QColor(231, 76, 60),           # Professional Red
-                "Material": QColor(155, 89, 182),       # Professional Purple
-                "Archive": QColor(149, 165, 166)        # Professional Gray
+                "Maya Scene": QColor(230, 126, 34),  # Professional Orange
+                "3D Model": QColor(46, 204, 113),  # Professional Green
+                "Image": QColor(52, 152, 219),  # Professional Blue
+                "Video": QColor(231, 76, 60),  # Professional Red
+                "Material": QColor(155, 89, 182),  # Professional Purple
+                "Archive": QColor(149, 165, 166),  # Professional Gray
             },
             "Pastel": {
-                "Maya Scene": QColor(255, 205, 178),    # Pastel Orange
-                "3D Model": QColor(200, 247, 197),      # Pastel Green
-                "Image": QColor(174, 214, 241),         # Pastel Blue
-                "Video": QColor(248, 196, 196),         # Pastel Pink
-                "Material": QColor(212, 172, 213),      # Pastel Purple
-                "Archive": QColor(215, 219, 221)        # Pastel Gray
-            }
+                "Maya Scene": QColor(255, 205, 178),  # Pastel Orange
+                "3D Model": QColor(200, 247, 197),  # Pastel Green
+                "Image": QColor(174, 214, 241),  # Pastel Blue
+                "Video": QColor(248, 196, 196),  # Pastel Pink
+                "Material": QColor(212, 172, 213),  # Pastel Purple
+                "Archive": QColor(215, 219, 221),  # Pastel Gray
+            },
         }
 
         self._current_scheme = "Default"
@@ -234,7 +243,9 @@ class ColorCodingManagerDialog(QDialog):
         """Edit color for selected asset type - Single Responsibility"""
         current_item = self._colors_list.currentItem()
         if not current_item:
-            QMessageBox.information(self, "No Selection", "Please select an asset type to edit its color.")
+            QMessageBox.information(
+                self, "No Selection", "Please select an asset type to edit its color."
+            )
             return
 
         asset_type = current_item.data(Qt.ItemDataRole.UserRole)
@@ -266,7 +277,7 @@ class ColorCodingManagerDialog(QDialog):
             "Reset Colors",
             "Are you sure you want to reset all colors to the default scheme?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -280,7 +291,7 @@ class ColorCodingManagerDialog(QDialog):
             self,
             "Custom Schemes",
             "Custom color scheme creation will be available in a future version.\n\n"
-            "For now, you can modify the existing schemes by editing individual asset type colors."
+            "For now, you can modify the existing schemes by editing individual asset type colors.",
         )
 
     def _apply_colors(self) -> None:
@@ -293,15 +304,11 @@ class ColorCodingManagerDialog(QDialog):
                 self,
                 "Colors Applied",
                 f"Color scheme '{self._current_scheme}' has been applied!\n\n"
-                "Asset thumbnails and icons will now use the selected colors."
+                "Asset thumbnails and icons will now use the selected colors.",
             )
 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Error",
-                f"Failed to apply color scheme:\n{str(e)}"
-            )
+            QMessageBox.critical(self, "Error", f"Failed to apply color scheme:\n{str(e)}")
 
     def get_current_color_scheme(self) -> Dict[str, QColor]:
         """Get the currently selected color scheme - Single Responsibility"""

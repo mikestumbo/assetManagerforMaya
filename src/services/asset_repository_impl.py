@@ -33,12 +33,27 @@ class AssetRepositoryImpl(IAssetRepository):
         self._recent_file = Path.home() / ".assetmanager" / "recent.json"
         self._removed_file = Path.home() / ".assetmanager" / "removed_assets.json"
         self._supported_extensions = {
-            '.ma', '.mb', '.mel',  # Maya files
-            '.obj', '.fbx', '.abc', '.usd',  # 3D formats
-            '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr',  # Images
-            '.mov', '.mp4', '.avi',  # Video
-            '.mtl', '.mat',  # Material files
-            '.zip', '.rar'  # Compressed assets
+            ".ma",
+            ".mb",
+            ".mel",  # Maya files
+            ".obj",
+            ".fbx",
+            ".abc",
+            ".usd",  # 3D formats
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".tiff",
+            ".tga",
+            ".exr",
+            ".hdr",  # Images
+            ".mov",
+            ".mp4",
+            ".avi",  # Video
+            ".mtl",
+            ".mat",  # Material files
+            ".zip",
+            ".rar",  # Compressed assets
             # Note: .txt, .md, .json removed to prevent project files from appearing
         }
 
@@ -62,23 +77,17 @@ class AssetRepositoryImpl(IAssetRepository):
             return False
 
         # Exclude project management files
-        project_files = {
-            'project.json',
-            'README.md',
-            'readme.md',
-            '.gitignore',
-            '.assetmanager'
-        }
+        project_files = {"project.json", "README.md", "readme.md", ".gitignore", ".assetmanager"}
 
         if file_path.name.lower() in project_files:
             return False
 
         # Exclude hidden files and system files
-        if file_path.name.startswith('.'):
+        if file_path.name.startswith("."):
             return False
 
         # Exclude files in temp directories
-        if 'temp' in file_path.parts or 'tmp' in file_path.parts:
+        if "temp" in file_path.parts or "tmp" in file_path.parts:
             return False
 
         return True
@@ -111,7 +120,7 @@ class AssetRepositoryImpl(IAssetRepository):
                 created_date=metadata.created_date,
                 modified_date=metadata.modified_date,
                 asset_type=asset_type,
-                metadata=metadata.custom_properties
+                metadata=metadata.custom_properties,
             )
 
             return asset
@@ -125,20 +134,20 @@ class AssetRepositoryImpl(IAssetRepository):
         """Determine asset type from file extension"""
         ext = file_path.suffix.lower()
 
-        if ext in {'.ma', '.mb', '.mel'}:
-            return 'maya_scene'
-        elif ext in {'.obj', '.fbx', '.abc', '.usd'}:
-            return '3d_model'
-        elif ext in {'.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr'}:
-            return 'image'
-        elif ext in {'.mov', '.mp4', '.avi'}:
-            return 'video'
-        elif ext in {'.mtl', '.mat'}:
-            return 'material'
-        elif ext in {'.zip', '.rar'}:
-            return 'archive'
+        if ext in {".ma", ".mb", ".mel"}:
+            return "maya_scene"
+        elif ext in {".obj", ".fbx", ".abc", ".usd"}:
+            return "3d_model"
+        elif ext in {".png", ".jpg", ".jpeg", ".tiff", ".tga", ".exr", ".hdr"}:
+            return "image"
+        elif ext in {".mov", ".mp4", ".avi"}:
+            return "video"
+        elif ext in {".mtl", ".mat"}:
+            return "material"
+        elif ext in {".zip", ".rar"}:
+            return "archive"
         else:
-            return 'unknown'
+            return "unknown"
 
     def find_all(self, directory: Path) -> List[Asset]:
         """
@@ -152,11 +161,11 @@ class AssetRepositoryImpl(IAssetRepository):
 
         try:
             # Recursive file discovery
-            for file_path in directory.rglob('*'):
+            for file_path in directory.rglob("*"):
                 if (
-                    file_path.is_file() and
-                    self._is_supported_file(file_path) and
-                    not self._is_asset_removed(file_path)  # Filter out removed assets
+                    file_path.is_file()
+                    and self._is_supported_file(file_path)
+                    and not self._is_asset_removed(file_path)  # Filter out removed assets
                 ):
                     asset = self._create_asset_from_path(file_path)
                     if asset:
@@ -209,7 +218,9 @@ class AssetRepositoryImpl(IAssetRepository):
 
         # File extension filter
         if criteria.file_extensions:
-            filtered = [a for a in filtered if a.file_extension.lstrip('.') in criteria.file_extensions]
+            filtered = [
+                a for a in filtered if a.file_extension.lstrip(".") in criteria.file_extensions
+            ]
 
         # Asset type filter
         if criteria.asset_types:
@@ -227,12 +238,14 @@ class AssetRepositoryImpl(IAssetRepository):
             if criteria.required_tags:
                 filtered = [a for a in filtered if criteria.required_tags.issubset(set(a.tags))]
             if criteria.excluded_tags:
-                filtered = [a for a in filtered if not criteria.excluded_tags.intersection(set(a.tags))]
+                filtered = [
+                    a for a in filtered if not criteria.excluded_tags.intersection(set(a.tags))
+                ]
 
         # Special filters
         if criteria.favorites_only:
             favorites = self._load_favorites()
-            favorite_ids = {fav['id'] for fav in favorites}
+            favorite_ids = {fav["id"] for fav in favorites}
             filtered = [a for a in filtered if a.id in favorite_ids]
 
         if criteria.recently_accessed:
@@ -264,10 +277,10 @@ class AssetRepositoryImpl(IAssetRepository):
     def _apply_pagination(self, assets: List[Asset], criteria: SearchCriteria) -> List[Asset]:
         """Apply pagination to asset list"""
         if criteria.limit is None:
-            return assets[criteria.offset:]
+            return assets[criteria.offset :]
         else:
             end_index = criteria.offset + criteria.limit
-            return assets[criteria.offset:end_index]
+            return assets[criteria.offset : end_index]
 
     def find_by_id(self, asset_id: str) -> Optional[Asset]:
         """Find specific asset by unique identifier"""
@@ -279,7 +292,7 @@ class AssetRepositoryImpl(IAssetRepository):
         recent_assets = []
 
         for item in recent_data[:limit]:
-            asset = self.find_by_id(item['id'])
+            asset = self.find_by_id(item["id"])
             if asset:
                 recent_assets.append(asset)
 
@@ -291,7 +304,7 @@ class AssetRepositoryImpl(IAssetRepository):
         favorite_assets = []
 
         for item in favorites_data:
-            asset = self.find_by_id(item['id'])
+            asset = self.find_by_id(item["id"])
             if asset:
                 asset.is_favorite = True
                 favorite_assets.append(asset)
@@ -304,20 +317,22 @@ class AssetRepositoryImpl(IAssetRepository):
             favorites = self._load_favorites()
 
             # Check if already in favorites
-            if any(fav['id'] == asset.id for fav in favorites):
+            if any(fav["id"] == asset.id for fav in favorites):
                 return True
 
             # Add to favorites
-            favorites.append({
-                'id': asset.id,
-                'name': asset.name,
-                'file_path': str(asset.file_path),
-                'added_date': datetime.now().isoformat()
-            })
+            favorites.append(
+                {
+                    "id": asset.id,
+                    "name": asset.name,
+                    "file_path": str(asset.file_path),
+                    "added_date": datetime.now().isoformat(),
+                }
+            )
 
             # Limit favorites
             if len(favorites) > SEARCH_CONFIG.MAX_FAVORITES:
-                favorites = favorites[-SEARCH_CONFIG.MAX_FAVORITES:]
+                favorites = favorites[-SEARCH_CONFIG.MAX_FAVORITES :]
 
             self._save_favorites(favorites)
             asset.is_favorite = True
@@ -331,7 +346,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Remove asset from favorites"""
         try:
             favorites = self._load_favorites()
-            favorites = [fav for fav in favorites if fav['id'] != asset.id]
+            favorites = [fav for fav in favorites if fav["id"] != asset.id]
 
             self._save_favorites(favorites)
             asset.is_favorite = False
@@ -350,19 +365,22 @@ class AssetRepositoryImpl(IAssetRepository):
             recent = self._load_recent()
 
             # Remove if already present
-            recent = [item for item in recent if item['id'] != asset.id]
+            recent = [item for item in recent if item["id"] != asset.id]
 
             # Add to beginning
-            recent.insert(0, {
-                'id': asset.id,
-                'name': asset.name,
-                'file_path': str(asset.file_path),
-                'access_date': datetime.now().isoformat()
-            })
+            recent.insert(
+                0,
+                {
+                    "id": asset.id,
+                    "name": asset.name,
+                    "file_path": str(asset.file_path),
+                    "access_date": datetime.now().isoformat(),
+                },
+            )
 
             # Limit recent items
             if len(recent) > SEARCH_CONFIG.MAX_RECENT_ASSETS:
-                recent = recent[:SEARCH_CONFIG.MAX_RECENT_ASSETS]
+                recent = recent[: SEARCH_CONFIG.MAX_RECENT_ASSETS]
 
             self._save_recent(recent)
 
@@ -373,7 +391,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load favorites from file"""
         try:
             if self._favorites_file.exists():
-                with open(self._favorites_file, 'r', encoding='utf-8') as f:
+                with open(self._favorites_file, "r", encoding="utf-8") as f:
                     return json.load(f)
         except Exception:
             pass
@@ -382,7 +400,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_favorites(self, favorites: List[Dict[str, Any]]) -> None:
         """Save favorites to file"""
         try:
-            with open(self._favorites_file, 'w', encoding='utf-8') as f:
+            with open(self._favorites_file, "w", encoding="utf-8") as f:
                 json.dump(favorites, f, indent=2)
         except Exception as e:
             print(f"Error saving favorites: {e}")
@@ -391,7 +409,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load recent assets from file"""
         try:
             if self._recent_file.exists():
-                with open(self._recent_file, 'r', encoding='utf-8') as f:
+                with open(self._recent_file, "r", encoding="utf-8") as f:
                     return json.load(f)
         except Exception:
             pass
@@ -400,7 +418,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_recent(self, recent: List[Dict[str, Any]]) -> None:
         """Save recent assets to file"""
         try:
-            with open(self._recent_file, 'w', encoding='utf-8') as f:
+            with open(self._recent_file, "w", encoding="utf-8") as f:
                 json.dump(recent, f, indent=2)
         except Exception as e:
             print(f"Error saving recent assets: {e}")
@@ -409,7 +427,7 @@ class AssetRepositoryImpl(IAssetRepository):
         """Load list of removed asset paths - Single Responsibility"""
         try:
             if self._removed_file.exists():
-                with open(self._removed_file, 'r', encoding='utf-8') as f:
+                with open(self._removed_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             return []
         except Exception as e:
@@ -419,7 +437,7 @@ class AssetRepositoryImpl(IAssetRepository):
     def _save_removed_assets(self, removed_paths: List[str]) -> None:
         """Save list of removed asset paths - Single Responsibility"""
         try:
-            with open(self._removed_file, 'w', encoding='utf-8') as f:
+            with open(self._removed_file, "w", encoding="utf-8") as f:
                 json.dump(removed_paths, f, indent=2)
         except Exception as e:
             print(f"Error saving removed assets: {e}")
@@ -453,12 +471,12 @@ class AssetRepositoryImpl(IAssetRepository):
 
             # Remove from favorites if present
             favorites = self._load_favorites()
-            favorites = [fav for fav in favorites if fav.get('id') != asset.id]
+            favorites = [fav for fav in favorites if fav.get("id") != asset.id]
             self._save_favorites(favorites)
 
             # Remove from recent if present
             recent = self._load_recent()
-            recent = [rec for rec in recent if rec.get('id') != asset.id]
+            recent = [rec for rec in recent if rec.get("id") != asset.id]
             self._save_recent(recent)
 
             print(f"Asset {asset.display_name} removed from repository (file preserved)")

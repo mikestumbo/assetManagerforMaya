@@ -41,8 +41,8 @@ def test_thumbnail_service():
 
         # Create a simple test PNG file
         try:
-            from PySide6.QtGui import QPixmap, QPainter, QColor
             from PySide6.QtCore import Qt
+            from PySide6.QtGui import QColor, QPainter, QPixmap
 
             # Create a simple test image
             pixmap = QPixmap(100, 100)
@@ -54,7 +54,7 @@ def test_thumbnail_service():
             painter.end()
 
             # Save test file
-            pixmap.save(str(test_file), 'PNG')
+            pixmap.save(str(test_file), "PNG")
             print(f"✅ Created test file: {test_file}")
 
             # Test thumbnail generation
@@ -87,6 +87,7 @@ def test_thumbnail_service():
     except Exception as e:
         print(f"❌ Error testing thumbnail service: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -110,6 +111,7 @@ def test_container_integration():
     except Exception as e:
         print(f"❌ Error testing container integration: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -139,7 +141,7 @@ def check_cache_directory():
             cache_files = list(cache_dir.glob("*.png"))
             print(f"📊 Cache files found: {len(cache_files)}")
 
-            for i, cache_file in enumerate(cache_files[:5]):  # Show first 5
+            for cache_file in cache_files[:5]:  # Show first 5
                 print(f"  📄 {cache_file.name} ({cache_file.stat().st_size} bytes)")
 
             if len(cache_files) > 5:
@@ -152,7 +154,6 @@ def check_cache_directory():
 
 
 def main():
-
 
     print("=" * 60)
     print("🔍 THUMBNAIL GENERATION DIAGNOSTIC")
@@ -167,6 +168,6 @@ def main():
     print("🏁 DIAGNOSTIC COMPLETE")
     print("=" * 60)
 
+
 if __name__ == "__main__":
-
-
+    main()

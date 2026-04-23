@@ -15,11 +15,11 @@ try:
     from .enhanced_asset_info_widget import EnhancedAssetInfoWidget  # noqa: F401
 
     __all__ = [
-        'CollectionsDisplayWidget',
-        'AssetLibraryWidget',
-        'AssetPreviewWidget',
-        'ColorCodingKeychartWidget',
-        'EnhancedAssetInfoWidget'
+        "CollectionsDisplayWidget",
+        "AssetLibraryWidget",
+        "AssetPreviewWidget",
+        "ColorCodingKeychartWidget",
+        "EnhancedAssetInfoWidget",
     ]
 
 except ImportError as e:

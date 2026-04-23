@@ -30,6 +30,7 @@ class MayaIntegrationImpl(IMayaIntegration):
         """Initialize Maya API connection"""
         try:
             import maya.cmds as cmds  # type: ignore
+
             self._maya_cmds = cmds
             self._maya_available = True
             self._maya_version = cmds.about(version=True)
@@ -56,10 +57,10 @@ class MayaIntegrationImpl(IMayaIntegration):
 
             # Default import options
             import_options = {
-                'type': 'mayaAscii' if asset.file_extension == '.ma' else 'mayaBinary',
-                'ignoreVersion': True,
-                'mergeNamespacesOnClash': False,
-                'rpr': asset.name  # Root prefix
+                "type": "mayaAscii" if asset.file_extension == ".ma" else "mayaBinary",
+                "ignoreVersion": True,
+                "mergeNamespacesOnClash": False,
+                "rpr": asset.name,  # Root prefix
             }
 
             # Update with user options
@@ -69,9 +70,9 @@ class MayaIntegrationImpl(IMayaIntegration):
             # Perform import based on file type
             if asset.is_maya_file:
                 return self._import_maya_file(asset.file_path, import_options)
-            elif asset.file_extension in {'.obj', '.fbx'}:
+            elif asset.file_extension in {".obj", ".fbx"}:
                 return self._import_3d_file(asset.file_path, import_options)
-            elif asset.file_extension in {'.usd', '.usda', '.usdc', '.usdz'}:
+            elif asset.file_extension in {".usd", ".usda", ".usdc", ".usdz"}:
                 return self._import_usd_file(asset.file_path, import_options)
             else:
                 return False
@@ -102,7 +103,7 @@ class MayaIntegrationImpl(IMayaIntegration):
                 reference=True,
                 namespace=namespace,
                 mergeNamespacesOnClash=False,
-                ignoreVersion=True
+                ignoreVersion=True,
             )
 
             return reference_node is not None
@@ -111,7 +112,9 @@ class MayaIntegrationImpl(IMayaIntegration):
             print(f"Error referencing asset {asset.name}: {e}")
             return False
 
-    def export_selection(self, export_path: Path, options: Optional[Dict[str, Any]] = None) -> bool:
+    def export_selection(
+        self, export_path: Path, options: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Export Maya selection to file
         Single Responsibility: handle Maya export operations
@@ -129,9 +132,9 @@ class MayaIntegrationImpl(IMayaIntegration):
 
             # Default export options
             export_options = {
-                'exportSelected': True,
-                'type': 'mayaAscii' if export_path.suffix == '.ma' else 'mayaBinary',
-                'force': True
+                "exportSelected": True,
+                "type": "mayaAscii" if export_path.suffix == ".ma" else "mayaBinary",
+                "force": True,
             }
 
             # Update with user options
@@ -141,10 +144,7 @@ class MayaIntegrationImpl(IMayaIntegration):
             # Perform export
             if not self._maya_cmds:
                 return False
-            self._maya_cmds.file(
-                str(export_path),
-                **export_options
-            )
+            self._maya_cmds.file(str(export_path), **export_options)
 
             return export_path.exists()
 
@@ -189,7 +189,7 @@ class MayaIntegrationImpl(IMayaIntegration):
         try:
             if not asset.is_maya_file:
                 # Non-Maya files are generally compatible
-                return asset.file_extension in {'.obj', '.fbx'}
+                return asset.file_extension in {".obj", ".fbx"}
 
             # For Maya files, could check version compatibility
             # This is a simplified check
@@ -210,7 +210,7 @@ class MayaIntegrationImpl(IMayaIntegration):
             self._maya_cmds.file(
                 str(file_path),
                 i=True,  # Import
-                **{k: v for k, v in options.items() if k != 'type'}
+                **{k: v for k, v in options.items() if k != "type"},
             )
             return True
         except Exception as e:
@@ -225,23 +225,23 @@ class MayaIntegrationImpl(IMayaIntegration):
 
             extension = file_path.suffix.lower()
 
-            if extension == '.obj':
+            if extension == ".obj":
                 # Import OBJ file
                 self._maya_cmds.file(
                     str(file_path),
                     i=True,
-                    type='OBJ',
-                    **{k: v for k, v in options.items() if k not in ['type']}
+                    type="OBJ",
+                    **{k: v for k, v in options.items() if k not in ["type"]},
                 )
-            elif extension == '.fbx':
+            elif extension == ".fbx":
                 # Import FBX file (requires FBX plugin)
                 try:
-                    self._maya_cmds.loadPlugin('fbxmaya', quiet=True)
+                    self._maya_cmds.loadPlugin("fbxmaya", quiet=True)
                     self._maya_cmds.file(
                         str(file_path),
                         i=True,
-                        type='FBX',
-                        **{k: v for k, v in options.items() if k not in ['type']}
+                        type="FBX",
+                        **{k: v for k, v in options.items() if k not in ["type"]},
                     )
                 except Exception:
                     return False
@@ -264,15 +264,14 @@ class MayaIntegrationImpl(IMayaIntegration):
             from src.services.usd.usd_import_service_impl import get_usd_import_service
 
             # Get namespace from options
-            namespace = options.get('rpr', None)  # Root prefix
+            namespace = options.get("rpr", None)  # Root prefix
 
             # Get USD import service
             usd_service = get_usd_import_service()
 
             # Import with skinning
             result = usd_service.import_with_skinning(
-                usd_path=file_path,  # Already a Path object
-                namespace=namespace
+                usd_path=file_path, namespace=namespace  # Already a Path object
             )
 
             # Log results
@@ -291,6 +290,7 @@ class MayaIntegrationImpl(IMayaIntegration):
         except Exception as e:
             print(f"Error importing USD file {file_path}: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -299,7 +299,7 @@ class MayaIntegrationImpl(IMayaIntegration):
         if not self.is_maya_available() or not self._maya_cmds:
             return asset_name
 
-        base_namespace = asset_name.replace(' ', '_').replace('-', '_')
+        base_namespace = asset_name.replace(" ", "_").replace("-", "_")
 
         # Check if namespace already exists
         existing_namespaces = self._maya_cmds.namespaceInfo(listOnlyNamespaces=True) or []

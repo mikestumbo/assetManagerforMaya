@@ -16,9 +16,9 @@ def test_import_usd_pipeline():
     try:
         # Check syntax by compiling the code
         usd_pipeline_path = src_path / "services" / "usd" / "usd_pipeline.py"
-        with open(usd_pipeline_path, 'r') as f:
+        with open(usd_pipeline_path, "r") as f:
             code = f.read()
-        compile(code, str(usd_pipeline_path), 'exec')
+        compile(code, str(usd_pipeline_path), "exec")
         print("✅ usd_pipeline.py syntax valid")
         return True
     except SyntaxError as e:
@@ -38,7 +38,7 @@ def test_hierarchy_logic():
         "Spine1": "Root",
         "Chest": "Spine1",
         "Neck": "Chest",
-        "Head": "Neck"
+        "Head": "Neck",
     }
 
     # Find roots

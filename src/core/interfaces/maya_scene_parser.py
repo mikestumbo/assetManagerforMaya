@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 @dataclass
 class MeshData:
     """Mesh geometry data extracted from Maya"""
+
     name: str
     transform_name: str
 
@@ -34,12 +35,15 @@ class MeshData:
     world_matrix: Optional[List[float]] = None  # 4x4 matrix as 16 floats
 
     # Material
-    material_assignments: Dict[str, List[int]] = field(default_factory=dict)  # {material_name: [face_indices]}
+    material_assignments: Dict[str, List[int]] = field(
+        default_factory=dict
+    )  # {material_name: [face_indices]}
 
 
 @dataclass
 class MaterialData:
     """Material data extracted from Maya"""
+
     name: str
     shader_type: str  # "lambert", "blinn", "PxrSurface", etc.
 
@@ -64,6 +68,7 @@ class MaterialData:
 @dataclass
 class JointData:
     """Joint/bone data for rigging"""
+
     name: str
     parent_name: Optional[str]
 
@@ -78,6 +83,7 @@ class JointData:
 @dataclass
 class SkinClusterData:
     """Skin cluster (skin weights) data"""
+
     name: str
     mesh_name: str
 
@@ -99,6 +105,7 @@ class NurbsCurveData:
     This enables full character rig export to USD with control curves.
     Most pipelines skip rig controls - this is groundbreaking!
     """
+
     name: str
     transform_name: str
 
@@ -131,6 +138,7 @@ class RigConnectionData:
     INDUSTRY FIRST: Complete rig controller preservation in USD!
     This enables functional rig round-tripping with constraints and connections.
     """
+
     source_node: str  # Node providing the value (e.g., "L_arm_ctrl.translateX")
     target_node: str  # Node receiving the value (e.g., "L_arm_joint.rotateX")
     source_attr: str  # Attribute name on source (e.g., "translateX")
@@ -154,6 +162,7 @@ class RigConnectionData:
 @dataclass
 class ConstraintData:
     """Maya constraint data for rig controllers"""
+
     name: str
     constraint_type: str  # "parentConstraint", "pointConstraint", "orientConstraint", etc.
 
@@ -173,6 +182,7 @@ class ConstraintData:
 @dataclass
 class SetDrivenKeyData:
     """Maya set-driven key data for rig controllers"""
+
     driver_node: str
     driver_attr: str
     driven_node: str
@@ -189,6 +199,7 @@ class SetDrivenKeyData:
 @dataclass
 class MayaSceneData:
     """Complete Maya scene data structure"""
+
     source_file: Optional[Path]  # None when parsing current unsaved scene
 
     # Scene contents
@@ -229,9 +240,7 @@ class IMayaSceneParser(ABC):
 
     @abstractmethod
     def parse_maya_file(
-        self,
-        maya_file: Path,
-        options: Optional[Dict[str, Any]] = None
+        self, maya_file: Path, options: Optional[Dict[str, Any]] = None
     ) -> MayaSceneData:
         """
         Parse Maya file and extract all relevant data
@@ -251,10 +260,7 @@ class IMayaSceneParser(ABC):
         """
 
     @abstractmethod
-    def parse_selected_objects(
-        self,
-        object_names: Optional[List[str]] = None
-    ) -> MayaSceneData:
+    def parse_selected_objects(self, object_names: Optional[List[str]] = None) -> MayaSceneData:
         """
         Parse currently selected objects in active Maya session
 
@@ -327,9 +333,7 @@ class IMayaSceneParser(ABC):
 
     @abstractmethod
     def extract_nurbs_curves(
-        self,
-        curve_names: Optional[List[str]] = None,
-        include_hierarchy: bool = True
+        self, curve_names: Optional[List[str]] = None, include_hierarchy: bool = True
     ) -> List[NurbsCurveData]:
         """
         Extract NURBS curves (rig controls) from Maya scene
@@ -350,8 +354,7 @@ class IMayaSceneParser(ABC):
 
     @abstractmethod
     def extract_rig_connections(
-        self,
-        nurbs_curves: List[NurbsCurveData]
+        self, nurbs_curves: List[NurbsCurveData]
     ) -> List[RigConnectionData]:
         """
         Extract rigging connections for NURBS curve controllers
@@ -370,10 +373,7 @@ class IMayaSceneParser(ABC):
         """
 
     @abstractmethod
-    def extract_constraints(
-        self,
-        nurbs_curves: List[NurbsCurveData]
-    ) -> List[ConstraintData]:
+    def extract_constraints(self, nurbs_curves: List[NurbsCurveData]) -> List[ConstraintData]:
         """
         Extract Maya constraints involving NURBS curve controllers
 
@@ -386,8 +386,7 @@ class IMayaSceneParser(ABC):
 
     @abstractmethod
     def extract_set_driven_keys(
-        self,
-        nurbs_curves: List[NurbsCurveData]
+        self, nurbs_curves: List[NurbsCurveData]
     ) -> List[SetDrivenKeyData]:
         """
         Extract set-driven keys involving NURBS curve controllers

@@ -17,6 +17,7 @@ sys.path.insert(0, str(src_path))
 
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -25,15 +26,16 @@ except ImportError:
 
 class MockCmds:
     """Mock Maya commands for testing without Maya"""
+
     namespaces = set()
     locked_nodes = set()
     connections = {}
 
     def namespace(self, **kwargs):
-        if 'exists' in kwargs:
-            return kwargs['exists'] in self.namespaces
-        if 'removeNamespace' in kwargs:
-            ns = kwargs['removeNamespace']
+        if "exists" in kwargs:
+            return kwargs["exists"] in self.namespaces
+        if "removeNamespace" in kwargs:
+            ns = kwargs["removeNamespace"]
             if ns in self.namespaces:
                 self.namespaces.remove(ns)
         return True
@@ -44,9 +46,9 @@ class MockCmds:
     def lockNode(self, nodes, **kwargs):
         if isinstance(nodes, str):
             nodes = [nodes]
-        if 'query' in kwargs:
+        if "query" in kwargs:
             return [node in self.locked_nodes for node in nodes]
-        if 'lock' in kwargs and not kwargs['lock']:
+        if "lock" in kwargs and not kwargs["lock"]:
             for node in nodes:
                 self.locked_nodes.discard(node)
 
@@ -67,7 +69,6 @@ class MockCmds:
 
 class BulletproofCleanupTester:
 
-
     def __init__(self):
         self.cmds = cmds if MAYA_AVAILABLE else MockCmds()  # type: ignore
         self.test_results = []
@@ -82,23 +83,19 @@ class BulletproofCleanupTester:
             self.test_connection_breaking,
             self.test_fallback_cleanup,
             self.test_complex_asset_scenario,
-            self.test_multiple_namespace_cleanup
+            self.test_multiple_namespace_cleanup,
         ]
 
         for test in tests:
             try:
                 result = test()
                 self.test_results.append(result)
-                status = "✅ PASS" if result['passed'] else "❌ FAIL"
+                status = "✅ PASS" if result["passed"] else "❌ FAIL"
                 print(f"{status}: {result['name']}")
-                if not result['passed']:
+                if not result["passed"]:
                     print(f"   Error: {result.get('error', 'Unknown error')}")
             except Exception as e:
-                self.test_results.append({
-                    'name': test.__name__,
-                    'passed': False,
-                    'error': str(e)
-                })
+                self.test_results.append({"name": test.__name__, "passed": False, "error": str(e)})
                 print(f"❌ FAIL: {test.__name__} - {e}")
 
         self._print_summary()
@@ -108,16 +105,16 @@ class BulletproofCleanupTester:
         namespace = "test_basic_123"
 
         # Setup
-        if hasattr(self.cmds, 'namespaces'):
+        if hasattr(self.cmds, "namespaces"):
             self.cmds.namespaces.add(namespace)
 
         # Test cleanup
         success = self._bulletproof_namespace_cleanup(namespace)
 
         return {
-            'name': 'Basic Namespace Cleanup',
-            'passed': success,
-            'details': f"Namespace {namespace} cleanup"
+            "name": "Basic Namespace Cleanup",
+            "passed": success,
+            "details": f"Namespace {namespace} cleanup",
         }
 
     def test_locked_nodes_cleanup(self):
@@ -125,7 +122,7 @@ class BulletproofCleanupTester:
         namespace = "test_locked_456"
 
         # Setup locked nodes
-        if hasattr(self.cmds, 'namespaces'):
+        if hasattr(self.cmds, "namespaces"):
             self.cmds.namespaces.add(namespace)
             self.cmds.locked_nodes.add(f"{namespace}:lockedNode")
 
@@ -133,9 +130,9 @@ class BulletproofCleanupTester:
         success = self._bulletproof_namespace_cleanup(namespace)
 
         return {
-            'name': 'Locked Nodes Cleanup',
-            'passed': success,
-            'details': f"Cleanup with locked nodes in {namespace}"
+            "name": "Locked Nodes Cleanup",
+            "passed": success,
+            "details": f"Cleanup with locked nodes in {namespace}",
         }
 
     def test_connection_breaking(self):
@@ -143,8 +140,8 @@ class BulletproofCleanupTester:
         namespace = "test_connections_789"
 
         # Setup connections
-        if hasattr(self.cmds, 'connections'):
-            self.cmds.connections['rmanDefaultDisplay.displayType'] = [
+        if hasattr(self.cmds, "connections"):
+            self.cmds.connections["rmanDefaultDisplay.displayType"] = [
                 f"{namespace}:d_openexr.message"
             ]
 
@@ -153,16 +150,16 @@ class BulletproofCleanupTester:
 
         # Verify connections broken
         connections_remain = False
-        if hasattr(self.cmds, 'connections'):
+        if hasattr(self.cmds, "connections"):
             for conn_list in self.cmds.connections.values():
                 if any(namespace in conn for conn in conn_list):
                     connections_remain = True
                     break
 
         return {
-            'name': 'Render Connection Breaking',
-            'passed': not connections_remain,
-            'details': f"Connection breaking for {namespace}"
+            "name": "Render Connection Breaking",
+            "passed": not connections_remain,
+            "details": f"Connection breaking for {namespace}",
         }
 
     def test_fallback_cleanup(self):
@@ -170,16 +167,16 @@ class BulletproofCleanupTester:
         namespace = "test_fallback_101"
 
         # Setup problematic namespace
-        if hasattr(self.cmds, 'namespaces'):
+        if hasattr(self.cmds, "namespaces"):
             self.cmds.namespaces.add(namespace)
 
         # Test fallback cleanup
         success = self._fallback_cleanup(namespace)
 
         return {
-            'name': 'Fallback Cleanup Strategy',
-            'passed': success,
-            'details': f"Fallback cleanup for {namespace}"
+            "name": "Fallback Cleanup Strategy",
+            "passed": success,
+            "details": f"Fallback cleanup for {namespace}",
         }
 
     def test_complex_asset_scenario(self):
@@ -187,22 +184,26 @@ class BulletproofCleanupTester:
         namespace = "test_veteran_complex"
 
         # Setup complex scenario
-        if hasattr(self.cmds, 'namespaces'):
+        if hasattr(self.cmds, "namespaces"):
             self.cmds.namespaces.add(namespace)
             self.cmds.locked_nodes.add(f"{namespace}:globalVolumeAggregate")
-            self.cmds.connections.update({
-                'rmanDefaultDisplay.displayType': [f"{namespace}:d_openexr.message"],
-                'rmanDefaultDisplay.displayChannels[0]': [f"{namespace}:Ci.message"],
-                'rmanBakingGlobals.displays[0]': [f"{namespace}:rmanDefaultBakeDisplay.message"]
-            })
+            self.cmds.connections.update(
+                {
+                    "rmanDefaultDisplay.displayType": [f"{namespace}:d_openexr.message"],
+                    "rmanDefaultDisplay.displayChannels[0]": [f"{namespace}:Ci.message"],
+                    "rmanBakingGlobals.displays[0]": [
+                        f"{namespace}:rmanDefaultBakeDisplay.message"
+                    ],
+                }
+            )
 
         # Test complex cleanup
         success = self._bulletproof_namespace_cleanup(namespace)
 
         return {
-            'name': 'Complex Asset Scenario (Veteran_Rig)',
-            'passed': success,
-            'details': f"Complex production asset cleanup for {namespace}"
+            "name": "Complex Asset Scenario (Veteran_Rig)",
+            "passed": success,
+            "details": f"Complex production asset cleanup for {namespace}",
         }
 
     def test_multiple_namespace_cleanup(self):
@@ -210,7 +211,7 @@ class BulletproofCleanupTester:
         namespaces = ["thumb_001", "meta_002", "thumb_003"]
 
         # Setup multiple namespaces
-        if hasattr(self.cmds, 'namespaces'):
+        if hasattr(self.cmds, "namespaces"):
             for ns in namespaces:
                 self.cmds.namespaces.add(ns)
 
@@ -222,9 +223,9 @@ class BulletproofCleanupTester:
                 all_success = False
 
         return {
-            'name': 'Multiple Namespace Cleanup',
-            'passed': all_success,
-            'details': f"Cleanup of {len(namespaces)} namespaces"
+            "name": "Multiple Namespace Cleanup",
+            "passed": all_success,
+            "details": f"Cleanup of {len(namespaces)} namespaces",
         }
 
     def _bulletproof_namespace_cleanup(self, namespace: str) -> bool:
@@ -271,9 +272,9 @@ class BulletproofCleanupTester:
         """Test implementation of connection breaking"""
         try:
             connection_patterns = [
-                'rmanDefaultDisplay.displayType',
-                'rmanDefaultDisplay.displayChannels[0]',
-                'rmanBakingGlobals.displays[0]'
+                "rmanDefaultDisplay.displayType",
+                "rmanDefaultDisplay.displayChannels[0]",
+                "rmanBakingGlobals.displays[0]",
             ]
 
             for pattern in connection_patterns:
@@ -297,7 +298,7 @@ class BulletproofCleanupTester:
     def _print_summary(self):
         """Print test results summary"""
         total = len(self.test_results)
-        passed = sum(1 for result in self.test_results if result['passed'])
+        passed = sum(1 for result in self.test_results if result["passed"])
         failed = total - passed
 
         print("\n📊 Test Results Summary:")
@@ -309,11 +310,11 @@ class BulletproofCleanupTester:
         if failed > 0:
             print("\n❌ Failed Tests:")
             for result in self.test_results:
-                if not result['passed']:
+                if not result["passed"]:
                     print(f"   • {result['name']}: {result.get('error', 'Unknown error')}")
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     tester.run_all_tests()
     print("\n🎯 Bulletproof Cleanup Test Suite Complete!")

@@ -22,7 +22,9 @@ class EventSystemImpl(IEventPublisher):
     """
 
     def __init__(self):
-        self._subscribers: Dict[EventType, Dict[str, Callable[[Dict[str, Any]], None]]] = defaultdict(dict)
+        self._subscribers: Dict[EventType, Dict[str, Callable[[Dict[str, Any]], None]]] = (
+            defaultdict(dict)
+        )
         self._lock = threading.Lock()
 
     def subscribe(self, event_type: EventType, callback: Callable[[Dict[str, Any]], None]) -> str:

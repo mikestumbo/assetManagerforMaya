@@ -11,11 +11,17 @@ from typing import Dict
 
 # PySide6 for Maya 2022+
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel,
-    QGroupBox, QGridLayout, QPushButton, QFrame
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QGroupBox,
+    QGridLayout,
+    QPushButton,
+    QFrame,
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QFont
+
 # Import the unified theme
 from ..theme import UITheme
 
@@ -35,12 +41,12 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
 
         # Default color scheme - matches ColorCodingManagerDialog
         self._color_scheme: Dict[str, QColor] = {
-            "Maya Scene": QColor(255, 150, 50),     # Orange
-            "3D Model": QColor(150, 255, 150),      # Green
-            "Image": QColor(100, 150, 255),         # Blue
-            "Video": QColor(255, 100, 150),         # Pink
-            "Material": QColor(200, 100, 255),      # Purple
-            "Archive": QColor(150, 150, 150)        # Gray
+            "Maya Scene": QColor(255, 150, 50),  # Orange
+            "3D Model": QColor(150, 255, 150),  # Green
+            "Image": QColor(100, 150, 255),  # Blue
+            "Video": QColor(255, 100, 150),  # Pink
+            "Material": QColor(200, 100, 255),  # Purple
+            "Archive": QColor(150, 150, 150),  # Gray
         }
 
         # Keep references to color swatch widgets for efficient updates
@@ -161,7 +167,9 @@ class ColorCodingKeychartWidget(QWidget):  # type: ignore
                     print(f"  [OK] Updated {asset_type}: {color.name()}")
                 else:
                     # If new asset type, need full recreation
-                    print(f"  [REFRESH] New asset type '{asset_type}' detected, recreating keychart")
+                    print(
+                        f"  [REFRESH] New asset type '{asset_type}' detected, recreating keychart"
+                    )
                     self._recreate_keychart()
                     return
 

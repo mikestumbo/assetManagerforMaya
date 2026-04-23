@@ -61,7 +61,7 @@ class BlendshapeTargetCleaner:
         """Find targets by analyzing blendShape node connections."""
         targets = set()
 
-        blendshape_nodes = cmds.ls(type='blendShape')
+        blendshape_nodes = cmds.ls(type="blendShape")
         if self.verbose:
             logger.info(f"Found {len(blendshape_nodes)} blendShape nodes")
 
@@ -73,17 +73,21 @@ class BlendshapeTargetCleaner:
                         target_names = cmds.blendShape(bs_node, query=True, target=True)
                         if target_names and i < len(target_names):
                             target_name = target_names[i]
-                            potential_targets = cmds.ls(f"*{target_name}*", type='transform')
+                            potential_targets = cmds.ls(f"*{target_name}*", type="transform")
 
                             for transform in potential_targets:
                                 shapes = cmds.listRelatives(transform, shapes=True, fullPath=True)
                                 if shapes:
                                     for shape in shapes:
-                                        connections = cmds.listConnections(shape, source=True, destination=False)
+                                        connections = cmds.listConnections(
+                                            shape, source=True, destination=False
+                                        )
                                         if connections and bs_node in connections:
                                             targets.add(shape)
                                             if self.verbose:
-                                                logger.debug(f"Found blendShape target by connection: {shape}")
+                                                logger.debug(
+                                                    f"Found blendShape target by connection: {shape}"
+                                                )
             except Exception as e:
                 logger.warning(f"Error analyzing blendShape node {bs_node}: {e}")
 
@@ -92,22 +96,29 @@ class BlendshapeTargetCleaner:
     def _find_by_names(self) -> Set[str]:
         """Find targets by name patterns (fallback for connection failures)."""
         import re
+
         targets = set()
-        all_meshes = cmds.ls(type='mesh', long=True)
+        all_meshes = cmds.ls(type="mesh", long=True)
 
         # Common blendshape suffixes/patterns
         patterns = [
-            r'Shape$', r'_Shape$', r'ShapeDeformed$', r'_deformed$',
-            r'_target$', r'_blend$', r'_morph$',
-            r'Blend\d+$', r'_.*_$'
+            r"Shape$",
+            r"_Shape$",
+            r"ShapeDeformed$",
+            r"_deformed$",
+            r"_target$",
+            r"_blend$",
+            r"_morph$",
+            r"Blend\d+$",
+            r"_.*_$",
         ]
 
         for mesh in all_meshes:
-            short_name = mesh.split('|')[-1].split(':')[-1]
+            short_name = mesh.split("|")[-1].split(":")[-1]
             if any(re.search(pattern, short_name, re.IGNORECASE) for pattern in patterns):
                 # Verify it's not a main mesh (has corresponding base mesh)
-                base_name = re.sub(r'Shape.*$', '', short_name)
-                if cmds.ls(f"*{base_name}*", type='transform'):
+                base_name = re.sub(r"Shape.*$", "", short_name)
+                if cmds.ls(f"*{base_name}*", type="transform"):
                     targets.add(mesh)
                     if self.verbose:
                         logger.debug(f"Found blendshape target by name: {short_name}")
@@ -117,21 +128,28 @@ class BlendshapeTargetCleaner:
     def _find_by_history(self) -> Set[str]:
         """Find targets by checking mesh history for blendShape connections."""
         targets = set()
-        all_meshes = cmds.ls(type='mesh', long=True)
+        all_meshes = cmds.ls(type="mesh", long=True)
 
         for mesh in all_meshes:
             try:
                 history = cmds.listHistory(mesh, pruneDagObjects=True)
                 if history:
                     for node in history:
-                        if cmds.nodeType(node) == 'blendShape':
-                            connections = cmds.listConnections(mesh, plugs=True, source=False, destination=True)
+                        if cmds.nodeType(node) == "blendShape":
+                            connections = cmds.listConnections(
+                                mesh, plugs=True, source=False, destination=True
+                            )
                             if connections:
                                 for conn in connections:
-                                    if 'inputTarget' in conn and cmds.nodeType(conn.split('.')[0]) == 'blendShape':
+                                    if (
+                                        "inputTarget" in conn
+                                        and cmds.nodeType(conn.split(".")[0]) == "blendShape"
+                                    ):
                                         targets.add(mesh)
                                         if self.verbose:
-                                            logger.debug(f"Found blendShape target via history: {mesh}")
+                                            logger.debug(
+                                                f"Found blendShape target via history: {mesh}"
+                                            )
                                         break
             except Exception as e:
                 logger.warning(f"Error checking history for {mesh}: {e}")
@@ -149,7 +167,7 @@ class BlendshapeTargetCleaner:
         import re
 
         duplicates = set()
-        all_meshes = cmds.ls(type='mesh', long=True)
+        all_meshes = cmds.ls(type="mesh", long=True)
 
         # Track meshes by base name
         base_name_map = {}
@@ -165,24 +183,24 @@ class BlendshapeTargetCleaner:
                 continue
 
             transform = transforms[0]
-            short_name = transform.split('|')[-1].split(':')[-1]
+            short_name = transform.split("|")[-1].split(":")[-1]
 
             # Extract base name with multiple strategies
             base_name = short_name
 
             # Remove common suffixes
-            for suffix in ['Shape', '_Geo', '_geo', '_GEO', '_mesh', '_Mesh', 'Orig']:
-                base_name = base_name.replace(suffix, '')
+            for suffix in ["Shape", "_Geo", "_geo", "_GEO", "_mesh", "_Mesh", "Orig"]:
+                base_name = base_name.replace(suffix, "")
 
             # Remove trailing numbers (Body1, Body2, etc.)
-            base_name = re.sub(r'\d+$', '', base_name)
+            base_name = re.sub(r"\d+$", "", base_name)
 
             # Remove common pattern indicators
-            base_name = re.sub(r'_copy\d*$', '', base_name, flags=re.IGNORECASE)
-            base_name = re.sub(r'_duplicate\d*$', '', base_name, flags=re.IGNORECASE)
+            base_name = re.sub(r"_copy\d*$", "", base_name, flags=re.IGNORECASE)
+            base_name = re.sub(r"_duplicate\d*$", "", base_name, flags=re.IGNORECASE)
 
             # Check for FK/IK variants
-            is_fk_ik = '_FK' in short_name or '_IK' in short_name
+            is_fk_ik = "_FK" in short_name or "_IK" in short_name
 
             # Track by base name
             if base_name in base_name_map:
@@ -224,7 +242,7 @@ class BlendshapeTargetCleaner:
                 hidden += 1
 
                 if self.verbose:
-                    short_name = shape.split('|')[-1]
+                    short_name = shape.split("|")[-1]
                     logger.info(f"Hidden: {short_name}")
 
             except Exception as e:
@@ -240,9 +258,9 @@ class BlendshapeTargetCleaner:
             Tuple of (blendshape_count, duplicate_count)
         """
         if self.verbose:
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("[TOOL] BLENDSHAPE TARGET & DUPLICATE MESH CLEANUP")
-            print("="*70)
+            print("=" * 70)
 
         # Find all blendshape targets
         self.blendshape_targets = self.find_all_blendshape_targets()
@@ -263,9 +281,9 @@ class BlendshapeTargetCleaner:
         if self.verbose:
             print(f"\n[OK] Hidden {bs_hidden} blendShape targets")
             print(f"[OK] Hidden {dup_hidden} duplicate/FK/IK meshes")
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print(f"[OK] TOTAL HIDDEN: {bs_hidden + dup_hidden} meshes")
-            print("="*70 + "\n")
+            print("=" * 70 + "\n")
 
         return bs_hidden, dup_hidden
 
@@ -281,7 +299,9 @@ def cleanup_blendshapes_for_export() -> Tuple[int, int]:
     print("[TOOL] BLENDSHAPE CLEANUP: Starting cleanup_blendshapes_for_export()")
     cleaner = BlendshapeTargetCleaner(verbose=True)
     result = cleaner.cleanup()
-    print(f"[TOOL] BLENDSHAPE CLEANUP: cleanup_blendshapes_for_export() completed with result: {result}")
+    print(
+        f"[TOOL] BLENDSHAPE CLEANUP: cleanup_blendshapes_for_export() completed with result: {result}"
+    )
     return result
 
 

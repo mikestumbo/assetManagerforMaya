@@ -15,6 +15,7 @@ from dataclasses import dataclass
 @dataclass
 class UsdSkelData:
     """USD Skeleton data structure"""
+
     skeleton_path: str  # Path in USD stage
     joint_names: List[str]  # Joint topology
     bind_transforms: List[Any]  # Joint bind transforms (4x4 matrices)
@@ -44,7 +45,7 @@ class IUSDRigConverter(ABC):
         self,
         joint_data: List[Any],  # List[JointData]
         usd_stage: Any,  # pxr.Usd.Stage
-        skeleton_path: str = "/Skeleton"
+        skeleton_path: str = "/Skeleton",
     ) -> Optional[Any]:  # pxr.UsdSkel.Skeleton
         """
         Convert Maya joint hierarchy to UsdSkel.Skeleton
@@ -65,7 +66,7 @@ class IUSDRigConverter(ABC):
         self,
         skin_cluster_data: Any,  # SkinClusterData
         skeleton: Any,  # pxr.UsdSkel.Skeleton
-        mesh_prim: Any  # pxr.Usd.Prim
+        mesh_prim: Any,  # pxr.Usd.Prim
     ) -> bool:
         """
         Convert Maya skin weights to USD skinning primvars
@@ -84,9 +85,7 @@ class IUSDRigConverter(ABC):
 
     @abstractmethod
     def create_bind_pose(
-        self,
-        skeleton: Any,  # pxr.UsdSkel.Skeleton
-        joint_data: List[Any]  # List[JointData]
+        self, skeleton: Any, joint_data: List[Any]  # pxr.UsdSkel.Skeleton  # List[JointData]
     ) -> bool:
         """
         Set skeleton bind pose from Maya joint transforms
@@ -102,10 +101,7 @@ class IUSDRigConverter(ABC):
         """
 
     @abstractmethod
-    def validate_joint_topology(
-        self,
-        joint_data: List[Any]
-    ) -> tuple[bool, str]:
+    def validate_joint_topology(self, joint_data: List[Any]) -> tuple[bool, str]:
         """
         Validate joint hierarchy is valid for USD
 
@@ -119,10 +115,7 @@ class IUSDRigConverter(ABC):
         """
 
     @abstractmethod
-    def normalize_weights(
-        self,
-        weights: Dict[int, List[tuple]]
-    ) -> Dict[int, List[tuple]]:
+    def normalize_weights(self, weights: Dict[int, List[tuple]]) -> Dict[int, List[tuple]]:
         """
         Normalize skin weights to sum to 1.0 per vertex
 
@@ -136,10 +129,7 @@ class IUSDRigConverter(ABC):
         """
 
     @abstractmethod
-    def get_max_influences_per_vertex(
-        self,
-        skin_cluster_data: Any
-    ) -> int:
+    def get_max_influences_per_vertex(self, skin_cluster_data: Any) -> int:
         """
         Get maximum number of joint influences per vertex
 
@@ -154,9 +144,7 @@ class IUSDRigConverter(ABC):
 
     @abstractmethod
     def prune_zero_weights(
-        self,
-        weights: Dict[int, List[tuple]],
-        threshold: float = 0.001
+        self, weights: Dict[int, List[tuple]], threshold: float = 0.001
     ) -> Dict[int, List[tuple]]:
         """
         Remove weights below threshold to optimize data

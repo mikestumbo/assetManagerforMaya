@@ -15,29 +15,29 @@ class UITheme:
     """
 
     # === MAIN COLOR PALETTE ===
-    PRIMARY_BG = "#4a4a4a"      # Main background color
-    SECONDARY_BG = "#5a5a5a"    # Hover/selected background
-    TERTIARY_BG = "#6a6a6a"     # Pressed/active background
-    DARK_BG = "#3a3a3a"         # Darker background for panels
+    PRIMARY_BG = "#4a4a4a"  # Main background color
+    SECONDARY_BG = "#5a5a5a"  # Hover/selected background
+    TERTIARY_BG = "#6a6a6a"  # Pressed/active background
+    DARK_BG = "#3a3a3a"  # Darker background for panels
 
     # === TEXT COLORS ===
-    TEXT_PRIMARY = "#ffffff"    # Main text color
+    TEXT_PRIMARY = "#ffffff"  # Main text color
     TEXT_SECONDARY = "#cccccc"  # Secondary text color
-    TEXT_DISABLED = "#808080"   # Disabled text color
-    TEXT_ACCENT = "#0078d4"     # Accent/link color
+    TEXT_DISABLED = "#808080"  # Disabled text color
+    TEXT_ACCENT = "#0078d4"  # Accent/link color
 
     # === BORDER COLORS ===
     BORDER_PRIMARY = "#666666"  # Main border color
-    BORDER_DARK = "#555555"     # Darker border
-    BORDER_LIGHT = "#777777"    # Lighter border
+    BORDER_DARK = "#555555"  # Darker border
+    BORDER_LIGHT = "#777777"  # Lighter border
 
     # === BUTTON COLORS ===
     BUTTON_BG = PRIMARY_BG
     BUTTON_HOVER = SECONDARY_BG
     BUTTON_PRESSED = TERTIARY_BG
-    BUTTON_ACCENT = "#0078d4"   # Blue accent for primary buttons
+    BUTTON_ACCENT = "#0078d4"  # Blue accent for primary buttons
     BUTTON_SUCCESS = "#28a745"  # Green for success actions
-    BUTTON_DANGER = "#dc3545"   # Red for danger actions
+    BUTTON_DANGER = "#dc3545"  # Red for danger actions
 
     # === INPUT COLORS ===
     INPUT_BG = "#3a3a3a"

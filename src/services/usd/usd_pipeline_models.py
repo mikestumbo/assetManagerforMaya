@@ -56,6 +56,7 @@ from enum import Enum, auto
 try:
     import maya.cmds as cmds  # type: ignore
     import maya.mel as mel  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -65,6 +66,7 @@ except ImportError:
 # USD imports (conditional)
 try:
     from pxr import Usd, UsdSkel, UsdGeom, Vt, Gf  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -72,20 +74,22 @@ except ImportError:
 
 class ConversionStatus(Enum):
     """Status of a component conversion to USD"""
-    SUCCESS = auto()       # Fully converted to USD
-    PARTIAL = auto()       # Some data converted, some in fallback
-    FALLBACK = auto()      # Using .rig.mb fallback
-    SKIPPED = auto()       # Not applicable/not requested
-    FAILED = auto()        # Conversion failed
+
+    SUCCESS = auto()  # Fully converted to USD
+    PARTIAL = auto()  # Some data converted, some in fallback
+    FALLBACK = auto()  # Using .rig.mb fallback
+    SKIPPED = auto()  # Not applicable/not requested
+    FAILED = auto()  # Conversion failed
 
 
 @dataclass
 class ConversionResult:
     """Result of converting a single component type"""
+
     component_type: str
     status: ConversionStatus
-    usd_count: int = 0           # Items successfully in USD
-    fallback_count: int = 0      # Items using .rig.mb fallback
+    usd_count: int = 0  # Items successfully in USD
+    fallback_count: int = 0  # Items using .rig.mb fallback
     message: str = ""
     details: List[str] = field(default_factory=list)
 
@@ -93,6 +97,7 @@ class ConversionResult:
 @dataclass
 class ExportResult:
     """Complete export result with all conversions"""
+
     success: bool = False
     usd_path: Optional[Path] = None
     rig_mb_path: Optional[Path] = None
@@ -126,12 +131,16 @@ class ExportResult:
                 ConversionStatus.PARTIAL: "[WARNING]",
                 ConversionStatus.FALLBACK: "[PACKAGE]",
                 ConversionStatus.SKIPPED: "⏭️",
-                ConversionStatus.FAILED: "[ERROR]"
+                ConversionStatus.FAILED: "[ERROR]",
             }.get(result.status, "?")
-            lines.append(f"    {status_icon} {comp_type}: {result.usd_count} USD, {result.fallback_count} fallback")
+            lines.append(
+                f"    {status_icon} {comp_type}: {result.usd_count} USD, {result.fallback_count} fallback"
+            )
 
         lines.append("")
-        lines.append(f"  Total: {self.total_usd_items} in USD, {self.total_fallback_items} in fallback")
+        lines.append(
+            f"  Total: {self.total_usd_items} in USD, {self.total_fallback_items} in fallback"
+        )
 
         return "\n".join(lines)
 
@@ -139,6 +148,7 @@ class ExportResult:
 @dataclass
 class ImportResult:
     """Complete import result"""
+
     success: bool = False
 
     # What was imported (final totals)
@@ -187,12 +197,24 @@ class ImportResult:
             fb_blends = self.blendshapes_imported - self.usd_blendshapes
 
             skins = self.skin_clusters_imported
-            lines.append(f"  {'Meshes':<14} {self.usd_meshes:<6} {fb_meshes:<10} {self.meshes_imported}")
-            lines.append(f"  {'Joints':<14} {self.usd_joints:<6} {fb_joints:<10} {self.joints_imported}")
-            lines.append(f"  {'NURBS Curves':<14} {self.usd_curves:<6} {fb_curves:<10} {self.curves_imported}")
-            lines.append(f"  {'Materials':<14} {self.usd_materials:<6} {fb_materials:<10} {self.materials_imported}")
-            lines.append(f"  {'Skin Clusters':<14} {self.usd_skin_clusters:<6} {fb_skins:<10} {skins}")
-            lines.append(f"  {'Blendshapes':<14} {self.usd_blendshapes:<6} {fb_blends:<10} {self.blendshapes_imported}")
+            lines.append(
+                f"  {'Meshes':<14} {self.usd_meshes:<6} {fb_meshes:<10} {self.meshes_imported}"
+            )
+            lines.append(
+                f"  {'Joints':<14} {self.usd_joints:<6} {fb_joints:<10} {self.joints_imported}"
+            )
+            lines.append(
+                f"  {'NURBS Curves':<14} {self.usd_curves:<6} {fb_curves:<10} {self.curves_imported}"
+            )
+            lines.append(
+                f"  {'Materials':<14} {self.usd_materials:<6} {fb_materials:<10} {self.materials_imported}"
+            )
+            lines.append(
+                f"  {'Skin Clusters':<14} {self.usd_skin_clusters:<6} {fb_skins:<10} {skins}"
+            )
+            lines.append(
+                f"  {'Blendshapes':<14} {self.usd_blendshapes:<6} {fb_blends:<10} {self.blendshapes_imported}"
+            )
             consts = self.constraints_imported
             lines.append(f"  {'Constraints':<14} {'N/A':<6} {consts:<10} {consts}")
 
@@ -218,6 +240,7 @@ class ImportResult:
 @dataclass
 class ExportOptions:
     """Options for USD export"""
+
     # Output options
     output_format: str = "usdz"  # "usd", "usdc", "usda", "usdz"
     create_rig_mb_backup: bool = True  # Always recommended!
@@ -246,10 +269,10 @@ class ExportOptions:
 
     # USD Layers (Maya 2026+ feature)
     use_layered_export: bool = False  # Export to layered USD structure
-    geometry_layer: bool = True       # Separate layer for geometry
-    skeleton_layer: bool = True       # Separate layer for skeleton/skinning
-    materials_layer: bool = True      # Separate layer for materials/shading
-    animation_layer: bool = True      # Separate layer for animation data
+    geometry_layer: bool = True  # Separate layer for geometry
+    skeleton_layer: bool = True  # Separate layer for skeleton/skinning
+    materials_layer: bool = True  # Separate layer for materials/shading
+    animation_layer: bool = True  # Separate layer for animation data
 
     # Advanced
     mesh_format: str = "default"  # "default", "subdivision"
@@ -258,9 +281,19 @@ class ExportOptions:
     # XGen / Hair System Filtering
     exclude_xgen_meshes: bool = True  # Exclude XGen scalp/guide meshes from export
     xgen_mesh_patterns: tuple = (  # Patterns to identify XGen-related meshes
-        "_scalp", "Scalp", "_xgen", "XGen", "xgen",
-        "_hair", "Hair_", "_fur", "Fur_",
-        "_guide", "Guide_", "_groom", "Groom_"
+        "_scalp",
+        "Scalp",
+        "_xgen",
+        "XGen",
+        "xgen",
+        "_hair",
+        "Hair_",
+        "_fur",
+        "Fur_",
+        "_guide",
+        "Guide_",
+        "_groom",
+        "Groom_",
     )
 
     # Viewport Compatibility (for complex rigs)
@@ -300,9 +333,30 @@ class ExportOptions:
 
     # Facial joint patterns to exclude when body_skeleton_only=True
     facial_joint_patterns: tuple = (
-        "Face", "face", "Lip", "lip", "Lid", "lid", "Eye", "eye",
-        "Brow", "brow", "Nose", "nose", "Jaw", "jaw", "Tongue", "tongue",
-        "Cheek", "cheek", "Ear", "ear", "Fleshy", "fleshy", "Ribbon", "ribbon"
+        "Face",
+        "face",
+        "Lip",
+        "lip",
+        "Lid",
+        "lid",
+        "Eye",
+        "eye",
+        "Brow",
+        "brow",
+        "Nose",
+        "nose",
+        "Jaw",
+        "jaw",
+        "Tongue",
+        "tongue",
+        "Cheek",
+        "cheek",
+        "Ear",
+        "ear",
+        "Fleshy",
+        "fleshy",
+        "Ribbon",
+        "ribbon",
     )
 
     # RenderMan Asset Library (optional — user-supplied)
@@ -317,6 +371,7 @@ class ExportOptions:
 @dataclass
 class ImportOptions:
     """Options for USD import"""
+
     # Component selection
     import_geometry: bool = True
     import_nurbs_curves: bool = True
@@ -333,7 +388,9 @@ class ImportOptions:
     # Workflow modes
     usd_proxy_mode: bool = False  # Keep USD as proxy (experimental, Maya 2026 bugs)
     hybrid_mode: bool = False  # Convert USD→Maya + import controllers (recommended)
-    convert_skeleton_to_maya: bool = False  # Convert UsdSkel to Maya joints (opt-in; proxy mode uses UsdSkelImaging)
+    convert_skeleton_to_maya: bool = (
+        False  # Convert UsdSkel to Maya joints (opt-in; proxy mode uses UsdSkelImaging)
+    )
 
     # Skin weight extraction (Phase 3.2)
     extract_full_weights: bool = False  # Load references for full skinCluster data (slower)
@@ -348,7 +405,7 @@ class ImportOptions:
     import_animation: bool = True
 
     # USD Layers (Maya 2026+ feature)
-    import_all_layers: bool = True    # Import all USD layers
-    flatten_layers: bool = False      # Flatten layers on import (combine into one)
-    create_edit_layer: bool = True    # Create editable layer for local edits
-    open_layer_editor: bool = False   # Open mayaUSD Layer Editor after proxy import (Option B)
+    import_all_layers: bool = True  # Import all USD layers
+    flatten_layers: bool = False  # Flatten layers on import (combine into one)
+    create_edit_layer: bool = True  # Create editable layer for local edits
+    open_layer_editor: bool = False  # Open mayaUSD Layer Editor after proxy import (Option B)

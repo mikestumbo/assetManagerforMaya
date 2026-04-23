@@ -56,7 +56,9 @@ class IMayaIntegration(ABC):
         """
 
     @abstractmethod
-    def export_selection(self, export_path: Path, options: Optional[Dict[str, Any]] = None) -> bool:
+    def export_selection(
+        self, export_path: Path, options: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Export Maya selection to file
 

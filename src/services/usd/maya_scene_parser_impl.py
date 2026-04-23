@@ -17,15 +17,16 @@ from src.core.interfaces.maya_scene_parser import (
     SkinClusterData,
     NurbsCurveData,  # NEW: NURBS curve support!
     RigConnectionData,  # NEW: Rig connection support!
-    ConstraintData,     # NEW: Constraint support!
-    SetDrivenKeyData,   # NEW: Set-driven key support!
-    MayaSceneData
+    ConstraintData,  # NEW: Constraint support!
+    SetDrivenKeyData,  # NEW: Set-driven key support!
+    MayaSceneData,
 )
 
 # Conditional Maya import (pattern from thumbnail_service_impl.py)
 try:
     import maya.cmds as cmds  # type: ignore  # noqa: F401
     import maya.api.OpenMaya as om2  # type: ignore  # noqa: F401
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -48,7 +49,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
         if not MAYA_AVAILABLE:
             self.logger.warning("Maya not available - parser will have limited functionality")
 
-    def parse_maya_file(self, maya_file: Optional[Path], options: Optional[Dict[str, Any]] = None) -> MayaSceneData:
+    def parse_maya_file(
+        self, maya_file: Optional[Path], options: Optional[Dict[str, Any]] = None
+    ) -> MayaSceneData:
         """Parse complete Maya file and extract all data
 
         Clean Code: Main entry point for file parsing
@@ -132,11 +135,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 current_file = cmds.file(query=True, sceneName=True)
                 source_file = Path(current_file) if current_file else Path("untitled.ma")
                 return MayaSceneData(
-                    source_file=source_file,
-                    meshes=[],
-                    materials=[],
-                    joints=[],
-                    skin_clusters=[]
+                    source_file=source_file, meshes=[], materials=[], joints=[], skin_clusters=[]
                 )
 
             self.logger.info(f"Parsing {len(selected)} selected objects")
@@ -146,7 +145,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
             source_file = Path(current_file) if current_file else Path("untitled.ma")
 
             # Parse selected objects
-            scene_data = self._parse_current_scene(source_file=source_file, objects_filter=selected)
+            scene_data = self._parse_current_scene(
+                source_file=source_file, objects_filter=selected
+            )
             if not scene_data:
                 raise RuntimeError("Failed to parse scene data")
             return scene_data
@@ -197,11 +198,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             self.logger.info(
                 f"Extracted mesh data: {mesh_name} ({len(vertices)} vertices, "
-                f"{len(face_vertex_counts)} faces)")
+                f"{len(face_vertex_counts)} faces)"
+            )
 
             return MeshData(
                 name=mesh_name,  # CRITICAL FIX: Use full DAG path for skin cluster matching
-                transform_name=mesh_name.split('|')[-1],
+                transform_name=mesh_name.split("|")[-1],
                 vertices=vertices,
                 face_vertex_counts=face_vertex_counts,
                 face_vertex_indices=face_vertex_indices,
@@ -210,7 +212,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 uv_indices=uv_indices,
                 vertex_colors=vertex_colors,
                 world_matrix=world_matrix,
-                material_assignments=material_assignments
+                material_assignments=material_assignments,
             )
 
         except Exception as e:
@@ -243,16 +245,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
             node_type = cmds.nodeType(material_name)
 
             # Extract properties based on shader type
-            if node_type in ('lambert', 'blinn'):
+            if node_type in ("lambert", "blinn"):
                 return self._extract_standard_material(material_name, node_type)
-            elif node_type == 'standardSurface':
+            elif node_type == "standardSurface":
                 return self._extract_standard_surface_material(material_name, node_type)
-            elif node_type == 'openPBRSurface':
+            elif node_type == "openPBRSurface":
                 # Maya 2026+ OpenPBR shader - has different attribute names
                 return self._extract_openpbr_material(material_name, node_type)
-            elif node_type.startswith('Pxr') or node_type == 'unknown':
+            elif node_type.startswith("Pxr") or node_type == "unknown":
                 return self._extract_renderman_material(material_name, node_type)
-            elif node_type in ('particleCloud', 'volumeShader'):
+            elif node_type in ("particleCloud", "volumeShader"):
                 # Volume shaders - not surface materials, skip extraction
                 self.logger.debug(f"Skipping volume shader: {node_type}")
                 return self._extract_generic_material(material_name, node_type)
@@ -313,14 +315,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
             # Get bind matrices
             bind_pre_matrices = self._extract_bind_matrices(skin_cluster, influence_joints)
 
-            self.logger.info(f"Extracted skin cluster: {skin_cluster} ({len(influence_joints)} joints)")
+            self.logger.info(
+                f"Extracted skin cluster: {skin_cluster} ({len(influence_joints)} joints)"
+            )
 
             return SkinClusterData(
                 name=skin_cluster,
                 mesh_name=mesh_name,
                 influence_joints=influence_joints,
                 weights=weights,
-                bind_pre_matrices=bind_pre_matrices
+                bind_pre_matrices=bind_pre_matrices,
             )
 
         except Exception as e:
@@ -346,8 +350,10 @@ class MayaSceneParserImpl(IMayaSceneParser):
         try:
             # Auto-detect root joint if not provided
             if root_joint is None:
-                all_joints = cmds.ls(type='joint', long=True)
-                root_joints = [j for j in all_joints if not cmds.listRelatives(j, parent=True, type='joint')]
+                all_joints = cmds.ls(type="joint", long=True)
+                root_joints = [
+                    j for j in all_joints if not cmds.listRelatives(j, parent=True, type="joint")
+                ]
                 if not root_joints:
                     self.logger.warning("No root joints found")
                     return []
@@ -359,14 +365,17 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 return []
 
             # Get all joints in hierarchy
-            all_joints = cmds.listRelatives(root_joint, allDescendents=True, type='joint', fullPath=True) or []
+            all_joints = (
+                cmds.listRelatives(root_joint, allDescendents=True, type="joint", fullPath=True)
+                or []
+            )
             all_joints.insert(0, root_joint)  # Include root
 
             joint_data_list = []
 
             for joint in all_joints:
                 # Get parent (only consider joint-type parents for skeleton hierarchy)
-                parent = cmds.listRelatives(joint, parent=True, type='joint', fullPath=True)
+                parent = cmds.listRelatives(joint, parent=True, type="joint", fullPath=True)
                 parent_name = parent[0] if parent else None
 
                 # Get bind pose matrix
@@ -376,14 +385,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 world_bind_matrix = self._extract_transform(joint)
 
                 # Get children
-                children = cmds.listRelatives(joint, children=True, type='joint', fullPath=True) or []
+                children = (
+                    cmds.listRelatives(joint, children=True, type="joint", fullPath=True) or []
+                )
 
                 joint_data = JointData(
                     name=joint,
                     parent_name=parent_name,
                     bind_pose_matrix=bind_pose_matrix,
                     world_bind_matrix=world_bind_matrix,
-                    children=[c.split('|')[-1] for c in children]  # Short names
+                    children=[c.split("|")[-1] for c in children],  # Short names
                 )
 
                 joint_data_list.append(joint_data)
@@ -396,9 +407,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             return []
 
     def extract_nurbs_curves(
-        self,
-        curve_names: Optional[List[str]] = None,
-        include_hierarchy: bool = True
+        self, curve_names: Optional[List[str]] = None, include_hierarchy: bool = True
     ) -> List[NurbsCurveData]:
         """Extract NURBS curves (rig controls) from Maya scene
 
@@ -419,8 +428,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
             # Get all NURBS curves or specific ones
             if curve_names is None:
                 # Get all NURBS curve shapes, including intermediates (rig controls may be intermediate)
-                all_curve_shapes = cmds.ls(type='nurbsCurve', long=True)  # Remove noIntermediate filter
-                self.logger.info(f"🔍 Found {len(all_curve_shapes)} total NURBS curve shapes (including intermediates)")
+                all_curve_shapes = cmds.ls(
+                    type="nurbsCurve", long=True
+                )  # Remove noIntermediate filter
+                self.logger.info(
+                    f"🔍 Found {len(all_curve_shapes)} total NURBS curve shapes (including intermediates)"
+                )
 
                 # Filter out true intermediates (construction history), but keep rig controls
                 filtered_shapes = []
@@ -428,19 +441,27 @@ class MayaSceneParserImpl(IMayaSceneParser):
                     if cmds.getAttr(f"{shape}.intermediateObject"):
                         # Check if it's a rig control (has transform parent with meaningful name)
                         transform = cmds.listRelatives(shape, parent=True, fullPath=True)
-                        if transform and not any(keyword in transform[0].lower() for keyword in ['history', 'cache']):
+                        if transform and not any(
+                            keyword in transform[0].lower() for keyword in ["history", "cache"]
+                        ):
                             filtered_shapes.append(shape)  # Keep as potential rig control
                     else:
                         filtered_shapes.append(shape)
 
                 all_curve_shapes = filtered_shapes
-                self.logger.info(f"[TARGET] Filtered to {len(all_curve_shapes)} NURBS curves for extraction")
+                self.logger.info(
+                    f"[TARGET] Filtered to {len(all_curve_shapes)} NURBS curves for extraction"
+                )
             else:
                 # Get shape nodes for specified transforms
                 all_curve_shapes = []
                 for curve_name in curve_names:
-                    shapes = cmds.listRelatives(curve_name, shapes=True, fullPath=True) or []  # Remove noIntermediate
-                    all_curve_shapes.extend([s for s in shapes if cmds.nodeType(s) == 'nurbsCurve'])
+                    shapes = (
+                        cmds.listRelatives(curve_name, shapes=True, fullPath=True) or []
+                    )  # Remove noIntermediate
+                    all_curve_shapes.extend(
+                        [s for s in shapes if cmds.nodeType(s) == "nurbsCurve"]
+                    )
 
             self.logger.info(f"Found {len(all_curve_shapes)} NURBS curves to extract")
 
@@ -460,7 +481,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
                 try:
                     # Extract curve data
-                    curve_data = self._extract_single_nurbs_curve(curve_shape, transform_node, include_hierarchy)
+                    curve_data = self._extract_single_nurbs_curve(
+                        curve_shape, transform_node, include_hierarchy
+                    )
                     if curve_data:
                         curves.append(curve_data)
                 except Exception as e:
@@ -475,10 +498,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             return []
 
     def _extract_single_nurbs_curve(
-        self,
-        curve_shape: str,
-        transform_node: str,
-        include_hierarchy: bool
+        self, curve_shape: str, transform_node: str, include_hierarchy: bool
     ) -> Optional[NurbsCurveData]:
         """Extract single NURBS curve data
 
@@ -492,7 +512,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
         """
         try:
             # Get curve name (use transform, not shape)
-            curve_name = transform_node.split('|')[-1]  # Short name
+            curve_name = transform_node.split("|")[-1]  # Short name
 
             # Check if this is an intermediate object (skip those)
             if cmds.getAttr(f"{curve_shape}.intermediateObject"):
@@ -533,7 +553,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             # Get knot vector using Maya's curveInfo node
             # Create temporary curveInfo node to query knots
-            curve_info = cmds.createNode('curveInfo', name='tempCurveInfo')
+            curve_info = cmds.createNode("curveInfo", name="tempCurveInfo")
             try:
                 cmds.connectAttr(f"{curve_shape}.worldSpace[0]", f"{curve_info}.inputCurve")
                 knots_attr = cmds.getAttr(f"{curve_info}.knots")[0]  # Returns list of knots
@@ -558,7 +578,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
                 child_list = cmds.listRelatives(transform_node, children=True, fullPath=True) or []
                 # Filter out shape nodes from children
-                children = [c for c in child_list if cmds.nodeType(c) != 'nurbsCurve']
+                children = [c for c in child_list if cmds.nodeType(c) != "nurbsCurve"]
 
             # Get override color if set
             color = None
@@ -569,7 +589,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             # Get line width (Maya 2015+)
             line_width = None
-            if cmds.attributeQuery('lineWidth', node=transform_node, exists=True):
+            if cmds.attributeQuery("lineWidth", node=transform_node, exists=True):
                 line_width = cmds.getAttr(f"{transform_node}.lineWidth")
 
             # Get custom attributes
@@ -596,10 +616,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 children=children,
                 color=color,
                 line_width=line_width,
-                custom_attrs=custom_attrs
+                custom_attrs=custom_attrs,
             )
 
-            self.logger.debug(f"Extracted curve: {curve_name} ({len(cvs)} CVs, degree {degree}, {form_str})")
+            self.logger.debug(
+                f"Extracted curve: {curve_name} ({len(cvs)} CVs, degree {degree}, {form_str})"
+            )
             return curve_data
 
         except Exception as e:
@@ -617,38 +639,38 @@ class MayaSceneParserImpl(IMayaSceneParser):
         """
         # Maya standard color palette (approximate)
         color_map = {
-            0: (0.5, 0.5, 0.5),    # Gray
-            1: (0.0, 0.0, 0.0),    # Black
+            0: (0.5, 0.5, 0.5),  # Gray
+            1: (0.0, 0.0, 0.0),  # Black
             2: (0.25, 0.25, 0.25),  # Dark gray
-            3: (0.5, 0.5, 0.5),    # Gray
-            4: (0.6, 0.0, 0.15),   # Dark red
-            5: (0.0, 0.0, 0.4),    # Dark blue
-            6: (0.0, 0.0, 1.0),    # Blue
-            7: (0.0, 0.3, 0.0),    # Dark green
-            8: (0.15, 0.0, 0.3),   # Purple
-            9: (0.8, 0.0, 0.8),    # Magenta
-            10: (0.5, 0.3, 0.2),   # Brown
-            11: (0.2, 0.1, 0.0),   # Dark brown
-            12: (0.6, 0.3, 0.0),   # Orange brown
-            13: (1.0, 0.0, 0.0),   # Red
-            14: (0.0, 1.0, 0.0),   # Green
+            3: (0.5, 0.5, 0.5),  # Gray
+            4: (0.6, 0.0, 0.15),  # Dark red
+            5: (0.0, 0.0, 0.4),  # Dark blue
+            6: (0.0, 0.0, 1.0),  # Blue
+            7: (0.0, 0.3, 0.0),  # Dark green
+            8: (0.15, 0.0, 0.3),  # Purple
+            9: (0.8, 0.0, 0.8),  # Magenta
+            10: (0.5, 0.3, 0.2),  # Brown
+            11: (0.2, 0.1, 0.0),  # Dark brown
+            12: (0.6, 0.3, 0.0),  # Orange brown
+            13: (1.0, 0.0, 0.0),  # Red
+            14: (0.0, 1.0, 0.0),  # Green
             15: (0.0, 0.25, 0.6),  # Blue
-            16: (1.0, 1.0, 1.0),   # White
-            17: (1.0, 1.0, 0.0),   # Yellow
-            18: (0.0, 1.0, 1.0),   # Cyan
-            19: (0.0, 1.0, 0.5),   # Aqua
-            20: (1.0, 0.7, 0.7),   # Pink
-            21: (0.9, 0.7, 0.5),   # Peach
-            22: (1.0, 1.0, 0.4),   # Light yellow
-            23: (0.0, 0.7, 0.0),   # Green
-            24: (0.6, 0.4, 0.2),   # Brown
-            25: (0.6, 0.6, 0.0),   # Yellow
-            26: (0.4, 0.6, 0.2),   # Green
-            27: (0.2, 0.6, 0.4),   # Cyan
-            28: (0.2, 0.6, 0.6),   # Light blue
-            29: (0.2, 0.4, 0.6),   # Blue
-            30: (0.4, 0.2, 0.6),   # Purple
-            31: (0.6, 0.2, 0.4),   # Magenta
+            16: (1.0, 1.0, 1.0),  # White
+            17: (1.0, 1.0, 0.0),  # Yellow
+            18: (0.0, 1.0, 1.0),  # Cyan
+            19: (0.0, 1.0, 0.5),  # Aqua
+            20: (1.0, 0.7, 0.7),  # Pink
+            21: (0.9, 0.7, 0.5),  # Peach
+            22: (1.0, 1.0, 0.4),  # Light yellow
+            23: (0.0, 0.7, 0.0),  # Green
+            24: (0.6, 0.4, 0.2),  # Brown
+            25: (0.6, 0.6, 0.0),  # Yellow
+            26: (0.4, 0.6, 0.2),  # Green
+            27: (0.2, 0.6, 0.4),  # Cyan
+            28: (0.2, 0.6, 0.6),  # Light blue
+            29: (0.2, 0.4, 0.6),  # Blue
+            30: (0.4, 0.2, 0.6),  # Purple
+            31: (0.6, 0.2, 0.4),  # Magenta
         }
 
         return color_map.get(color_index, (0.5, 0.5, 0.5))  # Default to gray
@@ -671,7 +693,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             return (False, error)
 
         # Check extension
-        if maya_file.suffix.lower() not in ['.ma', '.mb']:
+        if maya_file.suffix.lower() not in [".ma", ".mb"]:
             error = f"Invalid file extension: {maya_file.suffix}. Expected .ma or .mb"
             self.logger.error(error)
             return (False, error)
@@ -687,9 +709,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
     # ==================== PRIVATE HELPER METHODS ====================
 
     def _parse_current_scene(
-        self,
-        source_file: Optional[Path],
-        objects_filter: Optional[List[str]] = None
+        self, source_file: Optional[Path], objects_filter: Optional[List[str]] = None
     ) -> Optional[MayaSceneData]:
         """Parse current Maya scene (internal helper)
 
@@ -705,12 +725,14 @@ class MayaSceneParserImpl(IMayaSceneParser):
         try:
             # Get all meshes (or filtered objects)
             if objects_filter:
-                all_meshes = [obj for obj in objects_filter if cmds.nodeType(obj) == 'transform']
+                all_meshes = [obj for obj in objects_filter if cmds.nodeType(obj) == "transform"]
             else:
-                all_meshes = cmds.ls(type='mesh', long=True)
+                all_meshes = cmds.ls(type="mesh", long=True)
                 # Filter out intermediate objects (blendshape targets, construction history)
                 all_meshes = [m for m in all_meshes if not cmds.getAttr(f"{m}.intermediateObject")]
-                all_meshes = [cmds.listRelatives(m, parent=True, fullPath=True)[0] for m in all_meshes]
+                all_meshes = [
+                    cmds.listRelatives(m, parent=True, fullPath=True)[0] for m in all_meshes
+                ]
                 # Filter out hidden objects (blendshape targets that were hidden)
                 all_meshes = [m for m in all_meshes if cmds.getAttr(f"{m}.visibility")]
 
@@ -731,7 +753,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             # Add RenderMan materials if available (defensive: don't fail if plugin not loaded)
             try:
-                renderman_materials = cmds.ls('Pxr*', materials=True) or []
+                renderman_materials = cmds.ls("Pxr*", materials=True) or []
                 all_materials.extend(renderman_materials)
             except Exception:
                 pass  # Graceful degradation if RenderMan not available
@@ -746,8 +768,10 @@ class MayaSceneParserImpl(IMayaSceneParser):
             # We export the ENTIRE joint hierarchy to preserve FK/IK systems
             joints = []
             joints_seen = set()  # Track unique joint paths to avoid duplicates
-            all_joints = cmds.ls(type='joint', long=True)
-            root_joints = [j for j in all_joints if not cmds.listRelatives(j, parent=True, type='joint')]
+            all_joints = cmds.ls(type="joint", long=True)
+            root_joints = [
+                j for j in all_joints if not cmds.listRelatives(j, parent=True, type="joint")
+            ]
 
             for root in root_joints:
                 joint_hierarchy = self.get_joint_hierarchy(root)
@@ -809,7 +833,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 nurbs_curves=nurbs_curves,  # NEW: Include rig controls!
                 rig_connections=rig_connections,  # NEW: Include rig connections!
                 constraints=constraints,  # NEW: Include constraints!
-                set_driven_keys=set_driven_keys  # NEW: Include set-driven keys!
+                set_driven_keys=set_driven_keys,  # NEW: Include set-driven keys!
             )
 
         except Exception as e:
@@ -823,7 +847,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
         for i in range(vertex_count):
             # Extract in object space (local coordinates) - USD expects local space points
-            pos = cmds.xform(f"{shape_node}.vtx[{i}]", query=True, translation=True, objectSpace=True)
+            pos = cmds.xform(
+                f"{shape_node}.vtx[{i}]", query=True, translation=True, objectSpace=True
+            )
             vertices.append(tuple(pos))
 
         return vertices
@@ -859,7 +885,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 avg_normal = (
                     sum(normal[0::3]) / len(normal[0::3]),
                     sum(normal[1::3]) / len(normal[1::3]),
-                    sum(normal[2::3]) / len(normal[2::3])
+                    sum(normal[2::3]) / len(normal[2::3]),
                 )
                 normals.append(avg_normal)
 
@@ -895,7 +921,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             # Get colors from first color set
             colors = cmds.polyColorPerVertex(shape_node, query=True, rgb=True) or []
-            vertex_colors = [(colors[i], colors[i+1], colors[i+2]) for i in range(0, len(colors), 3)]
+            vertex_colors = [
+                (colors[i], colors[i + 1], colors[i + 2]) for i in range(0, len(colors), 3)
+            ]
             return vertex_colors
         except Exception:
             return []
@@ -911,7 +939,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
         Returns:
             Dict mapping material_name -> [face_indices]
         """
-        shading_engines = cmds.listConnections(shape_node, type='shadingEngine')
+        shading_engines = cmds.listConnections(shape_node, type="shadingEngine")
         if not shading_engines:
             return {}
 
@@ -930,10 +958,10 @@ class MayaSceneParserImpl(IMayaSceneParser):
             face_indices = []
 
             for face in assigned_faces:
-                if '.f[' in face:
+                if ".f[" in face:
                     # Parse face index from "meshShape.f[0]"
                     try:
-                        idx = int(face.split('[')[1].split(']')[0])
+                        idx = int(face.split("[")[1].split("]")[0])
                         face_indices.append(idx)
                     except Exception:
                         pass
@@ -948,12 +976,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
         material_data = MaterialData(
             name=material_name,
             shader_type=node_type,
-            diffuse_color=self._get_color_attribute(material_name, 'color'),
-            specular_color=self._get_color_attribute(material_name, 'specularColor') if node_type == 'blinn' else None,
-            roughness=1.0 - self._get_float_attribute(material_name, 'reflectivity', 0.0),
+            diffuse_color=self._get_color_attribute(material_name, "color"),
+            specular_color=(
+                self._get_color_attribute(material_name, "specularColor")
+                if node_type == "blinn"
+                else None
+            ),
+            roughness=1.0 - self._get_float_attribute(material_name, "reflectivity", 0.0),
             metallic=0.0,  # Standard Maya shaders don't have metallic
-            opacity=self._get_float_attribute(material_name, 'transparency', 1.0),
-            is_renderman=False
+            opacity=self._get_float_attribute(material_name, "transparency", 1.0),
+            is_renderman=False,
         )
 
         # Check for connected textures
@@ -963,7 +995,9 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
         return material_data
 
-    def _extract_standard_surface_material(self, material_name: str, node_type: str) -> MaterialData:
+    def _extract_standard_surface_material(
+        self, material_name: str, node_type: str
+    ) -> MaterialData:
         """Extract StandardSurface (Maya 2020+) material properties
 
         StandardSurface is Maya's modern physically-based shader (USD compatible)
@@ -972,12 +1006,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
             name=material_name,
             shader_type=node_type,
             # StandardSurface uses baseColor instead of color
-            diffuse_color=self._get_color_attribute(material_name, 'baseColor'),
-            specular_color=self._get_color_attribute(material_name, 'specularColor'),
-            roughness=self._get_float_attribute(material_name, 'specularRoughness', 0.5),
-            metallic=self._get_float_attribute(material_name, 'metalness', 0.0),
-            opacity=1.0 - self._get_float_attribute(material_name, 'transmission', 0.0),
-            is_renderman=False
+            diffuse_color=self._get_color_attribute(material_name, "baseColor"),
+            specular_color=self._get_color_attribute(material_name, "specularColor"),
+            roughness=self._get_float_attribute(material_name, "specularRoughness", 0.5),
+            metallic=self._get_float_attribute(material_name, "metalness", 0.0),
+            opacity=1.0 - self._get_float_attribute(material_name, "transmission", 0.0),
+            is_renderman=False,
         )
 
         # Check for connected textures
@@ -991,9 +1025,13 @@ class MayaSceneParserImpl(IMayaSceneParser):
             material_data.normal_texture = Path(self._get_texture_path(normal_connections[0]))
 
         # Check for roughness map
-        roughness_connections = cmds.listConnections(f"{material_name}.specularRoughness", source=True)
+        roughness_connections = cmds.listConnections(
+            f"{material_name}.specularRoughness", source=True
+        )
         if roughness_connections:
-            material_data.roughness_texture = Path(self._get_texture_path(roughness_connections[0]))
+            material_data.roughness_texture = Path(
+                self._get_texture_path(roughness_connections[0])
+            )
 
         # Check for metalness map
         metallic_connections = cmds.listConnections(f"{material_name}.metalness", source=True)
@@ -1010,16 +1048,18 @@ class MayaSceneParserImpl(IMayaSceneParser):
         """
         # OpenPBR uses different attribute names - safely get with fallbacks
         # Base color: base_color (not baseColor)
-        base_color = self._get_color_attribute_safe(material_name, 'base_color', [0.8, 0.8, 0.8])
+        base_color = self._get_color_attribute_safe(material_name, "base_color", [0.8, 0.8, 0.8])
         # Specular color
-        specular_color = self._get_color_attribute_safe(material_name, 'specular_color', [1.0, 1.0, 1.0])
+        specular_color = self._get_color_attribute_safe(
+            material_name, "specular_color", [1.0, 1.0, 1.0]
+        )
         # Roughness: specular_roughness (not specularRoughness)
-        roughness = self._get_float_attribute_safe(material_name, 'specular_roughness', 0.5)
+        roughness = self._get_float_attribute_safe(material_name, "specular_roughness", 0.5)
         # Metallic: base_metalness (not metalness)
-        metallic = self._get_float_attribute_safe(material_name, 'base_metalness', 0.0)
+        metallic = self._get_float_attribute_safe(material_name, "base_metalness", 0.0)
 
         # Transmission for opacity
-        transmission = self._get_float_attribute_safe(material_name, 'transmission_weight', 0.0)
+        transmission = self._get_float_attribute_safe(material_name, "transmission_weight", 0.0)
 
         material_data = MaterialData(
             name=material_name,
@@ -1029,20 +1069,26 @@ class MayaSceneParserImpl(IMayaSceneParser):
             roughness=roughness,
             metallic=metallic,
             opacity=1.0 - transmission,
-            is_renderman=False
+            is_renderman=False,
         )
 
         # Check for connected textures (with safe attribute checking)
         try:
-            base_color_connections = cmds.listConnections(f"{material_name}.base_color", source=True)
+            base_color_connections = cmds.listConnections(
+                f"{material_name}.base_color", source=True
+            )
             if base_color_connections:
-                material_data.diffuse_texture = Path(self._get_texture_path(base_color_connections[0]))
+                material_data.diffuse_texture = Path(
+                    self._get_texture_path(base_color_connections[0])
+                )
         except Exception:
             pass
 
         # Check for normal map
         try:
-            normal_connections = cmds.listConnections(f"{material_name}.geometry_normal", source=True)
+            normal_connections = cmds.listConnections(
+                f"{material_name}.geometry_normal", source=True
+            )
             if normal_connections:
                 material_data.normal_texture = Path(self._get_texture_path(normal_connections[0]))
         except Exception:
@@ -1050,17 +1096,25 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
         # Check for roughness map
         try:
-            roughness_connections = cmds.listConnections(f"{material_name}.specular_roughness", source=True)
+            roughness_connections = cmds.listConnections(
+                f"{material_name}.specular_roughness", source=True
+            )
             if roughness_connections:
-                material_data.roughness_texture = Path(self._get_texture_path(roughness_connections[0]))
+                material_data.roughness_texture = Path(
+                    self._get_texture_path(roughness_connections[0])
+                )
         except Exception:
             pass
 
         # Check for metalness map
         try:
-            metallic_connections = cmds.listConnections(f"{material_name}.base_metalness", source=True)
+            metallic_connections = cmds.listConnections(
+                f"{material_name}.base_metalness", source=True
+            )
             if metallic_connections:
-                material_data.metallic_texture = Path(self._get_texture_path(metallic_connections[0]))
+                material_data.metallic_texture = Path(
+                    self._get_texture_path(metallic_connections[0])
+                )
         except Exception:
             pass
 
@@ -1090,25 +1144,25 @@ class MayaSceneParserImpl(IMayaSceneParser):
         Disney/Pixar Critical: Preserve RenderMan parameters
         """
         # Get basic material properties with proper attribute names
-        diffuse_color = self._get_color_attribute(material_name, 'diffuseColor')
+        diffuse_color = self._get_color_attribute(material_name, "diffuseColor")
         # PxrDisney uses baseColor, PxrSurface uses diffuseColor
         if diffuse_color == [0.5, 0.5, 0.5]:  # Default means not found
-            diffuse_color = self._get_color_attribute(material_name, 'baseColor')
+            diffuse_color = self._get_color_attribute(material_name, "baseColor")
         # PxrSurface uses specularFaceColor, not specularColor
-        specular_color = self._get_color_attribute(material_name, 'specularFaceColor')
+        specular_color = self._get_color_attribute(material_name, "specularFaceColor")
         if specular_color == [0.5, 0.5, 0.5]:  # Default means not found
-            specular_color = self._get_color_attribute(material_name, 'specularColor')
+            specular_color = self._get_color_attribute(material_name, "specularColor")
 
         # For metallic, try different possible attribute names (PxrDisney has metallic, PxrSurface doesn't)
-        metallic = self._get_float_attribute(material_name, 'metallic', 0.0)
+        metallic = self._get_float_attribute(material_name, "metallic", 0.0)
         if metallic == 0.0:  # If not found, estimate from specular
             specular_intensity = sum(specular_color) / 3.0
             metallic = min(specular_intensity * 2.0, 1.0)
 
         # For roughness, try different possible attribute names
-        roughness = self._get_float_attribute(material_name, 'roughness', 0.5)
+        roughness = self._get_float_attribute(material_name, "roughness", 0.5)
         if roughness == 0.5:  # If not found, try specularRoughness
-            roughness = self._get_float_attribute(material_name, 'specularRoughness', 0.5)
+            roughness = self._get_float_attribute(material_name, "specularRoughness", 0.5)
 
         material_data = MaterialData(
             name=material_name,
@@ -1116,7 +1170,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             diffuse_color=diffuse_color,
             metallic=metallic,
             roughness=roughness,
-            is_renderman=True
+            is_renderman=True,
         )
 
         # Extract all RenderMan-specific parameters with better filtering
@@ -1125,7 +1179,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             for attr in pxr_attributes:
                 try:
                     # Skip connection-related attributes
-                    if 'Connection' in attr or attr.endswith('Connection'):
+                    if "Connection" in attr or attr.endswith("Connection"):
                         continue
 
                     value = cmds.getAttr(f"{material_name}.{attr}")
@@ -1133,7 +1187,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                     # Skip complex data types that USD can't handle
                     if isinstance(value, (list, tuple)) and len(value) > 4:
                         continue
-                    elif hasattr(value, '__len__') and not isinstance(value, (str, list, tuple)):
+                    elif hasattr(value, "__len__") and not isinstance(value, (str, list, tuple)):
                         continue  # Skip other complex objects
 
                     material_data.renderman_params[attr] = value
@@ -1152,7 +1206,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             diffuse_color=(0.5, 0.5, 0.5),
             metallic=0.0,
             roughness=0.5,
-            is_renderman=False
+            is_renderman=False,
         )
 
     def _get_color_attribute(self, node: str, attr: str) -> tuple:
@@ -1180,7 +1234,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
     def _find_skin_clusters(self, mesh_name: str) -> List[str]:
         """Find skin clusters attached to mesh"""
         history = cmds.listHistory(mesh_name, pruneDagObjects=True)
-        skin_clusters = [h for h in history if cmds.nodeType(h) == 'skinCluster']
+        skin_clusters = [h for h in history if cmds.nodeType(h) == "skinCluster"]
         return skin_clusters
 
     def _extract_skin_weights(self, skin_cluster: str, mesh_name: str) -> Dict[int, List[tuple]]:
@@ -1208,14 +1262,13 @@ class MayaSceneParserImpl(IMayaSceneParser):
             # Defensive: blendshape targets may raise exceptions on skinPercent queries
             try:
                 vertex_weights = cmds.skinPercent(
-                    skin_cluster,
-                    f"{mesh_name}.vtx[{v_idx}]",
-                    query=True,
-                    value=True
+                    skin_cluster, f"{mesh_name}.vtx[{v_idx}]", query=True, value=True
                 )
             except Exception as e:
                 # Blendshape targets or invalid skin clusters may fail here
-                self.logger.debug(f"Could not query skin weights for vertex {v_idx} on {mesh_name}: {e}")
+                self.logger.debug(
+                    f"Could not query skin weights for vertex {v_idx} on {mesh_name}: {e}"
+                )
                 continue
 
             # Defensive: vertex_weights can be None for invalid skin clusters
@@ -1232,13 +1285,17 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
         return weights
 
-    def _extract_bind_matrices(self, skin_cluster: str, joints: List[str]) -> Dict[str, List[float]]:
+    def _extract_bind_matrices(
+        self, skin_cluster: str, joints: List[str]
+    ) -> Dict[str, List[float]]:
         """Extract bind pose matrices for each joint"""
         bind_matrices = {}
 
         # Defensive: if joints is None or empty, return empty dict
         if not joints:
-            self.logger.debug(f"No joints provided for bind matrix extraction on skin cluster: {skin_cluster}")
+            self.logger.debug(
+                f"No joints provided for bind matrix extraction on skin cluster: {skin_cluster}"
+            )
             return bind_matrices
 
         for joint in joints:
@@ -1261,7 +1318,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
         """
         try:
             # Find bind pose dagPose node
-            bind_poses = cmds.ls(type='dagPose')
+            bind_poses = cmds.ls(type="dagPose")
             bind_pose_node = None
 
             for pose in bind_poses:
@@ -1275,11 +1332,11 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 members = cmds.dagPose(bind_pose_node, query=True, members=True) or []
 
                 # Find this joint's index in the dagPose
-                joint_short_name = joint.split(':')[-1].split('|')[-1]
+                joint_short_name = joint.split(":")[-1].split("|")[-1]
                 dag_pose_idx = None
 
                 for member_idx, member in enumerate(members):
-                    member_short = member.split(':')[-1].split('|')[-1]
+                    member_short = member.split(":")[-1].split("|")[-1]
                     if member_short == joint_short_name:
                         dag_pose_idx = member_idx
                         break
@@ -1292,9 +1349,13 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
                         # Convert world matrix to local matrix
                         # Get parent's world matrix
-                        parent = cmds.listRelatives(joint, parent=True, type='joint', fullPath=True)
+                        parent = cmds.listRelatives(
+                            joint, parent=True, type="joint", fullPath=True
+                        )
                         if parent:
-                            parent_world_matrix = cmds.xform(parent[0], query=True, matrix=True, worldSpace=True)
+                            parent_world_matrix = cmds.xform(
+                                parent[0], query=True, matrix=True, worldSpace=True
+                            )
                             # Use module-level om2 (already imported conditionally)
                             parent_m = om2.MMatrix(parent_world_matrix)
                             world_m = om2.MMatrix(world_matrix)
@@ -1322,8 +1383,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                 return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 
     def extract_rig_connections(
-        self,
-        nurbs_curves: List[NurbsCurveData]
+        self, nurbs_curves: List[NurbsCurveData]
     ) -> List[RigConnectionData]:
         """Extract rigging connections for NURBS curve controllers
 
@@ -1358,28 +1418,33 @@ class MayaSceneParserImpl(IMayaSceneParser):
                         continue
 
                     # Get connections where this attribute is the source
-                    connections_list = cmds.listConnections(
-                        f"{curve_transform}.{attr}",
-                        source=False,  # We want destinations
-                        destination=True,
-                        plugs=True,
-                        connections=True
-                    ) or []
+                    connections_list = (
+                        cmds.listConnections(
+                            f"{curve_transform}.{attr}",
+                            source=False,  # We want destinations
+                            destination=True,
+                            plugs=True,
+                            connections=True,
+                        )
+                        or []
+                    )
 
                     # Process connections in pairs (source, destination)
                     for i in range(0, len(connections_list), 2):
                         source_plug = connections_list[i]
-                        dest_plug = connections_list[i + 1] if i + 1 < len(connections_list) else None
+                        dest_plug = (
+                            connections_list[i + 1] if i + 1 < len(connections_list) else None
+                        )
 
                         if dest_plug:
                             # Parse source and destination
-                            source_parts = source_plug.split('.')
-                            dest_parts = dest_plug.split('.')
+                            source_parts = source_plug.split(".")
+                            dest_parts = dest_plug.split(".")
 
                             if len(source_parts) >= 2 and len(dest_parts) >= 2:
-                                source_node = '.'.join(source_parts[:-1])
+                                source_node = ".".join(source_parts[:-1])
                                 source_attr = source_parts[-1]
-                                target_node = '.'.join(dest_parts[:-1])
+                                target_node = ".".join(dest_parts[:-1])
                                 target_attr = dest_parts[-1]
 
                                 # Create connection data
@@ -1389,7 +1454,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                                     source_attr=source_attr,
                                     target_attr=target_attr,
                                     connection_type="direct",
-                                    is_input=True
+                                    is_input=True,
                                 )
                                 connections.append(connection)
 
@@ -1400,10 +1465,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             self.logger.error(f"Failed to extract rig connections: {e}")
             return []
 
-    def extract_constraints(
-        self,
-        nurbs_curves: List[NurbsCurveData]
-    ) -> List[ConstraintData]:
+    def extract_constraints(self, nurbs_curves: List[NurbsCurveData]) -> List[ConstraintData]:
         """Extract Maya constraints involving NURBS curve controllers
 
         Args:
@@ -1422,8 +1484,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
             # Find all constraint nodes in the scene
             constraint_types = [
-                'parentConstraint', 'pointConstraint', 'orientConstraint',
-                'scaleConstraint', 'aimConstraint', 'poleVectorConstraint'
+                "parentConstraint",
+                "pointConstraint",
+                "orientConstraint",
+                "scaleConstraint",
+                "aimConstraint",
+                "poleVectorConstraint",
             ]
 
             for constraint_type in constraint_types:
@@ -1431,11 +1497,14 @@ class MayaSceneParserImpl(IMayaSceneParser):
 
                 for constraint_node in constraint_nodes:
                     # Get constraint target (what it's constraining)
-                    constrained_objs = cmds.listConnections(
-                        f"{constraint_node}.constraintParentInverseMatrix",
-                        source=True,
-                        type='transform'
-                    ) or []
+                    constrained_objs = (
+                        cmds.listConnections(
+                            f"{constraint_node}.constraintParentInverseMatrix",
+                            source=True,
+                            type="transform",
+                        )
+                        or []
+                    )
 
                     if not constrained_objs:
                         continue
@@ -1447,11 +1516,12 @@ class MayaSceneParserImpl(IMayaSceneParser):
                         continue
 
                     # Get constraint drivers
-                    driver_nodes = cmds.listConnections(
-                        f"{constraint_node}.target",
-                        source=True,
-                        type='transform'
-                    ) or []
+                    driver_nodes = (
+                        cmds.listConnections(
+                            f"{constraint_node}.target", source=True, type="transform"
+                        )
+                        or []
+                    )
 
                     # Get driver weights
                     driver_weights = {}
@@ -1467,16 +1537,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
                     interpolate = cmds.getAttr(f"{constraint_node}.interpType") == 1
 
                     # Determine constrained attributes based on constraint type
-                    if constraint_type == 'parentConstraint':
-                        target_attrs = ['translate', 'rotate']
-                    elif constraint_type == 'pointConstraint':
-                        target_attrs = ['translate']
-                    elif constraint_type == 'orientConstraint':
-                        target_attrs = ['rotate']
-                    elif constraint_type == 'scaleConstraint':
-                        target_attrs = ['scale']
+                    if constraint_type == "parentConstraint":
+                        target_attrs = ["translate", "rotate"]
+                    elif constraint_type == "pointConstraint":
+                        target_attrs = ["translate"]
+                    elif constraint_type == "orientConstraint":
+                        target_attrs = ["rotate"]
+                    elif constraint_type == "scaleConstraint":
+                        target_attrs = ["scale"]
                     else:
-                        target_attrs = ['translate', 'rotate', 'scale']
+                        target_attrs = ["translate", "rotate", "scale"]
 
                     constraint_data = ConstraintData(
                         name=constraint_node,
@@ -1486,7 +1556,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                         driver_nodes=driver_nodes,
                         driver_weights=driver_weights,
                         maintain_offset=maintain_offset,
-                        interpolate=interpolate
+                        interpolate=interpolate,
                     )
                     constraints.append(constraint_data)
 
@@ -1498,8 +1568,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
             return []
 
     def extract_set_driven_keys(
-        self,
-        nurbs_curves: List[NurbsCurveData]
+        self, nurbs_curves: List[NurbsCurveData]
     ) -> List[SetDrivenKeyData]:
         """Extract set-driven keys involving NURBS curve controllers
 
@@ -1518,20 +1587,16 @@ class MayaSceneParserImpl(IMayaSceneParser):
             curve_transforms = [curve.transform_name for curve in nurbs_curves]
 
             # Get all anim curves in the scene
-            anim_curves = cmds.ls(type='animCurve') or []
+            anim_curves = cmds.ls(type="animCurve") or []
 
             for anim_curve in anim_curves:
                 # Get what this anim curve is driving
-                driven_attrs = cmds.listConnections(
-                    anim_curve,
-                    destination=True,
-                    plugs=True
-                ) or []
+                driven_attrs = cmds.listConnections(anim_curve, destination=True, plugs=True) or []
 
                 for driven_attr in driven_attrs:
-                    driven_parts = driven_attr.split('.')
+                    driven_parts = driven_attr.split(".")
                     if len(driven_parts) >= 2:
-                        driven_node = '.'.join(driven_parts[:-1])
+                        driven_node = ".".join(driven_parts[:-1])
                         driven_attr_name = driven_parts[-1]
 
                         # Check if driven node is one of our curves
@@ -1539,37 +1604,37 @@ class MayaSceneParserImpl(IMayaSceneParser):
                             continue
 
                         # Get driver attribute
-                        driver_attrs = cmds.listConnections(
-                            f"{anim_curve}.input",
-                            source=True,
-                            plugs=True
-                        ) or []
+                        driver_attrs = (
+                            cmds.listConnections(f"{anim_curve}.input", source=True, plugs=True)
+                            or []
+                        )
 
                         if not driver_attrs:
                             continue
 
                         driver_attr = driver_attrs[0]
-                        driver_parts = driver_attr.split('.')
+                        driver_parts = driver_attr.split(".")
                         if len(driver_parts) >= 2:
-                            driver_node = '.'.join(driver_parts[:-1])
+                            driver_node = ".".join(driver_parts[:-1])
                             driver_attr_name = driver_parts[-1]
 
                             # Get keyframe data
-                            driver_values = cmds.keyframe(
-                                anim_curve,
-                                query=True,
-                                floatChange=True
-                            ) or []
+                            driver_values = (
+                                cmds.keyframe(anim_curve, query=True, floatChange=True) or []
+                            )
 
-                            driven_values = cmds.keyframe(
-                                anim_curve,
-                                query=True,
-                                valueChange=True
-                            ) or []
+                            driven_values = (
+                                cmds.keyframe(anim_curve, query=True, valueChange=True) or []
+                            )
 
                             # Get interpolation type
                             interp_type = cmds.getAttr(f"{anim_curve}.preInfinity")
-                            interp_map = {0: "constant", 1: "linear", 2: "cycle", 3: "cycleRelative"}
+                            interp_map = {
+                                0: "constant",
+                                1: "linear",
+                                2: "cycle",
+                                3: "cycleRelative",
+                            }
                             interpolation = interp_map.get(interp_type, "linear")
 
                             sdk = SetDrivenKeyData(
@@ -1579,7 +1644,7 @@ class MayaSceneParserImpl(IMayaSceneParser):
                                 driven_attr=driven_attr_name,
                                 driver_values=driver_values,
                                 driven_values=driven_values,
-                                interpolation=interpolation
+                                interpolation=interpolation,
                             )
                             sdk_data.append(sdk)
 

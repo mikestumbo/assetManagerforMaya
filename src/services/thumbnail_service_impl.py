@@ -36,11 +36,15 @@ except ImportError:
     # Create minimal interface locally if imports fail
     class IThumbnailService(ABC):
         @abstractmethod
-        def generate_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+        def generate_thumbnail(
+            self, file_path: Path, size: Tuple[int, int] = (64, 64)
+        ) -> Optional[str]:
             pass
 
         @abstractmethod
-        def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+        def get_cached_thumbnail(
+            self, file_path: Path, size: Tuple[int, int] = (64, 64)
+        ) -> Optional[str]:
             pass
 
         @abstractmethod
@@ -78,14 +82,30 @@ class ThumbnailServiceImpl(IThumbnailService):
             self._cache_dir.mkdir(exist_ok=True)
 
         self._supported_extensions = {
-            '.png', '.jpg', '.jpeg', '.tiff', '.tga', '.bmp', '.gif',  # Images
-            '.ma', '.mb',  # Maya files
-            '.obj', '.fbx',  # 3D models
-            '.usd', '.usda', '.usdc', '.usdz',  # USD files
-            '.py', '.mel', '.txt', '.md'  # Script/text files
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".tiff",
+            ".tga",
+            ".bmp",
+            ".gif",  # Images
+            ".ma",
+            ".mb",  # Maya files
+            ".obj",
+            ".fbx",  # 3D models
+            ".usd",
+            ".usda",
+            ".usdc",
+            ".usdz",  # USD files
+            ".py",
+            ".mel",
+            ".txt",
+            ".md",  # Script/text files
         }
         self._cache_stats: Dict[str, int] = {}  # Track cache usage
-        self._master_capture_cache: Dict[str, Dict[str, Any]] = {}  # Store high-res playblast captures
+        self._master_capture_cache: Dict[str, Dict[str, Any]] = (
+            {}
+        )  # Store high-res playblast captures
         print("[CAMERA] ThumbnailServiceImpl initialized - RESTORED Maya playblast system")
 
     def _generate_cache_key(self, file_path: Path, size: Tuple[int, int]) -> str:
@@ -116,10 +136,7 @@ class ThumbnailServiceImpl(IThumbnailService):
         return self._cache_dir / f"{cache_key}.png"
 
     def generate_thumbnail(
-        self,
-        file_path: Path,
-        size: Tuple[int, int] = (64, 64),
-        force_playblast: bool = False
+        self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False
     ) -> Optional[str]:
         """Generate or retrieve thumbnail for asset.
 
@@ -157,7 +174,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             # Tier 1: Simple file-type icons (NO Maya import - safe for library browsing)
             # Tier 2: Maya playblast (imports to Maya - generates actual preview)
 
-            if extension in {'.ma', '.mb'}:
+            if extension in {".ma", ".mb"}:
                 if force_playblast:
                     # Generate high-quality playblast (isolated namespace - no scene pollution!)
                     print(f"[CAMERA] Generating Maya playblast thumbnail for {file_path.name}")
@@ -174,13 +191,17 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 size[0],
                                 size[1],
                                 Qt.KeepAspectRatio,  # type: ignore
-                                Qt.SmoothTransformation  # type: ignore
+                                Qt.SmoothTransformation,  # type: ignore
                             )
                             if scaled_pixmap.save(str(cache_path)):
-                                print(f"[OK] Generated playblast thumbnail: {file_path.name} ({size[0]}x{size[1]})")
+                                print(
+                                    f"[OK] Generated playblast thumbnail: {file_path.name} ({size[0]}x{size[1]})"
+                                )
                                 return str(cache_path)
                             else:
-                                print(f"[WARNING] Failed to save scaled thumbnail for {file_path.name}")
+                                print(
+                                    f"[WARNING] Failed to save scaled thumbnail for {file_path.name}"
+                                )
                         else:
                             print(f"[WARNING] Base playblast capture invalid for {file_path.name}")
                     else:
@@ -192,12 +213,13 @@ class ThumbnailServiceImpl(IThumbnailService):
                     print(f"[FILE] Using file-type icon for library browsing: {file_path.name}")
 
             # USD files - generate playblast thumbnails using UsdService
-            elif extension in {'.usd', '.usda', '.usdc', '.usdz'}:
+            elif extension in {".usd", ".usda", ".usdc", ".usdz"}:
                 if force_playblast:
                     # Generate USD playblast thumbnail
                     print(f"[CAMERA] Generating USD playblast thumbnail for {file_path.name}")
                     try:
                         from src.services.usd_service_impl import get_usd_service
+
                         usd_service = get_usd_service()
 
                         cache_key = self._generate_cache_key(file_path, size)
@@ -212,16 +234,22 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 asset_dir = file_path.parent
                                 thumbnail_dir = asset_dir / ".thumbnails"
                                 thumbnail_dir.mkdir(parents=True, exist_ok=True)
-                                custom_screenshot_path = thumbnail_dir / f"{file_path.stem}_screenshot.png"
+                                custom_screenshot_path = (
+                                    thumbnail_dir / f"{file_path.stem}_screenshot.png"
+                                )
 
                                 shutil.copy2(str(cache_path), str(custom_screenshot_path))
-                                print(f"[CAMERA] Saved USD playblast as custom screenshot: {custom_screenshot_path}")
+                                print(
+                                    f"[CAMERA] Saved USD playblast as custom screenshot: {custom_screenshot_path}"
+                                )
                             except Exception as e:
                                 print(f"[WARNING] Could not save custom screenshot: {e}")
 
                             return str(cache_path)
                         else:
-                            print("[WARNING] USD playblast generation failed, using file-type icon")
+                            print(
+                                "[WARNING] USD playblast generation failed, using file-type icon"
+                            )
                     except Exception as e:
                         print(f"[ERROR] USD thumbnail error: {e}")
                         print(f"[FILE] Falling back to file-type icon for {file_path.name}")
@@ -244,7 +272,9 @@ class ThumbnailServiceImpl(IThumbnailService):
             print(f"[ERROR] Thumbnail generation error: {e}")
             return None
 
-    def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+    def get_cached_thumbnail(
+        self, file_path: Path, size: Tuple[int, int] = (64, 64)
+    ) -> Optional[str]:
         """Get cached thumbnail if available and valid - checks custom screenshots first"""
         try:
             # ISSUE #2 FIX: Check for custom screenshot FIRST (highest priority)
@@ -293,7 +323,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 thumbnail_dir / f"{asset_name}_screenshot.jpg",
                 thumbnail_dir / f"{asset_name}_screenshot.tiff",
                 thumbnail_dir / f"{asset_name}.png",
-                thumbnail_dir / f"{asset_name}.jpg"
+                thumbnail_dir / f"{asset_name}.jpg",
             ]
 
             for screenshot_file in screenshot_files:
@@ -309,7 +339,9 @@ class ThumbnailServiceImpl(IThumbnailService):
 
         return None
 
-    def _ensure_playblast_capture(self, file_path: Path, requested_dimension: int) -> Optional[str]:
+    def _ensure_playblast_capture(
+        self, file_path: Path, requested_dimension: int
+    ) -> Optional[str]:
         """Capture a high-resolution playblast once per asset revision and reuse it."""
         try:
             mtime = file_path.stat().st_mtime
@@ -318,8 +350,8 @@ class ThumbnailServiceImpl(IThumbnailService):
 
         cache_entry = self._master_capture_cache.get(str(file_path))
         if cache_entry:
-            cached_path = Path(cache_entry.get('path', ''))
-            cached_mtime = cache_entry.get('mtime')
+            cached_path = Path(cache_entry.get("path", ""))
+            cached_mtime = cache_entry.get("mtime")
             if cached_path.exists() and cached_mtime == mtime:
                 # Cached playblast is still valid, but ensure custom screenshot exists
                 try:
@@ -332,7 +364,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                     # Copy cached playblast to custom screenshot location if it doesn't exist
                     if not custom_screenshot_path.exists():
                         shutil.copy2(cached_path, str(custom_screenshot_path))
-                        print(f"[CAMERA] Saved cached playblast as custom screenshot: {custom_screenshot_path.name}")
+                        print(
+                            f"[CAMERA] Saved cached playblast as custom screenshot: {custom_screenshot_path.name}"
+                        )
                 except Exception as save_error:
                     print(f"[WARNING] Could not save custom screenshot from cache: {save_error}")
 
@@ -343,17 +377,16 @@ class ThumbnailServiceImpl(IThumbnailService):
         capture_path = self._capture_maya_playblast(file_path, capture_size)
 
         if capture_path and Path(capture_path).exists():
-            self._master_capture_cache[str(file_path)] = {
-                'mtime': mtime,
-                'path': capture_path
-            }
+            self._master_capture_cache[str(file_path)] = {"mtime": mtime, "path": capture_path}
             return capture_path
 
         # Remove stale cache entry if capture failed
         self._master_capture_cache.pop(str(file_path), None)
         return None
 
-    def _capture_maya_playblast(self, file_path: Path, capture_size: Tuple[int, int]) -> Optional[str]:
+    def _capture_maya_playblast(
+        self, file_path: Path, capture_size: Tuple[int, int]
+    ) -> Optional[str]:
         """Import asset into temporary namespace, capture playblast, and clean up."""
         try:
             import maya.cmds as cmds  # type: ignore
@@ -371,7 +404,9 @@ class ThumbnailServiceImpl(IThumbnailService):
             original_selection = cmds.ls(selection=True) or []
             cmds.select(clear=True)
 
-            namespace, imported_nodes = self._import_maya_scene_safely_no_new_scene(file_path, cmds)
+            namespace, imported_nodes = self._import_maya_scene_safely_no_new_scene(
+                file_path, cmds
+            )
             if not namespace:
                 print(f"[WARNING] Playblast import failed for {file_path.name}")
                 return None
@@ -407,8 +442,8 @@ class ThumbnailServiceImpl(IThumbnailService):
             width, height = capture_size
             cmds.playblast(
                 filename=temp_file,
-                format='image',
-                compression='png',
+                format="image",
+                compression="png",
                 quality=100,
                 percent=100,
                 width=width,
@@ -417,7 +452,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 showOrnaments=False,
                 offScreen=True,
                 frame=1,
-                completeFilename=f"{temp_file}.0001.png"
+                completeFilename=f"{temp_file}.0001.png",
             )
 
             generated_files = [
@@ -490,7 +525,7 @@ class ThumbnailServiceImpl(IThumbnailService):
         original_settings = {}
         try:
             # Get the active model panel (viewport)
-            panels = cmds.getPanel(type='modelPanel')
+            panels = cmds.getPanel(type="modelPanel")
             if not panels:
                 print("[WARNING] No model panels found")
                 return original_settings
@@ -500,21 +535,35 @@ class ThumbnailServiceImpl(IThumbnailService):
                 active_panel = panels[0]  # Use first panel if focused panel isn't a model panel
 
             # Store original settings
-            original_settings['panel'] = active_panel
-            original_settings['displayTextures'] = cmds.modelEditor(active_panel, query=True, displayTextures=True)
-            original_settings['displayAppearance'] = cmds.modelEditor(active_panel, query=True, displayAppearance=True)
-            original_settings['displayLights'] = cmds.modelEditor(active_panel, query=True, displayLights=True)
-            original_settings['shadows'] = cmds.modelEditor(active_panel, query=True, shadows=True)
-            original_settings['useDefaultMaterial'] = cmds.modelEditor(
+            original_settings["panel"] = active_panel
+            original_settings["displayTextures"] = cmds.modelEditor(
+                active_panel, query=True, displayTextures=True
+            )
+            original_settings["displayAppearance"] = cmds.modelEditor(
+                active_panel, query=True, displayAppearance=True
+            )
+            original_settings["displayLights"] = cmds.modelEditor(
+                active_panel, query=True, displayLights=True
+            )
+            original_settings["shadows"] = cmds.modelEditor(active_panel, query=True, shadows=True)
+            original_settings["useDefaultMaterial"] = cmds.modelEditor(
                 active_panel, query=True, useDefaultMaterial=True
             )
 
             # Enable textures and materials
             cmds.modelEditor(active_panel, edit=True, displayTextures=True)  # Show textures
-            cmds.modelEditor(active_panel, edit=True, displayAppearance='smoothShaded')  # Smooth shaded mode
-            cmds.modelEditor(active_panel, edit=True, displayLights='default')  # Use default lighting
-            cmds.modelEditor(active_panel, edit=True, shadows=False)  # Disable shadows for performance
-            cmds.modelEditor(active_panel, edit=True, useDefaultMaterial=False)  # Use actual materials
+            cmds.modelEditor(
+                active_panel, edit=True, displayAppearance="smoothShaded"
+            )  # Smooth shaded mode
+            cmds.modelEditor(
+                active_panel, edit=True, displayLights="default"
+            )  # Use default lighting
+            cmds.modelEditor(
+                active_panel, edit=True, shadows=False
+            )  # Disable shadows for performance
+            cmds.modelEditor(
+                active_panel, edit=True, useDefaultMaterial=False
+            )  # Use actual materials
 
             print("[OK] Viewport configured for textured playblast")
             return original_settings
@@ -531,22 +580,30 @@ class ThumbnailServiceImpl(IThumbnailService):
             original_settings: Dictionary of original viewport settings
         """
         try:
-            if not original_settings or 'panel' not in original_settings:
+            if not original_settings or "panel" not in original_settings:
                 return
 
-            panel = original_settings['panel']
+            panel = original_settings["panel"]
 
             # Restore original settings
-            if 'displayTextures' in original_settings:
-                cmds.modelEditor(panel, edit=True, displayTextures=original_settings['displayTextures'])
-            if 'displayAppearance' in original_settings:
-                cmds.modelEditor(panel, edit=True, displayAppearance=original_settings['displayAppearance'])
-            if 'displayLights' in original_settings:
-                cmds.modelEditor(panel, edit=True, displayLights=original_settings['displayLights'])
-            if 'shadows' in original_settings:
-                cmds.modelEditor(panel, edit=True, shadows=original_settings['shadows'])
-            if 'useDefaultMaterial' in original_settings:
-                cmds.modelEditor(panel, edit=True, useDefaultMaterial=original_settings['useDefaultMaterial'])
+            if "displayTextures" in original_settings:
+                cmds.modelEditor(
+                    panel, edit=True, displayTextures=original_settings["displayTextures"]
+                )
+            if "displayAppearance" in original_settings:
+                cmds.modelEditor(
+                    panel, edit=True, displayAppearance=original_settings["displayAppearance"]
+                )
+            if "displayLights" in original_settings:
+                cmds.modelEditor(
+                    panel, edit=True, displayLights=original_settings["displayLights"]
+                )
+            if "shadows" in original_settings:
+                cmds.modelEditor(panel, edit=True, shadows=original_settings["shadows"])
+            if "useDefaultMaterial" in original_settings:
+                cmds.modelEditor(
+                    panel, edit=True, useDefaultMaterial=original_settings["useDefaultMaterial"]
+                )
 
             print("[OK] Viewport settings restored")
 
@@ -586,7 +643,9 @@ class ThumbnailServiceImpl(IThumbnailService):
             try:
                 success = self._delete_namespace_content(namespace, cmds)
             except Exception as phase3_error:
-                print(f"[WARNING] Phase 3 error (continuing to aggressive cleanup): {phase3_error}")
+                print(
+                    f"[WARNING] Phase 3 error (continuing to aggressive cleanup): {phase3_error}"
+                )
 
             # PHASE 4: NAMESPACE - Remove namespace (only if Phase 3 succeeded)
             if success:
@@ -615,7 +674,10 @@ class ThumbnailServiceImpl(IThumbnailService):
                 # Get all remaining nodes in namespace
                 remaining_nodes = []
                 try:
-                    remaining_nodes = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True) or []
+                    remaining_nodes = (
+                        cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True)
+                        or []
+                    )
                     print(f"   Found {len(remaining_nodes)} remaining nodes to force-delete")
                 except Exception:
                     pass
@@ -626,11 +688,11 @@ class ThumbnailServiceImpl(IThumbnailService):
                         continue
 
                     # Strategy 0: Special handling for RenderMan volume aggregates
-                    if 'globalVolumeAggregate' in node or 'VolumeAggregate' in node:
+                    if "globalVolumeAggregate" in node or "VolumeAggregate" in node:
                         try:
                             # Remove from all volume sets first
                             try:
-                                volume_sets = cmds.listConnections(node, type='set') or []
+                                volume_sets = cmds.listConnections(node, type="set") or []
                                 for vset in volume_sets:
                                     try:
                                         cmds.sets(node, remove=vset)
@@ -641,13 +703,15 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                             # Disconnect all RenderMan-specific connections
                             try:
-                                all_conns = cmds.listConnections(node, plugs=True, connections=True) or []
+                                all_conns = (
+                                    cmds.listConnections(node, plugs=True, connections=True) or []
+                                )
                                 for i in range(0, len(all_conns), 2):
                                     try:
-                                        cmds.disconnectAttr(all_conns[i], all_conns[i+1])
+                                        cmds.disconnectAttr(all_conns[i], all_conns[i + 1])
                                     except Exception:
                                         try:
-                                            cmds.disconnectAttr(all_conns[i+1], all_conns[i])
+                                            cmds.disconnectAttr(all_conns[i + 1], all_conns[i])
                                         except Exception:
                                             pass
                             except Exception:
@@ -656,13 +720,18 @@ class ThumbnailServiceImpl(IThumbnailService):
                             # Force unlock with all attributes
                             try:
                                 cmds.lockNode(
-                                    node, lock=False, lockName=False,
-                                    lockUnpublished=False, ignoreComponents=True
+                                    node,
+                                    lock=False,
+                                    lockName=False,
+                                    lockUnpublished=False,
+                                    ignoreComponents=True,
                                 )
                             except Exception:
                                 pass
 
-                            print(f"   [TARGET] Special handling for RenderMan volume: {node.split(':')[-1]}")
+                            print(
+                                f"   [TARGET] Special handling for RenderMan volume: {node.split(':')[-1]}"
+                            )
                         except Exception as vol_err:
                             print(f"   [WARNING] RenderMan volume handling: {vol_err}")
 
@@ -674,10 +743,12 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                     # Strategy 2: Break all connections
                     try:
-                        connections = cmds.listConnections(node, plugs=True, connections=True) or []
+                        connections = (
+                            cmds.listConnections(node, plugs=True, connections=True) or []
+                        )
                         for i in range(0, len(connections), 2):
                             try:
-                                cmds.disconnectAttr(connections[i], connections[i+1])
+                                cmds.disconnectAttr(connections[i], connections[i + 1])
                             except Exception:
                                 pass
                     except Exception:
@@ -705,8 +776,8 @@ class ThumbnailServiceImpl(IThumbnailService):
 
                     # Strategy 5: Try parent deletion for nested nodes
                     try:
-                        if '|' in node:
-                            parent = node.rsplit('|', 1)[0]
+                        if "|" in node:
+                            parent = node.rsplit("|", 1)[0]
                             if cmds.objExists(parent) and namespace in parent:
                                 cmds.delete(parent)
                                 if not cmds.objExists(node):
@@ -723,13 +794,17 @@ class ThumbnailServiceImpl(IThumbnailService):
                         if not cmds.objExists(renamed):
                             print(f"   [OK] Deleted after rename: {node.split(':')[-1]}")
                     except Exception:
-                        node_short = node.split(':')[-1]
-                        print(f"   [WARNING] Could not delete locked node: {node_short} (acceptable)")
+                        node_short = node.split(":")[-1]
+                        print(
+                            f"   [WARNING] Could not delete locked node: {node_short} (acceptable)"
+                        )
 
                 # Delete namespace with all content (don't move to root!)
                 try:
                     if cmds.namespace(exists=namespace):
-                        cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True, force=True)
+                        cmds.namespace(
+                            removeNamespace=namespace, deleteNamespaceContent=True, force=True
+                        )
                         print("   [OK] Removed namespace with deleteNamespaceContent flag")
                 except Exception as ns_error:
                     print(f"   [WARNING] Namespace removal attempt: {ns_error}")
@@ -739,11 +814,20 @@ class ThumbnailServiceImpl(IThumbnailService):
                 # ISSUE #1 FIX: Nuclear option - DELETE all nodes in namespace (don't move!)
                 try:
                     if cmds.namespace(exists=namespace):
-                        print(f"   [DEBUG] Nuclear option: Deleting all content in namespace {namespace}")
+                        print(
+                            f"   [DEBUG] Nuclear option: Deleting all content in namespace {namespace}"
+                        )
 
                         # Get ALL nodes in the namespace (DAG and DG nodes)
-                        dag_nodes = cmds.namespaceInfo(namespace, listNamespace=True, recurse=True, dagPath=True) or []
-                        dg_nodes = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
+                        dag_nodes = (
+                            cmds.namespaceInfo(
+                                namespace, listNamespace=True, recurse=True, dagPath=True
+                            )
+                            or []
+                        )
+                        dg_nodes = (
+                            cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
+                        )
                         all_nodes = list(set(dag_nodes + dg_nodes))  # Combine and deduplicate
 
                         nodes_deleted = 0
@@ -751,13 +835,21 @@ class ThumbnailServiceImpl(IThumbnailService):
                             print(f"   [SELECT] Found {len(all_nodes)} nodes to delete")
 
                             # Debug: Show some node names to verify we're getting the right nodes
-                            print(f"   🔍 Sample nodes: {[n.split(':')[-1] for n in all_nodes[:5]]}")
+                            print(
+                                f"   🔍 Sample nodes: {[n.split(':')[-1] for n in all_nodes[:5]]}"
+                            )
 
                             # Special handling for RenderMan globalVolumeAggregate nodes (often locked)
-                            volume_nodes = [n for n in all_nodes if 'globalvolumeaggregate' in n.lower()]
-                            print(f"   🔍 Searching for volume nodes in {len(all_nodes)} total nodes...")
+                            volume_nodes = [
+                                n for n in all_nodes if "globalvolumeaggregate" in n.lower()
+                            ]
+                            print(
+                                f"   🔍 Searching for volume nodes in {len(all_nodes)} total nodes..."
+                            )
                             if volume_nodes:
-                                print(f"   🔓 Found {len(volume_nodes)} RenderMan volume aggregate nodes to unlock...")
+                                print(
+                                    f"   🔓 Found {len(volume_nodes)} RenderMan volume aggregate nodes to unlock..."
+                                )
                                 for vol_node in volume_nodes:
                                     try:
                                         if cmds.objExists(vol_node):
@@ -766,7 +858,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                                             cmds.lockNode(vol_node, lock=False)
                                             print(f"   [OK] Unlocked: {vol_node.split(':')[-1]}")
                                     except Exception as unlock_err:
-                                        print(f"   [WARNING] Could not unlock {vol_node.split(':')[-1]}: {unlock_err}")
+                                        print(
+                                            f"   [WARNING] Could not unlock {vol_node.split(':')[-1]}: {unlock_err}"
+                                        )
                             else:
                                 print("   [INFO] No volume aggregate nodes found in initial scan")
 
@@ -777,12 +871,14 @@ class ThumbnailServiceImpl(IThumbnailService):
                                         cmds.delete(node)
                                         nodes_deleted += 1
                                 except Exception as e:
-                                    print(f"   [WARNING] Could not delete DAG node {node.split(':')[-1]}: {e}")
+                                    print(
+                                        f"   [WARNING] Could not delete DAG node {node.split(':')[-1]}: {e}"
+                                    )
 
                             # Then delete DG nodes (shaders, textures, etc.)
                             for node in dg_nodes:
                                 try:
-                                    if cmds.objExists(node) and ':' in node and namespace in node:
+                                    if cmds.objExists(node) and ":" in node and namespace in node:
                                         cmds.delete(node)
                                         nodes_deleted += 1
                                 except Exception:
@@ -797,26 +893,38 @@ class ThumbnailServiceImpl(IThumbnailService):
                                 # Get ALL remaining nodes using ls command with namespace prefix
                                 remaining_nodes = cmds.ls(f"{namespace}:*", long=True) or []
                                 if remaining_nodes:
-                                    print(f"   [SELECT] Found {len(remaining_nodes)} remaining nodes")
+                                    print(
+                                        f"   [SELECT] Found {len(remaining_nodes)} remaining nodes"
+                                    )
                                     # Focus on globalVolumeAggregate nodes specifically
-                                    locked_volumes = [n for n in remaining_nodes if 'globalVolumeAggregate' in n]
+                                    locked_volumes = [
+                                        n for n in remaining_nodes if "globalVolumeAggregate" in n
+                                    ]
                                     if locked_volumes:
                                         count = len(locked_volumes)
-                                        print(f"   🔓 Attempting to unlock {count} volume aggregate nodes...")
+                                        print(
+                                            f"   🔓 Attempting to unlock {count} volume aggregate nodes..."
+                                        )
                                         for vol_node in locked_volumes:
                                             try:
                                                 cmds.lockNode(vol_node, lock=False)
                                                 cmds.delete(vol_node)
-                                                print(f"   [OK] Unlocked and deleted: {vol_node.split(':')[-1]}")
+                                                print(
+                                                    f"   [OK] Unlocked and deleted: {vol_node.split(':')[-1]}"
+                                                )
                                             except Exception as e:
-                                                node_name = vol_node.split(':')[-1]
-                                                print(f"   [WARNING] Failed to cleanup: {node_name} - {e}")
+                                                node_name = vol_node.split(":")[-1]
+                                                print(
+                                                    f"   [WARNING] Failed to cleanup: {node_name} - {e}"
+                                                )
                             except Exception as remaining_err:
-                                print(f"   [WARNING] Could not scan remaining nodes: {remaining_err}")
+                                print(
+                                    f"   [WARNING] Could not scan remaining nodes: {remaining_err}"
+                                )
 
                         # Now remove the empty namespace
                         if cmds.namespace(exists=namespace):
-                            cmds.namespace(set=':')  # Switch to root namespace first
+                            cmds.namespace(set=":")  # Switch to root namespace first
                             cmds.namespace(removeNamespace=namespace, force=True)
                             print(f"   [OK] Namespace {namespace} removed")
                 except Exception as nuclear_error:
@@ -825,13 +933,21 @@ class ThumbnailServiceImpl(IThumbnailService):
                 # Verify final cleanup
                 final_cleanup = not cmds.namespace(exists=namespace)
                 if final_cleanup:
-                    print(f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner")
+                    print(
+                        f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner"
+                    )
                 else:
-                    print(f"[WARNING] Warning: Namespace {namespace} still exists - manual cleanup may be needed")
+                    print(
+                        f"[WARNING] Warning: Namespace {namespace} still exists - manual cleanup may be needed"
+                    )
                     # List remaining nodes for debugging
                     try:
-                        remaining = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
-                        print(f"   Remaining nodes ({len(remaining)}): {remaining[:5]}...")  # Show first 5
+                        remaining = (
+                            cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
+                        )
+                        print(
+                            f"   Remaining nodes ({len(remaining)}): {remaining[:5]}..."
+                        )  # Show first 5
                     except Exception:
                         pass
 
@@ -852,11 +968,11 @@ class ThumbnailServiceImpl(IThumbnailService):
             cmds.flushUndo()
 
             # Clear any scene-level references to namespace objects
-            if hasattr(cmds, 'dgdirty'):
+            if hasattr(cmds, "dgdirty"):
                 cmds.dgdirty(allPlugs=True)
 
             # Force garbage collection of unused nodes
-            if hasattr(cmds, 'dgeval'):
+            if hasattr(cmds, "dgeval"):
                 try:
                     cmds.dgeval("time")
                 except Exception:
@@ -868,15 +984,15 @@ class ThumbnailServiceImpl(IThumbnailService):
                 cmds.dgeval("defaultRenderGlobals.currentTime")
 
                 # Clear any remaining references in the scene
-                if hasattr(cmds, 'scriptEditorInfo'):
+                if hasattr(cmds, "scriptEditorInfo"):
                     cmds.scriptEditorInfo(clearHistory=True)
 
                 # Force Maya to update its internal node tracking
-                if hasattr(cmds, 'refresh'):
+                if hasattr(cmds, "refresh"):
                     cmds.refresh(force=True)
 
                 # Clear any lingering selection handles that can pin namespaces
-                if hasattr(cmds, 'select'):
+                if hasattr(cmds, "select"):
                     cmds.select(clear=True)
 
             except Exception as cleanup_error:
@@ -910,22 +1026,28 @@ class ThumbnailServiceImpl(IThumbnailService):
                 cmds.lockNode(locked_nodes, lock=False)
 
                 # Force unlock RenderMan volume aggregates that ignore standard unlock
-                volume_aggregates = [node for node in locked_nodes if 'globalVolumeAggregate' in node]
+                volume_aggregates = [
+                    node for node in locked_nodes if "globalVolumeAggregate" in node
+                ]
                 if volume_aggregates:
                     print(f"[DEBUG] Force unlocking {len(volume_aggregates)} volume aggregates")
                     for vol_node in volume_aggregates:
                         if cmds.objExists(vol_node):
                             try:
-                                if cmds.attributeQuery('locked', node=vol_node, exists=True):
+                                if cmds.attributeQuery("locked", node=vol_node, exists=True):
                                     cmds.setAttr(f"{vol_node}.locked", False)
                             except Exception as attr_error:
-                                print(f"[WARNING] Volume aggregate attribute unlock warning: {attr_error}")
+                                print(
+                                    f"[WARNING] Volume aggregate attribute unlock warning: {attr_error}"
+                                )
                             try:
                                 cmds.lockNode(vol_node, lock=False, lockName=False)
                             except Exception as lock_error:
                                 print(f"[WARNING] Volume aggregate lock warning: {lock_error}")
 
-                print(f"[OK] Unlocked nodes: {', '.join(locked_nodes[:3])}{'...' if len(locked_nodes) > 3 else ''}")
+                print(
+                    f"[OK] Unlocked nodes: {', '.join(locked_nodes[:3])}{'...' if len(locked_nodes) > 3 else ''}"
+                )
 
         except Exception as e:
             print(f"[WARNING] Lock management error: {e}")
@@ -935,10 +1057,10 @@ class ThumbnailServiceImpl(IThumbnailService):
         try:
             # Target problematic connection types from September 25th logs
             connection_patterns = [
-                'rmanDefaultDisplay.displayType',
-                'rmanDefaultDisplay.displayChannels[0]',
-                'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]'
+                "rmanDefaultDisplay.displayType",
+                "rmanDefaultDisplay.displayChannels[0]",
+                "rmanDefaultDisplay.displayChannels[1]",
+                "rmanBakingGlobals.displays[0]",
             ]
 
             connections_broken = 0
@@ -980,16 +1102,18 @@ class ThumbnailServiceImpl(IThumbnailService):
                         continue
                 except Exception as delete_error:
                     # Attempt targeted recovery for locked volume aggregates
-                    if 'globalVolumeAggregate' in obj and self._force_delete_volume_aggregate(obj, cmds):
+                    if "globalVolumeAggregate" in obj and self._force_delete_volume_aggregate(
+                        obj, cmds
+                    ):
                         deleted_count += 1
                         continue
 
                     # Generic locked-node retry
                     error_text = str(delete_error)
-                    if 'locked' in error_text.lower() and cmds.objExists(obj):
+                    if "locked" in error_text.lower() and cmds.objExists(obj):
                         try:
                             cmds.lockNode(obj, lock=False, lockName=False)
-                            if cmds.attributeQuery('locked', node=obj, exists=True):
+                            if cmds.attributeQuery("locked", node=obj, exists=True):
                                 cmds.setAttr(f"{obj}.locked", False)
                             cmds.delete(obj)
                             deleted_count += 1
@@ -1023,7 +1147,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Early detection: Skip deeply nested reference nodes (3+ namespace levels)
             # These will be automatically cleaned when parent namespace is removed
-            namespace_depth = node_name.count(':')
+            namespace_depth = node_name.count(":")
             if namespace_depth >= 3:
                 # Silently accept - parent namespace deletion will clean this up
                 return True
@@ -1035,6 +1159,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                     pass
                 try:
                     import maya.mel as mel  # type: ignore
+
                     mel.eval(f'lockNode -lock 0 -lockName 0 "{target}";')
                 except Exception:
                     pass
@@ -1052,6 +1177,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                             pass
                         try:
                             import maya.mel as mel  # type: ignore
+
                             mel.eval(f'lockNode -lock 0 -lockName 0 "{ref_node}";')
                         except Exception:
                             pass
@@ -1076,7 +1202,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             except Exception:
                 pass
 
-            if cmds.attributeQuery('locked', node=node_name, exists=True):
+            if cmds.attributeQuery("locked", node=node_name, exists=True):
                 try:
                     cmds.setAttr(f"{node_name}.locked", False)
                 except Exception:
@@ -1084,9 +1210,12 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Disconnect all connections involving this aggregate
             try:
-                connections = cmds.listConnections(
-                    node_name, plugs=True, connections=True, skipConversionNodes=True
-                ) or []
+                connections = (
+                    cmds.listConnections(
+                        node_name, plugs=True, connections=True, skipConversionNodes=True
+                    )
+                    or []
+                )
                 for idx in range(0, len(connections), 2):
                     src = connections[idx]
                     dest = connections[idx + 1] if idx + 1 < len(connections) else None
@@ -1104,12 +1233,12 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Remove known RenderMan display connections referencing this aggregate
             volume_patterns = [
-                'rmanDefaultDisplay.displayType',
-                'rmanDefaultDisplay.displayChannels[0]',
-                'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]',
-                'rmanDefaultDisplay.message',
-                'rmanDefaultBakeDisplay.message'
+                "rmanDefaultDisplay.displayType",
+                "rmanDefaultDisplay.displayChannels[0]",
+                "rmanDefaultDisplay.displayChannels[1]",
+                "rmanBakingGlobals.displays[0]",
+                "rmanDefaultDisplay.message",
+                "rmanDefaultBakeDisplay.message",
             ]
             for pattern in volume_patterns:
                 try:
@@ -1128,7 +1257,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Ensure the aggregate is no longer a member of renderPartition or other utility sets
             try:
-                for target_set in ('renderPartition', 'initialParticleSE', 'initialShadingGroup'):
+                for target_set in ("renderPartition", "initialParticleSE", "initialShadingGroup"):
                     if cmds.objExists(target_set):
                         try:
                             cmds.sets(node_name, remove=target_set)
@@ -1154,15 +1283,16 @@ class ThumbnailServiceImpl(IThumbnailService):
                 _unlock_node(node_name)
                 try:
                     import maya.mel as mel  # type: ignore
+
                     # Try MEL unlock as well
                     mel.eval(f'lockNode -lock 0 -lockName 0 "{node_name}";')
                     # Also try to unlock using setAttr
-                    if cmds.attributeQuery('locked', node=node_name, exists=True):
+                    if cmds.attributeQuery("locked", node=node_name, exists=True):
                         cmds.setAttr(f"{node_name}.locked", False, lock=False)
                 except Exception:
                     pass
 
-                all_sets = cmds.ls(type='rmanVolumeAggregateSet') or []
+                all_sets = cmds.ls(type="rmanVolumeAggregateSet") or []
                 for agg_set in all_sets:
                     try:
                         # Remove the node from this aggregate set
@@ -1175,6 +1305,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             # Attempt RenderMan-specific removal if available
             try:
                 import maya.mel as mel  # type: ignore
+
                 mel.eval(f'rmanRemoveVolumeAggregateSet("{node_name}")')
                 if not cmds.objExists(node_name):
                     return True
@@ -1190,7 +1321,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                 pass
 
             try:
-                short_name = node_name.split(':')[-1]
+                short_name = node_name.split(":")[-1]
                 temp_name = f"{short_name}_cleanup"
                 renamed = cmds.rename(node_name, temp_name)
                 _unlock_node(renamed)
@@ -1201,7 +1332,7 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Final strategy: If the node is in a nested reference, it may be impossible to delete
             # Check if this is a deeply nested reference node (3+ namespace levels)
-            namespace_depth = node_name.count(':')
+            namespace_depth = node_name.count(":")
             if namespace_depth >= 3:
                 # This is likely a nested reference node that can't be deleted directly
                 # This is acceptable - the parent namespace cleanup will handle it
@@ -1287,7 +1418,9 @@ class ThumbnailServiceImpl(IThumbnailService):
                 print(f"[ERROR] Complete scene creation failure: {fallback_error}")
                 raise fallback_error
 
-    def _import_maya_scene_safely_no_new_scene(self, file_path: Path, cmds) -> Tuple[Optional[str], List[str]]:
+    def _import_maya_scene_safely_no_new_scene(
+        self, file_path: Path, cmds
+    ) -> Tuple[Optional[str], List[str]]:
         """
         Import Maya scene into current scene - NO NEW SCENE CREATION
         Clean Code: Single Responsibility for safe import without scene crashes
@@ -1299,7 +1432,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             namespace = f"thumb_{int(time.time() * 1000)}"  # Unique namespace
 
             # Import with settings that worked in v1.2.2 - but into current scene
-            if file_path.suffix.lower() == '.ma':
+            if file_path.suffix.lower() == ".ma":
                 imported_nodes = cmds.file(
                     str(file_path),
                     i=True,
@@ -1307,7 +1440,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                     ignoreVersion=True,
                     mergeNamespacesOnClash=False,
                     namespace=namespace,
-                    returnNewNodes=True
+                    returnNewNodes=True,
                 )
             else:  # .mb
                 imported_nodes = cmds.file(
@@ -1317,13 +1450,15 @@ class ThumbnailServiceImpl(IThumbnailService):
                     ignoreVersion=True,
                     mergeNamespacesOnClash=False,
                     namespace=namespace,
-                    returnNewNodes=True
+                    returnNewNodes=True,
                 )
 
             if imported_nodes:
                 # Select the imported objects for thumbnail generation
                 cmds.select(imported_nodes)
-                print(f"[OK] Imported {len(imported_nodes)} objects for thumbnail: {file_path.name}")
+                print(
+                    f"[OK] Imported {len(imported_nodes)} objects for thumbnail: {file_path.name}"
+                )
             else:
                 print(f"[WARNING] No objects imported from: {file_path.name}")
             return namespace, imported_nodes
@@ -1342,15 +1477,21 @@ class ThumbnailServiceImpl(IThumbnailService):
         """Safely import Maya scene for thumbnail generation"""
         try:
             # Import with settings that worked in v1.2.2
-            if file_path.suffix.lower() == '.ma':
+            if file_path.suffix.lower() == ".ma":
                 cmds.file(
-                    str(file_path), i=True, type="mayaAscii",
-                    ignoreVersion=True, mergeNamespacesOnClash=True
+                    str(file_path),
+                    i=True,
+                    type="mayaAscii",
+                    ignoreVersion=True,
+                    mergeNamespacesOnClash=True,
                 )
             else:  # .mb
                 cmds.file(
-                    str(file_path), i=True, type="mayaBinary",
-                    ignoreVersion=True, mergeNamespacesOnClash=True
+                    str(file_path),
+                    i=True,
+                    type="mayaBinary",
+                    ignoreVersion=True,
+                    mergeNamespacesOnClash=True,
                 )
 
             print(f"[OK] Imported Maya scene: {file_path.name}")
@@ -1362,7 +1503,7 @@ class ThumbnailServiceImpl(IThumbnailService):
     def _get_scene_geometry_safely(self, cmds, namespace: Optional[str] = None, limit: int = 10):
         """Get visible geometry for framing, optionally scoped to a namespace."""
         try:
-            meshes = cmds.ls(type='mesh', long=True) or []
+            meshes = cmds.ls(type="mesh", long=True) or []
             if namespace:
                 prefix = f"{namespace}:"
                 meshes = [mesh for mesh in meshes if mesh.startswith(prefix)]
@@ -1393,14 +1534,16 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             if namespace:
                 ns_objects = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True) or []
-                ns_transforms = [obj for obj in ns_objects if cmds.nodeType(obj) == 'transform']
+                ns_transforms = [obj for obj in ns_objects if cmds.nodeType(obj) == "transform"]
                 if ns_transforms:
                     print(f"Found {len(ns_transforms)} transforms via namespace info")
                     return ns_transforms[:limit]
 
             generic_geometry = cmds.ls(geometry=True, long=True) or []
             if namespace:
-                generic_geometry = [geo for geo in generic_geometry if geo.startswith(f"{namespace}:")]
+                generic_geometry = [
+                    geo for geo in generic_geometry if geo.startswith(f"{namespace}:")
+                ]
 
             print(f"Found {len(generic_geometry)} fallback geometry nodes")
             return generic_geometry[:limit]
@@ -1421,18 +1564,18 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Map file extensions to custom icon files
             icon_map = {
-                '.ma': 'maya_ascii_am_icon.png',
-                '.mb': 'maya_binary_am_icon.png',
-                '.usd': 'usd_am_icon.png',
-                '.fbx': 'fbx_am_icon.png',
-                '.obj': 'obj_am_icon.png',
-                '.abc': 'abc_am_icon.png',
-                '.tex': 'tex_am_icon.png',
+                ".ma": "maya_ascii_am_icon.png",
+                ".mb": "maya_binary_am_icon.png",
+                ".usd": "usd_am_icon.png",
+                ".fbx": "fbx_am_icon.png",
+                ".obj": "obj_am_icon.png",
+                ".abc": "abc_am_icon.png",
+                ".tex": "tex_am_icon.png",
             }
 
             # Get custom icon path
-            custom_icon_name = icon_map.get(extension, 'unknown_am_icon.png')
-            icons_dir = Path(__file__).parent.parent.parent / 'icons'
+            custom_icon_name = icon_map.get(extension, "unknown_am_icon.png")
+            icons_dir = Path(__file__).parent.parent.parent / "icons"
             custom_icon_path = icons_dir / custom_icon_name
 
             # Try to load custom icon
@@ -1442,9 +1585,10 @@ class ThumbnailServiceImpl(IThumbnailService):
                 if not pixmap.isNull():
                     # Scale to requested size
                     pixmap = pixmap.scaled(
-                        size[0], size[1],
+                        size[0],
+                        size[1],
                         Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation
+                        Qt.TransformationMode.SmoothTransformation,
                     )
 
                     # Only add text overlay for unknown file types
@@ -1462,7 +1606,7 @@ class ThumbnailServiceImpl(IThumbnailService):
                         font = QFont("Arial", max(8, size[0] // 8), QFont.Weight.Bold)
                         painter.setFont(font)
 
-                        text = extension.upper().replace('.', '') if extension else "FILE"
+                        text = extension.upper().replace(".", "") if extension else "FILE"
                         rect = QRect(0, 0, pixmap.width(), pixmap.height())
                         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 
@@ -1481,13 +1625,13 @@ class ThumbnailServiceImpl(IThumbnailService):
 
             # Color mapping for fallback (v1.4.0 style)
             color_map = {
-                '.ma': QColor(100, 150, 255),   # Maya ASCII - Blue
-                '.mb': QColor(80, 120, 200),    # Maya Binary - Dark Blue
-                '.obj': QColor(255, 150, 100),  # OBJ - Orange
-                '.fbx': QColor(150, 255, 100),  # FBX - Green
-                '.usd': QColor(100, 195, 238),  # USD - Cyan (#64c3ee)
-                '.abc': QColor(255, 255, 100),  # Alembic - Yellow
-                '.tex': QColor(255, 100, 150),  # RenderMan Texture - Pink
+                ".ma": QColor(100, 150, 255),  # Maya ASCII - Blue
+                ".mb": QColor(80, 120, 200),  # Maya Binary - Dark Blue
+                ".obj": QColor(255, 150, 100),  # OBJ - Orange
+                ".fbx": QColor(150, 255, 100),  # FBX - Green
+                ".usd": QColor(100, 195, 238),  # USD - Cyan (#64c3ee)
+                ".abc": QColor(255, 255, 100),  # Alembic - Yellow
+                ".tex": QColor(255, 100, 150),  # RenderMan Texture - Pink
             }
 
             color = color_map.get(extension, QColor(150, 150, 150))
@@ -1504,7 +1648,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             painter.setPen(QPen(Qt.GlobalColor.white, 2))
 
             margin = 4
-            rect = QRect(margin, margin, size[0] - margin*2, size[1] - margin*2)
+            rect = QRect(margin, margin, size[0] - margin * 2, size[1] - margin * 2)
             painter.drawRoundedRect(rect, 4, 4)
 
             # Draw text
@@ -1512,7 +1656,7 @@ class ThumbnailServiceImpl(IThumbnailService):
             font = QFont("Arial", max(8, size[0] // 8), QFont.Weight.Bold)
             painter.setFont(font)
 
-            text = extension.upper().replace('.', '') if extension else "FILE"
+            text = extension.upper().replace(".", "") if extension else "FILE"
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 
             painter.end()

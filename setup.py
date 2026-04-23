@@ -1,4 +1,5 @@
 from typing import Optional
+
 # !/usr/bin/env python3
 """
 Asset Manager v1.5.0 - Unified Installation System
@@ -113,7 +114,14 @@ class AssetManagerInstaller:
         elif sys.platform == "darwin":
             # macOS: Check iCloud Drive and regular paths
             # iCloud Drive Documents (when Desktop & Documents sync is enabled)
-            icloud_docs = home / "Library" / "Mobile Documents" / "com~apple~CloudDocs" / "Documents" / "maya"
+            icloud_docs = (
+                home
+                / "Library"
+                / "Mobile Documents"
+                / "com~apple~CloudDocs"
+                / "Documents"
+                / "maya"
+            )
             # Regular Documents folder (may be symlinked to iCloud when sync is enabled)
             regular_docs = home / "Documents" / "maya"
             # Traditional Maya preferences location
@@ -152,7 +160,11 @@ class AssetManagerInstaller:
         # If general directories don't work, fall back to version-specific as last resort
         for maya_base in possible_bases:
             if maya_base.exists():
-                version_dirs = [d for d in maya_base.iterdir() if d.is_dir() and d.name.replace(".", "").isdigit()]
+                version_dirs = [
+                    d
+                    for d in maya_base.iterdir()
+                    if d.is_dir() and d.name.replace(".", "").isdigit()
+                ]
                 if version_dirs:
                     latest_version = max(version_dirs, key=lambda x: x.name)
                     scripts_dir = latest_version / "scripts"
@@ -230,7 +242,7 @@ class AssetManagerInstaller:
             # Clean copy excluding __pycache__ directories
             def ignore_pycache(dir_path, names):
                 """Filter function to ignore __pycache__ directories and .pyc files."""
-                return [name for name in names if name == '__pycache__' or name.endswith('.pyc')]
+                return [name for name in names if name == "__pycache__" or name.endswith(".pyc")]
 
             shutil.copytree(src_path, dst_path, ignore=ignore_pycache)
             self._log(f"EMSA architecture copied (clean): {src_dir}")
@@ -356,7 +368,7 @@ print("Usage: dev_hot_reload.r() or dev_hot_reload.reload_asset_manager()")
 
         try:
             hot_reload_path = self.maya_scripts_dir / "dev_hot_reload.py"
-            with open(hot_reload_path, 'w', encoding='utf-8') as f:
+            with open(hot_reload_path, "w", encoding="utf-8") as f:
                 f.write(hot_reload_content)
             self._log("Created: dev_hot_reload.py")
             return True

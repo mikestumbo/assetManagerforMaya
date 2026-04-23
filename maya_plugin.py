@@ -47,6 +47,7 @@ def show_asset_manager():
         # Check PySide6 availability
         try:
             from PySide6.QtWidgets import QApplication
+
             print("[OK] Using PySide6 (Maya 2025+)")
         except ImportError:
             print("[ERROR] PySide6 is not available")
@@ -82,6 +83,7 @@ def show_asset_manager():
         # Configure services
         try:
             from src.core.container import configure_services
+
             configure_services()
             print("[OK] Services configured")
         except Exception as e:
@@ -93,7 +95,7 @@ def show_asset_manager():
 
             # Singleton window management - prevent duplicates
             global _asset_manager_window  # pylint: disable=global-statement
-            if '_asset_manager_window' not in globals():
+            if "_asset_manager_window" not in globals():
                 _asset_manager_window = None
 
             # Check if window already exists
@@ -124,12 +126,14 @@ def show_asset_manager():
         except Exception as e:
             print(f"[ERROR] Failed to create Asset Manager window: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
     except Exception as e:
         print(f"[ERROR] Failed to launch Asset Manager: {e}")
         import traceback
+
         traceback.print_exc()
         return None
     finally:

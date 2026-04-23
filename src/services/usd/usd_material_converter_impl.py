@@ -21,6 +21,7 @@ from src.core.interfaces.usd_material_converter import IUSDMaterialConverter
 # Conditional USD import
 try:
     from pxr import Usd, Sdf, UsdShade, Gf  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -42,17 +43,14 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
     def _sanitize_name(self, name: str) -> str:
         """Sanitize a name for use in USD paths"""
         # Replace invalid USD path characters
-        safe_name = name.replace('|', '_').replace(':', '_').replace(' ', '_')
+        safe_name = name.replace("|", "_").replace(":", "_").replace(" ", "_")
         # Ensure name doesn't start with a digit
         if safe_name and safe_name[0].isdigit():
             safe_name = f"mat_{safe_name}"
         return safe_name
 
     def convert_to_preview_surface(
-        self,
-        material_name: str,
-        material_data: Dict[str, Any],
-        usd_stage: Any  # pxr.Usd.Stage
+        self, material_name: str, material_data: Dict[str, Any], usd_stage: Any  # pxr.Usd.Stage
     ) -> Optional[Any]:  # pxr.UsdShade.Material
         """
         Convert Maya material to UsdPreviewSurface with robust error handling
@@ -120,8 +118,8 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             shader.CreateIdAttr("UsdPreviewSurface")
 
             # Set basic properties with safe value handling
-            if 'diffuse_color' in material_data and material_data['diffuse_color']:
-                color = material_data['diffuse_color']
+            if "diffuse_color" in material_data and material_data["diffuse_color"]:
+                color = material_data["diffuse_color"]
                 if isinstance(color, (list, tuple)) and len(color) >= 3:
                     try:
                         shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
@@ -130,16 +128,16 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
                     except Exception as e:
                         self.logger.debug(f"Failed to set diffuse color: {e}")
 
-            if 'metallic' in material_data and material_data['metallic'] is not None:
+            if "metallic" in material_data and material_data["metallic"] is not None:
                 try:
-                    metallic = float(material_data['metallic'])
+                    metallic = float(material_data["metallic"])
                     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(metallic)
                 except Exception as e:
                     self.logger.debug(f"Failed to set metallic: {e}")
 
-            if 'roughness' in material_data and material_data['roughness'] is not None:
+            if "roughness" in material_data and material_data["roughness"] is not None:
                 try:
-                    roughness = float(material_data['roughness'])
+                    roughness = float(material_data["roughness"])
                     shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(roughness)
                 except Exception as e:
                     self.logger.debug(f"Failed to set roughness: {e}")
@@ -172,8 +170,11 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             return usd_material
 
         except Exception as e:
-            self.logger.error(f"Failed to create USD Preview Surface material {material_name}: {e}")
+            self.logger.error(
+                f"Failed to create USD Preview Surface material {material_name}: {e}"
+            )
             import traceback
+
             self.logger.debug(f"Traceback: {traceback.format_exc()}")
             return None
 
@@ -182,7 +183,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
         material_name: str,
         renderman_params: Dict[str, Any],
         usd_stage: Any,
-        usd_service: Optional[Any] = None  # Kept for API compatibility, not used
+        usd_service: Optional[Any] = None,  # Kept for API compatibility, not used
     ) -> Optional[Any]:
         """
         Convert RenderMan material to USD using native RenderMan-USD shaders
@@ -205,19 +206,14 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
 
         try:
             # Use native RenderMan-USD conversion
-            return self._convert_renderman_native(
-                material_name, renderman_params, usd_stage
-            )
+            return self._convert_renderman_native(material_name, renderman_params, usd_stage)
 
         except Exception as e:
             self.logger.error(f"Failed to create RenderMan USD material {material_name}: {e}")
             return None
 
     def _convert_renderman_native(
-        self,
-        material_name: str,
-        renderman_params: Dict[str, Any],
-        usd_stage: Any
+        self, material_name: str, renderman_params: Dict[str, Any], usd_stage: Any
     ) -> Optional[Any]:
         """
         Convert RenderMan material to native USD RenderMan shaders
@@ -286,10 +282,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
 
     # LEGACY: Keep as backup conversion method
     def _convert_renderman_manual(
-        self,
-        material_name: str,
-        renderman_params: Dict[str, Any],
-        usd_stage: Any
+        self, material_name: str, renderman_params: Dict[str, Any], usd_stage: Any
     ) -> Optional[Any]:
         """
         Convert RenderMan material using manual parameter mapping
@@ -312,7 +305,9 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             material_path = f"/Materials/{material_name}"
             existing_prim = usd_stage.GetPrimAtPath(material_path)
             if existing_prim and existing_prim.IsValid():
-                self.logger.warning(f"Material path {material_path} already exists, skipping {material_name}")
+                self.logger.warning(
+                    f"Material path {material_path} already exists, skipping {material_name}"
+                )
                 return existing_prim
 
             # Note: Materials scope is created by the caller (usd_export_service_impl)
@@ -352,12 +347,16 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
 
             # Validate the connection worked
             if not surface_output.IsValid():
-                self.logger.error(f"Failed to create valid surface output connection for {material_name}")
+                self.logger.error(
+                    f"Failed to create valid surface output connection for {material_name}"
+                )
                 return None
 
             # Final validation - check that everything is still valid
             if not usd_material.GetPrim().IsValid() or not shader.GetPrim().IsValid():
-                self.logger.error(f"USD prims became invalid after material creation for {material_name}")
+                self.logger.error(
+                    f"USD prims became invalid after material creation for {material_name}"
+                )
                 return None
 
             self.logger.info(f"Created RenderMan USD material: {material_name} ({shader_type})")
@@ -372,25 +371,25 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
         # Check material name for shader type hints
         name_lower = material_name.lower()
 
-        if 'bsdf' in name_lower:
+        if "bsdf" in name_lower:
             return "PxrBsdf"
-        elif 'surface' in name_lower:
+        elif "surface" in name_lower:
             return "PxrSurface"
-        elif 'disney' in name_lower:
+        elif "disney" in name_lower:
             return "PxrDisneyBsdf"
-        elif 'hair' in name_lower:
+        elif "hair" in name_lower:
             return "PxrHair"
-        elif 'volume' in name_lower:
+        elif "volume" in name_lower:
             return "PxrVolume"
-        elif 'light' in name_lower:
+        elif "light" in name_lower:
             return "PxrLight"
 
         # Check parameters for shader type hints
-        if any(key in params for key in ['diffuseColor', 'diffuseTint', 'specularColor']):
+        if any(key in params for key in ["diffuseColor", "diffuseTint", "specularColor"]):
             return "PxrSurface"
-        elif any(key in params for key in ['hairColor', 'melanin']):
+        elif any(key in params for key in ["hairColor", "melanin"]):
             return "PxrHair"
-        elif any(key in params for key in ['density', 'scatterColor']):
+        elif any(key in params for key in ["density", "scatterColor"]):
             return "PxrVolume"
 
         # Default to PxrSurface for general materials
@@ -410,7 +409,9 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
                         # Handle different data types appropriately
                         processed_value = self._process_renderman_param_value(param_value)
                         shader_input.Set(processed_value)
-                        self.logger.debug(f"Set RenderMan parameter: {param_name} = {processed_value}")
+                        self.logger.debug(
+                            f"Set RenderMan parameter: {param_name} = {processed_value}"
+                        )
                     else:
                         self.logger.debug(f"Skipping parameter {param_name}: unsupported type")
                 else:
@@ -422,7 +423,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
     def _is_supported_renderman_param(self, param_name: str, param_value: Any) -> bool:
         """Check if a RenderMan parameter is supported for USD conversion"""
         # Skip connection-related parameters
-        if param_name.endswith('Connection') or 'connection' in param_name.lower():
+        if param_name.endswith("Connection") or "connection" in param_name.lower():
             return False
 
         # Skip complex data types that USD can't handle
@@ -473,7 +474,9 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
 
         return None
 
-    def _get_usd_type_for_renderman_param(self, param_name: str, param_value: Any) -> Optional[Any]:
+    def _get_usd_type_for_renderman_param(
+        self, param_name: str, param_value: Any
+    ) -> Optional[Any]:
         """Get USD type for RenderMan parameter with better type detection"""
         try:
             if isinstance(param_value, (list, tuple)):
@@ -506,10 +509,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             return None
 
     def map_texture_inputs(
-        self,
-        maya_texture_path: Path,
-        usd_output_path: Path,
-        copy_textures: bool = False
+        self, maya_texture_path: Path, usd_output_path: Path, copy_textures: bool = False
     ) -> str:
         """
         Map Maya texture file path to USD texture reference
@@ -530,6 +530,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             usd_texture_path = usd_texture_dir / maya_texture_path.name
             try:
                 import shutil
+
                 shutil.copy2(maya_texture_path, usd_texture_path)
                 # Return relative path
                 return f"textures/{maya_texture_path.name}"
@@ -541,9 +542,7 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
             return str(maya_texture_path)
 
     def bind_material_to_geometry(
-        self,
-        geometry_prim: Any,  # pxr.Usd.Prim
-        material: Any  # pxr.UsdShade.Material
+        self, geometry_prim: Any, material: Any  # pxr.Usd.Prim  # pxr.UsdShade.Material
     ) -> bool:
         """
         Bind material to geometry
@@ -580,82 +579,79 @@ class USDMaterialConverterImpl(IUSDMaterialConverter):
         """
         return [
             # Standard Maya shaders
-            'lambert',
-            'blinn',
-            'phong',
-            'phongE',
-            'anisotropic',
-            'layeredShader',
-            'rampShader',
-            'shadingMap',
-            'surfaceShader',
-            'useBackground',
+            "lambert",
+            "blinn",
+            "phong",
+            "phongE",
+            "anisotropic",
+            "layeredShader",
+            "rampShader",
+            "shadingMap",
+            "surfaceShader",
+            "useBackground",
             # RenderMan 27 Surface Shaders
-            'PxrSurface',          # Primary physically-based surface shader
-            'PxrMarschnerHair',    # Hair and fur shader
-            'PxrVolume',           # Volume shader
-            'PxrLMDiffuse',        # LightMixer diffuse
-            'PxrLMGlass',          # LightMixer glass
-            'PxrLMMetal',          # LightMixer metal
-            'PxrLMPlastic',        # LightMixer plastic
-            'PxrLMSkin',           # LightMixer skin (subsurface)
-            'PxrLMSubsurface',     # LightMixer subsurface
-            'PxrDisplace',         # Displacement shader
+            "PxrSurface",  # Primary physically-based surface shader
+            "PxrMarschnerHair",  # Hair and fur shader
+            "PxrVolume",  # Volume shader
+            "PxrLMDiffuse",  # LightMixer diffuse
+            "PxrLMGlass",  # LightMixer glass
+            "PxrLMMetal",  # LightMixer metal
+            "PxrLMPlastic",  # LightMixer plastic
+            "PxrLMSkin",  # LightMixer skin (subsurface)
+            "PxrLMSubsurface",  # LightMixer subsurface
+            "PxrDisplace",  # Displacement shader
             # RenderMan 27 Patterns & Textures
-            'PxrTexture',          # Primary texture lookup
-            'PxrPtexture',         # Ptex texture lookup
-            'PxrMultiTexture',     # Multi-texture blending
-            'PxrBump',             # Bump mapping
-            'PxrNormalMap',        # Normal mapping
-            'PxrRoundCube',        # Procedural rounded cube
-            'PxrFractal',          # Fractal noise
-            'PxrWorley',           # Worley/cellular noise
-            'PxrVoronoise',        # Voronoi noise
-            'PxrChecker',          # Checker pattern
-            'PxrRamp',             # Color ramp
-            'PxrHairColor',        # Hair color generator
-            'PxrDirt',             # Ambient occlusion/dirt
-            'PxrFlakes',           # Metallic flakes
+            "PxrTexture",  # Primary texture lookup
+            "PxrPtexture",  # Ptex texture lookup
+            "PxrMultiTexture",  # Multi-texture blending
+            "PxrBump",  # Bump mapping
+            "PxrNormalMap",  # Normal mapping
+            "PxrRoundCube",  # Procedural rounded cube
+            "PxrFractal",  # Fractal noise
+            "PxrWorley",  # Worley/cellular noise
+            "PxrVoronoise",  # Voronoi noise
+            "PxrChecker",  # Checker pattern
+            "PxrRamp",  # Color ramp
+            "PxrHairColor",  # Hair color generator
+            "PxrDirt",  # Ambient occlusion/dirt
+            "PxrFlakes",  # Metallic flakes
             # RenderMan 27 Utility Nodes
-            'PxrBlend',            # Blend between inputs
-            'PxrLayerSurface',     # Layer surface shader
-            'PxrLayerMixer',       # Mix shader layers
-            'PxrMatteID',          # Matte ID for compositing
-            'PxrVariable',         # Custom variable
-            'PxrToFloat',          # Convert to float
-            'PxrToFloat3',         # Convert to float3
-            'PxrHSL',              # HSL color adjustment
-            'PxrColorCorrect',     # Color correction
-            'PxrExposure',         # Exposure control
-            'PxrGamma',            # Gamma correction
-            'PxrInvert',           # Invert values
-            'PxrClamp',            # Clamp values
-            'PxrMix',              # Mix/lerp utility
-            'PxrRemap',            # Remap value ranges
-            'PxrThreshold',        # Threshold values
+            "PxrBlend",  # Blend between inputs
+            "PxrLayerSurface",  # Layer surface shader
+            "PxrLayerMixer",  # Mix shader layers
+            "PxrMatteID",  # Matte ID for compositing
+            "PxrVariable",  # Custom variable
+            "PxrToFloat",  # Convert to float
+            "PxrToFloat3",  # Convert to float3
+            "PxrHSL",  # HSL color adjustment
+            "PxrColorCorrect",  # Color correction
+            "PxrExposure",  # Exposure control
+            "PxrGamma",  # Gamma correction
+            "PxrInvert",  # Invert values
+            "PxrClamp",  # Clamp values
+            "PxrMix",  # Mix/lerp utility
+            "PxrRemap",  # Remap value ranges
+            "PxrThreshold",  # Threshold values
             # RenderMan 27 Light Filters
-            'PxrIntMultLightFilter',     # Intensity multiplier
-            'PxrBlockerLightFilter',     # Light blocker
-            'PxrRodLightFilter',         # Rod light filter
-            'PxrCookieLightFilter',      # Cookie/gobo
-            'PxrGoboLightFilter',        # Gobo projection
-            'PxrRampLightFilter',        # Light ramp
-            'PxrBarnLightFilter',        # Barn door filter
+            "PxrIntMultLightFilter",  # Intensity multiplier
+            "PxrBlockerLightFilter",  # Light blocker
+            "PxrRodLightFilter",  # Rod light filter
+            "PxrCookieLightFilter",  # Cookie/gobo
+            "PxrGoboLightFilter",  # Gobo projection
+            "PxrRampLightFilter",  # Light ramp
+            "PxrBarnLightFilter",  # Barn door filter
             # RenderMan 27 Lights
-            'PxrDomeLight',        # Environment/HDRI light
-            'PxrRectLight',        # Rectangular area light
-            'PxrDiskLight',        # Disk area light
-            'PxrSphereLight',      # Sphere area light
-            'PxrCylinderLight',    # Cylinder area light
-            'PxrDistantLight',     # Directional/distant light
-            'PxrPortalLight',      # Portal light for indoor scenes
-            'PxrMeshLight'         # Mesh-based light
+            "PxrDomeLight",  # Environment/HDRI light
+            "PxrRectLight",  # Rectangular area light
+            "PxrDiskLight",  # Disk area light
+            "PxrSphereLight",  # Sphere area light
+            "PxrCylinderLight",  # Cylinder area light
+            "PxrDistantLight",  # Directional/distant light
+            "PxrPortalLight",  # Portal light for indoor scenes
+            "PxrMeshLight",  # Mesh-based light
         ]
 
-    def validate_texture_paths(
-        self,
-        texture_paths: list[Path]
-    ) -> tuple[list[Path], list[Path]]:
+    def validate_texture_paths(self, texture_paths: list[Path]) -> tuple[list[Path], list[Path]]:
         """
         Validate texture file paths exist
 

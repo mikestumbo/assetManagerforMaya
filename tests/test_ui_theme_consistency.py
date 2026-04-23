@@ -20,7 +20,7 @@ def test_theme_import_consistency():
         "src/ui/dialogs/color_coding_manager_dialog.py",
         "src/ui/dialogs/tag_manager_dialog.py",
         "src/ui/collection_manager_dialog.py",
-        "src/ui/widgets/color_coding_keychart_widget.py"
+        "src/ui/widgets/color_coding_keychart_widget.py",
     ]
 
     print("🎨 Testing UI Theme Consistency...")
@@ -36,7 +36,7 @@ def test_theme_import_consistency():
             success = False
             continue
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Test 1: Theme import
@@ -63,7 +63,7 @@ def test_theme_import_consistency():
             "color: #2c3e50",
             "color: #7f8c8d",
             "background-color: #3498db",
-            "background-color: #f8f9fa"
+            "background-color: #f8f9fa",
         ]
 
         legacy_found = False
@@ -81,16 +81,16 @@ def test_theme_import_consistency():
     if Path("src/ui/theme.py").exists():
         print("✅ UITheme constants file exists")
 
-        with open("src/ui/theme.py", 'r', encoding='utf-8') as f:
+        with open("src/ui/theme.py", "r", encoding="utf-8") as f:
             theme_content = f.read()
 
         # Check for required theme components
         required_components = [
             "class UITheme:",
-            "PRIMARY_BG = \"#4a4a4a\"",
-            "TEXT_PRIMARY = \"#ffffff\"",
+            'PRIMARY_BG = "#4a4a4a"',
+            'TEXT_PRIMARY = "#ffffff"',
             "get_dialog_stylesheet",
-            "get_color_preview_style"
+            "get_color_preview_style",
         ]
 
         for component in required_components:
@@ -126,7 +126,7 @@ def test_color_scheme_consistency():
         print("❌ Theme file not found")
         return False
 
-    with open(theme_file, 'r', encoding='utf-8') as f:
+    with open(theme_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     # Check for main color consistency
@@ -136,7 +136,7 @@ def test_color_scheme_consistency():
         "#ffffff": "Primary text",
         "#cccccc": "Secondary text",
         "#666666": "Border color",
-        "#0078d4": "Accent color"
+        "#0078d4": "Accent color",
     }
 
     success = True
@@ -151,7 +151,6 @@ def test_color_scheme_consistency():
 
 
 def main():
-
 
     print("🚀 Asset Manager UI Theme Consistency Validation")
     print("=" * 60)
@@ -174,6 +173,7 @@ def main():
         print("❌ SOME TESTS FAILED - Please review the issues above")
 
     return overall_success
+
 
 if __name__ == "__main__":
     success = run_ui_theme_tests()

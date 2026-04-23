@@ -15,6 +15,7 @@ from dataclasses import dataclass
 # USD imports (conditional)
 try:
     from pxr import Usd, UsdGeom, UsdSkel, Sdf, Gf, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -32,6 +33,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class UsdSkeletonData:
     """USD skeleton data extracted from stage"""
+
     skeleton_path: str  # USD path to skeleton prim
     joint_names: List[str]  # Ordered list of joint names (USD paths)
     joint_count: int
@@ -39,12 +41,13 @@ class UsdSkeletonData:
 
     def get_joint_short_names(self) -> List[str]:
         """Get short joint names (last component of USD path)"""
-        return [name.split('/')[-1] for name in self.joint_names]
+        return [name.split("/")[-1] for name in self.joint_names]
 
 
 @dataclass
 class UsdSkinWeightData:
     """Skin weight data for a single mesh"""
+
     mesh_path: str  # USD path to mesh
     skeleton_path: str  # USD path to bound skeleton
 
@@ -67,10 +70,16 @@ class UsdSkinWeightData:
     def validate(self) -> Tuple[bool, str]:
         """Validate skin weight data"""
         if len(self.joint_indices) != self.vertex_count:
-            return False, f"Joint indices count mismatch: {len(self.joint_indices)} vs {self.vertex_count}"
+            return (
+                False,
+                f"Joint indices count mismatch: {len(self.joint_indices)} vs {self.vertex_count}",
+            )
 
         if len(self.joint_weights) != self.vertex_count:
-            return False, f"Joint weights count mismatch: {len(self.joint_weights)} vs {self.vertex_count}"
+            return (
+                False,
+                f"Joint weights count mismatch: {len(self.joint_weights)} vs {self.vertex_count}",
+            )
 
         # Check weight normalization
         for v_idx, weights in enumerate(self.joint_weights):
@@ -148,7 +157,7 @@ class UsdSkeletonReaderImpl:
                 skeleton_path=skeleton_path,
                 joint_names=list(joint_names),
                 joint_count=len(joint_names),
-                has_animation=has_animation
+                has_animation=has_animation,
             )
 
         except Exception as e:
@@ -195,10 +204,7 @@ class UsdSkeletonReaderImpl:
             return False
 
     def read_skin_weights(
-        self,
-        stage: Any,
-        mesh_path: str,
-        skeleton_data: UsdSkeletonData
+        self, stage: Any, mesh_path: str, skeleton_data: UsdSkeletonData
     ) -> Optional[UsdSkinWeightData]:
         """
         Read skin weight data from mesh prim
@@ -279,7 +285,7 @@ class UsdSkeletonReaderImpl:
             joint_weights = []
 
             # Diagnostic: Track weight statistics
-            min_weight = float('inf')
+            min_weight = float("inf")
             max_weight = 0.0
             total_weights = 0
             non_zero_weights = 0
@@ -303,7 +309,9 @@ class UsdSkeletonReaderImpl:
                 joint_indices.append(indices)
                 joint_weights.append(weights)
 
-            self.logger.info(f"Read skin weights: {vertex_count} vertices, {element_size} max influences")
+            self.logger.info(
+                f"Read skin weights: {vertex_count} vertices, {element_size} max influences"
+            )
             if non_zero_weights > 0:
                 self.logger.info(
                     f"📊 Weight range (first 100 verts): min={min_weight:.6f}, "
@@ -319,8 +327,12 @@ class UsdSkeletonReaderImpl:
                     points = points_attr.Get()
                     if points:
                         for point in points:
-                            vertex_positions.append((float(point[0]), float(point[1]), float(point[2])))
-                        self.logger.info(f"[OK] Read {len(vertex_positions)} vertex positions for matching")
+                            vertex_positions.append(
+                                (float(point[0]), float(point[1]), float(point[2]))
+                            )
+                        self.logger.info(
+                            f"[OK] Read {len(vertex_positions)} vertex positions for matching"
+                        )
             except Exception as pos_error:
                 self.logger.warning(f"Could not read vertex positions: {pos_error}")
                 vertex_positions = None
@@ -346,7 +358,7 @@ class UsdSkeletonReaderImpl:
                         geom_bind_value = geom_bind_attr.Get()
 
                 # Convert USD matrix to flat list if found
-                if geom_bind_value and hasattr(geom_bind_value, '__iter__'):
+                if geom_bind_value and hasattr(geom_bind_value, "__iter__"):
                     flat_matrix = []
                     for row in range(4):
                         for col in range(4):
@@ -355,7 +367,9 @@ class UsdSkeletonReaderImpl:
                     self.logger.info(f"[OK] Read skel:geomBindTransform from {mesh_path}")
                 else:
                     # This is not an error - Maya will use joint bind matrices instead
-                    self.logger.debug(f"No skel:geomBindTransform on {mesh_path} (will use joint bind matrices)")
+                    self.logger.debug(
+                        f"No skel:geomBindTransform on {mesh_path} (will use joint bind matrices)"
+                    )
 
             except Exception as bind_error:
                 self.logger.debug(f"Could not read geomBindTransform: {bind_error}")
@@ -369,7 +383,7 @@ class UsdSkeletonReaderImpl:
                 vertex_count=vertex_count,
                 max_influences=element_size,
                 vertex_positions=vertex_positions,  # CRITICAL: For position-based matching
-                geom_bind_transform=geom_bind_transform
+                geom_bind_transform=geom_bind_transform,
             )
 
             # Validate
@@ -382,6 +396,7 @@ class UsdSkeletonReaderImpl:
         except Exception as e:
             self.logger.error(f"Failed to read skin weights from {mesh_path}: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 

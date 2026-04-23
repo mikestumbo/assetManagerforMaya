@@ -15,14 +15,14 @@ from .library_service import ILibraryService
 from .usd_import_service import IUsdImportService, UsdImportOptions, ImportResult
 
 __all__ = [
-    'IAssetRepository',
-    'IMetadataExtractor',
-    'IThumbnailService',
-    'IMayaIntegration',
-    'IEventPublisher',
-    'EventType',
-    'ILibraryService',
-    'IUsdImportService',
-    'UsdImportOptions',
-    'ImportResult'
+    "IAssetRepository",
+    "IMetadataExtractor",
+    "IThumbnailService",
+    "IMayaIntegration",
+    "IEventPublisher",
+    "EventType",
+    "ILibraryService",
+    "IUsdImportService",
+    "UsdImportOptions",
+    "ImportResult",
 ]

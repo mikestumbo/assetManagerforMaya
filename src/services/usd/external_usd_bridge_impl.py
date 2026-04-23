@@ -46,11 +46,7 @@ class UsdViewBridge:
         # USD tools are usually in Python environment or system path
         try:
             result = subprocess.run(
-                ["usdcat", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False
+                ["usdcat", "--version"], capture_output=True, text=True, timeout=5, check=False
             )
             if result.returncode == 0:
                 self.usdcat_path = "usdcat"
@@ -77,7 +73,7 @@ class UsdViewBridge:
             Validation results
         """
         if not self.is_available():
-            return {'valid': False, 'error': 'USD tools not available'}
+            return {"valid": False, "error": "USD tools not available"}
 
         try:
             result = subprocess.run(
@@ -85,23 +81,19 @@ class UsdViewBridge:
                 capture_output=True,
                 text=True,
                 timeout=30,
-                check=False
+                check=False,
             )
 
             return {
-                'valid': result.returncode == 0,
-                'output': result.stdout,
-                'errors': result.stderr if result.returncode != 0 else None
+                "valid": result.returncode == 0,
+                "output": result.stdout,
+                "errors": result.stderr if result.returncode != 0 else None,
             }
 
         except Exception as e:
-            return {'valid': False, 'error': str(e)}
+            return {"valid": False, "error": str(e)}
 
-    def convert_format(
-        self,
-        usd_path: Path,
-        output_format: str = 'usda'
-    ) -> Optional[Path]:
+    def convert_format(self, usd_path: Path, output_format: str = "usda") -> Optional[Path]:
         """
         Convert USD to different format (usda, usdc, usdz)
 
@@ -123,7 +115,7 @@ class UsdViewBridge:
                 capture_output=True,
                 text=True,
                 timeout=60,
-                check=False
+                check=False,
             )
 
             if result.returncode == 0 and output_path.exists():

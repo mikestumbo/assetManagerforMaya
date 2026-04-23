@@ -42,7 +42,9 @@ class AssetInfoLabel(QLabel):
         self._update_stylesheet()
 
         # Set initial text
-        self.setText("No asset selected\n\nTip: Hold Ctrl and scroll mouse wheel to adjust font size")
+        self.setText(
+            "No asset selected\n\nTip: Hold Ctrl and scroll mouse wheel to adjust font size"
+        )
 
     def _update_stylesheet(self) -> None:
         """Update stylesheet with current font size - Single Responsibility"""
@@ -98,7 +100,9 @@ class AssetInfoLabel(QLabel):
             self.font_size_changed.emit(size)
 
             # Update tooltip with current size
-            self.setToolTip(f"Asset Information (Font: {size}px)\nCtrl + Scroll to adjust font size")
+            self.setToolTip(
+                f"Asset Information (Font: {size}px)\nCtrl + Scroll to adjust font size"
+            )
 
     def get_font_size(self) -> int:
         """Get current font size - Single Responsibility"""
@@ -127,12 +131,12 @@ class AssetInfoLabel(QLabel):
     def get_font_size_info(self) -> dict:
         """Get comprehensive font size information - Single Responsibility"""
         return {
-            'current': self._current_font_size,
-            'default': self._default_font_size,
-            'min': self._min_font_size,
-            'max': self._max_font_size,
-            'at_min': self.is_font_size_at_minimum(),
-            'at_max': self.is_font_size_at_maximum()
+            "current": self._current_font_size,
+            "default": self._default_font_size,
+            "min": self._min_font_size,
+            "max": self._max_font_size,
+            "at_min": self.is_font_size_at_minimum(),
+            "at_max": self.is_font_size_at_maximum(),
         }
 
 
@@ -152,7 +156,7 @@ class AssetInfoPanel(QLabel):
 
     def setText(self, text: str) -> None:
         """Override to use enhanced label"""
-        if hasattr(self, '_enhanced_label'):
+        if hasattr(self, "_enhanced_label"):
             self._enhanced_label.setText(text)
         else:
             super().setText(text)

@@ -1,4 +1,5 @@
 from typing import Tuple
+
 # !/usr/bin/env python3
 """
 Asset Manager v1.3.0 - Asset Loading and Management Test Suite
@@ -37,14 +38,14 @@ def create_test_assets() -> str:
     maya_file = os.path.join(temp_dir, "test_cube.ma")
     with open(maya_file, "w") as f:
         f.write("//Maya ASCII 2025 scene\n//Created for Asset Manager Testing\n")
-        f.write("createNode transform -n \"pCube1\";\n")
-        f.write("createNode mesh -n \"pCubeShape1\" -p \"pCube1\";\n")
+        f.write('createNode transform -n "pCube1";\n')
+        f.write('createNode mesh -n "pCubeShape1" -p "pCube1";\n')
 
     # Create test image file
     image_file = os.path.join(temp_dir, "test_texture.jpg")
     with open(image_file, "wb") as f:
         # Simple test image data
-        f.write(b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb')
+        f.write(b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb")
 
     # Create test material file
     material_file = os.path.join(temp_dir, "test_material.mtl")
@@ -59,9 +60,12 @@ def test_asset_repository_service() -> Tuple[bool, str]:
     try:
         # Import after assetManager is loaded - use dynamic path
         import os
-        user_profile = os.environ.get('USERPROFILE', '')
-        maya_version = '2025.3'  # Adjust as needed
-        asset_manager_path = os.path.join(user_profile, 'Documents', 'maya', maya_version, 'scripts', 'assetManager')
+
+        user_profile = os.environ.get("USERPROFILE", "")
+        maya_version = "2025.3"  # Adjust as needed
+        asset_manager_path = os.path.join(
+            user_profile, "Documents", "maya", maya_version, "scripts", "assetManager"
+        )
         if asset_manager_path not in sys.path:
             sys.path.insert(0, asset_manager_path)
 
@@ -74,14 +78,21 @@ def test_asset_repository_service() -> Tuple[bool, str]:
         # Try to get the service using both methods
         repo = container.get(IAssetRepository)
         if not repo:
-            repo = container.resolve(IAssetRepository) if container.is_registered(IAssetRepository) else None
+            repo = (
+                container.resolve(IAssetRepository)
+                if container.is_registered(IAssetRepository)
+                else None
+            )
 
         if repo:
             return True, f"Asset repository service available: {type(repo).__name__}"
         else:
             # Check what services are actually registered
             registered = container.get_registered_services()
-            return False, f"Asset repository service not found. Registered: {list(registered.keys())}"
+            return (
+                False,
+                f"Asset repository service not found. Registered: {list(registered.keys())}",
+            )
     except Exception as e:
         return False, f"Service access error: {str(e)}"
 
@@ -91,6 +102,7 @@ def test_asset_discovery() -> Tuple[bool, str]:
     test_dir = None
     try:
         from src.core.container import configure_services
+
         # Create temporary test directory with assets
         test_dir = create_test_assets()
 
@@ -100,20 +112,26 @@ def test_asset_discovery() -> Tuple[bool, str]:
         container = configure_services()
         repo = container.get(IAssetRepository)
         if not repo:
-            repo = container.resolve(IAssetRepository) if container.is_registered(IAssetRepository) else None
+            repo = (
+                container.resolve(IAssetRepository)
+                if container.is_registered(IAssetRepository)
+                else None
+            )
 
         if not repo:
             return False, "Asset repository service not available"
 
         # Test discovery - use basic directory listing if specific method unavailable
         try:
-            if hasattr(repo, 'get_assets_from_directory'):
+            if hasattr(repo, "get_assets_from_directory"):
                 assets = repo.get_assets_from_directory(test_dir)
-            elif hasattr(repo, 'find_all'):
+            elif hasattr(repo, "find_all"):
                 assets = repo.find_all(Path(test_dir))
             else:
                 # Fallback: count files in directory
-                assets = [f for f in os.listdir(test_dir) if os.path.isfile(os.path.join(test_dir, f))]
+                assets = [
+                    f for f in os.listdir(test_dir) if os.path.isfile(os.path.join(test_dir, f))
+                ]
         except Exception as repo_error:
             return False, f"Repository method error: {str(repo_error)}"
 
@@ -148,16 +166,20 @@ def test_project_directory_handling() -> Tuple[bool, str]:
         container = configure_services()
         repo = container.get(IAssetRepository)
         if not repo:
-            repo = container.resolve(IAssetRepository) if container.is_registered(IAssetRepository) else None
+            repo = (
+                container.resolve(IAssetRepository)
+                if container.is_registered(IAssetRepository)
+                else None
+            )
 
         if not repo:
             return False, "Asset repository service not available"
 
         # Test accessing project directory with fallback
         try:
-            if hasattr(repo, 'get_assets_from_directory'):
+            if hasattr(repo, "get_assets_from_directory"):
                 project_assets = repo.get_assets_from_directory(current_project)
-            elif hasattr(repo, 'find_all'):
+            elif hasattr(repo, "find_all"):
                 project_assets = repo.find_all(Path(current_project))
             else:
                 # Fallback: just verify directory exists and is accessible
@@ -168,7 +190,10 @@ def test_project_directory_handling() -> Tuple[bool, str]:
         except Exception as repo_error:
             return False, f"Repository access error: {str(repo_error)}"
 
-        return True, f"Project directory handled: {current_project} with {len(project_assets)} items"
+        return (
+            True,
+            f"Project directory handled: {current_project} with {len(project_assets)} items",
+        )
 
     except Exception as e:
         return False, f"Project directory error: {str(e)}"
@@ -206,7 +231,7 @@ def test_asset_loading_into_maya() -> Tuple[bool, str]:
         return success, details
 
     except Exception as e:
-        if 'test_dir' in locals():
+        if "test_dir" in locals():
             try:
                 shutil.rmtree(test_dir)  # type: ignore
             except Exception:
@@ -218,16 +243,17 @@ def test_file_type_recognition() -> Tuple[bool, str]:
     """Test recognition of different file types."""
     try:
         from src.core.container import configure_services
+
         # Test file extensions recognition
         test_files = [
-            "scene.ma",      # Maya ASCII
-            "scene.mb",      # Maya Binary
-            "model.obj",     # OBJ
-            "texture.jpg",   # JPEG
-            "texture.png",   # PNG
+            "scene.ma",  # Maya ASCII
+            "scene.mb",  # Maya Binary
+            "model.obj",  # OBJ
+            "texture.jpg",  # JPEG
+            "texture.png",  # PNG
             "material.mtl",  # Material
-            "video.mp4",     # Video
-            "archive.zip"    # Archive
+            "video.mp4",  # Video
+            "archive.zip",  # Archive
         ]
 
         # Import thumbnail service using correct path
@@ -236,20 +262,24 @@ def test_file_type_recognition() -> Tuple[bool, str]:
         container = configure_services()
         thumbnail_service = container.get(IThumbnailService)
         if not thumbnail_service:
-            thumbnail_service = container.resolve(IThumbnailService) if container.is_registered(IThumbnailService) else None
+            thumbnail_service = (
+                container.resolve(IThumbnailService)
+                if container.is_registered(IThumbnailService)
+                else None
+            )
 
         recognized_types = []
         for test_file in test_files:
             # Test if service can handle the file type
             file_ext = os.path.splitext(test_file)[1].lower()
-            if thumbnail_service and hasattr(thumbnail_service, '_get_file_type_color'):
+            if thumbnail_service and hasattr(thumbnail_service, "_get_file_type_color"):
                 try:
                     color = thumbnail_service._get_file_type_color(file_ext)  # type: ignore
                     if color:
                         recognized_types.append(file_ext)
                 except Exception:
                     pass
-            elif thumbnail_service and hasattr(thumbnail_service, 'is_thumbnail_supported'):
+            elif thumbnail_service and hasattr(thumbnail_service, "is_thumbnail_supported"):
                 try:
                     if thumbnail_service.is_thumbnail_supported(Path(test_file)):
                         recognized_types.append(file_ext)
@@ -257,7 +287,10 @@ def test_file_type_recognition() -> Tuple[bool, str]:
                     pass
 
         if len(recognized_types) > 0:
-            return True, f"Recognized {len(recognized_types)} file types: {', '.join(recognized_types)}"
+            return (
+                True,
+                f"Recognized {len(recognized_types)} file types: {', '.join(recognized_types)}",
+            )
         elif thumbnail_service:
             return True, f"ThumbnailService available: {type(thumbnail_service).__name__}"
         else:
@@ -272,6 +305,7 @@ def test_thumbnail_generation() -> Tuple[bool, str]:
     test_dir = None
     try:
         from src.core.container import configure_services
+
         # Create test asset
         test_dir = create_test_assets()
         test_file = os.path.join(test_dir, "test_cube.ma")
@@ -282,10 +316,14 @@ def test_thumbnail_generation() -> Tuple[bool, str]:
         container = configure_services()
         thumbnail_service = container.get(IThumbnailService)
         if not thumbnail_service:
-            thumbnail_service = container.resolve(IThumbnailService) if container.is_registered(IThumbnailService) else None
+            thumbnail_service = (
+                container.resolve(IThumbnailService)
+                if container.is_registered(IThumbnailService)
+                else None
+            )
 
         # Test thumbnail generation with safe fallback
-        if thumbnail_service and hasattr(thumbnail_service, 'generate_thumbnail'):
+        if thumbnail_service and hasattr(thumbnail_service, "generate_thumbnail"):
             try:
                 thumbnail_path = thumbnail_service.generate_thumbnail(Path(test_file))
                 if thumbnail_path and os.path.exists(thumbnail_path):
@@ -295,7 +333,10 @@ def test_thumbnail_generation() -> Tuple[bool, str]:
             except Exception as gen_error:
                 result = False, f"Thumbnail generation failed: {str(gen_error)}"
         elif thumbnail_service:
-            result = True, f"ThumbnailService instantiated successfully: {type(thumbnail_service).__name__}"
+            result = (
+                True,
+                f"ThumbnailService instantiated successfully: {type(thumbnail_service).__name__}",
+            )
         else:
             result = False, "ThumbnailService not available"
 
@@ -339,7 +380,7 @@ def test_asset_metadata_extraction() -> Tuple[bool, str]:
                     name=file_name,
                     file_path=file_path,
                     file_extension=file_ext,
-                    file_size=file_size
+                    file_size=file_size,
                 )  # type: ignore
             except TypeError:
                 # Fallback: try simpler constructor
@@ -347,12 +388,15 @@ def test_asset_metadata_extraction() -> Tuple[bool, str]:
                     asset = Asset(file_path)  # type: ignore
                 except TypeError:
                     # Last fallback: basic info
-                    return True, f"Asset model available, test file: {file_name}{file_ext} ({file_size} bytes)"
+                    return (
+                        True,
+                        f"Asset model available, test file: {file_name}{file_ext} ({file_size} bytes)",
+                    )
 
             metadata_items = []
 
             # Check for various asset attributes safely
-            for attr in ['name', 'path', 'file_path', 'size', 'file_size']:
+            for attr in ["name", "path", "file_path", "size", "file_size"]:
                 if hasattr(asset, attr):
                     try:
                         value = getattr(asset, attr)
@@ -383,7 +427,6 @@ def test_asset_metadata_extraction() -> Tuple[bool, str]:
 
 
 def run_asset_management_tests():
-
 
     print_test_header("ASSET MANAGER v1.3.0 - ASSET LOADING & MANAGEMENT TESTS")
 
@@ -426,8 +469,8 @@ def run_asset_management_tests():
 
     print(f"\n{'='*60}")
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     try:
         print("✅ Asset Manager loaded, running asset management tests...")

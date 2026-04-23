@@ -17,9 +17,9 @@ def test_renderman_service_creation():
     assert service is not None, "RenderMan service should be created"
 
     # Check basic properties
-    assert hasattr(service, 'is_renderman_available'), "Service should have availability check"
-    assert hasattr(service, 'detect_renderman_nodes'), "Service should have node detection"
-    assert hasattr(service, 'get_renderman_info'), "Service should have info method"
+    assert hasattr(service, "is_renderman_available"), "Service should have availability check"
+    assert hasattr(service, "detect_renderman_nodes"), "Service should have node detection"
+    assert hasattr(service, "get_renderman_info"), "Service should have info method"
 
     print("\u2705 RenderMan service creation test passed")
     return True
@@ -69,9 +69,9 @@ def test_renderman_info():
 
     # Should return dictionary
     assert isinstance(info, dict), "Info should return dictionary"
-    assert 'available' in info, "Info should contain availability status"
-    assert 'prman_api' in info, "Info should contain prman status"
-    assert 'version' in info, "Info should contain version field"
+    assert "available" in info, "Info should contain availability status"
+    assert "prman_api" in info, "Info should contain prman status"
+    assert "version" in info, "Info should contain version field"
 
     print(f"\u2139\ufe0f RenderMan Info: {info}")
     print("\u2705 RenderMan info retrieval test passed")
@@ -98,7 +98,6 @@ def test_renderman_metadata_structure():
 
 def test_renderman_container_registration():
 
-
     from src.core.container import get_container
     from src.services.renderman_service_impl import RenderManService
 
@@ -116,11 +115,11 @@ def test_renderman_container_registration():
     print("\u2705 RenderMan container registration test passed")
     return True
 
+
 if __name__ == "__main__":
 
-
     print("RENDERMAN SERVICE TEST SUITE")
-    print("="*70)
+    print("=" * 70)
 
     tests = [
         ("RenderMan Service Creation", test_renderman_service_creation),
@@ -143,6 +142,6 @@ if __name__ == "__main__":
             print(f"\u274c {test_name} failed: {e}")
             failed += 1
 
-    print("\\n" + "="*70)
+    print("\\n" + "=" * 70)
     print(f"Test Results: {passed} passed, {failed} failed")
-    print("="*70)
+    print("=" * 70)

@@ -22,9 +22,7 @@ class ILibraryService(ABC):
 
     @abstractmethod
     def add_asset_to_library(
-        self,
-        source_path: Path,
-        project_path: Path
+        self, source_path: Path, project_path: Path
     ) -> Optional[Tuple[bool, Optional[Path]]]:
         """
         Add asset to library - copies file and updates repository with new path
@@ -50,11 +48,7 @@ class ILibraryService(ABC):
         """
 
     @abstractmethod
-    def get_library_path_for_asset(
-        self,
-        source_path: Path,
-        project_path: Path
-    ) -> Path:
+    def get_library_path_for_asset(self, source_path: Path, project_path: Path) -> Path:
         """
         Calculate target library path for an asset
 

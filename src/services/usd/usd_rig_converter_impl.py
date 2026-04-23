@@ -13,6 +13,7 @@ from typing import Optional, List, Dict, Any, Tuple
 # USD imports (conditional)
 try:
     from pxr import Usd, UsdGeom, UsdSkel, Sdf, Gf, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -55,7 +56,7 @@ class USDRigConverterImpl(IUSDRigConverter):
         self,
         joint_data: List[JointData],
         usd_stage: Any,  # pxr.Usd.Stage
-        skeleton_path: str = "/Skeleton"
+        skeleton_path: str = "/Skeleton",
     ) -> Optional[Any]:  # pxr.UsdSkel.Skeleton
         """
         Convert Maya joint hierarchy to UsdSkel.Skeleton
@@ -103,7 +104,7 @@ class USDRigConverterImpl(IUSDRigConverter):
         self,
         skin_cluster_data: SkinClusterData,
         skeleton: Any,  # pxr.UsdSkel.Skeleton
-        mesh_prim: Any  # pxr.Usd.Prim
+        mesh_prim: Any,  # pxr.Usd.Prim
     ) -> bool:
         """
         Convert Maya skin weights to USD skinning primvars
@@ -128,8 +129,7 @@ class USDRigConverterImpl(IUSDRigConverter):
 
             # Convert weights to USD format
             joint_indices, joint_weights = self._convert_weights_to_usd_format(
-                weights,
-                max_influences
+                weights, max_influences
             )
 
             # Create skinning primvars on mesh
@@ -141,15 +141,13 @@ class USDRigConverterImpl(IUSDRigConverter):
 
             # Set joint indices
             joint_indices_primvar = skel_binding_api.CreateJointIndicesPrimvar(
-                False,  # constant = False (per-vertex)
-                max_influences
+                False, max_influences  # constant = False (per-vertex)
             )
             joint_indices_primvar.Set(joint_indices)
 
             # Set joint weights
             joint_weights_primvar = skel_binding_api.CreateJointWeightsPrimvar(
-                False,  # constant = False (per-vertex)
-                max_influences
+                False, max_influences  # constant = False (per-vertex)
             )
             joint_weights_primvar.Set(joint_weights)
 
@@ -161,9 +159,7 @@ class USDRigConverterImpl(IUSDRigConverter):
             return False
 
     def create_bind_pose(
-        self,
-        skeleton: Any,  # pxr.UsdSkel.Skeleton
-        joint_data: List[JointData]
+        self, skeleton: Any, joint_data: List[JointData]  # pxr.UsdSkel.Skeleton
     ) -> bool:
         """
         Set skeleton bind pose from Maya joint transforms
@@ -185,7 +181,7 @@ class USDRigConverterImpl(IUSDRigConverter):
             # USD skeleton uses short names, Maya joint_data uses full DAG paths
             joint_map = {}
             for j in joint_data:
-                short_name = j.name.split('|')[-1]  # Extract short name from DAG path
+                short_name = j.name.split("|")[-1]  # Extract short name from DAG path
                 joint_map[short_name] = j
 
             # Get joint order from skeleton
@@ -193,7 +189,7 @@ class USDRigConverterImpl(IUSDRigConverter):
 
             for joint_path in joint_paths:
                 # Extract joint name from USD path (e.g., "root/spine/head" -> "head")
-                joint_short_name = joint_path.split('/')[-1]
+                joint_short_name = joint_path.split("/")[-1]
 
                 if joint_short_name not in joint_map:
                     logger.error(f"Joint {joint_short_name} not found in joint data")
@@ -220,10 +216,7 @@ class USDRigConverterImpl(IUSDRigConverter):
             logger.error(f"Failed to create bind pose: {e}")
             return False
 
-    def validate_joint_topology(
-        self,
-        joint_data: List[JointData]
-    ) -> Tuple[bool, str]:
+    def validate_joint_topology(self, joint_data: List[JointData]) -> Tuple[bool, str]:
         """
         Validate joint hierarchy is valid for USD
 
@@ -247,17 +240,17 @@ class USDRigConverterImpl(IUSDRigConverter):
 
         # Multiple root joints are valid in USD (separate hierarchies, FK/IK, facial rigs, etc.)
         if len(root_joints) > 1:
-            root_names = [j.name.split('|')[-1] for j in root_joints]
+            root_names = [j.name.split("|")[-1] for j in root_joints]
             preview = root_names[:5]
-            suffix = '...' if len(root_names) > 5 else ''
+            suffix = "..." if len(root_names) > 5 else ""
             logger.info(f"Skeleton has {len(root_joints)} root joints: {preview}{suffix}")
 
         # Check for valid parent references
         joint_path_set = set(joint_paths)
         for joint in joint_data:
             if joint.parent_name and joint.parent_name not in joint_path_set:
-                joint_short = joint.name.split('|')[-1]
-                parent_short = joint.parent_name.split('|')[-1] if joint.parent_name else "None"
+                joint_short = joint.name.split("|")[-1]
+                parent_short = joint.parent_name.split("|")[-1] if joint.parent_name else "None"
                 return False, f"Joint {joint_short} references non-existent parent: {parent_short}"
 
         # Check for cycles (a joint cannot be its own ancestor)
@@ -266,17 +259,18 @@ class USDRigConverterImpl(IUSDRigConverter):
 
         # Build validation summary
         if len(root_joints) == 1:
-            root_short_name = root_joints[0].name.split('|')[-1]
-            logger.debug(f"Joint topology validated: {len(joint_data)} joints, single root: {root_short_name}")
+            root_short_name = root_joints[0].name.split("|")[-1]
+            logger.debug(
+                f"Joint topology validated: {len(joint_data)} joints, single root: {root_short_name}"
+            )
         else:
-            logger.debug(f"Joint topology validated: {len(joint_data)} joints, {len(root_joints)} root hierarchies")
+            logger.debug(
+                f"Joint topology validated: {len(joint_data)} joints, {len(root_joints)} root hierarchies"
+            )
 
         return True, ""
 
-    def normalize_weights(
-        self,
-        weights: Dict[int, List[tuple]]
-    ) -> Dict[int, List[tuple]]:
+    def normalize_weights(self, weights: Dict[int, List[tuple]]) -> Dict[int, List[tuple]]:
         """
         Normalize skin weights to sum to 1.0 per vertex
 
@@ -295,14 +289,12 @@ class USDRigConverterImpl(IUSDRigConverter):
                 logger.warning(f"Vertex {vertex_idx} has zero total weight")
                 # Equal distribution as fallback
                 normalized[vertex_idx] = [
-                    (joint_idx, 1.0 / len(vertex_weights))
-                    for joint_idx, _ in vertex_weights
+                    (joint_idx, 1.0 / len(vertex_weights)) for joint_idx, _ in vertex_weights
                 ]
             elif abs(total - 1.0) > 0.001:
                 # Normalize
                 normalized[vertex_idx] = [
-                    (joint_idx, weight / total)
-                    for joint_idx, weight in vertex_weights
+                    (joint_idx, weight / total) for joint_idx, weight in vertex_weights
                 ]
             else:
                 # Already normalized
@@ -310,10 +302,7 @@ class USDRigConverterImpl(IUSDRigConverter):
 
         return normalized
 
-    def get_max_influences_per_vertex(
-        self,
-        skin_cluster_data: SkinClusterData
-    ) -> int:
+    def get_max_influences_per_vertex(self, skin_cluster_data: SkinClusterData) -> int:
         """
         Get maximum number of joint influences per vertex
 
@@ -323,16 +312,13 @@ class USDRigConverterImpl(IUSDRigConverter):
             return 0
 
         max_influences = max(
-            len(vertex_weights)
-            for vertex_weights in skin_cluster_data.weights.values()
+            len(vertex_weights) for vertex_weights in skin_cluster_data.weights.values()
         )
 
         return max_influences
 
     def prune_zero_weights(
-        self,
-        weights: Dict[int, List[tuple]],
-        threshold: float = 0.001
+        self, weights: Dict[int, List[tuple]], threshold: float = 0.001
     ) -> Dict[int, List[tuple]]:
         """
         Remove weights below threshold to optimize data
@@ -344,9 +330,7 @@ class USDRigConverterImpl(IUSDRigConverter):
         for vertex_idx, vertex_weights in weights.items():
             # Filter weights above threshold
             filtered = [
-                (joint_idx, weight)
-                for joint_idx, weight in vertex_weights
-                if weight >= threshold
+                (joint_idx, weight) for joint_idx, weight in vertex_weights if weight >= threshold
             ]
 
             if filtered:
@@ -374,7 +358,7 @@ class USDRigConverterImpl(IUSDRigConverter):
         # (Children are stored as short names in JointData.children)
         joint_map_short = {}
         for j in joint_data:
-            short_name = j.name.split('|')[-1]
+            short_name = j.name.split("|")[-1]
             # Handle potential short name collisions by storing list
             if short_name not in joint_map_short:
                 joint_map_short[short_name] = []
@@ -398,12 +382,12 @@ class USDRigConverterImpl(IUSDRigConverter):
         parent_path: str,
         paths: List[str],
         joint_map_full: Dict[str, JointData],
-        joint_map_short: Dict[str, List[JointData]]
+        joint_map_short: Dict[str, List[JointData]],
     ):
         """Recursive helper for building joint paths"""
         # Extract short name from full DAG path for USD token
         # Maya full path: |Group|MotionSystem|FKAnkle_L -> short: FKAnkle_L
-        joint_short_name = joint.name.split('|')[-1]
+        joint_short_name = joint.name.split("|")[-1]
 
         # Build current path
         if parent_path:
@@ -440,16 +424,26 @@ class USDRigConverterImpl(IUSDRigConverter):
         # Maya is row-major, USD Gf.Matrix4d is row-major too
         # So we can directly construct
         return Gf.Matrix4d(
-            maya_matrix[0], maya_matrix[1], maya_matrix[2], maya_matrix[3],
-            maya_matrix[4], maya_matrix[5], maya_matrix[6], maya_matrix[7],
-            maya_matrix[8], maya_matrix[9], maya_matrix[10], maya_matrix[11],
-            maya_matrix[12], maya_matrix[13], maya_matrix[14], maya_matrix[15]
+            maya_matrix[0],
+            maya_matrix[1],
+            maya_matrix[2],
+            maya_matrix[3],
+            maya_matrix[4],
+            maya_matrix[5],
+            maya_matrix[6],
+            maya_matrix[7],
+            maya_matrix[8],
+            maya_matrix[9],
+            maya_matrix[10],
+            maya_matrix[11],
+            maya_matrix[12],
+            maya_matrix[13],
+            maya_matrix[14],
+            maya_matrix[15],
         )
 
     def _convert_weights_to_usd_format(
-        self,
-        weights: Dict[int, List[tuple]],
-        max_influences: int
+        self, weights: Dict[int, List[tuple]], max_influences: int
     ) -> Tuple[List[int], List[float]]:
         """
         Convert weight dictionary to USD flat arrays

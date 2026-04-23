@@ -14,7 +14,6 @@ from pathlib import Path
 
 def validate_theme_success():
 
-
     print("🎉 Asset Manager UI Theme Consistency - FINAL VALIDATION")
     print("=" * 70)
 
@@ -22,7 +21,7 @@ def validate_theme_success():
         "theme_system": False,
         "component_integration": False,
         "legacy_removal": False,
-        "color_consistency": False
+        "color_consistency": False,
     }
 
     # 1. Validate theme system exists
@@ -31,7 +30,7 @@ def validate_theme_success():
 
     theme_file = "src/ui/theme.py"
     if Path(theme_file).exists():
-        with open(theme_file, 'r', encoding='utf-8') as f:
+        with open(theme_file, "r", encoding="utf-8") as f:
             theme_content = f.read()
 
         required_components = [
@@ -39,7 +38,7 @@ def validate_theme_success():
             ("Primary background", 'PRIMARY_BG = "#4a4a4a"'),
             ("Text colors", 'TEXT_PRIMARY = "#ffffff"'),
             ("Dialog stylesheet", "get_dialog_stylesheet"),
-            ("Color preview styling", "get_color_preview_style")
+            ("Color preview styling", "get_color_preview_style"),
         ]
 
         theme_score = 0
@@ -66,18 +65,18 @@ def validate_theme_success():
         ("Color Coding Manager", "src/ui/dialogs/color_coding_manager_dialog.py"),
         ("Tag Manager", "src/ui/dialogs/tag_manager_dialog.py"),
         ("Collections Manager", "src/ui/collection_manager_dialog.py"),
-        ("Color Keychart Widget", "src/ui/widgets/color_coding_keychart_widget.py")
+        ("Color Keychart Widget", "src/ui/widgets/color_coding_keychart_widget.py"),
     ]
 
     integration_score = 0
     for name, file_path in ui_components:
         if Path(file_path).exists():
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             has_import = "UITheme" in content
             has_stylesheet = "UITheme.get_dialog_stylesheet()" in content
-            has_properties = 'setProperty(' in content
+            has_properties = "setProperty(" in content
 
             component_score = sum([has_import, has_stylesheet, has_properties])
             if component_score >= 2:  # At least import + one usage
@@ -104,7 +103,7 @@ def validate_theme_success():
 
     for name, file_path in ui_components:
         if Path(file_path).exists():
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             file_legacy = sum(1 for pattern in legacy_patterns if pattern in content)
@@ -133,7 +132,7 @@ def validate_theme_success():
             ("#ffffff", "Primary text"),
             ("#cccccc", "Secondary text"),
             ("#666666", "Border color"),
-            ("#0078d4", "Accent color")
+            ("#0078d4", "Accent color"),
         ]
 
         color_score = 0
@@ -179,7 +178,7 @@ def validate_theme_success():
         print("🔧 Consider additional refinements for full consistency")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

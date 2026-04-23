@@ -32,6 +32,7 @@ def test_usd_service_creation():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -58,6 +59,7 @@ def test_usd_service_singleton():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -83,6 +85,7 @@ def test_usd_availability_check():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -99,10 +102,10 @@ def test_usd_info():
         info = service.get_usd_info()
 
         assert isinstance(info, dict), "Should return dictionary"
-        assert 'usd_available' in info, "Should have usd_available key"
-        assert 'mayausd_available' in info, "Should have mayausd_available key"
-        assert 'pxr_available' in info, "Should have pxr_available key"
-        assert 'supported_formats' in info, "Should have supported_formats key"
+        assert "usd_available" in info, "Should have usd_available key"
+        assert "mayausd_available" in info, "Should have mayausd_available key"
+        assert "pxr_available" in info, "Should have pxr_available key"
+        assert "supported_formats" in info, "Should have supported_formats key"
 
         print("✅ USD info structure valid")
         print(f"   Info keys: {list(info.keys())}")
@@ -114,6 +117,7 @@ def test_usd_info():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -132,11 +136,13 @@ def test_usd_metadata_structure():
         _test_path = Path("test.usd")
 
         # Method should exist and be callable
-        assert hasattr(service, 'extract_usd_metadata'), "Should have extract_usd_metadata method"
-        assert hasattr(service, 'detect_usd_content'), "Should have detect_usd_content method"
-        assert hasattr(service, 'get_usd_stage_info'), "Should have get_usd_stage_info method"
-        assert hasattr(service, 'generate_usd_thumbnail'), "Should have generate_usd_thumbnail method"
-        assert hasattr(service, 'import_usd_file'), "Should have import_usd_file method"
+        assert hasattr(service, "extract_usd_metadata"), "Should have extract_usd_metadata method"
+        assert hasattr(service, "detect_usd_content"), "Should have detect_usd_content method"
+        assert hasattr(service, "get_usd_stage_info"), "Should have get_usd_stage_info method"
+        assert hasattr(
+            service, "generate_usd_thumbnail"
+        ), "Should have generate_usd_thumbnail method"
+        assert hasattr(service, "import_usd_file"), "Should have import_usd_file method"
 
         print("✅ All USD methods present")
         print("   - extract_usd_metadata")
@@ -150,6 +156,7 @@ def test_usd_metadata_structure():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -168,7 +175,7 @@ def test_usd_container_registration():
         # Check if USD service was registered
         has_usd = False
         for service_type in container._services:
-            if 'Usd' in service_type._name__:
+            if "Usd" in service_type._name__:
                 has_usd = True
                 print(f"✅ Found USD service type: {service_type._name__}")
 
@@ -188,6 +195,7 @@ def test_usd_container_registration():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -203,8 +211,8 @@ def test_usd_supported_formats():
         service = get_usd_service()
         info = service.get_usd_info()
 
-        supported = info.get('supported_formats', [])
-        expected_formats = ['.usd', '.usda', '.usdc', '.usdz']
+        supported = info.get("supported_formats", [])
+        expected_formats = [".usd", ".usda", ".usdc", ".usdz"]
 
         for fmt in expected_formats:
             assert fmt in supported, f"{fmt} should be supported"
@@ -217,12 +225,12 @@ def test_usd_supported_formats():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 def test_usd_prim_counting():
-
 
     print("\n🧪 Test: USD Prim Counting Functionality")
     print("=" * 60)
@@ -233,7 +241,7 @@ def test_usd_prim_counting():
         service = get_usd_service()
 
         # Check that prim counting method exists
-        assert hasattr(service, '_count_prims'), "Should have _count_prims method"
+        assert hasattr(service, "_count_prims"), "Should have _count_prims method"
 
         print("✅ Prim counting method exists")
         print("   Expected prim types:")
@@ -246,11 +254,12 @@ def test_usd_prim_counting():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
 
     print("USD INTEGRATION TEST SUITE")
     print("=" * 60)
@@ -274,6 +283,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"❌ Test crashed: {e}")
             import traceback
+
             traceback.print_exc()
             results.append(False)
 

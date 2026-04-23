@@ -16,6 +16,7 @@ class AssetManagerError(Exception):
 
 class AssetNotFoundError(AssetManagerError):
     """Exception raised when an asset cannot be found"""
+
     def __init__(self, asset_id: Optional[str] = None, message: Optional[str] = None):
         if message is None:
             if asset_id:

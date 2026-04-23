@@ -20,8 +20,7 @@ class IThumbnailService(ABC):
 
     @abstractmethod
     def generate_thumbnail(
-        self, file_path: Path, size: Tuple[int, int] = (64, 64),
-        force_playblast: bool = False
+        self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False
     ) -> Optional[str]:
         """
         Generate thumbnail for asset file
@@ -37,7 +36,9 @@ class IThumbnailService(ABC):
         """
 
     @abstractmethod
-    def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+    def get_cached_thumbnail(
+        self, file_path: Path, size: Tuple[int, int] = (64, 64)
+    ) -> Optional[str]:
         """
         Get cached thumbnail if available
 

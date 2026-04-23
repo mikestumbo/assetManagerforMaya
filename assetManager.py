@@ -77,9 +77,10 @@ class AssetManagerPlugin:
         try:
             # Try to use __file__ if available
             import inspect
+
             frame = inspect.currentframe()
             if frame:
-                filename = frame.f_globals.get('__file__')
+                filename = frame.f_globals.get("__file__")
                 if filename:
                     return os.path.dirname(os.path.abspath(filename))
         except Exception:
@@ -88,8 +89,8 @@ class AssetManagerPlugin:
         # Fallback: Use Maya plugin manager to find plugin path
         try:
             plugin_list = cmds.pluginInfo(query=True, listPlugins=True)
-            if plugin_list and 'assetManager' in plugin_list:
-                plugin_path = cmds.pluginInfo('assetManager', query=True, path=True)
+            if plugin_list and "assetManager" in plugin_list:
+                plugin_path = cmds.pluginInfo("assetManager", query=True, path=True)
                 if plugin_path:
                     return os.path.dirname(plugin_path)
         except Exception:
@@ -208,14 +209,10 @@ class AssetManagerPlugin:
             "assetManagerUI",
             title=f"Asset Manager v{self._plugin_version}",
             widthHeight=(300, 150),
-            sizeable=False
+            sizeable=False,
         )
 
-        cmds.columnLayout(
-            adjustableColumn=True,
-            rowSpacing=5,
-            columnOffset=("left", 10)
-        )
+        cmds.columnLayout(adjustableColumn=True, rowSpacing=5, columnOffset=("left", 10))
         cmds.text(label=f"Asset Manager v{self._plugin_version}", font="boldLabelFont")
         cmds.separator(height=10)
         cmds.text(label="Legacy compatibility mode active")
@@ -363,6 +360,7 @@ def show_asset_manager():
         # Import and delegate to the dedicated UI module
         try:
             import maya_plugin
+
             return maya_plugin.show_asset_manager()
         except ImportError as e:
             _show_user_friendly_error(
@@ -370,7 +368,7 @@ def show_asset_manager():
                 f"Could not import maya_plugin module.\n\n"
                 f"Details: {str(e)}\n\n"
                 f"Plugin directory: {plugin_dir}\n"
-                f"Please ensure all files are properly installed."
+                f"Please ensure all files are properly installed.",
             )
             return None
         except Exception as e:
@@ -378,7 +376,7 @@ def show_asset_manager():
                 "UI Launch Error",
                 f"Failed to launch Asset Manager UI.\n\n"
                 f"Error: {str(e)}\n\n"
-                f"Please check the Script Editor for more details."
+                f"Please check the Script Editor for more details.",
             )
             return None
 
@@ -387,7 +385,7 @@ def show_asset_manager():
             "Critical Error",
             f"Unexpected error launching Asset Manager.\n\n"
             f"Error: {str(e)}\n\n"
-            f"Please contact support if this persists."
+            f"Please contact support if this persists.",
         )
         return None
     finally:
@@ -408,9 +406,10 @@ def _get_current_plugin_directory() -> str:
     try:
         # Try to use __file__ if available
         import inspect
+
         frame = inspect.currentframe()
         if frame:
-            filename = frame.f_globals.get('__file__')
+            filename = frame.f_globals.get("__file__")
             if filename:
                 return os.path.dirname(os.path.abspath(filename))
     except Exception:
@@ -419,8 +418,8 @@ def _get_current_plugin_directory() -> str:
     # Fallback: Use Maya plugin manager
     try:
         plugin_list = cmds.pluginInfo(query=True, listPlugins=True)
-        if plugin_list and 'assetManager' in plugin_list:
-            plugin_path = cmds.pluginInfo('assetManager', query=True, path=True)
+        if plugin_list and "assetManager" in plugin_list:
+            plugin_path = cmds.pluginInfo("assetManager", query=True, path=True)
             if plugin_path:
                 return os.path.dirname(plugin_path)
     except Exception:
@@ -445,11 +444,11 @@ def _show_user_friendly_error(title: str, message: str) -> None:
     """
     try:
         cmds.confirmDialog(
-            title=f'Asset Manager - {title}',
+            title=f"Asset Manager - {title}",
             message=message,
-            button='OK',
-            defaultButton='OK',
-            icon='critical'
+            button="OK",
+            defaultButton="OK",
+            icon="critical",
         )
     except Exception:
         # Fallback to print if Maya UI is not available

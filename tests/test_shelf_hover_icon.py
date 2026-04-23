@@ -31,14 +31,14 @@ def test_hover_icon_implementation():
         print("✅ Icon manager loaded successfully")
 
         # Test shelf icon pair functionality
-        icon_pair = icon_manager.get_shelf_icon_pair('assetManager_icon')
+        icon_pair = icon_manager.get_shelf_icon_pair("assetManager_icon")
 
         print(f"📁 Default icon: {icon_pair['default']}")
         print(f"🎯 Hover icon: {icon_pair['hover']}")
 
         # Validate files exist
-        default_exists = os.path.exists(icon_pair['default']) if icon_pair['default'] else False
-        hover_exists = os.path.exists(icon_pair['hover']) if icon_pair['hover'] else False
+        default_exists = os.path.exists(icon_pair["default"]) if icon_pair["default"] else False
+        hover_exists = os.path.exists(icon_pair["hover"]) if icon_pair["hover"] else False
 
         print(f"✅ Default icon exists: {default_exists}")
         print(f"✅ Hover icon exists: {hover_exists}")
@@ -57,11 +57,13 @@ def test_hover_icon_implementation():
 
         # Test individual methods
         print("\n🔧 Testing individual methods:")
-        default_icon = icon_manager.get_maya_shelf_icon('assetManager_icon.png')
-        hover_icon = icon_manager.get_maya_shelf_hover_icon('assetManager_icon')
+        default_icon = icon_manager.get_maya_shelf_icon("assetManager_icon.png")
+        hover_icon = icon_manager.get_maya_shelf_hover_icon("assetManager_icon")
 
         print(f"   - get_maya_shelf_icon(): {Path(default_icon).name if default_icon else 'None'}")
-        print(f"   - get_maya_shelf_hover_icon(): {Path(hover_icon).name if hover_icon else 'None'}")
+        print(
+            f"   - get_maya_shelf_hover_icon(): {Path(hover_icon).name if hover_icon else 'None'}"
+        )
 
         return True
 
@@ -81,7 +83,7 @@ def test_mel_integration():
     if mel_file.exists():
         print("✅ DRAG&DROP.mel found")
 
-        content = mel_file.read_text(encoding='utf-8', errors='ignore')
+        content = mel_file.read_text(encoding="utf-8", errors="ignore")
 
         # Check for hover implementation
         has_image1 = "-image1" in content
@@ -104,7 +106,6 @@ def test_mel_integration():
 
 def main():
 
-
     print("Asset Manager v1.3.0 - Shelf Hover Icon Test")
     print("Clean Code & SOLID Principles Implementation")
     print("=" * 80)
@@ -125,6 +126,6 @@ def main():
     else:
         print("❌ Issues found. Please review the output above.")
 
+
 if __name__ == "__main__":
-
-
+    main()

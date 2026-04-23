@@ -24,7 +24,7 @@ def test_toolbar_improvements():
         print("❌ Main window file not found")
         return {}
 
-    with open(main_window_file, 'r', encoding='utf-8') as f:
+    with open(main_window_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     improvements = {
@@ -32,7 +32,7 @@ def test_toolbar_improvements():
         "button_order": False,
         "button_width": False,
         "button_height": False,
-        "button_colors": False
+        "button_colors": False,
     }
 
     # Test 1: Increased toolbar height
@@ -50,13 +50,18 @@ def test_toolbar_improvements():
     preview_pos = content.find('QPushButton("Hide Preview")')
     info_pos = content.find('QPushButton("Hide Info")')
 
-    if all(pos != -1 for pos in [create_pos, import_pos, remove_pos, refresh_pos, preview_pos, info_pos]):
+    if all(
+        pos != -1
+        for pos in [create_pos, import_pos, remove_pos, refresh_pos, preview_pos, info_pos]
+    ):
         if create_pos < import_pos < remove_pos < refresh_pos < preview_pos < info_pos:
             print("✅ Button order correct: Create → Import → Remove → Refresh → Preview → Info")
             improvements["button_order"] = True
         else:
             print("❌ Button order incorrect")
-            print(f"   Positions: Create({create_pos}), Import({import_pos}), Remove({remove_pos})")
+            print(
+                f"   Positions: Create({create_pos}), Import({import_pos}), Remove({remove_pos})"
+            )
             print(f"   Refresh({refresh_pos}), Preview({preview_pos}), Info({info_pos})")
     else:
         print("❌ Not all buttons found")
@@ -65,7 +70,9 @@ def test_toolbar_improvements():
     if "setMinimumWidth(120)" in content:
         width_count = content.count("setMinimumWidth(120)")
         if width_count >= 2:
-            print("✅ Preview and Info buttons have increased width (120px) for bold text legibility")
+            print(
+                "✅ Preview and Info buttons have increased width (120px) for bold text legibility"
+            )
             improvements["button_width"] = True
         else:
             print(f"⚠️  Only {width_count} button(s) have increased width")
@@ -100,14 +107,10 @@ def test_color_keychart_improvements():
         print("❌ Color keychart file not found")
         return False
 
-    with open(keychart_file, 'r', encoding='utf-8') as f:
+    with open(keychart_file, "r", encoding="utf-8") as f:
         content = f.read()
 
-    improvements = {
-        "height_increased": False,
-        "made_stationary": False,
-        "proper_spacing": False
-    }
+    improvements = {"height_increased": False, "made_stationary": False, "proper_spacing": False}
 
     # Test height increase
     if "setFixedHeight(260)" in content:
@@ -146,7 +149,7 @@ def test_separator_adjustments():
     print("=" * 40)
 
     main_window_file = "src/ui/asset_manager_window.py"
-    with open(main_window_file, 'r', encoding='utf-8') as f:
+    with open(main_window_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     if "setFixedHeight(40)" in content and "_create_toolbar_separator" in content:
@@ -158,7 +161,6 @@ def test_separator_adjustments():
 
 
 def main():
-
 
     print("🚀 Asset Manager Toolbar & UI Improvements Validation")
     print("=" * 65)
@@ -190,7 +192,9 @@ def main():
     print(f"\n🎨 COLOR KEYCHART: {'✅' if keychart_improved else '❌'}")
     print(f"📏 SEPARATORS: {'✅' if separators_adjusted else '❌'}")
 
-    total_score = toolbar_score + (1 if keychart_improved else 0) + (1 if separators_adjusted else 0)
+    total_score = (
+        toolbar_score + (1 if keychart_improved else 0) + (1 if separators_adjusted else 0)
+    )
     total_tests = total_toolbar_tests + 2
 
     print(f"\n🎯 OVERALL SCORE: {total_score}/{total_tests}")
@@ -212,7 +216,7 @@ def main():
         print("🔧 Consider addressing the remaining issues for optimal UI")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

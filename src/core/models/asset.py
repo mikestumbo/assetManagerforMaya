@@ -68,13 +68,13 @@ class Asset:
     @property
     def is_maya_file(self) -> bool:
         """Check if asset is a Maya file"""
-        maya_extensions = {'.ma', '.mb', '.mel'}
+        maya_extensions = {".ma", ".mb", ".mel"}
         return self.file_extension in maya_extensions
 
     @property
     def is_image_file(self) -> bool:
         """Check if asset is an image file"""
-        image_extensions = {'.png', '.jpg', '.jpeg', '.tiff', '.tga', '.bmp', '.gif'}
+        image_extensions = {".png", ".jpg", ".jpeg", ".tiff", ".tga", ".bmp", ".gif"}
         return self.file_extension in image_extensions
 
     @property
@@ -100,33 +100,33 @@ class Asset:
     def to_dict(self) -> Dict[str, Any]:
         """Convert asset to dictionary for serialization"""
         return {
-            'id': self.id,
-            'name': self.name,
-            'file_path': str(self.file_path),
-            'file_extension': self.file_extension,
-            'file_size': self.file_size,
-            'created_date': self.created_date.isoformat() if self.created_date else None,
-            'modified_date': self.modified_date.isoformat() if self.modified_date else None,
-            'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None,
-            'asset_type': self.asset_type,
-            'category': self.category,
-            'tags': self.tags.copy(),
-            'metadata': self.metadata.copy(),
-            'is_favorite': self.is_favorite,
-            'access_count': self.access_count,
-            'thumbnail_path': str(self.thumbnail_path) if self.thumbnail_path else None
+            "id": self.id,
+            "name": self.name,
+            "file_path": str(self.file_path),
+            "file_extension": self.file_extension,
+            "file_size": self.file_size,
+            "created_date": self.created_date.isoformat() if self.created_date else None,
+            "modified_date": self.modified_date.isoformat() if self.modified_date else None,
+            "last_accessed": self.last_accessed.isoformat() if self.last_accessed else None,
+            "asset_type": self.asset_type,
+            "category": self.category,
+            "tags": self.tags.copy(),
+            "metadata": self.metadata.copy(),
+            "is_favorite": self.is_favorite,
+            "access_count": self.access_count,
+            "thumbnail_path": str(self.thumbnail_path) if self.thumbnail_path else None,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Asset':
+    def from_dict(cls, data: Dict[str, Any]) -> "Asset":
         """Create asset from dictionary"""
         # Convert string paths back to Path objects
-        data['file_path'] = Path(data['file_path'])
-        if data.get('thumbnail_path'):
-            data['thumbnail_path'] = Path(data['thumbnail_path'])
+        data["file_path"] = Path(data["file_path"])
+        if data.get("thumbnail_path"):
+            data["thumbnail_path"] = Path(data["thumbnail_path"])
 
         # Convert ISO date strings back to datetime objects
-        for date_field in ['created_date', 'modified_date', 'last_accessed']:
+        for date_field in ["created_date", "modified_date", "last_accessed"]:
             if data.get(date_field):
                 data[date_field] = datetime.fromisoformat(data[date_field])
 

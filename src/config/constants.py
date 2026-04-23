@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SearchConstants:
     """Search and discovery functionality constants - DRY principle"""
+
     MAX_RECENT_ASSETS: int = 20
     MAX_SEARCH_HISTORY: int = 15
     MAX_FAVORITES: int = 100
@@ -24,6 +25,7 @@ class SearchConstants:
 @dataclass(frozen=True)
 class ThumbnailConstants:
     """Thumbnail generation constants - follows DRY principle"""
+
     DEFAULT_WIDTH: int = 64
     DEFAULT_HEIGHT: int = 64
     CACHE_SIZE_LIMIT: int = 50
@@ -39,6 +41,7 @@ class ThumbnailConstants:
 @dataclass(frozen=True)
 class UIConstants:
     """UI dimension constants - DRY Principle"""
+
     # Preview widget dimensions
     PREVIEW_MIN_WIDTH: int = 350
     PREVIEW_MIN_HEIGHT: int = 250
@@ -53,6 +56,7 @@ class UIConstants:
 @dataclass(frozen=True)
 class ErrorMessages:
     """Centralized error messages - Single Source of Truth"""
+
     MAYA_NOT_AVAILABLE: str = "Maya not available - cannot import asset"
     FILE_NOT_FOUND: str = "FILE\nNOT FOUND"
     MAYA_ERROR: str = "MAYA\nERROR"

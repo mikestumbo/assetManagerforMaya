@@ -29,32 +29,32 @@ def test_menu_bar_styling():
             print("❌ AssetManagerWindow source file not found")
             return False
 
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for menu bar styling
-        if 'menubar.setStyleSheet(' in content:
+        if "menubar.setStyleSheet(" in content:
             print("✅ Menu bar styling applied")
         else:
             print("❌ Menu bar styling not found")
             return False
 
         # Check for enhanced font size in menu bar
-        if 'font-size: 13px' in content and 'QMenuBar' in content:
+        if "font-size: 13px" in content and "QMenuBar" in content:
             print("✅ Enhanced menu bar font size (13px)")
         else:
             print("❌ Enhanced menu bar font size not found")
             return False
 
         # Check for enhanced padding
-        if 'padding: 8px 16px' in content and 'QMenuBar::item' in content:
+        if "padding: 8px 16px" in content and "QMenuBar::item" in content:
             print("✅ Enhanced menu bar item padding")
         else:
             print("❌ Enhanced menu bar item padding not found")
             return False
 
         # Check for menu styling
-        if 'QMenu {' in content and 'font-size: 12px' in content:
+        if "QMenu {" in content and "font-size: 12px" in content:
             print("✅ Menu dropdown styling implemented")
         else:
             print("❌ Menu dropdown styling not found")
@@ -73,33 +73,35 @@ def test_toolbar_enhancements():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for increased toolbar height
-        if 'toolbar.setFixedHeight(48)' in content:
+        if "toolbar.setFixedHeight(48)" in content:
             print("✅ Toolbar height increased to 48px")
         else:
             print("❌ Toolbar height not increased")
             return False
 
         # Check for enhanced button padding
-        if 'padding: 6px 12px' in content and 'QPushButton' in content:
+        if "padding: 6px 12px" in content and "QPushButton" in content:
             print("✅ Button padding increased (6px 12px)")
         else:
             print("❌ Button padding not enhanced")
             return False
 
         # Check for increased button height
-        if 'min-height: 28px' in content:
+        if "min-height: 28px" in content:
             print("✅ Button minimum height increased to 28px")
         else:
             print("❌ Button height not increased")
             return False
 
         # Check for enhanced button font size
-        button_section = content[content.find('QPushButton {'):content.find('}', content.find('QPushButton {'))]
-        if 'font-size: 13px' in button_section:
+        button_section = content[
+            content.find("QPushButton {") : content.find("}", content.find("QPushButton {"))
+        ]
+        if "font-size: 13px" in button_section:
             print("✅ Button font size increased to 13px")
         else:
             print("❌ Button font size not enhanced")
@@ -118,32 +120,32 @@ def test_layout_adjustments():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for enhanced margins
-        if 'setContentsMargins(10, 6, 10, 6)' in content:
+        if "setContentsMargins(10, 6, 10, 6)" in content:
             print("✅ Toolbar margins increased (10, 6, 10, 6)")
         else:
             print("❌ Toolbar margins not enhanced")
             return False
 
         # Check for enhanced spacing
-        if 'setSpacing(6)' in content and 'Increased spacing between buttons' in content:
+        if "setSpacing(6)" in content and "Increased spacing between buttons" in content:
             print("✅ Button spacing increased to 6px")
         else:
             print("❌ Button spacing not enhanced")
             return False
 
         # Check for separator adjustments
-        if 'separator.setFixedHeight(32)' in content:
+        if "separator.setFixedHeight(32)" in content:
             print("✅ Separator height adjusted for larger toolbar")
         else:
             print("❌ Separator height not adjusted")
             return False
 
         # Check for enhanced separator margins
-        if 'margin: 3px 8px' in content:
+        if "margin: 3px 8px" in content:
             print("✅ Separator margins increased")
         else:
             print("❌ Separator margins not enhanced")
@@ -162,11 +164,11 @@ def test_font_consistency():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for consistent label font size
-        if 'font-size: 13px' in content and 'QLabel' in content:
+        if "font-size: 13px" in content and "QLabel" in content:
             print("✅ Label font size increased to 13px")
         else:
             print("❌ Label font size not enhanced")
@@ -174,7 +176,8 @@ def test_font_consistency():
 
         # Find all font size declarations
         import re
-        font_sizes = re.findall(r'font-size:\s*(\d+)px', content)
+
+        font_sizes = re.findall(r"font-size:\s*(\d+)px", content)
 
         # Count enhanced font sizes (12px and above)
         enhanced_sizes = [size for size in font_sizes if int(size) >= 12]
@@ -200,33 +203,33 @@ def test_visual_improvements():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         improvements_found = 0
 
         # Check for hover effects
-        if 'QPushButton:hover' in content:
+        if "QPushButton:hover" in content:
             print("✅ Button hover effects maintained")
             improvements_found += 1
 
         # Check for pressed effects
-        if 'QPushButton:pressed' in content:
+        if "QPushButton:pressed" in content:
             print("✅ Button pressed effects maintained")
             improvements_found += 1
 
         # Check for checked state styling
-        if 'QPushButton:checked' in content:
+        if "QPushButton:checked" in content:
             print("✅ Button checked state styling maintained")
             improvements_found += 1
 
         # Check for rounded corners
-        if 'border-radius:' in content:
+        if "border-radius:" in content:
             print("✅ Rounded corners maintained for modern look")
             improvements_found += 1
 
         # Check for color consistency
-        if '#4a4a4a' in content and '#5a5a5a' in content:
+        if "#4a4a4a" in content and "#5a5a5a" in content:
             print("✅ Color scheme consistency maintained")
             improvements_found += 1
 
@@ -241,8 +244,8 @@ def test_visual_improvements():
 
 def main():
 
-
     from PySide6.QtWidgets import QApplication
+
     print("🧪 MENU BAR & TOOLBAR SIZE ENHANCEMENT TEST - Issue #11")
     print("=" * 70)
 
@@ -287,7 +290,7 @@ def main():
         print("⚠️ Some tests failed - check implementation")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

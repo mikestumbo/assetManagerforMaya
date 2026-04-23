@@ -23,6 +23,7 @@ Enhancements in v1.5.0:
 - Rig health check
 - Auto-repair for common naming issues
 """
+
 # pyright: reportOptionalMemberAccess=false
 
 import json
@@ -33,12 +34,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Callable, Set
 
 print("=" * 80)
-print("[DEBUG][DEBUG][DEBUG] MAYA_RIG_IMPORTER.PY LOADED - VERSION 8 (CONTROLLERS .MA REF) [DEBUG][DEBUG][DEBUG]")
+print(
+    "[DEBUG][DEBUG][DEBUG] MAYA_RIG_IMPORTER.PY LOADED - VERSION 8 (CONTROLLERS .MA REF) [DEBUG][DEBUG][DEBUG]"
+)
 print("=" * 80)
 
 # Maya imports (conditional)
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -53,6 +57,7 @@ class RigHealthReport:
     Contains information about what succeeded, what failed,
     and suggestions for manual fixes.
     """
+
     success: bool = True
     controllers_created: int = 0
     controllers_failed: List[str] = field(default_factory=list)
@@ -69,9 +74,15 @@ class RigHealthReport:
         """Get human-readable summary"""
         lines = []
         lines.append(f"{'[OK]' if self.success else '[WARNING]'} Rig Import Health Report")
-        lines.append(f"  Controllers: {self.controllers_created} created, {len(self.controllers_failed)} failed")
-        lines.append(f"  Constraints: {self.constraints_created} created, {len(self.constraints_failed)} failed")
-        lines.append(f"  Connections: {self.connections_made} made, {len(self.connections_broken)} broken")
+        lines.append(
+            f"  Controllers: {self.controllers_created} created, {len(self.controllers_failed)} failed"
+        )
+        lines.append(
+            f"  Constraints: {self.constraints_created} created, {len(self.constraints_failed)} failed"
+        )
+        lines.append(
+            f"  Connections: {self.connections_made} made, {len(self.connections_broken)} broken"
+        )
 
         if self.nodes_remapped:
             lines.append(f"  Name remaps: {len(self.nodes_remapped)}")
@@ -136,7 +147,7 @@ class MayaRigImporter:
         mrig_path: Path,
         usd_root: Optional[str] = None,
         options: Optional[Dict] = None,
-        progress_callback: Optional[Callable[[str, int], None]] = None
+        progress_callback: Optional[Callable[[str, int], None]] = None,
     ) -> Tuple[bool, str]:
         """
         Import .mrig file and rebuild rig
@@ -168,7 +179,7 @@ class MayaRigImporter:
         self._health_report = RigHealthReport()
 
         # v1.5.0: Wrap entire import in undo chunk for single-step undo
-        use_undo = options.get('enable_undo', True) if options else True
+        use_undo = options.get("enable_undo", True) if options else True
 
         try:
             options = options or {}
@@ -180,7 +191,9 @@ class MayaRigImporter:
             self._report_progress("Loading rig data", 0)
 
             # v2.0: Check if this is a Maya rig file (.rig.mb or .rig.ma) instead of .mrig
-            is_maya_rig_file = mrig_path.suffix.lower() in ('.mb', '.ma') or '.rig.' in str(mrig_path).lower()
+            is_maya_rig_file = (
+                mrig_path.suffix.lower() in (".mb", ".ma") or ".rig." in str(mrig_path).lower()
+            )
 
             if is_maya_rig_file:
                 # v2.0: Direct Maya file import - much faster!
@@ -195,7 +208,7 @@ class MayaRigImporter:
                     return False, f"Failed to import rig from {mrig_path.name}"
 
             # Legacy: Load .mrig JSON data
-            with open(mrig_path, 'r', encoding='utf-8') as f:
+            with open(mrig_path, "r", encoding="utf-8") as f:
                 rig_data = json.load(f)
 
             self.logger.info(f"[TOOL] Importing rig data from: {mrig_path}")
@@ -205,31 +218,37 @@ class MayaRigImporter:
             # Check for .mb first (faster), fall back to .ma for backwards compatibility
             # Note: Use stem to get base name without .mrig suffix, then add .controllers.mb/.ma
             base_path = mrig_path.parent / mrig_path.stem
-            controllers_mb = base_path.with_suffix('.controllers.mb')
-            controllers_ma = base_path.with_suffix('.controllers.ma')
+            controllers_mb = base_path.with_suffix(".controllers.mb")
+            controllers_ma = base_path.with_suffix(".controllers.ma")
 
             self.logger.info(f"🔍 Looking for controllers at: {controllers_mb}")
 
-            if controllers_mb.exists() and options.get('import_controllers', True):
+            if controllers_mb.exists() and options.get("import_controllers", True):
                 self._report_progress("Importing controllers (.mb)", 10)
                 print(f">>> Importing controllers from: {controllers_mb.name}")
                 ref_success = self._reference_controllers_mb(controllers_mb)
                 if ref_success:
                     self.logger.info(f"[OK] Imported controllers from {controllers_mb.name}")
                     # Skip JSON-based controller import since we imported them
-                    options['_skip_controller_import'] = True
+                    options["_skip_controller_import"] = True
                 else:
-                    self.logger.warning(f"Failed to import {controllers_mb.name}, will try JSON import")
-            elif controllers_ma.exists() and options.get('import_controllers', True):
+                    self.logger.warning(
+                        f"Failed to import {controllers_mb.name}, will try JSON import"
+                    )
+            elif controllers_ma.exists() and options.get("import_controllers", True):
                 # Backwards compatibility with .ma files
                 self._report_progress("Importing controllers (.ma)", 10)
                 print(f">>> Importing controllers from: {controllers_ma.name}")
-                ref_success = self._reference_controllers_mb(controllers_ma)  # Same method works for both
+                ref_success = self._reference_controllers_mb(
+                    controllers_ma
+                )  # Same method works for both
                 if ref_success:
                     self.logger.info(f"[OK] Imported controllers from {controllers_ma.name}")
-                    options['_skip_controller_import'] = True
+                    options["_skip_controller_import"] = True
                 else:
-                    self.logger.warning(f"Failed to import {controllers_ma.name}, will try JSON import")
+                    self.logger.warning(
+                        f"Failed to import {controllers_ma.name}, will try JSON import"
+                    )
 
             # v1.5.0: Build scene node cache for smart name matching
             self._report_progress("Scanning scene", 3)
@@ -241,19 +260,23 @@ class MayaRigImporter:
 
             # Import controllers with custom/proxy attrs
             # Skip if we already referenced them from .ma file
-            if options.get('import_controllers', True) and not options.get('_skip_controller_import'):
+            if options.get("import_controllers", True) and not options.get(
+                "_skip_controller_import"
+            ):
                 print(">>> STEP: Importing controllers (15%)")
                 self._report_progress("Importing controllers from JSON", 15)
-                controllers = rig_data.get('controllers', [])
+                controllers = rig_data.get("controllers", [])
                 print(f">>> Found {len(controllers)} controllers to import from JSON")
                 self._import_controllers(
                     controllers,
-                    import_custom_attrs=options.get('import_custom_attrs', True),
-                    import_proxy_attrs=options.get('import_proxy_attrs', True)
+                    import_custom_attrs=options.get("import_custom_attrs", True),
+                    import_proxy_attrs=options.get("import_proxy_attrs", True),
                 )
                 print(f">>> Controllers DONE: {self._health_report.controllers_created}")
-                self.logger.info(f"     [OK] {self._health_report.controllers_created} controllers")
-            elif options.get('_skip_controller_import'):
+                self.logger.info(
+                    f"     [OK] {self._health_report.controllers_created} controllers"
+                )
+            elif options.get("_skip_controller_import"):
                 print(">>> STEP: Controllers already imported from .mb (15%)")
                 self._report_progress("Controllers imported from .mb ✓", 15)
                 print(">>> Controllers imported via .mb reference - skipping JSON import")
@@ -262,8 +285,8 @@ class MayaRigImporter:
             # Import IK handles BEFORE constraints (pole vector constraints need IK handles)
             print(">>> STEP: Importing IK handles (25%)")
             self._report_progress("Importing IK handles", 25)
-            if options.get('import_ik_handles', True):
-                ik_handles = rig_data.get('ik_handles', [])
+            if options.get("import_ik_handles", True):
+                ik_handles = rig_data.get("ik_handles", [])
                 print(f">>> Found {len(ik_handles)} IK handles to import")
                 self._import_ik_handles(ik_handles)
                 print(">>> IK handles DONE")
@@ -272,18 +295,20 @@ class MayaRigImporter:
             # Import constraints (after IK handles so pole vector constraints work)
             print(">>> STEP: Importing constraints (40%)")
             self._report_progress("Importing constraints", 40)
-            if options.get('import_constraints', True):
-                constraints = rig_data.get('constraints', [])
+            if options.get("import_constraints", True):
+                constraints = rig_data.get("constraints", [])
                 print(f">>> Found {len(constraints)} constraints to import")
                 self._import_constraints(constraints)
                 print(f">>> Constraints DONE: {self._health_report.constraints_created}")
-                self.logger.info(f"     [OK] {self._health_report.constraints_created} constraints")
+                self.logger.info(
+                    f"     [OK] {self._health_report.constraints_created} constraints"
+                )
 
             # v1.5.0: Import space switches
             print(">>> STEP: Importing space switches (55%)")
             self._report_progress("Importing space switches", 55)
-            if options.get('import_space_switches', True):
-                space_switches = rig_data.get('space_switches', [])
+            if options.get("import_space_switches", True):
+                space_switches = rig_data.get("space_switches", [])
                 print(f">>> Found {len(space_switches)} space switches to import")
                 self._import_space_switches(space_switches)
                 print(">>> Space switches DONE")
@@ -292,9 +317,9 @@ class MayaRigImporter:
             # Import blendshapes
             print(">>> STEP: Importing blendshapes (70%)")
             self._report_progress("Importing blendshapes", 70)
-            if options.get('import_blendshapes', True):
-                blendshapes = rig_data.get('blendshapes', [])
-                connections = rig_data.get('blendshape_connections', [])
+            if options.get("import_blendshapes", True):
+                blendshapes = rig_data.get("blendshapes", [])
+                connections = rig_data.get("blendshape_connections", [])
                 print(f">>> Found {len(blendshapes)} blendshapes, {len(connections)} connections")
                 self._import_blendshapes(blendshapes, connections)
                 print(">>> Blendshapes DONE")
@@ -305,18 +330,18 @@ class MayaRigImporter:
             # Import Set Driven Keys
             print(">>> STEP: Importing SDKs (85%)")
             self._report_progress("Importing SDKs", 85)
-            if options.get('import_sdks', True):
-                sdks = rig_data.get('set_driven_keys', [])
+            if options.get("import_sdks", True):
+                sdks = rig_data.get("set_driven_keys", [])
                 self._import_set_driven_keys(sdks)
                 self.logger.info(f"     [OK] {len(sdks)} SDKs")
 
             # v1.5.0: Run health check and attempt auto-repair
             self._report_progress("Validating connections", 92)
-            if options.get('validate_connections', True):
+            if options.get("validate_connections", True):
                 self._validate_rig_connections(rig_data)
 
             # v1.5.0: Attempt auto-repair if enabled
-            if options.get('auto_repair', True):
+            if options.get("auto_repair", True):
                 self._report_progress("Auto-repairing", 96)
                 self._attempt_auto_repair()
 
@@ -368,10 +393,10 @@ class MayaRigImporter:
 
             # Determine file type
             suffix = rig_path.suffix.lower()
-            if suffix == '.ma' or '.rig.ma' in str(rig_path).lower():
-                file_type = 'mayaAscii'
+            if suffix == ".ma" or ".rig.ma" in str(rig_path).lower():
+                file_type = "mayaAscii"
             else:
-                file_type = 'mayaBinary'
+                file_type = "mayaBinary"
 
             # Import the Maya file
             imported_nodes = cmds.file(
@@ -380,7 +405,7 @@ class MayaRigImporter:
                 type=file_type,
                 returnNewNodes=True,
                 preserveReferences=False,
-                ignoreVersion=True
+                ignoreVersion=True,
             )
 
             if not imported_nodes:
@@ -420,7 +445,7 @@ class MayaRigImporter:
                 str(mb_path),
                 i=True,  # import, not reference
                 returnNewNodes=True,
-                preserveReferences=False
+                preserveReferences=False,
             )
 
             if not imported_nodes:
@@ -457,7 +482,7 @@ class MayaRigImporter:
         all_nodes = cmds.ls(transforms=True, long=True) or []
         self.logger.info(f"   Found {len(all_nodes)} transforms")
 
-        joints = cmds.ls(type='joint', long=True) or []
+        joints = cmds.ls(type="joint", long=True) or []
         self.logger.info(f"   Found {len(joints)} joints")
         all_nodes.extend(joints)
 
@@ -465,7 +490,7 @@ class MayaRigImporter:
             self._scene_nodes.add(full_name)
 
             # Extract short name (without namespace or path)
-            short_name = full_name.split('|')[-1].split(':')[-1]
+            short_name = full_name.split("|")[-1].split(":")[-1]
 
             if short_name not in self._scene_short_names:
                 self._scene_short_names[short_name] = []
@@ -487,6 +512,7 @@ class MayaRigImporter:
         - Common suffixes (_geo, _jnt, _ctrl)
         """
         import time
+
         start_time = time.time()
 
         self.name_mapping = {}
@@ -495,31 +521,31 @@ class MayaRigImporter:
         names_to_map: Set[str] = set()
 
         # Skeleton root
-        skeleton_root = rig_data.get('skeleton_root')
+        skeleton_root = rig_data.get("skeleton_root")
         if skeleton_root:
             names_to_map.add(skeleton_root)
 
         # Controllers
-        for ctrl in rig_data.get('controllers', []):
-            names_to_map.add(ctrl['name'])
-            if ctrl.get('parent'):
-                names_to_map.add(ctrl['parent'])
+        for ctrl in rig_data.get("controllers", []):
+            names_to_map.add(ctrl["name"])
+            if ctrl.get("parent"):
+                names_to_map.add(ctrl["parent"])
 
         # Constraint targets
-        for const in rig_data.get('constraints', []):
-            names_to_map.add(const['driven'])
-            names_to_map.update(const.get('drivers', []))
+        for const in rig_data.get("constraints", []):
+            names_to_map.add(const["driven"])
+            names_to_map.update(const.get("drivers", []))
 
         # IK handle joints
-        for ik in rig_data.get('ik_handles', []):
-            names_to_map.add(ik['start_joint'])
-            names_to_map.add(ik['end_joint'])
-            if ik.get('pole_vector'):
-                names_to_map.add(ik['pole_vector'])
+        for ik in rig_data.get("ik_handles", []):
+            names_to_map.add(ik["start_joint"])
+            names_to_map.add(ik["end_joint"])
+            if ik.get("pole_vector"):
+                names_to_map.add(ik["pole_vector"])
 
         # Blendshape geometry
-        for bs in rig_data.get('blendshapes', []):
-            names_to_map.add(bs['base_geometry'])
+        for bs in rig_data.get("blendshapes", []):
+            names_to_map.add(bs["base_geometry"])
 
         total_names = len(names_to_map)
         self.logger.info(f"🔍 Mapping {total_names} unique names...")
@@ -545,7 +571,9 @@ class MayaRigImporter:
                 # Enable fast mode after 3 slow lookups
                 if slow_lookups >= 3 and not fast_mode_enabled:
                     fast_mode_enabled = True
-                    self.logger.warning("[HYBRID] Enabling fast mode - skipping expensive name searches")
+                    self.logger.warning(
+                        "[HYBRID] Enabling fast mode - skipping expensive name searches"
+                    )
 
             if scene_name and scene_name != orig_name:
                 self.name_mapping[orig_name] = scene_name
@@ -558,15 +586,21 @@ class MayaRigImporter:
             if processed % 100 == 0:
                 elapsed = time.time() - start_time
                 rate = processed / elapsed if elapsed > 0 else 0
-                self.logger.info(f"   Progress: {processed}/{total_names} names ({rate:.0f} names/sec)")
+                self.logger.info(
+                    f"   Progress: {processed}/{total_names} names ({rate:.0f} names/sec)"
+                )
                 cmds.refresh()  # Keep Maya responsive
 
         elapsed = time.time() - start_time
-        self.logger.info(f"📍 Name mapping complete in {elapsed:.2f}s: "
-                         f"{len(self.name_mapping)} remapped, "
-                         f"{len(self._health_report.nodes_not_found)} not found")
+        self.logger.info(
+            f"📍 Name mapping complete in {elapsed:.2f}s: "
+            f"{len(self.name_mapping)} remapped, "
+            f"{len(self._health_report.nodes_not_found)} not found"
+        )
 
-    def _find_scene_node(self, orig_name: str, usd_root: Optional[str], fast_mode: bool = False) -> Optional[str]:
+    def _find_scene_node(
+        self, orig_name: str, usd_root: Optional[str], fast_mode: bool = False
+    ) -> Optional[str]:
         """
         v1.5.0: Find a scene node matching the original name
 
@@ -588,22 +622,22 @@ class MayaRigImporter:
             return orig_name
 
         # Strategy 2: Short name match
-        short_name = orig_name.split('|')[-1].split(':')[-1]
+        short_name = orig_name.split("|")[-1].split(":")[-1]
         if short_name in self._scene_short_names:
             candidates = self._scene_short_names[short_name]
             if len(candidates) == 1:
-                return candidates[0].split('|')[-1]  # Return short path
+                return candidates[0].split("|")[-1]  # Return short path
             elif len(candidates) > 1:
                 # Multiple matches - prefer one under USD root
                 if usd_root:
                     for candidate in candidates:
                         if usd_root in candidate:
-                            return candidate.split('|')[-1]
+                            return candidate.split("|")[-1]
                 # Return first match with warning
                 self._health_report.warnings.append(
                     f"Multiple matches for '{orig_name}', using '{candidates[0]}'"
                 )
-                return candidates[0].split('|')[-1]
+                return candidates[0].split("|")[-1]
 
         # FAST MODE: Skip expensive searches
         if fast_mode:
@@ -612,29 +646,29 @@ class MayaRigImporter:
         # Strategy 3: Handle 'model:' prefix and other namespace prefixes
         # PERFORMANCE: Use dictionary lookups only, NO string iteration
         # The .mrig may have names like 'model:Body_Blendshape' but scene has namespace prefix
-        if ':' in short_name:
+        if ":" in short_name:
             # Strip any namespace prefix from the original name
-            stripped_name = short_name.split(':')[-1]
+            stripped_name = short_name.split(":")[-1]
             if stripped_name in self._scene_short_names:
                 candidates = self._scene_short_names[stripped_name]
                 if candidates:
-                    return candidates[0].split('|')[-1]
+                    return candidates[0].split("|")[-1]
 
         # Strategy 4: Try common suffix variations (dictionary lookup only)
         # Check base name without common suffixes
-        for suffix in ['Shape', 'Orig', '_jnt', '_geo', '_ctrl', '_grp', 'Blendshape']:
+        for suffix in ["Shape", "Orig", "_jnt", "_geo", "_ctrl", "_grp", "Blendshape"]:
             if short_name.endswith(suffix):
-                base_name = short_name[:-len(suffix)]
+                base_name = short_name[: -len(suffix)]
                 if base_name in self._scene_short_names:
                     candidates = self._scene_short_names[base_name]
                     if candidates:
-                        return candidates[0].split('|')[-1]
+                        return candidates[0].split("|")[-1]
             # Also try adding suffix
             name_with_suffix = short_name + suffix
             if name_with_suffix in self._scene_short_names:
                 candidates = self._scene_short_names[name_with_suffix]
                 if candidates:
-                    return candidates[0].split('|')[-1]
+                    return candidates[0].split("|")[-1]
 
         return None
 
@@ -648,14 +682,25 @@ class MayaRigImporter:
         - Common Maya naming conventions
         """
         variations = []
-        base = name.split('|')[-1].split(':')[-1]
+        base = name.split("|")[-1].split(":")[-1]
 
         # Common suffix variations
-        suffixes = ['', '_jnt', '_JNT', '_Jnt', '_geo', '_GEO', '_ctrl', '_CTRL', '_Ctrl']
+        suffixes = ["", "_jnt", "_JNT", "_Jnt", "_geo", "_GEO", "_ctrl", "_CTRL", "_Ctrl"]
         base_no_suffix = base
-        for suffix in ['_jnt', '_JNT', '_Jnt', '_geo', '_GEO', '_ctrl', '_CTRL', '_Ctrl', '_grp', '_GRP']:
+        for suffix in [
+            "_jnt",
+            "_JNT",
+            "_Jnt",
+            "_geo",
+            "_GEO",
+            "_ctrl",
+            "_CTRL",
+            "_Ctrl",
+            "_grp",
+            "_GRP",
+        ]:
             if base.endswith(suffix):
-                base_no_suffix = base[:-len(suffix)]
+                base_no_suffix = base[: -len(suffix)]
                 break
 
         # Generate variations
@@ -664,16 +709,16 @@ class MayaRigImporter:
 
         # CamelCase variations
         # Convert underscore to CamelCase
-        if '_' in base:
-            camel = ''.join(word.capitalize() for word in base.split('_'))
+        if "_" in base:
+            camel = "".join(word.capitalize() for word in base.split("_"))
             variations.append(camel)
             variations.append(camel[0].lower() + camel[1:] if camel else camel)
 
         # Convert CamelCase to underscore
-        underscore = re.sub(r'(?<!^)(?=[A-Z])', '_', base).lower()
+        underscore = re.sub(r"(?<!^)(?=[A-Z])", "_", base).lower()
         if underscore != base.lower():
             variations.append(underscore)
-            variations.append(underscore.title().replace('_', ''))
+            variations.append(underscore.title().replace("_", ""))
 
         return variations
 
@@ -685,7 +730,7 @@ class MayaRigImporter:
         self,
         controllers: List[Dict],
         import_custom_attrs: bool = True,
-        import_proxy_attrs: bool = True
+        import_proxy_attrs: bool = True,
     ):
         """
         Create controller curves
@@ -697,7 +742,7 @@ class MayaRigImporter:
         """
         for ctrl_data in controllers:
             try:
-                name = ctrl_data['name']
+                name = ctrl_data["name"]
 
                 # Skip if already exists
                 if cmds.objExists(name):
@@ -707,27 +752,31 @@ class MayaRigImporter:
                 curve = None  # Track created node
 
                 # Create controller based on shape type
-                if ctrl_data['shape_type'] == 'nurbs':
+                if ctrl_data["shape_type"] == "nurbs":
                     # Create NURBS curve from CV data
-                    curve_data = ctrl_data.get('curve_data', {})
-                    if curve_data and curve_data.get('cvs'):
-                        degree = curve_data.get('degree', 3)
-                        cvs = curve_data['cvs']
-                        form = curve_data.get('form', 0)  # 0=open, 1=closed, 2=periodic
-                        knots = curve_data.get('knots')
+                    curve_data = ctrl_data.get("curve_data", {})
+                    if curve_data and curve_data.get("cvs"):
+                        degree = curve_data.get("degree", 3)
+                        cvs = curve_data["cvs"]
+                        form = curve_data.get("form", 0)  # 0=open, 1=closed, 2=periodic
+                        knots = curve_data.get("knots")
 
                         # Create curve
                         try:
                             if form == 2:  # periodic
                                 # Periodic curves require explicit knots
                                 if knots:
-                                    curve = cmds.curve(degree=degree, point=cvs, knot=knots, periodic=True)
+                                    curve = cmds.curve(
+                                        degree=degree, point=cvs, knot=knots, periodic=True
+                                    )
                                 else:
                                     # Generate knots for periodic curve
                                     # For periodic: knots = [-degree, ..., numCVs-1]
                                     num_cvs = len(cvs)
                                     knots = list(range(-degree, num_cvs))
-                                    curve = cmds.curve(degree=degree, point=cvs, knot=knots, periodic=True)
+                                    curve = cmds.curve(
+                                        degree=degree, point=cvs, knot=knots, periodic=True
+                                    )
                             elif knots:
                                 # Open curve with explicit knots
                                 curve = cmds.curve(degree=degree, point=cvs, knot=knots)
@@ -736,7 +785,9 @@ class MayaRigImporter:
                                 curve = cmds.curve(degree=degree, point=cvs)
                         except Exception as curve_error:
                             # Fallback: try creating as non-periodic if periodic fails
-                            self.logger.debug(f"Periodic curve creation failed, trying non-periodic: {curve_error}")
+                            self.logger.debug(
+                                f"Periodic curve creation failed, trying non-periodic: {curve_error}"
+                            )
                             try:
                                 curve = cmds.curve(degree=degree, point=cvs)
                             except Exception as e2:
@@ -748,20 +799,20 @@ class MayaRigImporter:
                         # Set transform - position the curve in space
                         # CVs are in object space and already contain the scale baked in,
                         # so we only apply translation and rotation, NOT scale
-                        transform = ctrl_data['transform']
-                        cmds.xform(curve, translation=transform['translate'], worldSpace=False)
-                        cmds.xform(curve, rotation=transform['rotate'], worldSpace=False)
+                        transform = ctrl_data["transform"]
+                        cmds.xform(curve, translation=transform["translate"], worldSpace=False)
+                        cmds.xform(curve, rotation=transform["rotate"], worldSpace=False)
                         # NOTE: Scale is NOT applied because CVs already have scale baked into
                         # their object-space positions. Applying scale would double it.
 
                         # Set color override
-                        color = ctrl_data.get('color')
+                        color = ctrl_data.get("color")
                         if color is not None:
                             cmds.setAttr(f"{curve}.overrideEnabled", True)
                             cmds.setAttr(f"{curve}.overrideColor", color)
 
                         # Parent if needed
-                        parent = ctrl_data.get('parent')
+                        parent = ctrl_data.get("parent")
                         if parent:
                             parent_name = self._resolve_name(parent)
                             if cmds.objExists(parent_name):
@@ -769,23 +820,23 @@ class MayaRigImporter:
 
                         self.logger.debug(f"Created controller: {name}")
 
-                elif ctrl_data['shape_type'] == 'locator':
+                elif ctrl_data["shape_type"] == "locator":
                     # Create locator
                     curve = cmds.spaceLocator(name=name)[0]
 
                     # For locators, we need to set position and rotation
                     # But locators are created at default scale, so we DO need scale here
-                    transform = ctrl_data['transform']
-                    cmds.xform(curve, translation=transform['translate'], worldSpace=False)
-                    cmds.xform(curve, rotation=transform['rotate'], worldSpace=False)
+                    transform = ctrl_data["transform"]
+                    cmds.xform(curve, translation=transform["translate"], worldSpace=False)
+                    cmds.xform(curve, rotation=transform["rotate"], worldSpace=False)
                     # Locators need scale applied (unlike NURBS where CVs have it baked)
-                    scale = transform['scale']
+                    scale = transform["scale"]
                     cmds.setAttr(f"{curve}.scaleX", scale[0])
                     cmds.setAttr(f"{curve}.scaleY", scale[1])
                     cmds.setAttr(f"{curve}.scaleZ", scale[2])
 
                     # Parent if needed
-                    parent = ctrl_data.get('parent')
+                    parent = ctrl_data.get("parent")
                     if parent:
                         parent_name = self._resolve_name(parent)
                         if cmds.objExists(parent_name):
@@ -799,7 +850,7 @@ class MayaRigImporter:
 
                 # v1.5.0: Import custom attributes
                 if curve and import_custom_attrs:
-                    custom_attrs = ctrl_data.get('custom_attrs')
+                    custom_attrs = ctrl_data.get("custom_attrs")
                     if custom_attrs:
                         self._create_custom_attributes(curve, custom_attrs)
 
@@ -808,19 +859,20 @@ class MayaRigImporter:
 
             except Exception as e:
                 self.logger.warning(f"Failed to create controller {ctrl_data.get('name')}: {e}")
-                self._health_report.controllers_failed.append(ctrl_data.get('name', 'unknown'))
+                self._health_report.controllers_failed.append(ctrl_data.get("name", "unknown"))
                 continue
 
         # v1.5.0: Second pass for proxy attribute connections
         if import_proxy_attrs:
             # Count controllers with proxy attrs and total proxy attrs
             controllers_with_proxy = [
-                (c['name'], c.get('proxy_attrs', {}))
-                for c in controllers if c.get('proxy_attrs')
+                (c["name"], c.get("proxy_attrs", {})) for c in controllers if c.get("proxy_attrs")
             ]
             proxy_count = len(controllers_with_proxy)
             total_attrs = sum(len(pa) for _, pa in controllers_with_proxy)
-            print(f">>> Connecting proxy attrs: {total_attrs} attrs across {proxy_count} controllers...")
+            print(
+                f">>> Connecting proxy attrs: {total_attrs} attrs across {proxy_count} controllers..."
+            )
 
             processed_ctrls = 0
             processed_attrs = 0
@@ -832,8 +884,8 @@ class MayaRigImporter:
                     for attr_name, proxy_data in proxy_attrs.items():
                         processed_attrs += 1
                         try:
-                            source_node = self._resolve_name(proxy_data['source_node'])
-                            source_attr = proxy_data['source_attr']
+                            source_node = self._resolve_name(proxy_data["source_node"])
+                            source_attr = proxy_data["source_attr"]
 
                             if not cmds.objExists(source_node):
                                 missing_sources.add(source_node)
@@ -850,16 +902,18 @@ class MayaRigImporter:
 
                         # Progress every 500 attrs
                         if processed_attrs % 500 == 0:
-                            print(f">>> Proxy attrs: {processed_attrs}/{total_attrs} processed, {connected} connected")
+                            print(
+                                f">>> Proxy attrs: {processed_attrs}/{total_attrs} processed, {connected} connected"
+                            )
 
                     processed_ctrls += 1
 
             # Summary instead of per-attr warnings
             if missing_sources:
-                self.logger.warning(
-                    f"Proxy attrs: {len(missing_sources)} source nodes not found"
-                )
-            print(f">>> Proxy attrs DONE: {connected}/{total_attrs} connected across {processed_ctrls} controllers")
+                self.logger.warning(f"Proxy attrs: {len(missing_sources)} source nodes not found")
+            print(
+                f">>> Proxy attrs DONE: {connected}/{total_attrs} connected across {processed_ctrls} controllers"
+            )
 
     def _create_custom_attributes(self, node: str, custom_attrs: Dict):
         """
@@ -871,49 +925,51 @@ class MayaRigImporter:
         """
         for attr_name, attr_data in custom_attrs.items():
             try:
-                attr_type = attr_data.get('type', 'double')
+                attr_type = attr_data.get("type", "double")
 
                 # Create attribute based on type
-                if attr_type == 'enum':
-                    enum_names = attr_data.get('enum_names', ['Option1', 'Option2'])
+                if attr_type == "enum":
+                    enum_names = attr_data.get("enum_names", ["Option1", "Option2"])
                     cmds.addAttr(
-                        node, longName=attr_name, attributeType='enum',
-                        enumName=':'.join(enum_names)
+                        node,
+                        longName=attr_name,
+                        attributeType="enum",
+                        enumName=":".join(enum_names),
                     )
-                elif attr_type in ['double', 'float']:
-                    kwargs = {'longName': attr_name, 'attributeType': 'double'}
-                    if 'min' in attr_data:
-                        kwargs['minValue'] = attr_data['min']
-                    if 'max' in attr_data:
-                        kwargs['maxValue'] = attr_data['max']
+                elif attr_type in ["double", "float"]:
+                    kwargs = {"longName": attr_name, "attributeType": "double"}
+                    if "min" in attr_data:
+                        kwargs["minValue"] = attr_data["min"]
+                    if "max" in attr_data:
+                        kwargs["maxValue"] = attr_data["max"]
                     cmds.addAttr(node, **kwargs)
-                elif attr_type in ['long', 'short', 'int']:
-                    kwargs = {'longName': attr_name, 'attributeType': 'long'}
-                    if 'min' in attr_data:
-                        kwargs['minValue'] = int(attr_data['min'])
-                    if 'max' in attr_data:
-                        kwargs['maxValue'] = int(attr_data['max'])
+                elif attr_type in ["long", "short", "int"]:
+                    kwargs = {"longName": attr_name, "attributeType": "long"}
+                    if "min" in attr_data:
+                        kwargs["minValue"] = int(attr_data["min"])
+                    if "max" in attr_data:
+                        kwargs["maxValue"] = int(attr_data["max"])
                     cmds.addAttr(node, **kwargs)
-                elif attr_type == 'bool':
-                    cmds.addAttr(node, longName=attr_name, attributeType='bool')
-                elif attr_type == 'string':
-                    cmds.addAttr(node, longName=attr_name, dataType='string')
+                elif attr_type == "bool":
+                    cmds.addAttr(node, longName=attr_name, attributeType="bool")
+                elif attr_type == "string":
+                    cmds.addAttr(node, longName=attr_name, dataType="string")
                 else:
                     # Default to double
-                    cmds.addAttr(node, longName=attr_name, attributeType='double')
+                    cmds.addAttr(node, longName=attr_name, attributeType="double")
 
                 # Set keyable/channelBox
                 attr_path = f"{node}.{attr_name}"
-                if attr_data.get('keyable', True):
+                if attr_data.get("keyable", True):
                     cmds.setAttr(attr_path, keyable=True)
-                elif attr_data.get('channelBox', False):
+                elif attr_data.get("channelBox", False):
                     cmds.setAttr(attr_path, channelBox=True)
 
                 # Set value
-                value = attr_data.get('value')
+                value = attr_data.get("value")
                 if value is not None:
-                    if attr_type == 'string':
-                        cmds.setAttr(attr_path, value, type='string')
+                    if attr_type == "string":
+                        cmds.setAttr(attr_path, value, type="string")
                     else:
                         cmds.setAttr(attr_path, value)
 
@@ -937,9 +993,9 @@ class MayaRigImporter:
 
         for idx, switch_data in enumerate(space_switches):
             try:
-                control = self._resolve_name(switch_data['control'])
-                attr_name = switch_data['attribute']
-                spaces = switch_data.get('spaces', [])
+                control = self._resolve_name(switch_data["control"])
+                attr_name = switch_data["attribute"]
+                spaces = switch_data.get("spaces", [])
                 # constraint_name not used - SDK connections disabled for now
 
                 if not cmds.objExists(control):
@@ -947,14 +1003,17 @@ class MayaRigImporter:
                     continue
 
                 # Create enum attribute for space switching
-                space_names = [s.get('name', f'space{i}') for i, s in enumerate(spaces)]
+                space_names = [s.get("name", f"space{i}") for i, s in enumerate(spaces)]
                 attr_path = f"{control}.{attr_name}"
 
                 if not cmds.objExists(attr_path):
                     try:
                         cmds.addAttr(
-                            control, longName=attr_name, attributeType='enum',
-                            enumName=':'.join(space_names), keyable=True
+                            control,
+                            longName=attr_name,
+                            attributeType="enum",
+                            enumName=":".join(space_names),
+                            keyable=True,
                         )
                         created += 1
                     except Exception:
@@ -988,13 +1047,13 @@ class MayaRigImporter:
 
         for idx, const_data in enumerate(constraints):
             try:
-                constraint_type = const_data['type']
-                driven = self._resolve_name(const_data['driven'])
-                drivers = [self._resolve_name(d) for d in const_data['drivers']]
-                maintain_offset = const_data.get('maintain_offset', True)
-                weights = const_data.get('weights', [])
-                skip_translate = const_data.get('skip_translate', [])
-                skip_rotate = const_data.get('skip_rotate', [])
+                constraint_type = const_data["type"]
+                driven = self._resolve_name(const_data["driven"])
+                drivers = [self._resolve_name(d) for d in const_data["drivers"]]
+                maintain_offset = const_data.get("maintain_offset", True)
+                weights = const_data.get("weights", [])
+                skip_translate = const_data.get("skip_translate", [])
+                skip_rotate = const_data.get("skip_rotate", [])
 
                 # Check if objects exist
                 if not cmds.objExists(driven):
@@ -1029,7 +1088,7 @@ class MayaRigImporter:
                     maintain_offset,
                     weights,
                     skip_translate,
-                    skip_rotate
+                    skip_rotate,
                 )
 
                 if success:
@@ -1065,65 +1124,52 @@ class MayaRigImporter:
         maintain_offset: bool,
         weights: List[float],
         skip_translate: List[str],
-        skip_rotate: List[str]
+        skip_rotate: List[str],
     ) -> bool:
         """Create a constraint of the specified type. Returns True on success."""
         try:
             # Build skip flags
             skip_flags = {}
             for axis in skip_translate:
-                skip_flags[f'skip{axis}'] = True
+                skip_flags[f"skip{axis}"] = True
             for axis in skip_rotate:
-                skip_flags[f'skip{axis}'] = True
+                skip_flags[f"skip{axis}"] = True
 
             constraint = None
 
             # Create constraint based on type
-            if constraint_type == 'parentConstraint':
+            if constraint_type == "parentConstraint":
                 constraint = cmds.parentConstraint(
-                    *drivers,
-                    driven,
-                    maintainOffset=maintain_offset,
-                    **skip_flags
+                    *drivers, driven, maintainOffset=maintain_offset, **skip_flags
                 )[0]
 
-            elif constraint_type == 'orientConstraint':
+            elif constraint_type == "orientConstraint":
                 constraint = cmds.orientConstraint(
-                    *drivers,
-                    driven,
-                    maintainOffset=maintain_offset,
-                    **skip_flags
+                    *drivers, driven, maintainOffset=maintain_offset, **skip_flags
                 )[0]
 
-            elif constraint_type == 'pointConstraint':
+            elif constraint_type == "pointConstraint":
                 constraint = cmds.pointConstraint(
-                    *drivers,
-                    driven,
-                    maintainOffset=maintain_offset,
-                    **skip_flags
+                    *drivers, driven, maintainOffset=maintain_offset, **skip_flags
                 )[0]
 
-            elif constraint_type == 'aimConstraint':
-                constraint = cmds.aimConstraint(
-                    *drivers,
-                    driven,
-                    maintainOffset=maintain_offset
-                )[0]
+            elif constraint_type == "aimConstraint":
+                constraint = cmds.aimConstraint(*drivers, driven, maintainOffset=maintain_offset)[
+                    0
+                ]
 
-            elif constraint_type == 'scaleConstraint':
+            elif constraint_type == "scaleConstraint":
                 constraint = cmds.scaleConstraint(
-                    *drivers,
-                    driven,
-                    maintainOffset=maintain_offset
+                    *drivers, driven, maintainOffset=maintain_offset
                 )[0]
 
-            elif constraint_type == 'poleVectorConstraint':
+            elif constraint_type == "poleVectorConstraint":
                 if len(drivers) == 1:
                     # Pole vector only works with rotate plane (RP) solver IK handles
                     # Check if driven is an IK handle with RP solver
-                    if cmds.objectType(driven) == 'ikHandle':
+                    if cmds.objectType(driven) == "ikHandle":
                         solver = cmds.ikHandle(driven, q=True, solver=True)
-                        if solver and 'ikRPsolver' not in solver:
+                        if solver and "ikRPsolver" not in solver:
                             # SC solver doesn't support pole vector - skip silently
                             return False
                     constraint = cmds.poleVectorConstraint(drivers[0], driven)[0]
@@ -1139,7 +1185,7 @@ class MayaRigImporter:
 
             # Set weights if provided
             if constraint and weights and len(weights) == len(drivers):
-                weight_attrs = cmds.listAttr(constraint, string='*W*') or []
+                weight_attrs = cmds.listAttr(constraint, string="*W*") or []
                 for i, weight in enumerate(weights):
                     if i < len(weight_attrs):
                         try:
@@ -1163,12 +1209,12 @@ class MayaRigImporter:
 
         for idx, ik_data in enumerate(ik_handles):
             try:
-                name = ik_data['name']
-                start_joint = self._resolve_name(ik_data['start_joint'])
-                end_joint = self._resolve_name(ik_data['end_joint'])
-                solver = ik_data.get('solver', 'ikRPsolver')
-                priority = ik_data.get('priority', 1)
-                pole_vector = ik_data.get('pole_vector')
+                name = ik_data["name"]
+                start_joint = self._resolve_name(ik_data["start_joint"])
+                end_joint = self._resolve_name(ik_data["end_joint"])
+                solver = ik_data.get("solver", "ikRPsolver")
+                priority = ik_data.get("priority", 1)
+                pole_vector = ik_data.get("pole_vector")
 
                 # Check if joints exist
                 if not cmds.objExists(start_joint) or not cmds.objExists(end_joint):
@@ -1187,11 +1233,11 @@ class MayaRigImporter:
                     startJoint=start_joint,
                     endEffector=end_joint,
                     solver=solver,
-                    priority=priority
+                    priority=priority,
                 )[0]
 
                 # Add pole vector constraint if specified (only for RP solver)
-                if pole_vector and 'ikRPsolver' in solver:
+                if pole_vector and "ikRPsolver" in solver:
                     pole_name = self._resolve_name(pole_vector)
                     if cmds.objExists(pole_name):
                         try:
@@ -1227,8 +1273,8 @@ class MayaRigImporter:
 
         for idx, bs_data in enumerate(blendshapes):
             try:
-                name = bs_data['name']
-                base_geometry = self._resolve_name(bs_data['base_geometry'])
+                name = bs_data["name"]
+                base_geometry = self._resolve_name(bs_data["base_geometry"])
 
                 # Check if base geometry exists
                 if not cmds.objExists(base_geometry):
@@ -1240,16 +1286,16 @@ class MayaRigImporter:
                 node_type = cmds.nodeType(base_geometry)
 
                 # If it's already a shape node, check directly
-                if node_type == 'nurbsCurve':
+                if node_type == "nurbsCurve":
                     skipped_curves += 1
                     continue
 
                 # If it's a transform, check its shapes
-                if node_type == 'transform':
+                if node_type == "transform":
                     shapes = cmds.listRelatives(base_geometry, shapes=True) or []
                     if shapes:
                         shape_type = cmds.nodeType(shapes[0])
-                        if shape_type == 'nurbsCurve':
+                        if shape_type == "nurbsCurve":
                             skipped_curves += 1
                             continue
 
@@ -1258,22 +1304,19 @@ class MayaRigImporter:
                     created += 1  # Already exists
                 else:
                     # Create empty blendshape (targets will be added separately if needed)
-                    targets = bs_data.get('targets', [])
-                    target_names = [t['name'] for t in targets if cmds.objExists(t['name'])]
+                    targets = bs_data.get("targets", [])
+                    target_names = [t["name"] for t in targets if cmds.objExists(t["name"])]
 
                     if target_names:
                         # Create blendshape with existing targets
                         blendshape = cmds.blendShape(
-                            target_names,
-                            base_geometry,
-                            name=name,
-                            frontOfChain=True
+                            target_names, base_geometry, name=name, frontOfChain=True
                         )[0]
 
                         # Set initial weights
                         for target in targets:
-                            target_name = target['name']
-                            weight = target.get('weight', 0.0)
+                            target_name = target["name"]
+                            weight = target.get("weight", 0.0)
                             if cmds.objExists(f"{blendshape}.{target_name}"):
                                 cmds.setAttr(f"{blendshape}.{target_name}", weight)
 
@@ -1291,7 +1334,9 @@ class MayaRigImporter:
                 print(f">>> Blendshapes: {idx + 1}/{total_bs} processed")
 
         if skipped_curves > 0:
-            print(f">>> Blendshapes: {skipped_curves} NURBS curves skipped (use wire deformers instead)")
+            print(
+                f">>> Blendshapes: {skipped_curves} NURBS curves skipped (use wire deformers instead)"
+            )
         print(f">>> Blendshapes DONE: {created}/{total_bs} created, {skipped} skipped")
 
         # Reconnect blendshape drivers
@@ -1299,11 +1344,11 @@ class MayaRigImporter:
         conn_skipped = 0
         for idx, conn_data in enumerate(connections):
             try:
-                blendshape = conn_data['blendshape']
-                target = conn_data['target']
-                driver = conn_data['driver']
-                connection_type = conn_data.get('connection_type', 'direct')
-                sdk_keys = conn_data.get('sdk_keys')
+                blendshape = conn_data["blendshape"]
+                target = conn_data["target"]
+                driver = conn_data["driver"]
+                connection_type = conn_data.get("connection_type", "direct")
+                sdk_keys = conn_data.get("sdk_keys")
 
                 # Resolve names
                 blendshape = self._resolve_name(blendshape)
@@ -1314,7 +1359,7 @@ class MayaRigImporter:
                     conn_skipped += 1
                     continue
 
-                if not cmds.objExists(driver.split('.')[0]):
+                if not cmds.objExists(driver.split(".")[0]):
                     conn_skipped += 1
                     continue
 
@@ -1324,10 +1369,10 @@ class MayaRigImporter:
                     continue
 
                 # Create connection
-                if connection_type == 'direct':
+                if connection_type == "direct":
                     cmds.connectAttr(driver, target_attr, force=True)
                     connected += 1
-                elif connection_type == 'sdk' and sdk_keys:
+                elif connection_type == "sdk" and sdk_keys:
                     self._create_sdk(driver, target_attr, sdk_keys)
                     connected += 1
 
@@ -1352,13 +1397,13 @@ class MayaRigImporter:
 
         for idx, sdk_data in enumerate(sdks):
             try:
-                driver = self._resolve_name(sdk_data['driver'])
-                driven = self._resolve_name(sdk_data['driven'])
-                keys = sdk_data.get('keys', [])
+                driver = self._resolve_name(sdk_data["driver"])
+                driven = self._resolve_name(sdk_data["driven"])
+                keys = sdk_data.get("keys", [])
 
                 # Check if driver and driven exist
-                driver_obj = driver.split('.')[0]
-                driven_obj = driven.split('.')[0]
+                driver_obj = driver.split(".")[0]
+                driven_obj = driven.split(".")[0]
 
                 if not cmds.objExists(driver_obj) or not cmds.objExists(driven_obj):
                     skipped += 1
@@ -1403,10 +1448,7 @@ class MayaRigImporter:
 
                 # Set driven key
                 cmds.setDrivenKeyframe(
-                    driven,
-                    currentDriver=driver,
-                    driverValue=driver_val,
-                    value=driven_val
+                    driven, currentDriver=driver, driverValue=driver_val, value=driven_val
                 )
 
             except Exception as e:
@@ -1416,6 +1458,7 @@ class MayaRigImporter:
         # Reset driver to first key value
         if keys:
             cmds.setAttr(driver, keys[0][0])
+
     # ==================== v1.5.0: Validation & Auto-Repair ====================
 
     def _validate_rig_connections(self, rig_data: Dict) -> None:
@@ -1431,9 +1474,19 @@ class MayaRigImporter:
         self.logger.info("🔍 Validating rig connections...")
 
         # Check constraints
-        all_constraints = cmds.ls(type=['parentConstraint', 'orientConstraint',
-                                        'pointConstraint', 'aimConstraint',
-                                        'scaleConstraint', 'poleVectorConstraint']) or []
+        all_constraints = (
+            cmds.ls(
+                type=[
+                    "parentConstraint",
+                    "orientConstraint",
+                    "pointConstraint",
+                    "aimConstraint",
+                    "scaleConstraint",
+                    "poleVectorConstraint",
+                ]
+            )
+            or []
+        )
 
         for constraint in all_constraints:
             try:
@@ -1447,7 +1500,7 @@ class MayaRigImporter:
                 pass  # Some constraint types don't support constraintTargetList
 
         # Check IK handles
-        ik_handles = cmds.ls(type='ikHandle') or []
+        ik_handles = cmds.ls(type="ikHandle") or []
         for ik in ik_handles:
             try:
                 start = cmds.ikHandle(ik, q=True, startJoint=True)
@@ -1460,8 +1513,8 @@ class MayaRigImporter:
                 self._health_report.warnings.append(f"Could not validate IK {ik}: {e}")
 
         # Check for broken connections (attributes with no input)
-        for ctrl in rig_data.get('controllers', []):
-            ctrl_name = self._resolve_name(ctrl['name'])
+        for ctrl in rig_data.get("controllers", []):
+            ctrl_name = self._resolve_name(ctrl["name"])
             if cmds.objExists(ctrl_name):
                 # Check if controller is connected to anything
                 connections = cmds.listConnections(ctrl_name, source=False, destination=True) or []
@@ -1470,7 +1523,9 @@ class MayaRigImporter:
                         f"Controller {ctrl_name}: not driving anything"
                     )
 
-        self.logger.info(f"     Found {len(self._health_report.connections_broken)} broken connections")
+        self.logger.info(
+            f"     Found {len(self._health_report.connections_broken)} broken connections"
+        )
 
     def _attempt_auto_repair(self) -> None:
         """
@@ -1535,23 +1590,23 @@ class MayaRigImporter:
 
             # Check for objects ending in _ctrl, _Ctrl, _CTRL
             all_transforms = cmds.ls(transforms=True) or []
-            driven_base = driven.split(':')[-1].replace('_jnt', '').replace('_Jnt', '')
+            driven_base = driven.split(":")[-1].replace("_jnt", "").replace("_Jnt", "")
 
             for obj in all_transforms:
-                obj_base = obj.split(':')[-1]
+                obj_base = obj.split(":")[-1]
                 if driven_base in obj_base and obj != driven:
-                    if any(suffix in obj for suffix in ['_ctrl', '_Ctrl', '_CTRL', 'Control']):
+                    if any(suffix in obj for suffix in ["_ctrl", "_Ctrl", "_CTRL", "Control"]):
                         potential_targets.append(obj)
 
             if potential_targets:
                 # Try to add the first potential target
                 target = potential_targets[0]
 
-                if node_type == 'parentConstraint':
+                if node_type == "parentConstraint":
                     cmds.parentConstraint(target, driven, maintainOffset=True, edit=True)
-                elif node_type == 'orientConstraint':
+                elif node_type == "orientConstraint":
                     cmds.orientConstraint(target, driven, maintainOffset=True, edit=True)
-                elif node_type == 'pointConstraint':
+                elif node_type == "pointConstraint":
                     cmds.pointConstraint(target, driven, maintainOffset=True, edit=True)
 
                 self.logger.info(f"     Repaired {constraint_name}: added target {target}")
@@ -1604,18 +1659,22 @@ class MayaRigImporter:
         report = RigHealthReport()
 
         # Count controllers (NURBS curves that look like controls)
-        curves = cmds.ls(type='nurbsCurve') or []
+        curves = cmds.ls(type="nurbsCurve") or []
         for curve in curves:
             transform = cmds.listRelatives(curve, parent=True)
             if transform:
                 name = transform[0]
-                if any(s in name.lower() for s in ['ctrl', 'control', 'con_']):
+                if any(s in name.lower() for s in ["ctrl", "control", "con_"]):
                     report.controllers_created += 1
 
         # Count constraints
         constraint_types = [
-            'parentConstraint', 'orientConstraint', 'pointConstraint',
-            'aimConstraint', 'scaleConstraint', 'poleVectorConstraint'
+            "parentConstraint",
+            "orientConstraint",
+            "pointConstraint",
+            "aimConstraint",
+            "scaleConstraint",
+            "poleVectorConstraint",
         ]
         for ctype in constraint_types:
             constraints = cmds.ls(type=ctype) or []
@@ -1631,7 +1690,7 @@ class MayaRigImporter:
                     pass
 
         # Count IK handles
-        ik_handles = cmds.ls(type='ikHandle') or []
+        ik_handles = cmds.ls(type="ikHandle") or []
         for ik in ik_handles:
             try:
                 start = cmds.ikHandle(ik, q=True, startJoint=True)

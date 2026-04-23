@@ -13,6 +13,7 @@ from pathlib import Path
 # Import with fallback
 # PySide6 for Maya 2022+
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QLineEdit, QFileDialog
+
 PYSIDE_AVAILABLE = True
 
 

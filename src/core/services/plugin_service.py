@@ -104,14 +104,10 @@ class PluginService(IPluginService):
             "assetManagerUI",
             title=f"Asset Manager v{self._version} - Basic Mode",
             widthHeight=(400, 300),
-            sizeable=True
+            sizeable=True,
         )
 
-        cmds.columnLayout(
-            adjustableColumn=True,
-            rowSpacing=10,
-            columnOffset=("left", 15)
-        )
+        cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnOffset=("left", 15))
 
         # Header
         cmds.text(label=f"Asset Manager v{self._version}", font="boldLabelFont")
@@ -125,8 +121,9 @@ class PluginService(IPluginService):
         cmds.separator(height=15)
 
         # Fallback buttons
-        cmds.button(label="Launch Full UI", height=35,
-                    command=lambda x: self._try_launch_full_ui())
+        cmds.button(
+            label="Launch Full UI", height=35, command=lambda x: self._try_launch_full_ui()
+        )
 
         cmds.separator(height=15)
         cmds.button(label="Close", command=f'cmds.deleteUI("{window}")')
@@ -143,8 +140,8 @@ class PluginService(IPluginService):
             cmds.confirmDialog(
                 title="Asset Manager UI",
                 message="Full PySide6 UI is temporarily disabled for compatibility.\n"
-                        "Using Maya-native UI for optimal stability.",
-                button=["OK"]
+                "Using Maya-native UI for optimal stability.",
+                button=["OK"],
             )
         except Exception as e:
             print(f"[ERROR] Could not launch full UI: {e}")

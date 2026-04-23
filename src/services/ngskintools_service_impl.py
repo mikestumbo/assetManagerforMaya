@@ -47,16 +47,20 @@ class NgSkinToolsService:
 
             # Check if ngSkinTools2 plugin is loaded
             try:
-                plugin_loaded = cmds.pluginInfo('ngSkinTools2', query=True, loaded=True)
+                plugin_loaded = cmds.pluginInfo("ngSkinTools2", query=True, loaded=True)
                 if plugin_loaded:
                     self._plugin_available = True
                     # Get plugin version if available
                     try:
-                        self._plugin_version = cmds.pluginInfo('ngSkinTools2', query=True, version=True)
+                        self._plugin_version = cmds.pluginInfo(
+                            "ngSkinTools2", query=True, version=True
+                        )
                     except Exception:
                         self._plugin_version = "Unknown"
 
-                    self.logger.info(f"# {__name__} : [OK] ngSkinTools2 plugin detected (v{self._plugin_version})")
+                    self.logger.info(
+                        f"# {__name__} : [OK] ngSkinTools2 plugin detected (v{self._plugin_version})"
+                    )
                 else:
                     self.logger.info(f"# {__name__} : [WARNING] ngSkinTools2 plugin not loaded")
                     return
@@ -68,8 +72,11 @@ class NgSkinToolsService:
             try:
                 import ngSkinTools2.api  # type: ignore[import-not-found] # noqa: F401,F811
                 from ngSkinTools2.api import (  # noqa: F401,F811
-                    Layers, init_layers, target_info
+                    Layers,
+                    init_layers,
+                    target_info,
                 )  # type: ignore[import-not-found]
+
                 self._api_available = True
                 self.logger.info(f"# {__name__} : [OK] ngSkinTools2 Python API available")
             except ImportError:
@@ -111,12 +118,7 @@ class NgSkinToolsService:
                 - 'layer_count': Total number of layers across all meshes
                 - 'total_nodes': Total number of ngSkinTools2-related nodes
         """
-        result = {
-            'data_nodes': [],
-            'skin_clusters': [],
-            'layer_count': 0,
-            'total_nodes': 0
-        }
+        result = {"data_nodes": [], "skin_clusters": [], "layer_count": 0, "total_nodes": 0}
 
         if not self._plugin_available:
             return result
@@ -128,9 +130,9 @@ class NgSkinToolsService:
             ns_filter = f"{namespace}:*" if namespace else "*"
 
             # Find ngSkinTools2 data nodes (ngst2SkinLayerData)
-            data_nodes = cmds.ls(ns_filter, type='ngst2SkinLayerData') or []
-            result['data_nodes'] = data_nodes
-            result['total_nodes'] += len(data_nodes)
+            data_nodes = cmds.ls(ns_filter, type="ngst2SkinLayerData") or []
+            result["data_nodes"] = data_nodes
+            result["total_nodes"] += len(data_nodes)
 
             # Find skin clusters with ngSkinTools2 enabled
             if self._api_available:
@@ -138,20 +140,21 @@ class NgSkinToolsService:
                     from ngSkinTools2.api import target_info  # type: ignore[import-not-found] # noqa: F811
 
                     # Get all skin clusters in the scene
-                    all_skin_clusters = cmds.ls(ns_filter, type='skinCluster') or []
+                    all_skin_clusters = cmds.ls(ns_filter, type="skinCluster") or []
 
                     for skin_cluster in all_skin_clusters:
                         # Check if this skin cluster has ngSkinTools2 data attached
                         data_node = target_info.get_related_data_node(skin_cluster)
                         if data_node:
-                            result['skin_clusters'].append(skin_cluster)
+                            result["skin_clusters"].append(skin_cluster)
 
                             # Count layers for this skin cluster
                             try:
                                 from ngSkinTools2.api import Layers  # type: ignore # noqa: F811
+
                                 layers = Layers(skin_cluster)
                                 layer_list = layers.list()
-                                result['layer_count'] += len(layer_list)
+                                result["layer_count"] += len(layer_list)
                             except Exception:
                                 pass
 
@@ -188,16 +191,16 @@ class NgSkinToolsService:
                 - 'layers_enabled': Whether layers are enabled on this target
         """
         metadata = {
-            'has_ngskintools': False,
-            'plugin_version': self._plugin_version,
-            'data_node': None,
-            'skin_cluster': None,
-            'layer_count': 0,
-            'layer_names': [],
-            'influence_count': 0,
-            'influence_names': [],
-            'is_slow_mode': False,
-            'layers_enabled': False
+            "has_ngskintools": False,
+            "plugin_version": self._plugin_version,
+            "data_node": None,
+            "skin_cluster": None,
+            "layer_count": 0,
+            "layer_names": [],
+            "influence_count": 0,
+            "influence_names": [],
+            "is_slow_mode": False,
+            "layers_enabled": False,
         }
 
         if not self.is_available():
@@ -216,42 +219,44 @@ class NgSkinToolsService:
             if not skin_cluster:
                 return metadata
 
-            metadata['skin_cluster'] = skin_cluster
+            metadata["skin_cluster"] = skin_cluster
 
             # Get related data node
             data_node = target_info.get_related_data_node(target)
             if data_node:
-                metadata['has_ngskintools'] = True
-                metadata['data_node'] = data_node
+                metadata["has_ngskintools"] = True
+                metadata["data_node"] = data_node
             else:
                 return metadata
 
             # Check if layers are enabled
             try:
                 layers = Layers(target)
-                metadata['layers_enabled'] = layers.is_enabled()
+                metadata["layers_enabled"] = layers.is_enabled()
 
-                if metadata['layers_enabled']:
+                if metadata["layers_enabled"]:
                     # Get layer information
                     layer_list = layers.list()
-                    metadata['layer_count'] = len(layer_list)
-                    metadata['layer_names'] = [layer.name for layer in layer_list]
+                    metadata["layer_count"] = len(layer_list)
+                    metadata["layer_names"] = [layer.name for layer in layer_list]
 
                     # Get influence information
                     influences = layers.list_influences()
-                    metadata['influence_count'] = len(influences)
-                    metadata['influence_names'] = [inf.path for inf in influences]
+                    metadata["influence_count"] = len(influences)
+                    metadata["influence_names"] = [inf.path for inf in influences]
 
             except Exception as layer_error:
                 self.logger.debug(f"Error extracting layer data: {layer_error}")
 
             # Check if slow mode is active
             try:
-                metadata['is_slow_mode'] = target_info.is_slow_mode_skin_cluster(skin_cluster)
+                metadata["is_slow_mode"] = target_info.is_slow_mode_skin_cluster(skin_cluster)
             except Exception:
                 pass
 
-            self.logger.debug(f"Extracted ngSkinTools2 metadata for '{target}': {metadata['layer_count']} layers")
+            self.logger.debug(
+                f"Extracted ngSkinTools2 metadata for '{target}': {metadata['layer_count']} layers"
+            )
 
         except Exception as e:
             self.logger.warning(f"Error extracting ngSkinTools2 metadata from '{target}': {e}")
@@ -272,12 +277,12 @@ class NgSkinToolsService:
                 - 'skinned_meshes': List of meshes with ngSkinTools2 enabled
         """
         summary = {
-            'available': self.is_available(),
-            'plugin_version': self._plugin_version,
-            'total_data_nodes': 0,
-            'total_skin_clusters': 0,
-            'total_layers': 0,
-            'skinned_meshes': []
+            "available": self.is_available(),
+            "plugin_version": self._plugin_version,
+            "total_data_nodes": 0,
+            "total_skin_clusters": 0,
+            "total_layers": 0,
+            "skinned_meshes": [],
         }
 
         if not self.is_available():
@@ -288,29 +293,29 @@ class NgSkinToolsService:
             from ngSkinTools2.api import target_info, Layers  # type: ignore[import-not-found] # noqa: F811
 
             # Get all ngSkinTools2 data nodes
-            data_nodes = cmds.ls(type='ngst2SkinLayerData') or []
-            summary['total_data_nodes'] = len(data_nodes)
+            data_nodes = cmds.ls(type="ngst2SkinLayerData") or []
+            summary["total_data_nodes"] = len(data_nodes)
 
             # Get all skin clusters and check for ngSkinTools2
-            all_skin_clusters = cmds.ls(type='skinCluster') or []
+            all_skin_clusters = cmds.ls(type="skinCluster") or []
 
             for skin_cluster in all_skin_clusters:
                 data_node = target_info.get_related_data_node(skin_cluster)
                 if data_node:
-                    summary['total_skin_clusters'] += 1
+                    summary["total_skin_clusters"] += 1
 
                     # Get mesh connected to this skin cluster
                     try:
                         shapes = cmds.skinCluster(skin_cluster, query=True, geometry=True) or []
                         if shapes:
                             mesh = shapes[0]
-                            summary['skinned_meshes'].append(mesh)
+                            summary["skinned_meshes"].append(mesh)
 
                             # Count layers
                             try:
                                 layers = Layers(skin_cluster)
                                 layer_list = layers.list()
-                                summary['total_layers'] += len(layer_list)
+                                summary["total_layers"] += len(layer_list)
                             except Exception:
                                 pass
                     except Exception:
@@ -345,12 +350,14 @@ class NgSkinToolsService:
 
             # Find all ngSkinTools2 data nodes in this namespace
             ns_filter = f"{namespace}:*"
-            data_nodes = cmds.ls(ns_filter, type='ngst2SkinLayerData') or []
+            data_nodes = cmds.ls(ns_filter, type="ngst2SkinLayerData") or []
 
             if not data_nodes:
                 return True
 
-            self.logger.debug(f"Cleaning up {len(data_nodes)} ngSkinTools2 data nodes from namespace '{namespace}'")
+            self.logger.debug(
+                f"Cleaning up {len(data_nodes)} ngSkinTools2 data nodes from namespace '{namespace}'"
+            )
 
             # Delete data nodes (this should clean up the layers automatically)
             deleted_count = 0
@@ -366,13 +373,17 @@ class NgSkinToolsService:
                         cmds.delete(node)
                         deleted_count += 1
                 except Exception as delete_error:
-                    self.logger.debug(f"Could not delete ngSkinTools2 node '{node}': {delete_error}")
+                    self.logger.debug(
+                        f"Could not delete ngSkinTools2 node '{node}': {delete_error}"
+                    )
 
             self.logger.debug(f"Deleted {deleted_count}/{len(data_nodes)} ngSkinTools2 data nodes")
             return deleted_count == len(data_nodes)
 
         except Exception as e:
-            self.logger.warning(f"Error cleaning up ngSkinTools2 nodes from namespace '{namespace}': {e}")
+            self.logger.warning(
+                f"Error cleaning up ngSkinTools2 nodes from namespace '{namespace}': {e}"
+            )
             return False
 
     def get_info(self) -> Dict[str, Any]:
@@ -383,19 +394,23 @@ class NgSkinToolsService:
             dict: Service information including availability and capabilities
         """
         return {
-            'name': 'ngSkinTools2',
-            'available': self.is_available(),
-            'plugin_available': self._plugin_available,
-            'api_available': self._api_available,
-            'version': self._plugin_version,
-            'description': 'Advanced layer-based skinning for Maya',
-            'capabilities': [
-                'Layer-based weight painting',
-                'Influence management',
-                'Mirror effects',
-                'Weight import/export',
-                'Dual quaternion skinning'
-            ] if self.is_available() else []
+            "name": "ngSkinTools2",
+            "available": self.is_available(),
+            "plugin_available": self._plugin_available,
+            "api_available": self._api_available,
+            "version": self._plugin_version,
+            "description": "Advanced layer-based skinning for Maya",
+            "capabilities": (
+                [
+                    "Layer-based weight painting",
+                    "Influence management",
+                    "Mirror effects",
+                    "Weight import/export",
+                    "Dual quaternion skinning",
+                ]
+                if self.is_available()
+                else []
+            ),
         }
 
 

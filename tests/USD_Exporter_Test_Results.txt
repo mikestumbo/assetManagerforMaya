@@ -1,3 +1,18 @@
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
 [OK] Pixar USD Python API available
 [OK] USD Service initialized - Disney's Universal Scene Description support active
 // src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
@@ -9,7 +24,7 @@
 // src.services.usd.usd_pipeline_export :   mayaUSD: True
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline initialized
 // src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
-// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1618
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1751
 // src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
 [EXPORT] USD export started...
 // src.services.usd.usd_pipeline_export : [FILE] Opening source file: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.mb
@@ -18,6 +33,12 @@ requires "stereoCamera" "10.0";
 updateRenderOverride;
 requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.0 @ 2386582";
 requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
+evalDeferred "shaderBallRendererMenuUpdate";
+import arnold
+import mtoa
+import mtoa.cmds.registerArnoldRenderer;mtoa.cmds.registerArnoldRenderer.registerArnoldRenderer()
+updateRenderOverride;
+import mtoa.viewport;mtoa.viewport.add_controls()
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144792: ':rmanGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144793: ':PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
@@ -26,7 +47,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
 // Warning: line 1262: The default image may not be modified. Use the -i/image flag instead.
-# Read 2 files in  4.9 seconds.
+# Read 2 files in  6.5 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -264,11 +285,11 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [EXPORT] Found 45 nurbsSurface nodes
 // src.services.usd.usd_pipeline_export : [EXPORT] Found 548 joint nodes
 // src.services.usd.usd_pipeline_export : [BLEND] XGen filter: Excluded 7 meshes
-// src.services.usd.usd_pipeline_export :    └─ R_Eyelash_xgen
-// src.services.usd.usd_pipeline_export :    └─ Hair_xgen
-// src.services.usd.usd_pipeline_export :    └─ Beard_xgen
 // src.services.usd.usd_pipeline_export :    └─ L_Eyebrow_xgen
-// src.services.usd.usd_pipeline_export :    └─ L_Eyelash_xgen
+// src.services.usd.usd_pipeline_export :    └─ Hair_xgen
+// src.services.usd.usd_pipeline_export :    └─ R_Eyelash_xgen
+// src.services.usd.usd_pipeline_export :    └─ Manbun_xgen
+// src.services.usd.usd_pipeline_export :    └─ Beard_xgen
 // src.services.usd.usd_pipeline_export :    └─ ... and 2 more
 // src.services.usd.usd_pipeline_export : [SKEL] Found 52 skinClusters in scene
 // src.services.usd.usd_pipeline_export :    [DEBUG] DIAGNOSTIC: Found 23 meshes with blendShapes:
@@ -376,110 +397,110 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [BLEND] RenderMan material export enabled
 // src.services.usd.usd_pipeline_export : mayaUSDExport args: {'file': 'D:\\Maya\\projects\\Athens_Sequence\\assets\\Character Models\\Veteran\\Veteran_Rig.usdc', 'selection': True, 'exportUVs': True, 'exportMaterialCollections': False, 'exportSkels': 'auto', 'exportSkin': 'auto', 'exportBlendShapes': False, 'exportMaterials': True, 'shadingMode': 'useRegistry', 'convertMaterialsTo': ['UsdPreviewSurface', 'rendermanForMaya'], 'materialsScopeName': 'Looks', 'exportDisplayColor': True, 'exportVisibility': True, 'exportInstances': True, 'exportStagesAsRefs': False, 'mergeTransformAndShape': True, 'stripNamespaces': False, 'filterTypes': ['nurbsCurve', 'nurbsSurface']}
 # Opening layer 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig.usdc' for writing
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Hip_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart2_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'Knee_R' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Hip_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Joint 'HipPart1_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster13_usdExport.
-# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster13_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster13_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'HipPart2_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster11 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster17 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster12 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster13 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster14 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster15 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster16 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster22 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster18 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster19 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster20 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster21 differ. Using bindPreMatrix from skinCluster11_usdExport.
+# Warning: Joint 'Knee_L' has different bind poses. bindPreMatrix values on skinCluster11_usdExport and skinCluster23 differ. Using bindPreMatrix from skinCluster11_usdExport.
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMesh|EyeLidInnerAreaMeshShape. Skipping...
 # Warning: Unable to retrieve colorSet data: SculptFreezeColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitEyeLidInner|FaceFitEyeLidInnerGeo|EyeLidInnerAreaMeshExtrude|EyeLidInnerAreaMeshExtrudeShape. Skipping...
@@ -809,6 +830,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [INFO] Opening USD stage...
 // src.services.usd.usd_pipeline_export : [INFO] USD stage opened, counting prims...
 // src.services.usd.usd_pipeline_export : [INFO] Found 21 meshes in USD
+// src.services.usd.usd_pipeline_export : [INFO] Found 0 NURBS curves in USD
 // src.services.usd.usd_pipeline_export : [INFO] Found 124 joints in 2 skeleton(s)
 // src.services.usd.usd_pipeline_export : [INFO] SkelRoot: /SkelRoot
 // src.services.usd.usd_pipeline_export :    Children: ['Group', 'model_Veteran_Geo_Grp', 'BlendShapes']
@@ -816,7 +838,7 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [INFO] Found 30 materials in USD
 // src.services.usd.usd_pipeline_export : [INFO] Found 63 blendshapes in USD
 // src.services.usd.usd_pipeline_export : [INFO] Found 2 SkelAnimation prims (rest pose only)
-// src.services.usd.usd_pipeline_export : [INFO] All prim types in USD: {'Material', 'Xform', 'NodeGraph', 'GeomSubset', 'SkelRoot', 'Scope', 'Mesh', 'Skeleton', 'SkelAnimation', 'BlendShape', 'Shader'}
+// src.services.usd.usd_pipeline_export : [INFO] All prim types in USD: {'Scope', 'Material', 'NodeGraph', 'Shader', 'GeomSubset', 'Mesh', 'Xform', 'Skeleton', 'BlendShape', 'SkelAnimation', 'SkelRoot'}
 // src.services.usd.usd_pipeline_export : [INFO] USD validation complete
 // src.services.usd.usd_pipeline_export : [OK] USD exported: Veteran_Rig.usdc
 // src.services.usd.usd_pipeline_export : [PACKAGE] Bundled 17 texture(s) into USDZ: Body_Base_color.png, Chain_Base_color.png, LfButton_01_Base_color.png, LfButton_02_Base_color.png, LfButton_03_Base_color.png...
@@ -846,22 +868,14 @@ requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
 // src.services.usd.usd_pipeline_export : [CLEANUP] Rig backup kept alongside USDZ: Veteran_Rig.rig.mb
 // src.services.usd.usd_pipeline_export : [OK] Intermediate files cleaned up (bundled in USDZ)
 [OK] USD export: Export successful
-// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Loading recent assets...
-[RECENT] Found 0 recent assets
-[RECENT] Recent tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[RECENT] Populated recent assets tab with 0 items
-[FAVORITE] Loading favorite assets...
-[FAVORITE] Found 0 favorite assets
-[FAVORITE] Favorites tab widget: DragEnabledAssetList
-[REFRESH] Populating asset list with 0 assets
-[OK] Populated asset list with 0 unique assets
-[FAVORITE] Populated favorites tab with 0 items
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "ACES - ACES2065-1" in node ":model:file86" is not defined in the selected transform collection.
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "ACES - ACES2065-1" in node ":model:file90" is not defined in the selected transform collection.
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "ACES - ACES2065-1" in node ":model:file91" is not defined in the selected transform collection.
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "ACES - ACES2065-1" in node ":file92" is not defined in the selected transform collection.
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "Input - Generic - sRGB - Texture" in node ":file93" is not defined in the selected transform collection.
+// Warning: file: C:/Program Files/Autodesk/Maya2026/scripts/startup/colorManagementUtilities.mel line 260: Color space "ACES - ACES2065-1" in node ":file94" is not defined in the selected transform collection.
+updateRendererUI;
 # [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
 // Saving stage
 // Warning: Unable to retrieve colorSet data: SculptMaskColorTemp on mesh: |Group|FaceGroup|FaceFitSkeleton|FaceFitForeHead|FaceFitForeHeadGeo|ForeHeadAreaMesh|ForeHeadAreaMeshShape. Skipping... -- and 69 similar
-// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1618
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1751

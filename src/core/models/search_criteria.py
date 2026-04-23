@@ -15,12 +15,14 @@ from enum import Enum
 
 class SortOrder(Enum):
     """Sort order enumeration"""
+
     ASCENDING = "asc"
     DESCENDING = "desc"
 
 
 class SortBy(Enum):
     """Sort criteria enumeration"""
+
     NAME = "name"
     DATE_CREATED = "created_date"
     DATE_MODIFIED = "modified_date"
@@ -79,7 +81,7 @@ class SearchCriteria:
     def __post_init__(self):
         """Validate search criteria after initialization"""
         # Normalize file extensions
-        self.file_extensions = {ext.lower().lstrip('.') for ext in self.file_extensions}
+        self.file_extensions = {ext.lower().lstrip(".") for ext in self.file_extensions}
 
         # Validate size filters
         if self.min_file_size and self.max_file_size:
@@ -104,10 +106,9 @@ class SearchCriteria:
     @property
     def has_date_filters(self) -> bool:
         """Check if date filters are specified"""
-        return any([
-            self.created_after, self.created_before,
-            self.modified_after, self.modified_before
-        ])
+        return any(
+            [self.created_after, self.created_before, self.modified_after, self.modified_before]
+        )
 
     @property
     def has_tag_filters(self) -> bool:
@@ -117,23 +118,25 @@ class SearchCriteria:
     @property
     def is_empty(self) -> bool:
         """Check if criteria is empty (no filters specified)"""
-        return not any([
-            self.has_text_search,
-            self.has_file_filters,
-            self.has_size_filters,
-            self.has_date_filters,
-            self.has_tag_filters,
-            self.favorites_only,
-            self.recently_accessed
-        ])
+        return not any(
+            [
+                self.has_text_search,
+                self.has_file_filters,
+                self.has_size_filters,
+                self.has_date_filters,
+                self.has_tag_filters,
+                self.favorites_only,
+                self.recently_accessed,
+            ]
+        )
 
     def add_file_extension(self, extension: str) -> None:
         """Add file extension to filter"""
-        self.file_extensions.add(extension.lower().lstrip('.'))
+        self.file_extensions.add(extension.lower().lstrip("."))
 
     def remove_file_extension(self, extension: str) -> None:
         """Remove file extension from filter"""
-        self.file_extensions.discard(extension.lower().lstrip('.'))
+        self.file_extensions.discard(extension.lower().lstrip("."))
 
     def add_required_tag(self, tag: str) -> None:
         """Add required tag to filter"""
@@ -165,25 +168,25 @@ class SearchCriteria:
     def to_dict(self) -> Dict[str, Any]:
         """Convert criteria to dictionary"""
         return {
-            'search_text': self.search_text,
-            'case_sensitive': self.case_sensitive,
-            'file_extensions': list(self.file_extensions),
-            'asset_types': list(self.asset_types),
-            'categories': list(self.categories),
-            'min_file_size': self.min_file_size,
-            'max_file_size': self.max_file_size,
-            'created_after': self.created_after,
-            'created_before': self.created_before,
-            'modified_after': self.modified_after,
-            'modified_before': self.modified_before,
-            'required_tags': list(self.required_tags),
-            'excluded_tags': list(self.excluded_tags),
-            'favorites_only': self.favorites_only,
-            'recently_accessed': self.recently_accessed,
-            'search_directories': [str(d) for d in self.search_directories],
-            'recursive': self.recursive,
-            'sort_by': self.sort_by.value,
-            'sort_order': self.sort_order.value,
-            'limit': self.limit,
-            'offset': self.offset
+            "search_text": self.search_text,
+            "case_sensitive": self.case_sensitive,
+            "file_extensions": list(self.file_extensions),
+            "asset_types": list(self.asset_types),
+            "categories": list(self.categories),
+            "min_file_size": self.min_file_size,
+            "max_file_size": self.max_file_size,
+            "created_after": self.created_after,
+            "created_before": self.created_before,
+            "modified_after": self.modified_after,
+            "modified_before": self.modified_before,
+            "required_tags": list(self.required_tags),
+            "excluded_tags": list(self.excluded_tags),
+            "favorites_only": self.favorites_only,
+            "recently_accessed": self.recently_accessed,
+            "search_directories": [str(d) for d in self.search_directories],
+            "recursive": self.recursive,
+            "sort_by": self.sort_by.value,
+            "sort_order": self.sort_order.value,
+            "limit": self.limit,
+            "offset": self.offset,
         }

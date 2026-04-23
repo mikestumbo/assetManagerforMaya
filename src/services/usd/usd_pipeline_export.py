@@ -3,6 +3,7 @@ Export-side mixin for UsdPipeline: export(), deformation joints, mayausd export.
 
 Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-split.
 """
+
 from __future__ import annotations
 
 import logging
@@ -12,17 +13,19 @@ from typing import Callable, List, Optional
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
-    import maya.cmds as cmds          # type: ignore[import-unresolved]
-    import maya.mel as mel            # type: ignore[import-unresolved]
+    import maya.cmds as cmds  # type: ignore[import-unresolved]
+    import maya.mel as mel  # type: ignore[import-unresolved]
+
     MAYA_AVAILABLE = True
 except ImportError:
-    cmds = None   # type: ignore[assignment]
-    mel = None    # type: ignore[assignment]
+    cmds = None  # type: ignore[assignment]
+    mel = None  # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
 try:
     from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, UsdSkel, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -62,10 +65,10 @@ class ExportMixin:
             return False
         try:
             # Check if plugin exists
-            if cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True):
+            if cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
                 return True
             # Try to load it
-            cmds.loadPlugin('mayaUsdPlugin')
+            cmds.loadPlugin("mayaUsdPlugin")
             return True
         except Exception:
             return False
@@ -85,10 +88,7 @@ class ExportMixin:
     # =========================================================================
 
     def export(
-        self,
-        source_path: Path,
-        output_path: Path,
-        options: Optional[ExportOptions] = None
+        self, source_path: Path, output_path: Path, options: Optional[ExportOptions] = None
     ) -> ExportResult:
         """
         Export Maya rig to USD with .rig.mb backup
@@ -131,7 +131,7 @@ class ExportMixin:
 
             # Determine output paths
             output_path = Path(output_path)
-            base_path = output_path.with_suffix('')
+            base_path = output_path.with_suffix("")
             asset_name = base_path.name
 
             # Create subfolder if requested (AssetName_USD/)
@@ -149,10 +149,10 @@ class ExportMixin:
             rig_mb_path = Path(str(base_path) + ".rig.mb")
 
             # USDZ package path (if requested)
-            usdz_path = base_path.with_suffix('.usdz') if options.output_format == "usdz" else None
+            usdz_path = base_path.with_suffix(".usdz") if options.output_format == "usdz" else None
 
             # ZIP archive path (if requested)
-            zip_path = base_path.with_suffix('.zip') if options.create_zip_archive else None
+            zip_path = base_path.with_suffix(".zip") if options.create_zip_archive else None
 
             # Step 1: Export complete .rig.mb backup (ALWAYS do this first!)
             self._report_progress("Exporting .rig.mb backup", 5)
@@ -187,9 +187,7 @@ class ExportMixin:
             # Step 3: Create USDZ package if requested
             if usdz_path and usd_path.exists():
                 self._report_progress("Creating USDZ package", 85)
-                usdz_success = self._create_usdz_package(
-                    usd_path, rig_mb_path, usdz_path
-                )
+                usdz_success = self._create_usdz_package(usd_path, rig_mb_path, usdz_path)
                 if usdz_success:
                     result.usdz_path = usdz_path
                     self.logger.info(f"[OK] USDZ package created: {usdz_path.name}")
@@ -203,7 +201,11 @@ class ExportMixin:
                 self._report_progress("Creating ZIP archive", 95)
                 zip_success = self._create_zip_archive(
                     base_path.parent if options.organize_in_subfolder else None,
-                    usdz_path, usd_path, rig_mb_path, zip_path, options
+                    usdz_path,
+                    usd_path,
+                    rig_mb_path,
+                    zip_path,
+                    options,
                 )
                 if zip_success:
                     self.logger.info(f"[PACKAGE] ZIP archive created: {zip_path.name}")
@@ -244,7 +246,7 @@ class ExportMixin:
         deformation_joints = set()
 
         # Get all skinClusters in the scene
-        skin_clusters = cmds.ls(type='skinCluster') or []
+        skin_clusters = cmds.ls(type="skinCluster") or []
 
         for skin_cluster in skin_clusters:
             try:
@@ -282,7 +284,7 @@ class ExportMixin:
             return {}
 
         mesh_to_skins = {}
-        skin_clusters = cmds.ls(type='skinCluster') or []
+        skin_clusters = cmds.ls(type="skinCluster") or []
 
         for sc in skin_clusters:
             try:
@@ -296,7 +298,7 @@ class ExportMixin:
 
         # Find meshes with blendShapes (mayaUSD export can fail on these)
         mesh_to_blendshapes = {}
-        blendshape_nodes = cmds.ls(type='blendShape') or []
+        blendshape_nodes = cmds.ls(type="blendShape") or []
 
         for bs in blendshape_nodes:
             try:
@@ -310,7 +312,9 @@ class ExportMixin:
 
         # DIAGNOSTIC: Log ALL meshes with blendShapes found
         if mesh_to_blendshapes:
-            self.logger.info(f"   [DEBUG] DIAGNOSTIC: Found {len(mesh_to_blendshapes)} meshes with blendShapes:")
+            self.logger.info(
+                f"   [DEBUG] DIAGNOSTIC: Found {len(mesh_to_blendshapes)} meshes with blendShapes:"
+            )
             for mesh, bs_list in mesh_to_blendshapes.items():
                 self.logger.info(f"      - {mesh} ({len(bs_list)} blendShapes)")
 
@@ -327,7 +331,9 @@ class ExportMixin:
             elif mesh in mesh_to_blendshapes:
                 # BlendShape + skinCluster combination (also problematic)
                 problem_meshes[mesh] = skins
-                self.logger.info(f"   [BLEND] {mesh}: has blendShapes + skinCluster (will bake geometry)")
+                self.logger.info(
+                    f"   [BLEND] {mesh}: has blendShapes + skinCluster (will bake geometry)"
+                )
 
         # Also check blendShape meshes for skinClusters (reverse direction)
         # Maya creates separate shape nodes (original vs deformed), so names may not match
@@ -339,7 +345,7 @@ class ExportMixin:
             try:
                 # Get transform node from shape
                 transform = None
-                if cmds.objectType(bs_mesh) == 'transform':
+                if cmds.objectType(bs_mesh) == "transform":
                     transform = bs_mesh
                 else:
                     parents = cmds.listRelatives(bs_mesh, parent=True, fullPath=True) or []
@@ -349,21 +355,21 @@ class ExportMixin:
                 if transform:
                     # Check for skinCluster in the mesh's history
                     history = cmds.listHistory(transform, pruneDagObjects=True) or []
-                    skin_in_history = [h for h in history if cmds.objectType(h) == 'skinCluster']
+                    skin_in_history = [h for h in history if cmds.objectType(h) == "skinCluster"]
 
                     if skin_in_history:
                         # This mesh has both blendShape and skinCluster - add it
                         problem_meshes[bs_mesh] = skin_in_history
-                        self.logger.info(f"   [BLEND] {bs_mesh}: has blendShapes + skinCluster (will bake geometry)")
+                        self.logger.info(
+                            f"   [BLEND] {bs_mesh}: has blendShapes + skinCluster (will bake geometry)"
+                        )
             except Exception:
                 pass
 
         return problem_meshes
 
     def _fix_multi_skincluster_for_export(
-        self,
-        multi_skin_meshes: dict,
-        export_transforms: set
+        self, multi_skin_meshes: dict, export_transforms: set
     ) -> list:
         """
         Fix meshes with multiple skinClusters for USD export.
@@ -401,7 +407,9 @@ class ExportMixin:
                 try:
                     # Find blendShape nodes affecting this mesh
                     history = cmds.listHistory(mesh_name, pruneDagObjects=True) or []
-                    blendshape_nodes = [node for node in history if cmds.nodeType(node) == 'blendShape']
+                    blendshape_nodes = [
+                        node for node in history if cmds.nodeType(node) == "blendShape"
+                    ]
                     has_blendshapes = len(blendshape_nodes) > 0
                 except Exception:
                     pass
@@ -410,7 +418,7 @@ class ExportMixin:
                 # Prefer the one named 'skinCluster*' (base deformation layer)
                 primary_sc = None
                 for sc in skin_clusters:
-                    if sc.startswith('skinCluster'):
+                    if sc.startswith("skinCluster"):
                         primary_sc = sc
                         break
                 if primary_sc is None:
@@ -428,7 +436,9 @@ class ExportMixin:
                     self.logger.info(log_msg)
 
                 # Duplicate the mesh (captures current deformed shape INCLUDING blendshapes)
-                dup = cmds.duplicate(original_transform, name=f"{original_transform.split('|')[-1]}_usdExport")[0]
+                dup = cmds.duplicate(
+                    original_transform, name=f"{original_transform.split('|')[-1]}_usdExport"
+                )[0]
                 dup_long = cmds.ls(dup, long=True)[0]
                 temp_nodes.append(dup_long)
 
@@ -439,7 +449,13 @@ class ExportMixin:
                 deformers_to_delete = []
                 for node in history:
                     node_type = cmds.nodeType(node)
-                    if node_type in ['skinCluster', 'blendShape', 'tweak', 'groupParts', 'groupId']:
+                    if node_type in [
+                        "skinCluster",
+                        "blendShape",
+                        "tweak",
+                        "groupParts",
+                        "groupId",
+                    ]:
                         deformers_to_delete.append(node)
 
                 if deformers_to_delete:
@@ -451,17 +467,20 @@ class ExportMixin:
                 # Get the influences (joints) from the primary skinCluster
                 influences = cmds.skinCluster(primary_sc, query=True, influence=True)
                 if not influences:
-                    self.logger.warning(f"   [WARNING] No influences on {primary_sc}, skipping fix")
+                    self.logger.warning(
+                        f"   [WARNING] No influences on {primary_sc}, skipping fix"
+                    )
                     continue
 
                 # Re-bind the clean duplicate to only the primary skinCluster's joints
                 new_sc = cmds.skinCluster(
-                    influences, dup_long,
+                    influences,
+                    dup_long,
                     toSelectedBones=True,
-                    bindMethod=0,     # Closest distance
+                    bindMethod=0,  # Closest distance
                     normalizeWeights=1,
                     weightDistribution=0,
-                    name=f"{primary_sc}_usdExport"
+                    name=f"{primary_sc}_usdExport",
                 )[0]
 
                 # Copy weights from the primary skinCluster to the new one
@@ -469,8 +488,8 @@ class ExportMixin:
                     sourceSkin=primary_sc,
                     destinationSkin=new_sc,
                     noMirror=True,
-                    surfaceAssociation='closestPoint',
-                    influenceAssociation=['oneToOne', 'closestJoint']
+                    surfaceAssociation="closestPoint",
+                    influenceAssociation=["oneToOne", "closestJoint"],
                 )
 
                 # Remove the original from export, add the duplicate
@@ -478,12 +497,14 @@ class ExportMixin:
                 export_transforms.add(dup_long)
 
                 if has_blendshapes:
-                    dup_short = dup_long.split('|')[-1]
+                    dup_short = dup_long.split("|")[-1]
                     self.logger.info(
                         f"   [OK] {mesh_name} → {dup_short} (baked geometry, clean skinCluster)"
                     )
                 else:
-                    self.logger.info(f"   [OK] {mesh_name} → {dup_long.split('|')[-1]} (single skinCluster)")
+                    self.logger.info(
+                        f"   [OK] {mesh_name} → {dup_long.split('|')[-1]} (single skinCluster)"
+                    )
 
             except Exception as e:
                 self.logger.warning(f"   [WARNING] Failed to fix {mesh_name}: {e}")
@@ -520,13 +541,13 @@ class ExportMixin:
                 parent = parent_list[0]
 
                 # Stop if parent is not a joint (reached transform node)
-                if not cmds.nodeType(parent) == 'joint':
+                if not cmds.nodeType(parent) == "joint":
                     # Check if it's a transform with a joint child
                     node_type = cmds.nodeType(parent)
-                    if node_type not in ['joint', 'transform']:
+                    if node_type not in ["joint", "transform"]:
                         break
                     # If it's a transform, we've left the skeleton
-                    if node_type == 'transform':
+                    if node_type == "transform":
                         break
 
                 complete_hierarchy.add(parent)
@@ -565,7 +586,7 @@ class ExportMixin:
                     break
                 parent = parent_list[0]
                 # Check if parent is a joint
-                if cmds.nodeType(parent) != 'joint':
+                if cmds.nodeType(parent) != "joint":
                     roots.add(current)
                     break
                 # Check if parent is also a deformation joint
@@ -584,8 +605,8 @@ class ExportMixin:
                 self.logger.info(f"   └─ {root.split('|')[-1]}")
             # Return the one with "Deformation" or "Root" in name, or first one
             for root in roots:
-                short_name = root.split('|')[-1].lower()
-                if 'deform' in short_name or 'root' in short_name:
+                short_name = root.split("|")[-1].lower()
+                if "deform" in short_name or "root" in short_name:
                     return root
             return list(roots)[0]
 
@@ -605,6 +626,35 @@ class ExportMixin:
             # Ensure output directory exists
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
+            # ── Strip Arnold scriptNodes before export ────────────────────────
+            # Veteran_Model_Final.ma (nested reference) was saved with Arnold
+            # installed, which bakes `import arnold` / `registerArnoldRenderer()`
+            # scriptNode callbacks into the scene.  When the .rig.mb is later
+            # loaded by the importer, Maya re-executes those callbacks causing
+            # Arnold to load as an unwanted side-effect.
+            # Delete any scriptNode whose script text references arnold/mtoa.
+            _arnold_script_nodes_removed: list = []
+            for _sn in cmds.ls(type="script") or []:
+                try:
+                    _before = (cmds.getAttr(f"{_sn}.before") or "").lower()
+                    _after = (cmds.getAttr(f"{_sn}.after") or "").lower()
+                    if (
+                        "arnold" in _before
+                        or "mtoa" in _before
+                        or "arnold" in _after
+                        or "mtoa" in _after
+                    ):
+                        cmds.delete(_sn)
+                        _arnold_script_nodes_removed.append(_sn)
+                except Exception:
+                    pass
+            if _arnold_script_nodes_removed:
+                self.logger.info(
+                    f"[PACKAGE] Removed {len(_arnold_script_nodes_removed)} Arnold "
+                    f"scriptNode(s) before .rig.mb export so the importer won't "
+                    f"trigger an Arnold load: {_arnold_script_nodes_removed}"
+                )
+
             # Save entire scene as Maya Binary
             # We export selected=False to get everything
             cmds.file(
@@ -617,7 +667,7 @@ class ExportMixin:
                 channels=True,
                 constraints=True,
                 expressions=True,
-                shader=True
+                shader=True,
             )
 
             file_size = output_path.stat().st_size / (1024 * 1024)
@@ -629,10 +679,7 @@ class ExportMixin:
             return False
 
     def _export_with_mayausd(
-        self,
-        output_path: Path,
-        options: ExportOptions,
-        result: ExportResult
+        self, output_path: Path, options: ExportOptions, result: ExportResult
     ) -> bool:
         """
         Export to USD using mayaUSD plugin with maximum conversion
@@ -666,10 +713,16 @@ class ExportMixin:
             # In viewport-friendly mode, skip NURBS curves - they stay in .rig.mb
             # to preserve their original shapes and colors
             if options.viewport_friendly_skeleton:
-                export_types = ['mesh', 'nurbsSurface', 'joint']  # No nurbsCurve - ALL kept in .rig.mb
-                self.logger.info("🎮 ALL NURBS curves excluded from USD - preserved in .rig.mb only")
+                export_types = [
+                    "mesh",
+                    "nurbsSurface",
+                    "joint",
+                ]  # No nurbsCurve - ALL kept in .rig.mb
+                self.logger.info(
+                    "🎮 ALL NURBS curves excluded from USD - preserved in .rig.mb only"
+                )
             else:
-                export_types = ['mesh', 'nurbsSurface', 'joint']  # No curves in USD at all
+                export_types = ["mesh", "nurbsSurface", "joint"]  # No curves in USD at all
             all_shapes = []
             for shape_type in export_types:
                 # dag=True ensures we get referenced nodes too
@@ -703,7 +756,7 @@ class ExportMixin:
             # Skip IK/FK/Twist/Fit skeletons - they don't work in USD anyway!
             if options.merge_skeletons:
                 deform_joints = self._get_deformation_joint_hierarchy()
-                all_joints = cmds.ls(type='joint', dag=True, long=True) or []
+                all_joints = cmds.ls(type="joint", dag=True, long=True) or []
 
                 # Filter out facial joints if body_skeleton_only is True
                 # Facial joints are often disconnected hierarchies that create multiple Skeleton prims
@@ -712,8 +765,10 @@ class ExportMixin:
                     facial_excluded = []
 
                     for joint in deform_joints:
-                        short_name = joint.split('|')[-1]
-                        is_facial = any(pattern in short_name for pattern in options.facial_joint_patterns)
+                        short_name = joint.split("|")[-1]
+                        is_facial = any(
+                            pattern in short_name for pattern in options.facial_joint_patterns
+                        )
 
                         if is_facial:
                             facial_excluded.append(short_name)
@@ -745,7 +800,7 @@ class ExportMixin:
             # This dramatically reduces skeleton complexity and helps UsdSkelImaging
             elif options.simplified_skeleton_export:
                 deform_joints = self._get_deformation_joint_hierarchy()
-                all_joints = cmds.ls(type='joint', dag=True, long=True) or []
+                all_joints = cmds.ls(type="joint", dag=True, long=True) or []
 
                 self.logger.info("[SKEL] Simplified skeleton export enabled:")
                 self.logger.info(f"   └─ Total joints in scene: {len(all_joints)}")
@@ -757,7 +812,7 @@ class ExportMixin:
                 joints = list(deform_joints)  # For logging below
             else:
                 # Also add joints directly (they don't have shapes)
-                joints = cmds.ls(type='joint', dag=True, long=True) or []
+                joints = cmds.ls(type="joint", dag=True, long=True) or []
                 export_transforms.update(joints)
 
             # ============ XGEN/HAIR MESH FILTERING ============
@@ -768,7 +823,7 @@ class ExportMixin:
 
                 for transform in list(export_transforms):
                     # Get short name for pattern matching
-                    short_name = transform.split('|')[-1].split(':')[-1]
+                    short_name = transform.split("|")[-1].split(":")[-1]
 
                     # Check if name matches any XGen pattern
                     is_xgen = any(pattern.lower() in short_name.lower() for pattern in patterns)
@@ -785,7 +840,7 @@ class ExportMixin:
                         self.logger.info(f"   └─ ... and {len(xgen_filtered) - 5} more")
 
             # Check for complex skeleton setup (multiple skinClusters = potential UsdSkel issues)
-            skin_clusters = cmds.ls(type='skinCluster') or []
+            skin_clusters = cmds.ls(type="skinCluster") or []
             num_skin_clusters = len(skin_clusters)
             self.logger.info(f"[SKEL] Found {num_skin_clusters} skinClusters in scene")
 
@@ -801,7 +856,9 @@ class ExportMixin:
             if multi_skin_meshes and not options.viewport_friendly_skeleton:
                 self.logger.info("[FIX] MULTI-SKINCLUSTER MESHES DETECTED - Auto-fixing...")
                 for mesh, skins in list(multi_skin_meshes.items()):
-                    self.logger.info(f"   [FIX] {mesh} ({len(skins)} skinClusters: {', '.join(skins)})")
+                    self.logger.info(
+                        f"   [FIX] {mesh} ({len(skins)} skinClusters: {', '.join(skins)})"
+                    )
                 fixed_meshes = self._fix_multi_skincluster_for_export(
                     multi_skin_meshes, export_transforms
                 )
@@ -834,9 +891,7 @@ class ExportMixin:
 
                         # Duplicate the mesh (this captures current deformed state)
                         duplicate = cmds.duplicate(
-                            original_transform,
-                            renameChildren=True,
-                            returnRootsOnly=True
+                            original_transform, renameChildren=True, returnRootsOnly=True
                         )
                         if not duplicate:
                             continue
@@ -848,7 +903,7 @@ class ExportMixin:
                         shapes = cmds.listRelatives(baked_mesh, shapes=True, fullPath=True) or []
                         for shape in shapes:
                             history = cmds.listHistory(shape, pruneDagObjects=True) or []
-                            deformers = cmds.ls(history, type='geometryFilter')
+                            deformers = cmds.ls(history, type="geometryFilter")
                             if deformers:
                                 cmds.delete(deformers)
 
@@ -857,7 +912,9 @@ class ExportMixin:
                             export_transforms.remove(original_transform)
                         export_transforms.add(baked_mesh)
 
-                self.logger.info(f"   └─ Baked {len(baked_meshes)} skinned meshes to static geometry")
+                self.logger.info(
+                    f"   └─ Baked {len(baked_meshes)} skinned meshes to static geometry"
+                )
                 self.logger.info("   └─ NURBS curves (controllers) preserved in .rig.mb only")
                 self.logger.info("   └─ Full skinning preserved in .rig.mb backup")
             elif num_skin_clusters > 5:
@@ -878,84 +935,81 @@ class ExportMixin:
             # Note: NURBS curves export automatically as part of scene geometry
             # Note: Animation controlled via frameRange, not exportAnimation flag
             export_args = {
-                'file': str(output_path),
-
+                "file": str(output_path),
                 # ============ CRITICAL: Export selection ============
-                'selection': True,
-
+                "selection": True,
                 # ============ GEOMETRY ============
-                'exportUVs': True,
-                'exportMaterialCollections': False,
-
+                "exportUVs": True,
+                "exportMaterialCollections": False,
                 # ============ SKELETON & SKINNING ============
                 # viewport_friendly_skeleton: export skeleton but skip skin bindings
                 # This avoids UsdSkelImaging viewport bugs with complex rigs
                 # We manually bake skinned meshes before export (duplicate + delete skinCluster)
                 # CRITICAL: When simplified_skeleton_export + viewport_friendly_skeleton are BOTH True,
                 # skip skeleton export entirely - meshes are baked, no skeleton needed in USD
-                'exportSkels': (
-                    'none' if (options.simplified_skeleton_export and options.viewport_friendly_skeleton)
-                    else ('auto' if options.export_skeleton else 'none')
+                "exportSkels": (
+                    "none"
+                    if (options.simplified_skeleton_export and options.viewport_friendly_skeleton)
+                    else ("auto" if options.export_skeleton else "none")
                 ),
-                'exportSkin': (
-                    'none' if options.viewport_friendly_skeleton
-                    else ('auto' if options.export_skin_weights else 'none')
+                "exportSkin": (
+                    "none"
+                    if options.viewport_friendly_skeleton
+                    else ("auto" if options.export_skin_weights else "none")
                 ),
-
                 # ============ BLENDSHAPES ============
                 # Maya 2026 supports this!
                 # NOTE: Keep False here — _export_blendshapes_to_usd() handles blendshapes
                 # correctly via UsdSkel.BlendShape prims.  Setting True causes mayaUSD to
                 # also export blendshape TARGET meshes as standalone root-level Mesh prims
                 # (50+ floating clones visible in USD viewers).
-                'exportBlendShapes': False,
-
+                "exportBlendShapes": False,
                 # ============ MATERIALS ============
-                'exportMaterials': options.export_materials,
-                'shadingMode': 'useRegistry',
-                'convertMaterialsTo': ['UsdPreviewSurface'],
+                "exportMaterials": options.export_materials,
+                "shadingMode": "useRegistry",
+                "convertMaterialsTo": ["UsdPreviewSurface"],
                 # Support RenderMan PxrSurface/PxrShader conversion
-                'materialsScopeName': 'Looks',  # Standard USD materials scope
-                'exportDisplayColor': True,  # Fallback for unconverted materials
-
+                "materialsScopeName": "Looks",  # Standard USD materials scope
+                "exportDisplayColor": True,  # Fallback for unconverted materials
                 # ============ GENERAL ============
-                'exportVisibility': True,
-                'exportInstances': True,
-                'exportStagesAsRefs': False,
-                'mergeTransformAndShape': True,
-                'stripNamespaces': not options.include_namespaces,
-
+                "exportVisibility": True,
+                "exportInstances": True,
+                "exportStagesAsRefs": False,
+                "mergeTransformAndShape": True,
+                "stripNamespaces": not options.include_namespaces,
                 # ============ FILTER OUT NURBS CURVES AND SURFACES ============
                 # nurbsCurve  — control curve shapes (CVs, IK handles, etc.)
                 # nurbsSurface — NURBS patch surfaces (eye-lid fitGeo, cluster controls)
                 # Both are rig helpers that must NOT render in the USD output.
                 # They stay visible only inside .rig.mb via the controllers sublayer.
-                'filterTypes': ['nurbsCurve', 'nurbsSurface'],
+                "filterTypes": ["nurbsCurve", "nurbsSurface"],
             }
 
             # Add RenderMan support if available and requested
             if options.export_renderman and cmds is not None:
                 try:
                     # Check if RenderMan is available
-                    if cmds.pluginInfo('RenderMan_for_Maya', query=True, loaded=True):
+                    if cmds.pluginInfo("RenderMan_for_Maya", query=True, loaded=True):
                         # Add RenderMan material conversion
-                        export_args['convertMaterialsTo'].append('rendermanForMaya')
+                        export_args["convertMaterialsTo"].append("rendermanForMaya")
                         self.logger.info("[BLEND] RenderMan material export enabled")
                 except Exception:
                     pass
 
             # Add animation range if exporting animation
             if options.export_animation:
-                export_args['frameRange'] = (
+                export_args["frameRange"] = (
                     int(options.animation_start),
-                    int(options.animation_end)
+                    int(options.animation_end),
                 )
 
             self.logger.info(f"mayaUSDExport args: {export_args}")
 
             # Log if skipping skeleton export due to simplified mode
             if options.simplified_skeleton_export and options.viewport_friendly_skeleton:
-                self.logger.info("[SKEL] Simplified mode: Skipping skeleton export (meshes are baked)")
+                self.logger.info(
+                    "[SKEL] Simplified mode: Skipping skeleton export (meshes are baked)"
+                )
                 self.logger.info("   └─ Full rigging preserved in .rig.mb backup")
 
             # Execute export
@@ -973,31 +1027,36 @@ class ExportMixin:
                 # Minimal export args that should work
                 # Note: NURBS export automatically with scene geometry
                 minimal_args = {
-                    'file': str(output_path),
-                    'selection': True,  # Export current selection
-                    'exportDisplayColor': True,
-                    'exportUVs': True,
-                    'exportSkels': (
-                        'none' if (options.simplified_skeleton_export and options.viewport_friendly_skeleton)
-                        else ('auto' if options.export_skeleton else 'none')
+                    "file": str(output_path),
+                    "selection": True,  # Export current selection
+                    "exportDisplayColor": True,
+                    "exportUVs": True,
+                    "exportSkels": (
+                        "none"
+                        if (
+                            options.simplified_skeleton_export
+                            and options.viewport_friendly_skeleton
+                        )
+                        else ("auto" if options.export_skeleton else "none")
                     ),
-                    'exportSkin': (
-                        'none' if options.viewport_friendly_skeleton
-                        else ('auto' if options.export_skin_weights else 'none')
+                    "exportSkin": (
+                        "none"
+                        if options.viewport_friendly_skeleton
+                        else ("auto" if options.export_skin_weights else "none")
                     ),
-                    'exportBlendShapes': False,   # see export_args comment above
-                    'exportMaterials': options.export_materials,
-                    'shadingMode': 'useRegistry',
-                    'exportVisibility': True,
-                    'stripNamespaces': not options.include_namespaces,
-                    'filterTypes': ['nurbsCurve', 'nurbsSurface'],  # hide all rig helpers
+                    "exportBlendShapes": False,  # see export_args comment above
+                    "exportMaterials": options.export_materials,
+                    "shadingMode": "useRegistry",
+                    "exportVisibility": True,
+                    "stripNamespaces": not options.include_namespaces,
+                    "filterTypes": ["nurbsCurve", "nurbsSurface"],  # hide all rig helpers
                 }
 
                 # Animation via frameRange only
                 if options.export_animation:
-                    minimal_args['frameRange'] = (
+                    minimal_args["frameRange"] = (
                         int(options.animation_start),
-                        int(options.animation_end)
+                        int(options.animation_end),
                     )
 
                 self.logger.info(f"Minimal mayaUSDExport args: {minimal_args}")
@@ -1007,7 +1066,9 @@ class ExportMixin:
                 if baked_meshes:
                     try:
                         cmds.delete(baked_meshes)
-                        self.logger.info(f"[CLEANUP] Cleaned up {len(baked_meshes)} baked mesh duplicates")
+                        self.logger.info(
+                            f"[CLEANUP] Cleaned up {len(baked_meshes)} baked mesh duplicates"
+                        )
                     except Exception as cleanup_error:
                         self.logger.warning(f"Failed to cleanup baked meshes: {cleanup_error}")
 
@@ -1034,7 +1095,9 @@ class ExportMixin:
                 blend_targets_exported = self._export_blendshapes_to_usd(output_path)
                 if blend_targets_exported > 0:
                     result.usd_blendshapes = blend_targets_exported
-                    self.logger.info(f"[USD] Exported {blend_targets_exported} blendShape targets to USD")
+                    self.logger.info(
+                        f"[USD] Exported {blend_targets_exported} blendShape targets to USD"
+                    )
 
             # POST-PROCESS: Convert RenderMan materials to UsdPreviewSurface
             # Ensure PxrShader + Lambert combinations are properly converted
@@ -1066,10 +1129,7 @@ class ExportMixin:
             return False
 
     def _create_layered_usd(
-        self,
-        base_usd_path: Path,
-        options: ExportOptions,
-        result: ExportResult
+        self, base_usd_path: Path, options: ExportOptions, result: ExportResult
     ) -> bool:
         """
         Create a layered USD structure from the exported USD
@@ -1153,15 +1213,12 @@ class ExportMixin:
             stage = Usd.Stage.Open(layer)
 
             # Copy geometry prims (Mesh, NurbsCurves, BasisCurves, Xform)
-            geom_types = {'Mesh', 'NurbsCurves', 'BasisCurves', 'Xform', 'Scope'}
+            geom_types = {"Mesh", "NurbsCurves", "BasisCurves", "Xform", "Scope"}
             for prim in source_stage.Traverse():
                 if prim.GetTypeName() in geom_types:
                     # Copy prim and its attributes
                     Sdf.CopySpec(
-                        source_stage.GetRootLayer(),
-                        prim.GetPath(),
-                        layer,
-                        prim.GetPath()
+                        source_stage.GetRootLayer(), prim.GetPath(), layer, prim.GetPath()
                     )
 
             stage.Save()
@@ -1178,15 +1235,12 @@ class ExportMixin:
             stage = Usd.Stage.Open(layer)
 
             # Copy skeleton prims
-            skel_types = {'Skeleton', 'SkelRoot', 'SkelAnimation', 'BlendShape'}
+            skel_types = {"Skeleton", "SkelRoot", "SkelAnimation", "BlendShape"}
             for prim in source_stage.Traverse():
                 prim_type = prim.GetTypeName()
-                if prim_type in skel_types or prim.HasAPI('UsdSkelBindingAPI'):
+                if prim_type in skel_types or prim.HasAPI("UsdSkelBindingAPI"):
                     Sdf.CopySpec(
-                        source_stage.GetRootLayer(),
-                        prim.GetPath(),
-                        layer,
-                        prim.GetPath()
+                        source_stage.GetRootLayer(), prim.GetPath(), layer, prim.GetPath()
                     )
 
             stage.Save()
@@ -1203,14 +1257,11 @@ class ExportMixin:
             stage = Usd.Stage.Open(layer)
 
             # Copy material prims
-            mtl_types = {'Material', 'Shader', 'NodeGraph'}
+            mtl_types = {"Material", "Shader", "NodeGraph"}
             for prim in source_stage.Traverse():
                 if prim.GetTypeName() in mtl_types:
                     Sdf.CopySpec(
-                        source_stage.GetRootLayer(),
-                        prim.GetPath(),
-                        layer,
-                        prim.GetPath()
+                        source_stage.GetRootLayer(), prim.GetPath(), layer, prim.GetPath()
                     )
 
             stage.Save()
@@ -1227,14 +1278,11 @@ class ExportMixin:
             stage = Usd.Stage.Open(layer)
 
             # Copy animation-related prims
-            anim_types = {'SkelAnimation'}
+            anim_types = {"SkelAnimation"}
             for prim in source_stage.Traverse():
                 if prim.GetTypeName() in anim_types:
                     Sdf.CopySpec(
-                        source_stage.GetRootLayer(),
-                        prim.GetPath(),
-                        layer,
-                        prim.GetPath()
+                        source_stage.GetRootLayer(), prim.GetPath(), layer, prim.GetPath()
                     )
 
             # Also copy time samples from other prims (animated attributes)
@@ -1248,10 +1296,7 @@ class ExportMixin:
             return False
 
     def _create_root_layer(
-        self,
-        root_path: Path,
-        sublayer_paths: List[Path],
-        asset_name: str
+        self, root_path: Path, sublayer_paths: List[Path], asset_name: str
     ) -> bool:
         """Create root layer that references sublayers"""
         try:
@@ -1320,17 +1365,16 @@ class ExportMixin:
             root_layer = stage.GetRootLayer()
             # rootPrims returns PrimSpecs - get their names
             root_prim_names = [spec.name for spec in root_layer.rootPrims]
-            root_prims = [
-                stage.GetPrimAtPath(Sdf.Path("/" + name))
-                for name in root_prim_names
-            ]
+            root_prims = [stage.GetPrimAtPath(Sdf.Path("/" + name)) for name in root_prim_names]
             skel_roots = [p for p in root_prims if p and p.IsA(UsdSkel.Root)]
 
             if len(skel_roots) <= 1:
                 self.logger.info("[OK] Single SkelRoot - no scope fix needed")
                 return True
 
-            self.logger.info(f"[FIX] Found {len(skel_roots)} SkelRoots - creating unified wrapper...")
+            self.logger.info(
+                f"[FIX] Found {len(skel_roots)} SkelRoots - creating unified wrapper..."
+            )
             for sr in skel_roots:
                 self.logger.info(f"   [PACKAGE] {sr.GetPath()}")
 

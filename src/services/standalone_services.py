@@ -31,7 +31,15 @@ def safe_import():
         from ..core.interfaces.event_publisher import IEventPublisher, EventType
         from ..core.models.asset import Asset
         from ..core.models.search_criteria import SearchCriteria
-        return IAssetRepository, IThumbnailService, IEventPublisher, EventType, Asset, SearchCriteria
+
+        return (
+            IAssetRepository,
+            IThumbnailService,
+            IEventPublisher,
+            EventType,
+            Asset,
+            SearchCriteria,
+        )
     except ImportError:
         try:
             # Fallback to absolute imports for Maya context
@@ -45,7 +53,15 @@ def safe_import():
             from core.interfaces.event_publisher import IEventPublisher, EventType
             from core.models.asset import Asset
             from core.models.search_criteria import SearchCriteria
-            return IAssetRepository, IThumbnailService, IEventPublisher, EventType, Asset, SearchCriteria
+
+            return (
+                IAssetRepository,
+                IThumbnailService,
+                IEventPublisher,
+                EventType,
+                Asset,
+                SearchCriteria,
+            )
         except ImportError:
             # Ultimate fallback - return None and we'll define locally
             return None, None, None, None, None, None
@@ -56,7 +72,9 @@ _imports = safe_import()
 
 # Unpack imports with fallbacks
 if _imports and len(_imports) >= 6:
-    IAssetRepository, IThumbnailService, IEventPublisher, EventType, Asset, SearchCriteria = _imports
+    IAssetRepository, IThumbnailService, IEventPublisher, EventType, Asset, SearchCriteria = (
+        _imports
+    )
 else:
     IAssetRepository = None
     IThumbnailService = None
@@ -68,8 +86,10 @@ else:
 
 # Define fallback classes if imports failed
 if IAssetRepository is None:
+
     class EventType(Enum):
         """Event types for the asset manager system"""
+
         ASSET_SELECTED = "asset_selected"
         ASSET_IMPORTED = "asset_imported"
         ASSET_FAVORITED = "asset_favorited"
@@ -81,59 +101,103 @@ if IAssetRepository is None:
 
     class IAssetRepository(ABC):
         """Asset Repository Interface - Maya Standalone Fallback"""
+
         @abstractmethod
-        def find_all(self, directory: Path) -> List[Any]: pass
+        def find_all(self, directory: Path) -> List[Any]:
+            pass
+
         @abstractmethod
-        def find_by_criteria(self, criteria: Any) -> List[Any]: pass
+        def find_by_criteria(self, criteria: Any) -> List[Any]:
+            pass
+
         @abstractmethod
-        def find_by_id(self, asset_id: str) -> Optional[Any]: pass
+        def find_by_id(self, asset_id: str) -> Optional[Any]:
+            pass
+
         @abstractmethod
-        def get_recent_assets(self, limit: int = 20) -> List[Any]: pass
+        def get_recent_assets(self, limit: int = 20) -> List[Any]:
+            pass
+
         @abstractmethod
-        def get_favorites(self) -> List[Any]: pass
+        def get_favorites(self) -> List[Any]:
+            pass
+
         @abstractmethod
-        def add_to_favorites(self, asset: Any) -> bool: pass
+        def add_to_favorites(self, asset: Any) -> bool:
+            pass
+
         @abstractmethod
-        def remove_from_favorites(self, asset: Any) -> bool: pass
+        def remove_from_favorites(self, asset: Any) -> bool:
+            pass
+
         @abstractmethod
-        def update_access_time(self, asset: Any) -> None: pass
+        def update_access_time(self, asset: Any) -> None:
+            pass
+
         @abstractmethod
-        def remove_asset(self, asset: Any) -> bool: pass
+        def remove_asset(self, asset: Any) -> bool:
+            pass
 
     class IThumbnailService(ABC):
         """Thumbnail Service Interface - Maya Standalone Fallback"""
+
         @abstractmethod
         def generate_thumbnail(
-            self, file_path: Path, size: Tuple[int, int] = (64, 64),
-            force_playblast: bool = False
-        ) -> Optional[str]: pass
+            self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False
+        ) -> Optional[str]:
+            pass
+
         @abstractmethod
-        def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]: pass
+        def get_cached_thumbnail(
+            self, file_path: Path, size: Tuple[int, int] = (64, 64)
+        ) -> Optional[str]:
+            pass
+
         @abstractmethod
-        def clear_cache(self) -> None: pass
+        def clear_cache(self) -> None:
+            pass
+
         @abstractmethod
-        def clear_cache_for_file(self, file_path: Path) -> None: pass
+        def clear_cache_for_file(self, file_path: Path) -> None:
+            pass
+
         @abstractmethod
-        def is_thumbnail_supported(self, file_path: Path) -> bool: pass
+        def is_thumbnail_supported(self, file_path: Path) -> bool:
+            pass
+
         @abstractmethod
-        def get_cache_size(self) -> int: pass
+        def get_cache_size(self) -> int:
+            pass
 
     class IEventPublisher(ABC):
         """Event Publisher Interface - Maya Standalone Fallback"""
+
         @abstractmethod
-        def subscribe(self, event_type: EventType, callback: Callable[[Dict[str, Any]], None]) -> str: pass
+        def subscribe(
+            self, event_type: EventType, callback: Callable[[Dict[str, Any]], None]
+        ) -> str:
+            pass
+
         @abstractmethod
-        def unsubscribe(self, subscription_id: str) -> bool: pass
+        def unsubscribe(self, subscription_id: str) -> bool:
+            pass
+
         @abstractmethod
-        def publish(self, event_type: EventType, event_data: Dict[str, Any]) -> None: pass
+        def publish(self, event_type: EventType, event_data: Dict[str, Any]) -> None:
+            pass
+
         @abstractmethod
-        def get_subscribers_count(self, event_type: EventType) -> int: pass
+        def get_subscribers_count(self, event_type: EventType) -> int:
+            pass
+
         @abstractmethod
-        def clear_all_subscriptions(self) -> None: pass
+        def clear_all_subscriptions(self) -> None:
+            pass
 
     @dataclass
     class Asset:
         """Simple Asset class for Maya standalone mode"""
+
         id: str
         name: str
         file_path: Path
@@ -152,6 +216,7 @@ if IAssetRepository is None:
 
     class SearchCriteria:
         """Simple search criteria for Maya standalone mode"""
+
         def _init__(self, **kwargs):
             self.criteria = kwargs
 
@@ -185,9 +250,9 @@ class StandaloneAssetRepository(IAssetRepository):
                 return assets
 
             # Scan for asset files
-            supported_extensions = {'.ma', '.mb', '.obj', '.fbx', '.abc', '.usd', '.usda', '.usdc'}
+            supported_extensions = {".ma", ".mb", ".obj", ".fbx", ".abc", ".usd", ".usda", ".usdc"}
 
-            for file_path in directory.rglob('*'):
+            for file_path in directory.rglob("*"):
                 if file_path.suffix.lower() in supported_extensions:
                     try:
                         stat_info = file_path.stat()
@@ -204,7 +269,7 @@ class StandaloneAssetRepository(IAssetRepository):
                             asset_type=self._get_asset_type(file_path),
                             created_date=datetime.fromtimestamp(stat_info.st_ctime),
                             modified_date=datetime.fromtimestamp(stat_info.st_mtime),
-                            metadata=metadata  # FIXED: Now populating metadata
+                            metadata=metadata,  # FIXED: Now populating metadata
                         )
                         assets.append(asset)
                     except Exception as e:
@@ -255,7 +320,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     asset_type=self._get_asset_type(file_path),
                     created_date=datetime.fromtimestamp(stat_info.st_ctime),
                     modified_date=datetime.fromtimestamp(stat_info.st_mtime),
-                    metadata=metadata  # FIXED: Include metadata
+                    metadata=metadata,  # FIXED: Include metadata
                 )
         except Exception as e:
             self.logger.warning(f"Error finding asset {asset_id}: {e}")
@@ -376,7 +441,9 @@ class StandaloneAssetRepository(IAssetRepository):
             removed_from_recent = before_count - after_count
 
             print(f"   Removed from favorites: {was_in_favorites}")
-            print(f"   Removed from recent: {removed_from_recent > 0} (removed {removed_from_recent} entries)")
+            print(
+                f"   Removed from recent: {removed_from_recent > 0} (removed {removed_from_recent} entries)"
+            )
             print(f"   New favorites count: {len(self._favorites)}")
             print(f"   New recent assets count: {len(self._recent_assets)}")
 
@@ -419,16 +486,16 @@ class StandaloneAssetRepository(IAssetRepository):
         """
         extension = file_path.suffix.lower()
         type_mapping = {
-            '.ma': 'maya_ascii',
-            '.mb': 'maya_binary',
-            '.obj': 'wavefront_obj',
-            '.fbx': 'fbx',
-            '.abc': 'alembic',
-            '.usd': 'usd',
-            '.usda': 'usd_ascii',
-            '.usdc': 'usd_binary'
+            ".ma": "maya_ascii",
+            ".mb": "maya_binary",
+            ".obj": "wavefront_obj",
+            ".fbx": "fbx",
+            ".abc": "alembic",
+            ".usd": "usd",
+            ".usda": "usd_ascii",
+            ".usdc": "usd_binary",
         }
-        return type_mapping.get(extension, 'unknown')
+        return type_mapping.get(extension, "unknown")
 
     def _extract_asset_metadata(self, file_path: Path, stat_info) -> Dict[str, Any]:
         """
@@ -446,40 +513,43 @@ class StandaloneAssetRepository(IAssetRepository):
         """
         metadata = {
             # Basic file information
-            'file_name': file_path.name,
-            'file_size_mb': round(stat_info.st_size / (1024 * 1024), 2),
-            'file_size_kb': round(stat_info.st_size / 1024, 2),
-            'absolute_path': str(file_path.resolve()),
-            'relative_path': str(file_path),
-
+            "file_name": file_path.name,
+            "file_size_mb": round(stat_info.st_size / (1024 * 1024), 2),
+            "file_size_kb": round(stat_info.st_size / 1024, 2),
+            "absolute_path": str(file_path.resolve()),
+            "relative_path": str(file_path),
             # Timestamps (formatted for display)
-            'created_date_formatted': datetime.fromtimestamp(stat_info.st_ctime).strftime('%Y-%m-%d %H:%M:%S'),
-            'modified_date_formatted': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
-            'accessed_date_formatted': datetime.fromtimestamp(stat_info.st_atime).strftime('%Y-%m-%d %H:%M:%S'),
-
+            "created_date_formatted": datetime.fromtimestamp(stat_info.st_ctime).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "modified_date_formatted": datetime.fromtimestamp(stat_info.st_mtime).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "accessed_date_formatted": datetime.fromtimestamp(stat_info.st_atime).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
             # File attributes
-            'is_readonly': not os.access(file_path, os.W_OK),
-            'file_permissions': oct(stat_info.st_mode)[-3:],
-
+            "is_readonly": not os.access(file_path, os.W_OK),
+            "file_permissions": oct(stat_info.st_mode)[-3:],
             # Asset-specific metadata based on file type
-            'asset_category': self._get_asset_category(file_path),
-            'estimated_complexity': self._estimate_complexity(file_path, stat_info)
+            "asset_category": self._get_asset_category(file_path),
+            "estimated_complexity": self._estimate_complexity(file_path, stat_info),
         }
 
         # Add file-type specific metadata
         try:
             extension = file_path.suffix.lower()
-            if extension in {'.ma', '.mb'}:
+            if extension in {".ma", ".mb"}:
                 metadata.update(self._extract_maya_metadata(file_path))
-            elif extension == '.obj':
+            elif extension == ".obj":
                 metadata.update(self._extract_obj_metadata(file_path))
-            elif extension == '.fbx':
+            elif extension == ".fbx":
                 metadata.update(self._extract_fbx_metadata(file_path))
-            elif extension in {'.abc', '.usd', '.usda', '.usdc'}:
+            elif extension in {".abc", ".usd", ".usda", ".usdc"}:
                 metadata.update(self._extract_cache_metadata(file_path))
         except Exception as e:
             # Don't let metadata extraction failures break asset creation
-            metadata['extraction_error'] = str(e)
+            metadata["extraction_error"] = str(e)
             self.logger.warning(f"Metadata extraction failed for {file_path}: {e}")
 
         return metadata
@@ -487,30 +557,30 @@ class StandaloneAssetRepository(IAssetRepository):
     def _get_asset_category(self, file_path: Path) -> str:
         """Get asset category for metadata display"""
         extension = file_path.suffix.lower()
-        if extension in {'.ma', '.mb'}:
-            return 'Maya Scene'
-        elif extension == '.obj':
-            return '3D Model'
-        elif extension == '.fbx':
-            return 'FBX Model'
-        elif extension in {'.abc'}:
-            return 'Alembic Cache'
-        elif extension in {'.usd', '.usda', '.usdc'}:
-            return 'USD Asset'
+        if extension in {".ma", ".mb"}:
+            return "Maya Scene"
+        elif extension == ".obj":
+            return "3D Model"
+        elif extension == ".fbx":
+            return "FBX Model"
+        elif extension in {".abc"}:
+            return "Alembic Cache"
+        elif extension in {".usd", ".usda", ".usdc"}:
+            return "USD Asset"
         else:
-            return '3D Asset'
+            return "3D Asset"
 
     def _estimate_complexity(self, file_path: Path, stat_info) -> str:
         """Estimate asset complexity based on file size"""
         size_mb = stat_info.st_size / (1024 * 1024)
         if size_mb < 1:
-            return 'Simple'
+            return "Simple"
         elif size_mb < 10:
-            return 'Medium'
+            return "Medium"
         elif size_mb < 50:
-            return 'Complex'
+            return "Complex"
         else:
-            return 'Very Complex'
+            return "Very Complex"
 
     def _create_clean_scene_safely(self, cmds):
         """
@@ -547,18 +617,18 @@ class StandaloneAssetRepository(IAssetRepository):
             Basic metadata dictionary with placeholders
         """
         metadata = {
-            'poly_count': 0,
-            'vertex_count': 0,
-            'face_count': 0,
-            'texture_count': 0,
-            'material_count': 0,
-            'has_animation': False,
-            'animation_frames': 0,
-            'scene_objects': [],
-            'cameras': [],
-            'lights': [],
-            'metadata_level': 'basic',
-            'note': 'Import asset to extract detailed Maya metadata'
+            "poly_count": 0,
+            "vertex_count": 0,
+            "face_count": 0,
+            "texture_count": 0,
+            "material_count": 0,
+            "has_animation": False,
+            "animation_frames": 0,
+            "scene_objects": [],
+            "cameras": [],
+            "lights": [],
+            "metadata_level": "basic",
+            "note": "Import asset to extract detailed Maya metadata",
         }
 
         # Return basic metadata only - don't import into Maya!
@@ -585,18 +655,18 @@ class StandaloneAssetRepository(IAssetRepository):
             Detailed metadata dictionary with real Maya scene data
         """
         metadata = {
-            'poly_count': 0,
-            'vertex_count': 0,
-            'face_count': 0,
-            'texture_count': 0,
-            'material_count': 0,
-            'has_animation': False,
-            'animation_frames': 0,
-            'scene_objects': [],
-            'cameras': [],
-            'lights': [],
-            'metadata_level': 'full',
-            'extraction_timestamp': datetime.now().isoformat()
+            "poly_count": 0,
+            "vertex_count": 0,
+            "face_count": 0,
+            "texture_count": 0,
+            "material_count": 0,
+            "has_animation": False,
+            "animation_frames": 0,
+            "scene_objects": [],
+            "cameras": [],
+            "lights": [],
+            "metadata_level": "full",
+            "extraction_timestamp": datetime.now().isoformat(),
         }
 
         try:
@@ -607,65 +677,66 @@ class StandaloneAssetRepository(IAssetRepository):
 
             try:
                 # Import asset
-                file_type = 'mayaAscii' if file_path.suffix.lower() == '.ma' else 'mayaBinary'
+                file_type = "mayaAscii" if file_path.suffix.lower() == ".ma" else "mayaBinary"
                 cmds.file(str(file_path), i=True, namespace=temp_namespace, type=file_type)
 
                 self.logger.info(f"📊 Extracting full Maya metadata from: {file_path.name}")
 
                 # Get all nodes in namespace
-                all_nodes = cmds.namespaceInfo(temp_namespace, listNamespace=True, dagPath=True) or []
-                metadata['scene_objects'] = all_nodes[:50]  # Limit to first 50 for performance
+                all_nodes = (
+                    cmds.namespaceInfo(temp_namespace, listNamespace=True, dagPath=True) or []
+                )
+                metadata["scene_objects"] = all_nodes[:50]  # Limit to first 50 for performance
 
                 # Count polygons
-                meshes = cmds.ls(f"{temp_namespace}:*", type='mesh', long=True) or []
+                meshes = cmds.ls(f"{temp_namespace}:*", type="mesh", long=True) or []
                 for mesh in meshes:
                     try:
                         # Get vertex count
                         vertex_count = cmds.polyEvaluate(mesh, vertex=True) or 0
-                        metadata['vertex_count'] += vertex_count
+                        metadata["vertex_count"] += vertex_count
 
                         # Get face count
                         face_count = cmds.polyEvaluate(mesh, face=True) or 0
-                        metadata['face_count'] += face_count
+                        metadata["face_count"] += face_count
                     except Exception:
                         pass
 
-                metadata['poly_count'] = metadata['face_count']
+                metadata["poly_count"] = metadata["face_count"]
 
                 # Count materials
-                materials = cmds.ls(f"{temp_namespace}:*", type='shadingEngine') or []
-                metadata['material_count'] = len(materials)
+                materials = cmds.ls(f"{temp_namespace}:*", type="shadingEngine") or []
+                metadata["material_count"] = len(materials)
 
                 # Count file textures
-                textures = cmds.ls(f"{temp_namespace}:*", type='file') or []
-                metadata['texture_count'] = len(textures)
+                textures = cmds.ls(f"{temp_namespace}:*", type="file") or []
+                metadata["texture_count"] = len(textures)
 
                 # Check for animation
-                anim_curves = cmds.ls(f"{temp_namespace}:*", type='animCurve') or []
+                anim_curves = cmds.ls(f"{temp_namespace}:*", type="animCurve") or []
                 if anim_curves:
-                    metadata['has_animation'] = True
+                    metadata["has_animation"] = True
                     try:
                         # Get animation frame range
                         min_time = cmds.playbackOptions(query=True, minTime=True)
                         max_time = cmds.playbackOptions(query=True, maxTime=True)
-                        metadata['animation_frames'] = int(max_time - min_time)
+                        metadata["animation_frames"] = int(max_time - min_time)
                     except Exception:
-                        metadata['animation_frames'] = len(anim_curves)
+                        metadata["animation_frames"] = len(anim_curves)
 
                 # Count cameras (exclude default cameras)
-                all_cameras = cmds.ls(f"{temp_namespace}:*", type='camera') or []
-                default_cams = ['persp', 'top', 'side', 'front']
-                metadata['cameras'] = [
-                    cam for cam in all_cameras
-                    if not any(dc in cam for dc in default_cams)
+                all_cameras = cmds.ls(f"{temp_namespace}:*", type="camera") or []
+                default_cams = ["persp", "top", "side", "front"]
+                metadata["cameras"] = [
+                    cam for cam in all_cameras if not any(dc in cam for dc in default_cams)
                 ]
 
                 # Count lights
-                lights = cmds.ls(f"{temp_namespace}:*", type='light') or []
-                metadata['lights'] = lights
+                lights = cmds.ls(f"{temp_namespace}:*", type="light") or []
+                metadata["lights"] = lights
 
-                poly_count = metadata['poly_count']
-                mat_count = metadata['material_count']
+                poly_count = metadata["poly_count"]
+                mat_count = metadata["material_count"]
                 self.logger.info(f"[OK] Metadata: {poly_count} polys, {mat_count} materials")
 
             finally:
@@ -673,10 +744,10 @@ class StandaloneAssetRepository(IAssetRepository):
                 self._bulletproof_namespace_cleanup(temp_namespace, cmds)
 
         except ImportError:
-            metadata['extraction_error'] = 'Maya cmds not available'
+            metadata["extraction_error"] = "Maya cmds not available"
             self.logger.warning("Maya cmds not available for metadata extraction")
         except Exception as e:
-            metadata['extraction_error'] = str(e)
+            metadata["extraction_error"] = str(e)
             self.logger.error(f"Full metadata extraction failed: {e}")
 
         return metadata
@@ -719,7 +790,9 @@ class StandaloneAssetRepository(IAssetRepository):
                 self.logger.info(f"Complete cleanup successful: {namespace}")
                 return True
             else:
-                self.logger.warning(f"Partial cleanup - namespace still exists, starting Phase 6: {namespace}")
+                self.logger.warning(
+                    f"Partial cleanup - namespace still exists, starting Phase 6: {namespace}"
+                )
 
             # PHASE 6: AGGRESSIVE FINAL CLEANUP - Force remove everything from Outliner
             try:
@@ -728,8 +801,13 @@ class StandaloneAssetRepository(IAssetRepository):
                 # Get all remaining nodes in namespace
                 remaining_nodes = []
                 try:
-                    remaining_nodes = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True) or []
-                    self.logger.info(f"   Found {len(remaining_nodes)} remaining nodes to force-delete")
+                    remaining_nodes = (
+                        cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True)
+                        or []
+                    )
+                    self.logger.info(
+                        f"   Found {len(remaining_nodes)} remaining nodes to force-delete"
+                    )
                 except Exception:
                     pass
 
@@ -746,10 +824,12 @@ class StandaloneAssetRepository(IAssetRepository):
 
                     # Strategy 2: Break all connections
                     try:
-                        connections = cmds.listConnections(node, plugs=True, connections=True) or []
+                        connections = (
+                            cmds.listConnections(node, plugs=True, connections=True) or []
+                        )
                         for i in range(0, len(connections), 2):
                             try:
-                                cmds.disconnectAttr(connections[i], connections[i+1])
+                                cmds.disconnectAttr(connections[i], connections[i + 1])
                             except Exception:
                                 pass
                     except Exception:
@@ -777,12 +857,14 @@ class StandaloneAssetRepository(IAssetRepository):
 
                     # Strategy 5: Try parent deletion for nested nodes
                     try:
-                        if '|' in node:
-                            parent = node.rsplit('|', 1)[0]
+                        if "|" in node:
+                            parent = node.rsplit("|", 1)[0]
                             if cmds.objExists(parent) and namespace in parent:
                                 cmds.delete(parent)
                                 if not cmds.objExists(node):
-                                    self.logger.info(f"   [OK] Deleted via parent: {node.split(':')[-1]}")
+                                    self.logger.info(
+                                        f"   [OK] Deleted via parent: {node.split(':')[-1]}"
+                                    )
                                     continue
                     except Exception:
                         pass
@@ -790,38 +872,53 @@ class StandaloneAssetRepository(IAssetRepository):
                     # Strategy 6: Rename and isolate
                     try:
                         import time
+
                         temp_name = f"_toDelete_{int(time.time())}_{node.split(':')[-1]}"
                         renamed = cmds.rename(node, temp_name)
                         cmds.delete(renamed)
                         if not cmds.objExists(renamed):
-                            self.logger.info(f"   [OK] Deleted after rename: {node.split(':')[-1]}")
+                            self.logger.info(
+                                f"   [OK] Deleted after rename: {node.split(':')[-1]}"
+                            )
                     except Exception:
-                        node_short = node.split(':')[-1]
-                        self.logger.warning(f"   [WARNING] Could not delete locked node: {node_short} (acceptable)")
+                        node_short = node.split(":")[-1]
+                        self.logger.warning(
+                            f"   [WARNING] Could not delete locked node: {node_short} (acceptable)"
+                        )
 
                 # Final namespace removal attempt
                 try:
                     if cmds.namespace(exists=namespace):
                         # Move any remaining content to root namespace before deletion
-                        cmds.namespace(moveNamespace=[namespace, ':'], force=True)
+                        cmds.namespace(moveNamespace=[namespace, ":"], force=True)
                         cmds.namespace(removeNamespace=namespace, force=True)
                 except Exception:
                     try:
-                        cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True, force=True)
+                        cmds.namespace(
+                            removeNamespace=namespace, deleteNamespaceContent=True, force=True
+                        )
                     except Exception as ns_error:
-                        self.logger.warning(f"   [WARNING] Final namespace removal note: {ns_error}")
+                        self.logger.warning(
+                            f"   [WARNING] Final namespace removal note: {ns_error}"
+                        )
 
                 # Verify final cleanup
                 final_cleanup = not cmds.namespace(exists=namespace)
                 if final_cleanup:
-                    self.logger.info(f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner")
+                    self.logger.info(
+                        f"🎉 Aggressive cleanup successful: {namespace} completely removed from Outliner"
+                    )
                 else:
-                    self.logger.info(f"[INFO]  Namespace {namespace} may have deeply nested references (acceptable)")
+                    self.logger.info(
+                        f"[INFO]  Namespace {namespace} may have deeply nested references (acceptable)"
+                    )
 
                 return True  # Consider partial cleanup acceptable for production
 
             except Exception as aggressive_error:
-                self.logger.warning(f"[WARNING] Phase 6 aggressive cleanup exception: {aggressive_error}")
+                self.logger.warning(
+                    f"[WARNING] Phase 6 aggressive cleanup exception: {aggressive_error}"
+                )
                 # Still try fallback as last resort
                 return self._fallback_cleanup(namespace, cmds)
 
@@ -832,7 +929,9 @@ class StandaloneAssetRepository(IAssetRepository):
             # Force Phase 6 execution even after exception
             try:
                 if cmds.namespace(exists=namespace):
-                    self.logger.info(f"[DEBUG] Phase 6: Forced aggressive cleanup after exception for: {namespace}")
+                    self.logger.info(
+                        f"[DEBUG] Phase 6: Forced aggressive cleanup after exception for: {namespace}"
+                    )
                     return self._force_aggressive_cleanup(namespace, cmds)
             except Exception:
                 pass
@@ -847,11 +946,11 @@ class StandaloneAssetRepository(IAssetRepository):
             cmds.flushUndo()
 
             # Clear any scene-level references to namespace objects
-            if hasattr(cmds, 'dgdirty'):
+            if hasattr(cmds, "dgdirty"):
                 cmds.dgdirty(allPlugs=True)
 
             # Force garbage collection of unused nodes
-            if hasattr(cmds, 'dgeval'):
+            if hasattr(cmds, "dgeval"):
                 try:
                     cmds.dgeval("time")
                 except Exception:
@@ -863,11 +962,11 @@ class StandaloneAssetRepository(IAssetRepository):
                 cmds.dgeval("defaultRenderGlobals.currentTime")
 
                 # Clear any remaining references in the scene
-                if hasattr(cmds, 'scriptEditorInfo'):
+                if hasattr(cmds, "scriptEditorInfo"):
                     cmds.scriptEditorInfo(clearHistory=True)
 
                 # Force Maya to update its internal node tracking
-                if hasattr(cmds, 'refresh'):
+                if hasattr(cmds, "refresh"):
                     cmds.refresh(force=True)
 
                 # Clear any scene-level selection or active object references
@@ -906,7 +1005,9 @@ class StandaloneAssetRepository(IAssetRepository):
                 cmds.lockNode(locked_nodes, lock=False)
 
                 # Second pass: Force unlock volume aggregates specifically
-                volume_aggregates = [node for node in locked_nodes if 'globalVolumeAggregate' in node]
+                volume_aggregates = [
+                    node for node in locked_nodes if "globalVolumeAggregate" in node
+                ]
                 if volume_aggregates:
                     try:
                         # Force unlock volume aggregates with Maya-specific commands
@@ -917,12 +1018,14 @@ class StandaloneAssetRepository(IAssetRepository):
                                 except Exception:
                                     pass  # Attribute might not exist
                                 cmds.lockNode(vol_node, lock=False)
-                        self.logger.info(f"[DEBUG] Force unlocked {len(volume_aggregates)} volume aggregates")
+                        self.logger.info(
+                            f"[DEBUG] Force unlocked {len(volume_aggregates)} volume aggregates"
+                        )
                     except Exception as vol_error:
                         self.logger.warning(f"Volume aggregate unlock error: {vol_error}")
 
-                node_list = ', '.join(locked_nodes[:3])
-                suffix = '...' if len(locked_nodes) > 3 else ''
+                node_list = ", ".join(locked_nodes[:3])
+                suffix = "..." if len(locked_nodes) > 3 else ""
                 self.logger.info(f"Unlocked nodes: {node_list}{suffix}")
 
         except Exception as e:
@@ -933,10 +1036,10 @@ class StandaloneAssetRepository(IAssetRepository):
         try:
             # Target problematic connection types from September 25th logs
             connection_patterns = [
-                'rmanDefaultDisplay.displayType',
-                'rmanDefaultDisplay.displayChannels[0]',
-                'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]'
+                "rmanDefaultDisplay.displayType",
+                "rmanDefaultDisplay.displayChannels[0]",
+                "rmanDefaultDisplay.displayChannels[1]",
+                "rmanBakingGlobals.displays[0]",
             ]
 
             connections_broken = 0
@@ -975,7 +1078,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     if cmds.objExists(obj):
                         # PRE-CHECK: Skip deeply nested volume aggregates before attempting delete
                         # These will be cleaned automatically when parent namespace is removed
-                        if 'globalVolumeAggregate' in obj and obj.count(':') >= 3:
+                        if "globalVolumeAggregate" in obj and obj.count(":") >= 3:
                             deleted_count += 1  # Count as successful (parent will clean)
                             continue
 
@@ -983,15 +1086,17 @@ class StandaloneAssetRepository(IAssetRepository):
                         deleted_count += 1
                         continue
                 except Exception as delete_error:
-                    if 'globalVolumeAggregate' in obj and self._force_delete_volume_aggregate(obj, cmds):
+                    if "globalVolumeAggregate" in obj and self._force_delete_volume_aggregate(
+                        obj, cmds
+                    ):
                         deleted_count += 1
                         continue
 
                     error_text = str(delete_error)
-                    if 'locked' in error_text.lower() and cmds.objExists(obj):
+                    if "locked" in error_text.lower() and cmds.objExists(obj):
                         try:
                             cmds.lockNode(obj, lock=False, lockName=False)
-                            if cmds.attributeQuery('locked', node=obj, exists=True):
+                            if cmds.attributeQuery("locked", node=obj, exists=True):
                                 cmds.setAttr(f"{obj}.locked", False)
                             cmds.delete(obj)
                             deleted_count += 1
@@ -1025,7 +1130,7 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # Early detection: Skip deeply nested reference nodes (3+ namespace levels)
             # These will be automatically cleaned when parent namespace is removed
-            namespace_depth = node_name.count(':')
+            namespace_depth = node_name.count(":")
             if namespace_depth >= 3:
                 # Silently accept - parent namespace deletion will clean this up
                 return True
@@ -1037,6 +1142,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     pass
                 try:
                     import maya.mel as mel  # type: ignore
+
                     mel.eval(f'lockNode -lock 0 -lockName 0 "{target}";')
                 except Exception:
                     pass
@@ -1054,6 +1160,7 @@ class StandaloneAssetRepository(IAssetRepository):
                             pass
                         try:
                             import maya.mel as mel  # type: ignore
+
                             mel.eval(f'lockNode -lock 0 -lockName 0 "{ref_node}";')
                         except Exception:
                             pass
@@ -1077,7 +1184,7 @@ class StandaloneAssetRepository(IAssetRepository):
             except Exception:
                 pass
 
-            if cmds.attributeQuery('locked', node=node_name, exists=True):
+            if cmds.attributeQuery("locked", node=node_name, exists=True):
                 try:
                     cmds.setAttr(f"{node_name}.locked", False)
                 except Exception:
@@ -1085,9 +1192,12 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # Disconnect all connections that involve the aggregate
             try:
-                connections = cmds.listConnections(
-                    node_name, plugs=True, connections=True, skipConversionNodes=True
-                ) or []
+                connections = (
+                    cmds.listConnections(
+                        node_name, plugs=True, connections=True, skipConversionNodes=True
+                    )
+                    or []
+                )
                 for idx in range(0, len(connections), 2):
                     src = connections[idx]
                     dest = connections[idx + 1] if idx + 1 < len(connections) else None
@@ -1104,12 +1214,12 @@ class StandaloneAssetRepository(IAssetRepository):
                 pass
 
             volume_patterns = [
-                'rmanDefaultDisplay.displayType',
-                'rmanDefaultDisplay.displayChannels[0]',
-                'rmanDefaultDisplay.displayChannels[1]',
-                'rmanBakingGlobals.displays[0]',
-                'rmanDefaultDisplay.message',
-                'rmanDefaultBakeDisplay.message'
+                "rmanDefaultDisplay.displayType",
+                "rmanDefaultDisplay.displayChannels[0]",
+                "rmanDefaultDisplay.displayChannels[1]",
+                "rmanBakingGlobals.displays[0]",
+                "rmanDefaultDisplay.message",
+                "rmanDefaultBakeDisplay.message",
             ]
             for pattern in volume_patterns:
                 try:
@@ -1127,7 +1237,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     continue
 
             try:
-                for target_set in ('renderPartition', 'initialParticleSE', 'initialShadingGroup'):
+                for target_set in ("renderPartition", "initialParticleSE", "initialShadingGroup"):
                     if cmds.objExists(target_set):
                         try:
                             cmds.sets(node_name, remove=target_set)
@@ -1152,15 +1262,16 @@ class StandaloneAssetRepository(IAssetRepository):
                 _unlock_node(node_name)
                 try:
                     import maya.mel as mel  # type: ignore
+
                     # Try MEL unlock as well
                     mel.eval(f'lockNode -lock 0 -lockName 0 "{node_name}";')
                     # Also try to unlock using setAttr
-                    if cmds.attributeQuery('locked', node=node_name, exists=True):
+                    if cmds.attributeQuery("locked", node=node_name, exists=True):
                         cmds.setAttr(f"{node_name}.locked", False, lock=False)
                 except Exception:
                     pass
 
-                all_sets = cmds.ls(type='rmanVolumeAggregateSet') or []
+                all_sets = cmds.ls(type="rmanVolumeAggregateSet") or []
                 for agg_set in all_sets:
                     try:
                         # Remove the node from this aggregate set
@@ -1172,6 +1283,7 @@ class StandaloneAssetRepository(IAssetRepository):
 
             try:
                 import maya.mel as mel  # type: ignore
+
                 mel.eval(f'rmanRemoveVolumeAggregateSet("{node_name}")')
                 if not cmds.objExists(node_name):
                     return True
@@ -1186,7 +1298,7 @@ class StandaloneAssetRepository(IAssetRepository):
                 pass
 
             try:
-                short_name = node_name.split(':')[-1]
+                short_name = node_name.split(":")[-1]
                 temp_name = f"{short_name}_cleanup"
                 renamed = cmds.rename(node_name, temp_name)
                 _unlock_node(renamed)
@@ -1197,7 +1309,7 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # Final strategy: If the node is in a nested reference, it may be impossible to delete
             # Check if this is a deeply nested reference node (3+ namespace levels)
-            namespace_depth = node_name.count(':')
+            namespace_depth = node_name.count(":")
             if namespace_depth >= 3:
                 # This is likely a nested reference node that can't be deleted directly
                 # This is acceptable - the parent namespace cleanup will handle it
@@ -1223,8 +1335,12 @@ class StandaloneAssetRepository(IAssetRepository):
             # Get all remaining nodes
             remaining_nodes = []
             try:
-                remaining_nodes = cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True) or []
-                self.logger.info(f"   Found {len(remaining_nodes)} remaining nodes to force-delete")
+                remaining_nodes = (
+                    cmds.namespaceInfo(namespace, listOnlyDependencyNodes=True, dagPath=True) or []
+                )
+                self.logger.info(
+                    f"   Found {len(remaining_nodes)} remaining nodes to force-delete"
+                )
             except Exception:
                 pass
 
@@ -1244,7 +1360,7 @@ class StandaloneAssetRepository(IAssetRepository):
                     connections = cmds.listConnections(node, plugs=True, connections=True) or []
                     for i in range(0, len(connections), 2):
                         try:
-                            cmds.disconnectAttr(connections[i], connections[i+1])
+                            cmds.disconnectAttr(connections[i], connections[i + 1])
                         except Exception:
                             pass
                 except Exception:
@@ -1271,8 +1387,8 @@ class StandaloneAssetRepository(IAssetRepository):
 
                 # Strategy 5: Parent deletion
                 try:
-                    if '|' in node:
-                        parent = node.rsplit('|', 1)[0]
+                    if "|" in node:
+                        parent = node.rsplit("|", 1)[0]
                         if cmds.objExists(parent) and namespace in parent:
                             cmds.delete(parent)
                             if not cmds.objExists(node):
@@ -1283,6 +1399,7 @@ class StandaloneAssetRepository(IAssetRepository):
                 # Strategy 6: Rename and delete
                 try:
                     import time
+
                     temp_name = f"_toDelete_{int(time.time())}_{node.split(':')[-1]}"
                     renamed = cmds.rename(node, temp_name)
                     cmds.delete(renamed)
@@ -1292,11 +1409,13 @@ class StandaloneAssetRepository(IAssetRepository):
             # Final namespace removal
             try:
                 if cmds.namespace(exists=namespace):
-                    cmds.namespace(moveNamespace=[namespace, ':'], force=True)
+                    cmds.namespace(moveNamespace=[namespace, ":"], force=True)
                     cmds.namespace(removeNamespace=namespace, force=True)
             except Exception:
                 try:
-                    cmds.namespace(removeNamespace=namespace, deleteNamespaceContent=True, force=True)
+                    cmds.namespace(
+                        removeNamespace=namespace, deleteNamespaceContent=True, force=True
+                    )
                 except Exception:
                     pass
 
@@ -1305,7 +1424,9 @@ class StandaloneAssetRepository(IAssetRepository):
             if final_cleanup:
                 self.logger.info(f"🎉 Phase 6 successful: {namespace} completely removed")
             else:
-                self.logger.info(f"[INFO]  Phase 6 partial: {namespace} has nested references (acceptable)")
+                self.logger.info(
+                    f"[INFO]  Phase 6 partial: {namespace} has nested references (acceptable)"
+                )
 
             return True  # Acceptable
 
@@ -1353,7 +1474,9 @@ class StandaloneAssetRepository(IAssetRepository):
                 pass
 
             # Recovery Level 4: Log warning and continue
-            self.logger.warning(f"All cleanup levels failed for: {namespace} - continuing operation")
+            self.logger.warning(
+                f"All cleanup levels failed for: {namespace} - continuing operation"
+            )
             return False
 
         except Exception as e:
@@ -1363,24 +1486,24 @@ class StandaloneAssetRepository(IAssetRepository):
     def _extract_obj_metadata(self, file_path: Path) -> Dict[str, Any]:
         """Extract OBJ-specific metadata by parsing file - Comprehensive implementation"""
         metadata = {
-            'vertex_count': 0,
-            'face_count': 0,
-            'poly_count': 0,
-            'texture_count': 0,
-            'material_count': 0,
-            'bounding_box': {'min': [0, 0, 0], 'max': [0, 0, 0]}
+            "vertex_count": 0,
+            "face_count": 0,
+            "poly_count": 0,
+            "texture_count": 0,
+            "material_count": 0,
+            "bounding_box": {"min": [0, 0, 0], "max": [0, 0, 0]},
         }
 
         try:
             materials = set()
-            min_bounds = [float('inf')] * 3
-            max_bounds = [float('-inf')] * 3
+            min_bounds = [float("inf")] * 3
+            max_bounds = [float("-inf")] * 3
 
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line = line.strip()
-                    if line.startswith('v '):  # Vertex
-                        metadata['vertex_count'] += 1
+                    if line.startswith("v "):  # Vertex
+                        metadata["vertex_count"] += 1
                         # Extract coordinates for bounding box
                         try:
                             parts = line.split()
@@ -1391,34 +1514,31 @@ class StandaloneAssetRepository(IAssetRepository):
                                     max_bounds[i] = max(max_bounds[i], coords[i])
                         except Exception:
                             pass
-                    elif line.startswith('f '):  # Face
-                        metadata['face_count'] += 1
-                    elif line.startswith('vt '):  # Texture coordinate
-                        metadata['texture_count'] += 1
-                    elif line.startswith('usemtl '):  # Material usage
-                        material_name = line.split()[1] if len(line.split()) > 1 else 'default'
+                    elif line.startswith("f "):  # Face
+                        metadata["face_count"] += 1
+                    elif line.startswith("vt "):  # Texture coordinate
+                        metadata["texture_count"] += 1
+                    elif line.startswith("usemtl "):  # Material usage
+                        material_name = line.split()[1] if len(line.split()) > 1 else "default"
                         materials.add(material_name)
 
-            metadata['poly_count'] = metadata['face_count']
-            metadata['material_count'] = len(materials)
+            metadata["poly_count"] = metadata["face_count"]
+            metadata["material_count"] = len(materials)
 
             # Set bounding box if we found valid bounds
-            if min_bounds[0] != float('inf'):
-                metadata['bounding_box'] = {
-                    'min': min_bounds,
-                    'max': max_bounds
-                }
+            if min_bounds[0] != float("inf"):
+                metadata["bounding_box"] = {"min": min_bounds, "max": max_bounds}
 
                 # Calculate dimensions
                 dimensions = [max_bounds[i] - min_bounds[i] for i in range(3)]
-                metadata['dimensions'] = {
-                    'width': round(dimensions[0], 3),
-                    'height': round(dimensions[1], 3),
-                    'depth': round(dimensions[2], 3)
+                metadata["dimensions"] = {
+                    "width": round(dimensions[0], 3),
+                    "height": round(dimensions[1], 3),
+                    "depth": round(dimensions[2], 3),
                 }
 
         except Exception as e:
-            metadata['extraction_error'] = str(e)
+            metadata["extraction_error"] = str(e)
             self.logger.warning(f"OBJ metadata extraction failed for {file_path}: {e}")
 
         return metadata
@@ -1426,9 +1546,9 @@ class StandaloneAssetRepository(IAssetRepository):
     def _extract_fbx_metadata(self, file_path: Path) -> Dict[str, Any]:
         """Extract FBX-specific metadata - Enhanced implementation"""
         metadata = {
-            'file_type': 'fbx_model',
-            'has_animation': True,  # FBX files commonly contain animation
-            'estimated_complexity': 'Medium'
+            "file_type": "fbx_model",
+            "has_animation": True,  # FBX files commonly contain animation
+            "estimated_complexity": "Medium",
         }
 
         try:
@@ -1436,35 +1556,35 @@ class StandaloneAssetRepository(IAssetRepository):
 
             # Estimate geometry based on file size (rough approximations)
             if file_size < 1024 * 1024:  # < 1MB
-                metadata['vertex_count'] = min(1000, file_size // 100)
-                metadata['face_count'] = min(800, file_size // 150)
-                metadata['estimated_complexity'] = 'Simple'
+                metadata["vertex_count"] = min(1000, file_size // 100)
+                metadata["face_count"] = min(800, file_size // 150)
+                metadata["estimated_complexity"] = "Simple"
             elif file_size < 10 * 1024 * 1024:  # < 10MB
-                metadata['vertex_count'] = min(10000, file_size // 500)
-                metadata['face_count'] = min(8000, file_size // 600)
-                metadata['estimated_complexity'] = 'Medium'
+                metadata["vertex_count"] = min(10000, file_size // 500)
+                metadata["face_count"] = min(8000, file_size // 600)
+                metadata["estimated_complexity"] = "Medium"
             else:  # > 10MB
-                metadata['vertex_count'] = min(100000, file_size // 1000)
-                metadata['face_count'] = min(80000, file_size // 1200)
-                metadata['estimated_complexity'] = 'Complex'
+                metadata["vertex_count"] = min(100000, file_size // 1000)
+                metadata["face_count"] = min(80000, file_size // 1200)
+                metadata["estimated_complexity"] = "Complex"
 
-            metadata['poly_count'] = metadata['face_count']
+            metadata["poly_count"] = metadata["face_count"]
 
             # Check for binary FBX header
             try:
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     header = f.read(23)
-                    if header.startswith(b'Kaydara FBX Binary'):
-                        metadata['fbx_format'] = 'Binary'
-                        metadata['fbx_version'] = 'Binary FBX'
+                    if header.startswith(b"Kaydara FBX Binary"):
+                        metadata["fbx_format"] = "Binary"
+                        metadata["fbx_version"] = "Binary FBX"
                     else:
-                        metadata['fbx_format'] = 'ASCII'
-                        metadata['fbx_version'] = 'ASCII FBX'
+                        metadata["fbx_format"] = "ASCII"
+                        metadata["fbx_version"] = "ASCII FBX"
             except Exception:
-                metadata['fbx_format'] = 'Unknown'
+                metadata["fbx_format"] = "Unknown"
 
         except Exception as e:
-            metadata['extraction_error'] = str(e)
+            metadata["extraction_error"] = str(e)
             self.logger.warning(f"FBX metadata extraction failed for {file_path}: {e}")
 
         return metadata
@@ -1472,8 +1592,8 @@ class StandaloneAssetRepository(IAssetRepository):
     def _extract_cache_metadata(self, file_path: Path) -> Dict[str, Any]:
         """Extract cache file metadata - Enhanced implementation"""
         metadata = {
-            'has_animation': True,  # Cache files typically contain animation
-            'file_type': 'animation_cache'
+            "has_animation": True,  # Cache files typically contain animation
+            "file_type": "animation_cache",
         }
 
         try:
@@ -1481,33 +1601,33 @@ class StandaloneAssetRepository(IAssetRepository):
             file_ext = file_path.suffix.lower()
 
             # Set specific cache type
-            if file_ext == '.abc':
-                metadata['cache_format'] = 'Alembic'
-                metadata['file_type'] = 'alembic_cache'
-            elif file_ext in ['.usd', '.usda', '.usdc']:
-                metadata['cache_format'] = 'USD'
-                metadata['file_type'] = 'usd_scene'
+            if file_ext == ".abc":
+                metadata["cache_format"] = "Alembic"
+                metadata["file_type"] = "alembic_cache"
+            elif file_ext in [".usd", ".usda", ".usdc"]:
+                metadata["cache_format"] = "USD"
+                metadata["file_type"] = "usd_scene"
             else:
-                metadata['cache_format'] = file_ext.upper()
+                metadata["cache_format"] = file_ext.upper()
 
             # Estimate frame count and complexity based on file size
             estimated_frames = max(1, file_size // (100 * 1024))  # Rough estimate
-            metadata['animation_frames'] = min(estimated_frames, 1000)  # Cap at reasonable number
+            metadata["animation_frames"] = min(estimated_frames, 1000)  # Cap at reasonable number
 
             # Estimate complexity
             if file_size < 10 * 1024 * 1024:  # < 10MB
-                metadata['estimated_complexity'] = 'Simple'
+                metadata["estimated_complexity"] = "Simple"
             elif file_size < 100 * 1024 * 1024:  # < 100MB
-                metadata['estimated_complexity'] = 'Medium'
+                metadata["estimated_complexity"] = "Medium"
             else:
-                metadata['estimated_complexity'] = 'Complex'
+                metadata["estimated_complexity"] = "Complex"
 
             # Add cache-specific properties
-            metadata['supports_streaming'] = file_ext in ['.abc', '.usd', '.usdc']
-            metadata['supports_variants'] = file_ext in ['.usd', '.usda', '.usdc']
+            metadata["supports_streaming"] = file_ext in [".abc", ".usd", ".usdc"]
+            metadata["supports_variants"] = file_ext in [".usd", ".usda", ".usdc"]
 
         except Exception as e:
-            metadata['extraction_error'] = str(e)
+            metadata["extraction_error"] = str(e)
             self.logger.warning(f"Cache metadata extraction failed for {file_path}: {e}")
 
         return metadata
@@ -1524,8 +1644,7 @@ class StandaloneThumbnailService(IThumbnailService):
         self.logger = logging.getLogger(__name__)
 
     def generate_thumbnail(
-            self, file_path: Path, size: Tuple[int, int] = (64, 64),
-            force_playblast: bool = False
+        self, file_path: Path, size: Tuple[int, int] = (64, 64), force_playblast: bool = False
     ) -> Optional[str]:
         """
         Generate thumbnail for asset - Clean Code: Single Responsibility
@@ -1539,7 +1658,7 @@ class StandaloneThumbnailService(IThumbnailService):
         """
         try:
             # For standalone mode, return placeholder logic
-            thumbnail_dir = file_path.parent / '.thumbnails'
+            thumbnail_dir = file_path.parent / ".thumbnails"
             thumbnail_path = thumbnail_dir / f"{file_path.stem}_thumb.png"
 
             # Create thumbnail directory if needed
@@ -1555,7 +1674,9 @@ class StandaloneThumbnailService(IThumbnailService):
             self.logger.error(f"Failed to generate thumbnail for {file_path.name}: {e}")
             return None
 
-    def get_cached_thumbnail(self, file_path: Path, size: Tuple[int, int] = (64, 64)) -> Optional[str]:
+    def get_cached_thumbnail(
+        self, file_path: Path, size: Tuple[int, int] = (64, 64)
+    ) -> Optional[str]:
         """
         Get existing cached thumbnail - SOLID: Single Responsibility
 
@@ -1567,7 +1688,7 @@ class StandaloneThumbnailService(IThumbnailService):
             Path to thumbnail if exists
         """
         try:
-            thumbnail_dir = file_path.parent / '.thumbnails'
+            thumbnail_dir = file_path.parent / ".thumbnails"
             thumbnail_path = thumbnail_dir / f"{file_path.stem}_thumb.png"
 
             return str(thumbnail_path) if thumbnail_path.exists() else None
@@ -1607,7 +1728,7 @@ class StandaloneThumbnailService(IThumbnailService):
         Returns:
             True if thumbnail generation is supported
         """
-        supported_extensions = {'.ma', '.mb', '.obj', '.fbx', '.abc', '.usd', '.usda', '.usdc'}
+        supported_extensions = {".ma", ".mb", ".obj", ".fbx", ".abc", ".usd", ".usda", ".usdc"}
         return file_path.suffix.lower() in supported_extensions
 
     def get_cache_size(self) -> int:

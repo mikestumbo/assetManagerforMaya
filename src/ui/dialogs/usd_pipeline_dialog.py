@@ -26,10 +26,24 @@ from typing import Optional
 import logging
 
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel,
-    QPushButton, QLineEdit, QCheckBox, QRadioButton,
-    QProgressBar, QTextEdit, QFileDialog, QSpinBox,
-    QButtonGroup, QWidget, QMessageBox, QTabWidget, QComboBox
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGroupBox,
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QCheckBox,
+    QRadioButton,
+    QProgressBar,
+    QTextEdit,
+    QFileDialog,
+    QSpinBox,
+    QButtonGroup,
+    QWidget,
+    QMessageBox,
+    QTabWidget,
+    QComboBox,
 )
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont
@@ -40,10 +54,9 @@ from ...services.usd import USDExportServiceImpl, MayaSceneParserImpl, USDRigCon
 from ...services.usd.usd_material_converter_impl import USDMaterialConverterImpl
 from ...services.usd.maya_rig_exporter import MayaRigExporter
 from ...services.usd.usdz_packager import UsdzPackager
+
 # Clean Architecture Pipeline
-from ...services.usd.usd_pipeline import (
-    UsdPipeline, ExportOptions
-)
+from ...services.usd.usd_pipeline import UsdPipeline, ExportOptions
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +109,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
         # Set window flags for Maya integration
         if self.parent() is not None:
             self.setWindowFlags(
-                Qt.WindowType.Dialog |
-                Qt.WindowType.WindowCloseButtonHint |
-                Qt.WindowType.WindowStaysOnTopHint
+                Qt.WindowType.Dialog
+                | Qt.WindowType.WindowCloseButtonHint
+                | Qt.WindowType.WindowStaysOnTopHint
             )
 
     def _init_services(self) -> None:
@@ -112,6 +125,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Create USD service for plugin availability checks
             from ...services.usd_service_impl import UsdService
+
             self._usd_service = UsdService()
 
             # Create rig converter
@@ -122,11 +136,12 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 scene_parser=self._scene_parser,
                 material_converter=self._material_converter,
                 rig_converter=self._rig_converter,
-                usd_service=self._usd_service
+                usd_service=self._usd_service,
             )
 
             # Create import service
             from ...services.usd.usd_import_service_impl import UsdImportServiceImpl
+
             self._import_service = UsdImportServiceImpl()
 
             # Clean Architecture Pipeline
@@ -140,7 +155,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             QMessageBox.warning(
                 self,
                 "Service Initialization Error",
-                f"Failed to initialize USD pipeline services:\n{e}\n\nSome features may not work."
+                f"Failed to initialize USD pipeline services:\n{e}\n\nSome features may not work.",
             )
 
     def _create_ui(self) -> None:
@@ -407,9 +422,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             "(e.g. Body_Base_color_1001.png for Body_Base_color_1001.png.tex)."
         )
         self._rma_lib_edit = QLineEdit()
-        self._rma_lib_edit.setPlaceholderText(
-            "e.g.  D:/Maya/RenderManAssetLibrary/Materials"
-        )
+        self._rma_lib_edit.setPlaceholderText("e.g.  D:/Maya/RenderManAssetLibrary/Materials")
         self._rma_lib_edit.setToolTip(rma_lib_label.toolTip())
         self._rma_lib_browse_btn = QPushButton("Browse...")
         self._rma_lib_browse_btn.setFixedWidth(72)
@@ -465,7 +478,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
         anim_layers_label.setStyleSheet("font-weight: bold; margin-top: 8px; color: #FF9800;")
         layout.addWidget(anim_layers_label)
 
-        self._export_merge_skeletons_cb = QCheckBox("[SKELETON] Merge Skeletons (unified animation)")
+        self._export_merge_skeletons_cb = QCheckBox(
+            "[SKELETON] Merge Skeletons (unified animation)"
+        )
         self._export_merge_skeletons_cb.setChecked(False)
         self._export_merge_skeletons_cb.setToolTip(
             "[SKELETON] Merge Skeletons for USD-Native Animation\n\n"
@@ -694,10 +709,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
     def _on_browse_source(self) -> None:
         """Browse for source Maya file"""
         file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select Source Maya Scene",
-            "",
-            "Maya Files (*.ma *.mb);;All Files (*.*)"
+            self, "Select Source Maya Scene", "", "Maya Files (*.ma *.mb);;All Files (*.*)"
         )
 
         if file_path:
@@ -758,10 +770,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             extension = ".usdz"
 
         file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Select Output USD File",
-            "",
-            f"{format_filter};;All Files (*.*)"
+            self, "Select Output USD File", "", f"{format_filter};;All Files (*.*)"
         )
 
         if file_path:
@@ -808,13 +817,19 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 try:
                     scene_data = self._scene_parser.parse_maya_file(source_file)  # type: ignore
                     self._validation_text.append(f"[OK] Meshes found: {len(scene_data.meshes)}")
-                    self._validation_text.append(f"[OK] Materials found: {len(scene_data.materials)}")
+                    self._validation_text.append(
+                        f"[OK] Materials found: {len(scene_data.materials)}"
+                    )
 
                     if scene_data.joints:
-                        self._validation_text.append(f"[OK] Joints found: {len(scene_data.joints)}")
+                        self._validation_text.append(
+                            f"[OK] Joints found: {len(scene_data.joints)}"
+                        )
 
                     if scene_data.skin_clusters:
-                        self._validation_text.append(f"[OK] Skin clusters detected: {len(scene_data.skin_clusters)}")
+                        self._validation_text.append(
+                            f"[OK] Skin clusters detected: {len(scene_data.skin_clusters)}"
+                        )
 
                     if not scene_data.meshes:
                         self._validation_text.append("[WARNING] Warning: No meshes found in scene")
@@ -911,7 +926,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             result = self._pipeline.export(
                 source_path=source_file if source_file else Path("current_scene"),
                 output_path=options.output_path,
-                options=export_options
+                options=export_options,
             )
 
             self._progress_timer.stop()
@@ -929,8 +944,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 if not self._completion_dialog_shown:
                     self._completion_dialog_shown = True
                     import re
+
                     clean_msg = "\n".join(message_parts)
-                    clean_msg = re.sub(r'[^\x00-\x7F]+', '', clean_msg).strip()
+                    clean_msg = re.sub(r"[^\x00-\x7F]+", "", clean_msg).strip()
                     if not clean_msg:
                         clean_msg = "Export completed successfully!"
                     self._deferred_message = clean_msg
@@ -945,7 +961,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 if not self._completion_dialog_shown:
                     self._completion_dialog_shown = True
                     import re
-                    safe_msg = re.sub(r'[^\x00-\x7F]+', '', str(error_msg))
+
+                    safe_msg = re.sub(r"[^\x00-\x7F]+", "", str(error_msg))
                     self._deferred_message = f"USD export failed:\n{safe_msg}"
                     self._deferred_title = "Export Failed"
                     self._deferred_success = False
@@ -960,7 +977,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if not self._completion_dialog_shown:
                 self._completion_dialog_shown = True
                 import re
-                safe_err = re.sub(r'[^\x00-\x7F]+', '', str(e))
+
+                safe_err = re.sub(r"[^\x00-\x7F]+", "", str(e))
                 self._deferred_message = f"An error occurred:\n{safe_err}"
                 self._deferred_title = "Export Error"
                 self._deferred_success = False
@@ -1033,8 +1051,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if success and self._export_rig_cb.isChecked():
                 # Determine rig file format
                 use_binary = self._rig_mb_radio.isChecked()
-                rig_ext = '.rig.mb' if use_binary else '.rig.ma'
-                rig_type = 'mayaBinary' if use_binary else 'mayaAscii'
+                rig_ext = ".rig.mb" if use_binary else ".rig.ma"
+                rig_type = "mayaBinary" if use_binary else "mayaAscii"
 
                 self._status_label.setText(f"Exporting rig file ({rig_ext})...")
                 self._progress_bar.setValue(75)
@@ -1054,17 +1072,17 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
                     # Export options
                     rig_options = {
-                        'export_controllers': True,
-                        'export_constraints': True,
-                        'export_space_switches': True,
-                        'export_ik_handles': True,
-                        'export_blendshapes': True,
-                        'export_sdks': True,
-                        'export_custom_attrs': True,
-                        'export_proxy_attrs': True,
-                        'validate_before_export': True,
-                        'rig_format': rig_type,  # v2.0: Maya format
-                        'rig_path': rig_path,    # v2.0: Output path for rig file
+                        "export_controllers": True,
+                        "export_constraints": True,
+                        "export_space_switches": True,
+                        "export_ik_handles": True,
+                        "export_blendshapes": True,
+                        "export_sdks": True,
+                        "export_custom_attrs": True,
+                        "export_proxy_attrs": True,
+                        "validate_before_export": True,
+                        "rig_format": rig_type,  # v2.0: Maya format
+                        "rig_path": rig_path,  # v2.0: Output path for rig file
                     }
 
                     # Find skeleton root
@@ -1072,11 +1090,12 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     if self._include_rigging_cb.isChecked():
                         try:
                             import maya.cmds as cmds  # type: ignore
-                            joints = cmds.ls(type='joint') or []
+
+                            joints = cmds.ls(type="joint") or []
                             if joints:
                                 for j in joints:
                                     parent = cmds.listRelatives(j, parent=True)
-                                    if not parent or cmds.nodeType(parent[0]) != 'joint':
+                                    if not parent or cmds.nodeType(parent[0]) != "joint":
                                         skeleton_root = j
                                         break
                         except Exception:
@@ -1086,7 +1105,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                         output_path=rig_path,
                         skeleton_root=skeleton_root,
                         options=rig_options,
-                        progress_callback=rig_progress
+                        progress_callback=rig_progress,
                     )
 
                     if not rig_success:
@@ -1110,35 +1129,45 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
                     # The export service created .usdc (because USD API can't create .usdz directly)
                     # Now package it with rig file
-                    temp_usd_path = options.output_path.with_suffix('.usdc')
+                    temp_usd_path = options.output_path.with_suffix(".usdc")
 
                     # Fallback checks for other possible extensions
                     if not temp_usd_path.exists():
-                        if options.output_path.with_suffix('.usda').exists():
-                            temp_usd_path = options.output_path.with_suffix('.usda')
-                        elif options.output_path.exists() and options.output_path.suffix == '.usdz':
+                        if options.output_path.with_suffix(".usda").exists():
+                            temp_usd_path = options.output_path.with_suffix(".usda")
+                        elif (
+                            options.output_path.exists() and options.output_path.suffix == ".usdz"
+                        ):
                             # The file might have been created with wrong extension, rename it
-                            temp_usd_path = options.output_path.with_suffix('.usdc')
+                            temp_usd_path = options.output_path.with_suffix(".usdc")
                             options.output_path.rename(temp_usd_path)
 
                     if not temp_usd_path.exists():
-                        logger.error(f"Could not find intermediate USD file for USDZ packaging: {temp_usd_path}")
-                        raise FileNotFoundError(f"Intermediate USD file not found: {temp_usd_path}")
+                        logger.error(
+                            f"Could not find intermediate USD file for USDZ packaging: {temp_usd_path}"
+                        )
+                        raise FileNotFoundError(
+                            f"Intermediate USD file not found: {temp_usd_path}"
+                        )
 
-                    usdz_path = options.output_path.with_suffix('.usdz')
+                    usdz_path = options.output_path.with_suffix(".usdz")
 
                     # Package with rig file (.rig.mb/.rig.ma)
                     pkg_success, pkg_message = packager.create_package(
                         output_path=usdz_path,
                         usd_file=temp_usd_path,
                         mrig_file=None,  # No longer using .mrig
-                        rig_file=rig_path if rig_success and rig_path and rig_path.exists() else None
+                        rig_file=(
+                            rig_path if rig_success and rig_path and rig_path.exists() else None
+                        ),
                     )
 
                     if pkg_success:
                         usdz_packaged = True
                         if rig_path and rig_success:
-                            logger.info(f"[PACKAGE] Created USDZ package with rig file: {usdz_path}")
+                            logger.info(
+                                f"[PACKAGE] Created USDZ package with rig file: {usdz_path}"
+                            )
                         else:
                             logger.info(f"[PACKAGE] Created USDZ package: {usdz_path}")
 
@@ -1164,12 +1193,12 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     if rig_success and rig_path:
                         message_parts = [
                             f"[PACKAGE] USDZ package created:\n{usdz_path}",
-                            "\n[OK] Contains USD geometry + .rig.mb in one file!"
+                            "\n[OK] Contains USD geometry + .rig.mb in one file!",
                         ]
                     else:
                         message_parts = [
                             f"[PACKAGE] USDZ package created:\n{usdz_path}",
-                            "\n[OK] Contains USD geometry in a single portable package."
+                            "\n[OK] Contains USD geometry in a single portable package.",
                         ]
                 else:
                     message_parts = [f"USD file exported successfully:\n{options.output_path}"]
@@ -1191,8 +1220,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     self._completion_dialog_shown = True
                     # Store message for deferred dialog
                     import re
+
                     clean_msg = "\n".join(message_parts)
-                    clean_msg = re.sub(r'[^\x00-\x7F]+', '', clean_msg).strip()
+                    clean_msg = re.sub(r"[^\x00-\x7F]+", "", clean_msg).strip()
                     if not clean_msg:
                         clean_msg = "Export completed successfully!"
                     self._deferred_message = clean_msg
@@ -1208,7 +1238,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 if not self._completion_dialog_shown:
                     self._completion_dialog_shown = True
                     import re
-                    safe_msg = re.sub(r'[^\x00-\x7F]+', '', str(error_msg))
+
+                    safe_msg = re.sub(r"[^\x00-\x7F]+", "", str(error_msg))
                     self._deferred_message = f"USD export failed:\n{safe_msg}"
                     self._deferred_title = "Export Failed"
                     self._deferred_success = False
@@ -1223,7 +1254,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if not self._completion_dialog_shown:
                 self._completion_dialog_shown = True
                 import re
-                safe_err = re.sub(r'[^\x00-\x7F]+', '', str(e))
+
+                safe_err = re.sub(r"[^\x00-\x7F]+", "", str(e))
                 self._deferred_message = f"An error occurred:\n{safe_err}"
                 self._deferred_title = "Export Error"
                 self._deferred_success = False
@@ -1239,9 +1271,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
     def _show_deferred_dialog(self) -> None:
         """Show export completion dialog after event loop settles"""
         try:
-            title = getattr(self, '_deferred_title', 'Export')
-            message = getattr(self, '_deferred_message', 'Operation complete')
-            success = getattr(self, '_deferred_success', True)
+            title = getattr(self, "_deferred_title", "Export")
+            message = getattr(self, "_deferred_message", "Operation complete")
+            success = getattr(self, "_deferred_success", True)
 
             # Use static method - simplest and most reliable
             if success:
@@ -1252,7 +1284,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
         except Exception as e:
             # Fallback to print
             print(f"Dialog display error: {e}")
-            print(getattr(self, '_deferred_message', 'Export complete'))
+            print(getattr(self, "_deferred_message", "Export complete"))
 
     def _on_cancel(self) -> None:
         """Cancel export"""
@@ -1303,7 +1335,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             export_nurbs_curves=False,  # NURBS come from .rig.mb bundled in USDZ
             nurbs_curves_renderable=False,
             export_animation=self._include_animation_cb.isChecked(),
-            convert_renderman=self._preview_surface_radio.isChecked()
+            convert_renderman=self._preview_surface_radio.isChecked(),
         )
 
         return options
@@ -1317,7 +1349,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
         usd_layout = QHBoxLayout()
         usd_layout.addWidget(QLabel("USD File:"))
         self._usd_file_edit = QLineEdit()
-        self._usd_file_edit.setPlaceholderText("Select USD file (geometry, materials, skeleton)...")
+        self._usd_file_edit.setPlaceholderText(
+            "Select USD file (geometry, materials, skeleton)..."
+        )
         usd_layout.addWidget(self._usd_file_edit)
 
         self._usd_browse_btn = QPushButton("Browse...")
@@ -1349,7 +1383,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
         layout.addWidget(self._lookdev_workflow_radio)
 
         # Option 2: USD Animation (Experimental - Keep USD Native)
-        self._usd_animation_radio = QRadioButton("[ANIMATION] USD Animation - Experimental [WARNING]")
+        self._usd_animation_radio = QRadioButton(
+            "[ANIMATION] USD Animation - Experimental [WARNING]"
+        )
         self._usd_animation_radio.setToolTip(
             "[ANIMATION] USD ANIMATION (EXPERIMENTAL)\n\n"
             "Pure USD workflow - keeps USD proxy reference:\n"
@@ -1615,7 +1651,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
         authoring_inner.addWidget(self._open_layer_editor_rb)
 
         layout.addWidget(self._anim_authoring_container)
-        self._anim_authoring_container.setVisible(False)   # shown only for USD Animation mode
+        self._anim_authoring_container.setVisible(False)  # shown only for USD Animation mode
 
         return group
 
@@ -1628,7 +1664,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
         # USD-specific options (more relevant for look-dev)
         # These still apply but behave differently
-        if hasattr(self, '_import_skin_weights_cb'):
+        if hasattr(self, "_import_skin_weights_cb"):
             self._import_skin_weights_cb.setEnabled(is_animation)
             if not is_animation:
                 self._import_skin_weights_cb.setChecked(False)
@@ -1637,12 +1673,12 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
         # Rig fallback options (only for animation workflow)
         rig_widgets = [
-            '_import_controllers_cb',
-            '_import_constraints_cb',
-            '_import_space_switches_cb',
-            '_import_blendshapes_cb',
-            '_import_custom_attrs_cb',
-            '_create_unified_rig_cb'
+            "_import_controllers_cb",
+            "_import_constraints_cb",
+            "_import_space_switches_cb",
+            "_import_blendshapes_cb",
+            "_import_custom_attrs_cb",
+            "_create_unified_rig_cb",
         ]
         for widget_name in rig_widgets:
             if hasattr(self, widget_name):
@@ -1652,7 +1688,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                     widget.setChecked(True)
 
         # Update info label
-        if hasattr(self, '_usd_info_label'):
+        if hasattr(self, "_usd_info_label"):
             if is_lookdev:
                 self._usd_info_label.setText(
                     "[LOOKDEV] Look-Dev Mode: USD will be loaded as proxy shape.\n"
@@ -1665,7 +1701,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 )
 
         # Show animation authoring method only when USD Animation (proxy) mode is selected
-        if hasattr(self, '_anim_authoring_container') and hasattr(self, '_usd_animation_radio'):
+        if hasattr(self, "_anim_authoring_container") and hasattr(self, "_usd_animation_radio"):
             is_usd_proxy = self._usd_animation_radio.isChecked()
             self._anim_authoring_container.setVisible(is_usd_proxy)
 
@@ -1701,10 +1737,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
     def _browse_usd_file(self) -> None:
         """Browse for USD file to import"""
         file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select USD File",
-            "",
-            "USD Files (*.usd *.usda *.usdc *.usdz);;All Files (*)"
+            self, "Select USD File", "", "USD Files (*.usd *.usda *.usdc *.usdz);;All Files (*)"
         )
         if file_path:
             self._usd_file_edit.setText(file_path)
@@ -1712,15 +1745,15 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Check if this is a USDZ package that might contain .rig.mb
             usd_path = Path(file_path)
-            if usd_path.suffix.lower() == '.usdz':
+            if usd_path.suffix.lower() == ".usdz":
                 try:
                     packager = UsdzPackager()
                     pkg_info = packager.get_package_info(usd_path)
 
-                    if pkg_info.get('has_rig'):
+                    if pkg_info.get("has_rig"):
                         self._usd_info_label.setText(
-                            self._usd_info_label.text() +
-                            "\n[PACKAGE] Package contains .rig.mb Maya rig file!"
+                            self._usd_info_label.text()
+                            + "\n[PACKAGE] Package contains .rig.mb Maya rig file!"
                         )
                 except Exception as e:
                     logger.debug(f"Could not check USDZ package: {e}")
@@ -1739,7 +1772,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 return
 
             # Basic validation
-            self._usd_info_label.setText(f"[OK] USD file found: {path.name}\nValidating contents...")
+            self._usd_info_label.setText(
+                f"[OK] USD file found: {path.name}\nValidating contents..."
+            )
 
             # TODO: Add more detailed USD validation
 
@@ -1775,82 +1810,90 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if is_lookdev_mode:
                 # ============ LOOK-DEV WORKFLOW ============
                 # Create USD proxy shape - fast, non-destructive
-                self._import_status_label.setText("[LOOKDEV] Look-Dev Mode: Creating USD proxy shape...")
+                self._import_status_label.setText(
+                    "[LOOKDEV] Look-Dev Mode: Creating USD proxy shape..."
+                )
 
                 import_options = ImportOptions(
                     import_geometry=True,
                     import_nurbs_curves=False,  # NURBS in .rig.mb for animation
-                    import_skeleton=True,       # Skeleton for reference
+                    import_skeleton=True,  # Skeleton for reference
                     import_skin_weights=False,  # No skin bindings (viewport-friendly)
-                    import_blendshapes=False,   # Blendshapes in .rig.mb
+                    import_blendshapes=False,  # Blendshapes in .rig.mb
                     import_materials=True,
                     import_constraints=False,
                     use_rig_mb_fallback=False,  # Don't use .rig.mb for look-dev
                     prefer_usd=True,
                     namespace=self._namespace_edit.text().strip() or None,
-                    import_animation=False      # Static for look-dev
+                    import_animation=False,  # Static for look-dev
                 )
 
             elif is_usd_animation_mode:
                 # ============ USD ANIMATION (EXPERIMENTAL) ============
                 # Keep USD as proxy - for pipeline integration with USD Layers
-                self._import_status_label.setText("[ANIMATION] USD Animation: Creating USD stage in Maya...")
+                self._import_status_label.setText(
+                    "[ANIMATION] USD Animation: Creating USD stage in Maya..."
+                )
 
                 import_options = ImportOptions(
                     import_geometry=True,
                     import_nurbs_curves=False,  # Keep in USD
                     import_skeleton=True,
-                    import_skin_weights=False,   # Proxy mode: UsdSkelImaging handles deformation natively
-                    import_blendshapes=True,    # USD blendShapes preserved
+                    import_skin_weights=False,  # Proxy mode: UsdSkelImaging handles deformation natively
+                    import_blendshapes=True,  # USD blendShapes preserved
                     import_materials=True,
                     import_constraints=False,
                     use_rig_mb_fallback=False,  # Pure USD workflow
                     prefer_usd=True,
                     namespace=self._namespace_edit.text().strip() or None,
                     import_animation=False,
-                    usd_proxy_mode=True,        # Keep as USD proxy (mayaUSD v0.35.0)
+                    usd_proxy_mode=True,  # Keep as USD proxy (mayaUSD v0.35.0)
                     convert_skeleton_to_maya=self._convert_skeleton_to_maya_cb.isChecked(),
-                    open_layer_editor=self._open_layer_editor_rb.isChecked()
+                    open_layer_editor=self._open_layer_editor_rb.isChecked(),
                 )
 
             elif is_hybrid_mode:
                 # ============ HYBRID WORKFLOW (RECOMMENDED) ============
                 # Convert USD to Maya + import controllers
-                self._import_status_label.setText("[HYBRID] Hybrid Mode: Converting USD to Maya + controllers...")
+                self._import_status_label.setText(
+                    "[HYBRID] Hybrid Mode: Converting USD to Maya + controllers..."
+                )
 
                 import_options = ImportOptions(
                     import_geometry=True,
-                    import_nurbs_curves=True,   # Import controllers from .rig.mb
+                    import_nurbs_curves=True,  # Import controllers from .rig.mb
                     import_skeleton=True,
-                    import_skin_weights=True,   # Convert USD bindings to Maya
+                    import_skin_weights=True,  # Convert USD bindings to Maya
                     import_blendshapes=True,
                     import_materials=True,
-                    import_constraints=True,    # Import constraints for controllers
-                    use_rig_mb_fallback=True,   # Use .rig.mb for controllers
-                    prefer_usd=True,            # Prefer USD for meshes
+                    import_constraints=True,  # Import constraints for controllers
+                    use_rig_mb_fallback=True,  # Use .rig.mb for controllers
+                    prefer_usd=True,  # Prefer USD for meshes
                     namespace=self._namespace_edit.text().strip() or None,
                     import_animation=False,
-                    hybrid_mode=True,           # Special flag for hybrid import
-                    extract_full_weights=self._extract_full_weights_cb.isChecked()  # Advanced option
+                    hybrid_mode=True,  # Special flag for hybrid import
+                    extract_full_weights=self._extract_full_weights_cb.isChecked(),  # Advanced option
                 )
 
             elif is_animation_mode:
                 # ============ ANIMATION WORKFLOW ============
                 # Extract .rig.mb for full Maya functionality
-                self._import_status_label.setText("[ANIMATION] Animation Mode: Extracting full Maya rig...")
+                self._import_status_label.setText(
+                    "[ANIMATION] Animation Mode: Extracting full Maya rig..."
+                )
 
                 import_options = ImportOptions(
                     import_geometry=self._import_geometry_cb.isChecked(),
-                    import_nurbs_curves=True,   # Controllers from .rig.mb
+                    import_nurbs_curves=True,  # Controllers from .rig.mb
                     import_skeleton=self._import_skeleton_cb.isChecked(),
                     import_skin_weights=self._import_skin_weights_cb.isChecked(),
                     import_blendshapes=self._import_blendshapes_cb.isChecked(),
                     import_materials=self._import_materials_cb.isChecked(),
                     import_constraints=self._import_constraints_cb.isChecked(),
-                    use_rig_mb_fallback=True,   # Use .rig.mb for full rig!
-                    prefer_usd=False,           # Prefer .rig.mb data for animation
+                    use_rig_mb_fallback=True,  # Use .rig.mb for full rig!
+                    prefer_usd=False,  # Prefer .rig.mb data for animation
                     namespace=self._namespace_edit.text().strip() or None,
-                    import_animation=True
+                    import_animation=True,
                 )
 
             else:
@@ -1873,10 +1916,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Execute import
             self._import_status_label.setText("[START] Importing with mayaUSD...")
-            result = self._pipeline.import_usd(
-                usd_path=Path(usd_path),
-                options=import_options
-            )
+            result = self._pipeline.import_usd(usd_path=Path(usd_path), options=import_options)
 
             self._import_progress_bar.setValue(100)
             self._import_progress_bar.setVisible(False)
@@ -1897,6 +1937,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
             QMessageBox.critical(self, "Import Error", f"An error occurred:\n{e}")
             logger.error(f"Import error: {e}")
             import traceback
+
             traceback.print_exc()
 
     def _create_unified_rig_structure(self, usd_path: str, _rig_path: str) -> bool:
@@ -1925,7 +1966,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Find and organize imported nodes
             # Look for geometry (meshes)
-            meshes = cmds.ls(type='mesh', long=True) or []
+            meshes = cmds.ls(type="mesh", long=True) or []
             for mesh in meshes:
                 transform = cmds.listRelatives(mesh, parent=True, fullPath=True)
                 if transform:
@@ -1938,7 +1979,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
                             pass  # May already be parented
 
             # Look for NURBS curves (controllers)
-            curves = cmds.ls(type='nurbsCurve', long=True) or []
+            curves = cmds.ls(type="nurbsCurve", long=True) or []
             for curve in curves:
                 transform = cmds.listRelatives(curve, parent=True, fullPath=True)
                 if transform:
@@ -1950,10 +1991,10 @@ class USDPipelineDialog(QDialog):  # type: ignore
                             pass
 
             # Look for root joints
-            joints = cmds.ls(type='joint') or []
+            joints = cmds.ls(type="joint") or []
             root_joints = []
             for joint in joints:
-                parent = cmds.listRelatives(joint, parent=True, type='joint')
+                parent = cmds.listRelatives(joint, parent=True, type="joint")
                 if not parent:  # No joint parent = root joint
                     root_joints.append(joint)
 
@@ -1967,7 +2008,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
 
             # Lock and hide groups' transforms
             for grp in [geo_grp, ctrl_grp, skel_grp]:
-                for attr in ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']:
+                for attr in ["tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz"]:
                     cmds.setAttr(f"{grp}.{attr}", lock=True, keyable=False)
 
             logger.info(f"[OK] Created unified rig structure: {rig_grp}")
@@ -1999,10 +2040,11 @@ class USDPipelineDialog(QDialog):  # type: ignore
         """Restore persisted form values (called after _create_ui)"""
         try:
             from PySide6.QtCore import QSettings
+
             settings = QSettings("MikeStumbo", "USDPipeline")
             path = settings.value("rma_lib_path", "")
             if path:
-                self._rma_lib_edit.setText(path)
+                self._rma_lib_edit.setText(str(path))
         except Exception:
             pass
 
@@ -2018,9 +2060,13 @@ class USDPipelineDialog(QDialog):  # type: ignore
             if geometry:
                 success = self.restoreGeometry(geometry)
                 if success:
-                    logger.info(f"[OK] USD Pipeline geometry restored: {self.size().width()}x{self.size().height()}")
+                    logger.info(
+                        f"[OK] USD Pipeline geometry restored: {self.size().width()}x{self.size().height()}"
+                    )
                 else:
-                    logger.warning("[WARNING] Failed to restore USD Pipeline geometry, using defaults")
+                    logger.warning(
+                        "[WARNING] Failed to restore USD Pipeline geometry, using defaults"
+                    )
             else:
                 logger.info("[INFO] No saved USD Pipeline geometry found, using defaults")
 
@@ -2035,7 +2081,9 @@ class USDPipelineDialog(QDialog):  # type: ignore
             settings = QSettings("MikeStumbo", "USDPipeline")
             settings.setValue("geometry", self.saveGeometry())
             settings.setValue("rma_lib_path", self._rma_lib_edit.text())
-            logger.info(f"[OK] USD Pipeline geometry saved: {self.size().width()}x{self.size().height()}")
+            logger.info(
+                f"[OK] USD Pipeline geometry saved: {self.size().width()}x{self.size().height()}"
+            )
 
         except Exception as e:
             logger.warning(f"[WARNING] Error saving USD Pipeline geometry: {e}")

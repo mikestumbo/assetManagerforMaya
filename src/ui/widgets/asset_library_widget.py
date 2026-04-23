@@ -14,11 +14,19 @@ from typing import List, Optional, Dict, Any, TYPE_CHECKING
 # Runtime imports
 try:
     from PySide6.QtWidgets import (
-        QWidget, QListWidget, QMenu, QVBoxLayout, QHBoxLayout,
-        QLineEdit, QPushButton, QTabWidget, QListWidgetItem
+        QWidget,
+        QListWidget,
+        QMenu,
+        QVBoxLayout,
+        QHBoxLayout,
+        QLineEdit,
+        QPushButton,
+        QTabWidget,
+        QListWidgetItem,
     )
     from PySide6.QtCore import Qt, Signal, QTimer, QSize, QMimeData
     from PySide6.QtGui import QColor, QIcon, QDrag
+
     PYSIDE_AVAILABLE = True
 except ImportError:
     PYSIDE_AVAILABLE = False
@@ -40,6 +48,7 @@ try:
     from ...core.interfaces.thumbnail_service import IThumbnailService  # type: ignore
     from ...core.interfaces.event_publisher import IEventPublisher, EventType  # type: ignore
     from ...core.container import get_container  # type: ignore
+
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"[WARNING] Import warning for asset library: {e}")
@@ -69,16 +78,24 @@ except ImportError as e:
                 setattr(self, key, value)
 
     class IAssetRepository:
-        def find_all(self, path): return []
-        def find_by_criteria(self, criteria): return []
-        def add_to_favorites(self, asset): pass
-        def remove_from_favorites(self, asset): pass
+        def find_all(self, path):
+            return []
+
+        def find_by_criteria(self, criteria):
+            return []
+
+        def add_to_favorites(self, asset):
+            pass
+
+        def remove_from_favorites(self, asset):
+            pass
 
     class IThumbnailService:
         pass
 
     class IEventPublisher:
-        def publish(self, event_type, data): pass
+        def publish(self, event_type, data):
+            pass
 
     class EventType:
         LIBRARY_REFRESHED = "library_refreshed"
@@ -93,11 +110,13 @@ except ImportError as e:
                 elif interface == IThumbnailService:
                     return IThumbnailService()
                 return None
+
         return MockContainer()
 
     IMPORTS_AVAILABLE = False
 
 if PYSIDE_AVAILABLE and QWidget is not None:
+
     class DragEnabledAssetList(QListWidget):  # type: ignore
         """
         Custom QListWidget with drag support for Maya viewport
@@ -117,11 +136,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Get asset data using duck typing
             asset = item.data(Qt.UserRole)  # type: ignore
-            if not asset or not hasattr(asset, 'file_path'):
+            if not asset or not hasattr(asset, "file_path"):
                 print("[WARNING] No valid asset data for drag operation")
                 return
 
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else 'Unknown'
+            asset_name = asset.display_name if hasattr(asset, "display_name") else "Unknown"
             print(f"[TARGET] Starting drag operation for: {asset_name}")
             print(f"   File path: {asset.file_path}")
 
@@ -130,6 +149,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Set file path as URL for drag and drop
             from PySide6.QtCore import QUrl
+
             file_url = QUrl.fromLocalFile(str(asset.file_path))  # type: ignore
             mime_data.setUrls([file_url])  # type: ignore
 
@@ -159,12 +179,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
         # Asset Type Color Mapping - Synced with Asset Type Colors keychart
         # This provides a single source of truth for all asset type colors
         ASSET_TYPE_COLORS: Dict[str, Any] = {
-            "Maya Scene": (255, 150, 50),     # Orange
-            "3D Model": (150, 255, 150),      # Green
-            "Image": (100, 150, 255),         # Blue
-            "Video": (255, 100, 150),         # Pink
-            "Material": (200, 100, 255),      # Purple
-            "Archive": (150, 150, 150)        # Gray
+            "Maya Scene": (255, 150, 50),  # Orange
+            "3D Model": (150, 255, 150),  # Green
+            "Image": (100, 150, 255),  # Blue
+            "Video": (255, 100, 150),  # Pink
+            "Material": (200, 100, 255),  # Purple
+            "Archive": (150, 150, 150),  # Gray
         }
 
         # Clean event signals - defined here to avoid None callable error
@@ -173,7 +193,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             asset_double_clicked = Signal(Asset)  # type: ignore
             selection_changed = Signal(list)  # List[Asset]  # type: ignore
             asset_info_requested = Signal(Asset)  # type: ignore - Request to show asset info in panel
-            color_scheme_changed = Signal(dict)  # Dict[str, QColor] - Emitted when color scheme is updated
+            color_scheme_changed = Signal(
+                dict
+            )  # Dict[str, QColor] - Emitted when color scheme is updated
 
         def __init__(self, parent=None):
             super().__init__(parent)
@@ -203,23 +225,24 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     # Add src to path for factory import
                     import sys
                     from pathlib import Path
+
                     src_path = Path(__file__).parent.parent.parent
                     if str(src_path) not in sys.path:
                         sys.path.insert(0, str(src_path))
 
                     from ...core.service_factory import get_service_factory  # type: ignore
+
                     factory = get_service_factory()
 
                     self._repository = (
                         factory.create_asset_repository() or self._create_fallback_repository()
                     )
                     self._thumbnail_service = (
-                        factory.create_thumbnail_service() or
-                        self._create_fallback_thumbnail_service()
+                        factory.create_thumbnail_service()
+                        or self._create_fallback_thumbnail_service()
                     )
                     self._event_publisher = (
-                        factory.create_event_publisher() or
-                        self._create_fallback_event_publisher()
+                        factory.create_event_publisher() or self._create_fallback_event_publisher()
                     )
 
                     print("[OK] Asset library using service factory")
@@ -256,9 +279,18 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Tag tracking - maintain a set of all used tags
             self._all_used_tags: set = set()
             self._predefined_tags = [
-                "Environment", "Character", "Prop", "Texture",
-                "Material", "Animation", "Lighting", "VFX",
-                "WIP", "Final", "Approved", "Archived"
+                "Environment",
+                "Character",
+                "Prop",
+                "Texture",
+                "Material",
+                "Animation",
+                "Lighting",
+                "VFX",
+                "WIP",
+                "Final",
+                "Approved",
+                "Archived",
             ]
             self._all_used_tags.update(self._predefined_tags)  # Start with predefined tags
 
@@ -285,29 +317,34 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _create_fallback_repository(self):
             """Create minimal fallback asset repository"""
+
             class FallbackAssetRepository:
                 def find_all(self, directory):
                     assets = []
                     if directory and directory.exists():
-                        for file_path in directory.rglob('*'):
+                        for file_path in directory.rglob("*"):
                             if file_path.is_file() and self._is_asset_file(file_path):
                                 assets.append(self._create_minimal_asset(file_path))
                     return assets
 
                 def _is_asset_file(self, file_path):
-                    supported_extensions = {'.png', '.jpg', '.jpeg', '.ma', '.mb', '.obj', '.fbx'}
+                    supported_extensions = {".png", ".jpg", ".jpeg", ".ma", ".mb", ".obj", ".fbx"}
                     return file_path.suffix.lower() in supported_extensions
 
                 def _create_minimal_asset(self, file_path):
-                    return type('Asset', (), {
-                        'id': str(file_path),
-                        'name': file_path.name,
-                        'file_path': file_path,
-                        'display_name': file_path.name,
-                        'is_favorite': False,
-                        'file_extension': file_path.suffix,
-                        'asset_type': 'unknown'
-                    })()
+                    return type(
+                        "Asset",
+                        (),
+                        {
+                            "id": str(file_path),
+                            "name": file_path.name,
+                            "file_path": file_path,
+                            "display_name": file_path.name,
+                            "is_favorite": False,
+                            "file_extension": file_path.suffix,
+                            "asset_type": "unknown",
+                        },
+                    )()
 
                 def add_to_favorites(self, asset):
                     print(f"📌 Would add {asset.name} to favorites")
@@ -322,12 +359,14 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _create_fallback_thumbnail_service(self):
             """Create enhanced fallback thumbnail service with basic file type icons"""
+
             class FallbackThumbnailService:
                 def __init__(self):
                     self._cache_dir = None
                     try:
                         from pathlib import Path
                         import tempfile
+
                         self._cache_dir = Path(tempfile.gettempdir()) / "asset_manager_icons"
                         self._cache_dir.mkdir(exist_ok=True)
                     except Exception:
@@ -337,8 +376,15 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     """Generate basic file type icon as fallback thumbnail"""
                     try:
                         from pathlib import Path
-                        file_name = Path(file_path).name if hasattr(Path(file_path), 'name') else str(file_path)
-                        print(f"[REFRESH] Fallback thumbnail service generating icon for: {file_name}")
+
+                        file_name = (
+                            Path(file_path).name
+                            if hasattr(Path(file_path), "name")
+                            else str(file_path)
+                        )
+                        print(
+                            f"[REFRESH] Fallback thumbnail service generating icon for: {file_name}"
+                        )
                         result = self._create_file_type_icon(file_path, size)
                         if result:
                             print(f"[OK] Fallback thumbnail created: {result}")
@@ -364,9 +410,13 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         file_path = Path(file_path) if isinstance(file_path, str) else file_path
 
                         # Get file extension for icon type
-                        ext = file_path.suffix.lower() if hasattr(file_path, 'suffix') else '.unknown'
+                        ext = (
+                            file_path.suffix.lower()
+                            if hasattr(file_path, "suffix")
+                            else ".unknown"
+                        )
                         if not ext:
-                            ext = '.file'
+                            ext = ".file"
 
                         # Create a simple colored icon based on file type
                         pixmap = QPixmap(size[0], size[1])
@@ -377,14 +427,14 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
                         # Choose color based on file type
                         colors = {
-                            '.ma': QColor(0, 150, 255),     # Maya - Blue
-                            '.mb': QColor(0, 120, 200),     # Maya Binary - Dark Blue
-                            '.fbx': QColor(255, 150, 0),    # FBX - Orange
-                            '.obj': QColor(150, 255, 150),  # OBJ - Light Green
-                            '.usd': QColor(255, 100, 150),  # USD - Pink
-                            '.usda': QColor(255, 120, 170),  # USDA - Light Pink
-                            '.abc': QColor(150, 150, 255),  # Alembic - Light Blue
-                            '.3ds': QColor(255, 255, 100),  # 3DS - Yellow
+                            ".ma": QColor(0, 150, 255),  # Maya - Blue
+                            ".mb": QColor(0, 120, 200),  # Maya Binary - Dark Blue
+                            ".fbx": QColor(255, 150, 0),  # FBX - Orange
+                            ".obj": QColor(150, 255, 150),  # OBJ - Light Green
+                            ".usd": QColor(255, 100, 150),  # USD - Pink
+                            ".usda": QColor(255, 120, 170),  # USDA - Light Pink
+                            ".abc": QColor(150, 150, 255),  # Alembic - Light Blue
+                            ".3ds": QColor(255, 255, 100),  # 3DS - Yellow
                         }
 
                         color = colors.get(ext, QColor(180, 180, 180))  # Default gray
@@ -407,9 +457,15 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         painter.setPen(QColor(255, 255, 255))
 
                         # Remove the dot for display
-                        ext_text = ext[1:].upper() if ext.startswith('.') else ext.upper()
-                        painter.drawText(margin, margin, rect_width, rect_height,
-                                         Qt.AlignmentFlag.AlignCenter, ext_text)
+                        ext_text = ext[1:].upper() if ext.startswith(".") else ext.upper()
+                        painter.drawText(
+                            margin,
+                            margin,
+                            rect_width,
+                            rect_height,
+                            Qt.AlignmentFlag.AlignCenter,
+                            ext_text,
+                        )
 
                         painter.end()
 
@@ -425,7 +481,8 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
                         # Return as temporary file
                         import tempfile
-                        temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+
+                        temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                         pixmap.save(temp_file.name, "PNG")
                         return temp_file.name
 
@@ -443,6 +500,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _create_fallback_event_publisher(self):
             """Create minimal fallback event publisher"""
+
             class FallbackEventPublisher:
                 def publish(self, event_type, data=None):
                     print(f"📢 Event: {event_type}")
@@ -476,6 +534,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Collections tab with proper implementation
             from .collections_widget import CollectionsDisplayWidget
+
             collections_widget = CollectionsDisplayWidget(self)  # type: ignore
             # Connect collection widget signals to library widget signals
             collections_widget.asset_selected.connect(self.asset_selected.emit)  # type: ignore
@@ -508,7 +567,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _create_asset_list(self):  # type: ignore
             """Create asset list widget - Single Responsibility"""
-            print("[LOOKDEV] Creating asset list widget with drag support and event connections...")
+            print(
+                "[LOOKDEV] Creating asset list widget with drag support and event connections..."
+            )
             asset_list = DragEnabledAssetList()  # Use custom drag-enabled list
             asset_list.setViewMode(QListWidget.IconMode)  # type: ignore
             asset_list.setGridSize(QSize(80, 100))  # type: ignore
@@ -524,7 +585,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Connect signals
             asset_list.itemSelectionChanged.connect(self._on_selection_changed)  # type: ignore
             asset_list.itemDoubleClicked.connect(self._on_item_double_clicked)  # type: ignore
-            print("[OK] Asset list signals connected: itemSelectionChanged, itemDoubleClicked, drag enabled")
+            print(
+                "[OK] Asset list signals connected: itemSelectionChanged, itemDoubleClicked, drag enabled"
+            )
 
             return asset_list
 
@@ -552,7 +615,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 return
 
             # Validate that asset has required attributes (duck typing approach)
-            required_attrs = ['display_name', 'file_path', 'id']
+            required_attrs = ["display_name", "file_path", "id"]
             if not all(hasattr(asset, attr) for attr in required_attrs):
                 return
 
@@ -574,12 +637,15 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Screenshot capture action with custom icon
             screenshot_action = menu.addAction("Capture Screenshot")
-            screenshot_action.setToolTip("Create custom captured screenshot from Maya's currently selected viewport")
+            screenshot_action.setToolTip(
+                "Create custom captured screenshot from Maya's currently selected viewport"
+            )
             # Try to use custom screenshot icon
             try:
                 screenshot_icon_path = self._get_screenshot_icon_path()
                 if screenshot_icon_path:
                     from PySide6.QtGui import QIcon
+
                     screenshot_action.setIcon(QIcon(screenshot_icon_path))
             except Exception as e:
                 print(f"[WARNING] Could not set custom screenshot icon in menu: {e}")
@@ -589,7 +655,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             menu.addSeparator()
 
             # Favorites actions - show both, enable/disable based on status
-            is_favorite = getattr(asset, 'is_favorite', False)
+            is_favorite = getattr(asset, "is_favorite", False)
 
             add_fav_action = menu.addAction("Add to Favorites")
             add_fav_action.setEnabled(not is_favorite)
@@ -617,8 +683,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 if action is not None:
                     # Use lambda with default argument to capture current value
                     action.triggered.connect(
-                        lambda checked=False, type_name=asset_type_name:
-                        self._set_asset_type_color(asset, type_name)
+                        lambda checked=False, type_name=asset_type_name: self._set_asset_type_color(
+                            asset, type_name
+                        )
                     )
 
             color_menu.addSeparator()
@@ -633,25 +700,35 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             tag_menu = menu.addMenu("Tags")
 
             # Show current tags if any
-            if hasattr(asset, 'tags') and asset.tags:
+            if hasattr(asset, "tags") and asset.tags:
                 tag_menu.addAction(f"Current Tags: {', '.join(asset.tags)}").setEnabled(False)
                 tag_menu.addSeparator()
 
-            tag_menu.addAction("Add Tag...").triggered.connect(lambda: self._add_tag_to_asset(asset))
+            tag_menu.addAction("Add Tag...").triggered.connect(
+                lambda: self._add_tag_to_asset(asset)
+            )
 
             # Only show remove option if asset has tags
-            if hasattr(asset, 'tags') and asset.tags:
-                tag_menu.addAction("Remove Tag...").triggered.connect(lambda: self._remove_tags_from_asset(asset))
+            if hasattr(asset, "tags") and asset.tags:
+                tag_menu.addAction("Remove Tag...").triggered.connect(
+                    lambda: self._remove_tags_from_asset(asset)
+                )
 
             tag_menu.addSeparator()
             tag_menu.addAction("Manage Tags...").triggered.connect(self._open_tag_manager)
 
             # Collections submenu
             collections_menu = menu.addMenu("Collections")
-            collections_menu.addAction("Add to Collection...").triggered.connect(lambda: self._add_to_collection(asset))
-            collections_menu.addAction("New Collection...").triggered.connect(self._create_new_collection)
+            collections_menu.addAction("Add to Collection...").triggered.connect(
+                lambda: self._add_to_collection(asset)
+            )
+            collections_menu.addAction("New Collection...").triggered.connect(
+                self._create_new_collection
+            )
             collections_menu.addSeparator()
-            collections_menu.addAction("Manage Collections...").triggered.connect(self._open_collections_manager)
+            collections_menu.addAction("Manage Collections...").triggered.connect(
+                self._open_collections_manager
+            )
 
             # Separator
             menu.addSeparator()
@@ -683,7 +760,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     f"Are you sure you want to remove '{asset.display_name}' from the library?\n\n"
                     f"This will delete the asset file from disk and cannot be undone.",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
+                    QMessageBox.StandardButton.No,
                 )
 
                 if reply == QMessageBox.StandardButton.Yes:
@@ -691,7 +768,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     import os
                     from pathlib import Path
 
-                    file_path = Path(asset.file_path) if isinstance(asset.file_path, str) else asset.file_path
+                    file_path = (
+                        Path(asset.file_path)
+                        if isinstance(asset.file_path, str)
+                        else asset.file_path
+                    )
                     if file_path.exists():
                         os.remove(file_path)
                         print(f"[DELETE] Deleted asset file: {file_path}")
@@ -710,23 +791,20 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         QMessageBox.information(
                             self,
                             "Asset Removed",
-                            f"'{asset.display_name}' has been removed from the library."
+                            f"'{asset.display_name}' has been removed from the library.",
                         )
                     else:
                         QMessageBox.warning(
                             self,
                             "File Not Found",
-                            f"The asset file could not be found:\n{file_path}"
+                            f"The asset file could not be found:\n{file_path}",
                         )
 
             except Exception as e:
                 from PySide6.QtWidgets import QMessageBox
+
                 print(f"[ERROR] Error removing asset: {e}")
-                QMessageBox.critical(
-                    self,
-                    "Error",
-                    f"Failed to remove asset:\n{str(e)}"
-                )
+                QMessageBox.critical(self, "Error", f"Failed to remove asset:\n{str(e)}")
 
         def _add_to_favorites(self, asset: Any) -> None:
             """Add asset to favorites - Single Responsibility"""
@@ -762,12 +840,14 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 self.asset_selected.emit(asset)
 
             self._set_status(f"[FAVORITE] Removed from favorites: {asset.name}")
-            print(f"[FAVORITE] Removed '{asset.display_name}' from favorites and saved to metadata")
+            print(
+                f"[FAVORITE] Removed '{asset.display_name}' from favorites and saved to metadata"
+            )
 
         def _capture_screenshot(self, asset: Any) -> None:
             """Capture screenshot for asset - Single Responsibility"""
             try:
-                asset_name = asset.display_name if hasattr(asset, 'display_name') else 'Unknown'
+                asset_name = asset.display_name if hasattr(asset, "display_name") else "Unknown"
                 print(f"[CAMERA] Opening screenshot dialog for: {asset_name}")
 
                 # Import screenshot dialog
@@ -781,7 +861,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     """Refresh thumbnail for the specific asset after screenshot capture"""
                     try:
                         # Clear thumbnail cache for this asset to force reload
-                        if hasattr(asset, 'file_path') and self._thumbnail_service:
+                        if hasattr(asset, "file_path") and self._thumbnail_service:
                             try:
                                 self._thumbnail_service.clear_cache_for_file(asset.file_path)
                                 print(f"[DELETE] Cleared thumbnail cache for {asset.display_name}")
@@ -803,6 +883,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             except Exception as e:
                 import traceback
+
                 print(f"[ERROR] Error opening screenshot dialog: {e}")
                 print(f"Traceback:\n{traceback.format_exc()}")
                 self._set_status(f"Screenshot error: {e}")
@@ -812,13 +893,17 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             try:
                 # Method 1: Check current Asset Manager installation directory (when running in Maya)
                 from pathlib import Path as PathLib
+
                 current_file = PathLib(__file__)
 
                 # If we're running from Maya's assetManager installation
                 if "assetManager" in str(current_file):
                     # Navigate up to find the assetManager root directory
                     asset_manager_root = current_file
-                    while asset_manager_root.name != "assetManager" and asset_manager_root.parent != asset_manager_root:
+                    while (
+                        asset_manager_root.name != "assetManager"
+                        and asset_manager_root.parent != asset_manager_root
+                    ):
                         asset_manager_root = asset_manager_root.parent
 
                     # Check for icon in the assetManager directory
@@ -837,8 +922,19 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 try:
                     home = PathLib.home()
                     maya_paths = [
-                        home / "OneDrive" / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png",
-                        home / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png"
+                        home
+                        / "OneDrive"
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
+                        home
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
                     ]
 
                     for maya_path in maya_paths:
@@ -858,11 +954,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Show asset in file explorer - Single Responsibility"""
             import subprocess
             import os
+
             try:
-                if os.name == 'nt':  # Windows
-                    subprocess.run(['explorer', '/select,', str(asset.file_path)], check=False)
-                elif os.name == 'posix':  # macOS/Linux
-                    subprocess.run(['xdg-open', str(asset.file_path.parent)], check=False)
+                if os.name == "nt":  # Windows
+                    subprocess.run(["explorer", "/select,", str(asset.file_path)], check=False)
+                elif os.name == "posix":  # macOS/Linux
+                    subprocess.run(["xdg-open", str(asset.file_path.parent)], check=False)
             except Exception as e:
                 self._set_status(f"Error opening folder: {e}")
 
@@ -871,15 +968,21 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             try:
                 # Check if Ctrl key is pressed (for icon size adjustment)
                 # Without Ctrl, let default scrolling behavior happen
-                if Qt and event.modifiers() & Qt.KeyboardModifier.ControlModifier:  # Added check for Qt availability
+                if (
+                    Qt and event.modifiers() & Qt.KeyboardModifier.ControlModifier
+                ):  # Added check for Qt availability
                     delta = event.angleDelta().y()
 
                     if delta > 0:
                         # Zoom in (larger icons)
-                        self._icon_size = min(self._icon_size + self._icon_size_step, self._max_icon_size)
+                        self._icon_size = min(
+                            self._icon_size + self._icon_size_step, self._max_icon_size
+                        )
                     else:
                         # Zoom out (smaller icons)
-                        self._icon_size = max(self._icon_size - self._icon_size_step, self._min_icon_size)
+                        self._icon_size = max(
+                            self._icon_size - self._icon_size_step, self._min_icon_size
+                        )
 
                     # Apply new icon size to all asset list widgets
                     self._update_icon_sizes()
@@ -912,7 +1015,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     for i in range(self._tab_widget.count()):
                         widget = self._tab_widget.widget(i)
                         # Use hasattr for duck typing instead of isinstance to avoid type errors
-                        if widget and hasattr(widget, 'setIconSize') and hasattr(widget, 'setGridSize'):
+                        if (
+                            widget
+                            and hasattr(widget, "setIconSize")
+                            and hasattr(widget, "setGridSize")
+                        ):
                             widget.setIconSize(new_icon_size)  # type: ignore
                             widget.setGridSize(new_grid_size)  # type: ignore
 
@@ -941,14 +1048,26 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             except Exception as e:
                 print(f"[WARNING] Error showing properties: {e}")
                 # Fallback: show basic info in status
-                self._set_status(f"Properties for: {getattr(asset, 'display_name', 'Unknown Asset')}")
+                self._set_status(
+                    f"Properties for: {getattr(asset, 'display_name', 'Unknown Asset')}"
+                )
 
         def _show_asset_properties_dialog(self, asset: Any) -> None:
             """Display asset properties in a dialog - Single Responsibility"""
-            from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QFormLayout
+            from PySide6.QtWidgets import (
+                QDialog,
+                QVBoxLayout,
+                QHBoxLayout,
+                QLabel,
+                QPushButton,
+                QTextEdit,
+                QFormLayout,
+            )
 
             dialog = QDialog(self)
-            dialog.setWindowTitle(f"Asset Properties - {getattr(asset, 'display_name', 'Unknown')}")
+            dialog.setWindowTitle(
+                f"Asset Properties - {getattr(asset, 'display_name', 'Unknown')}"
+            )
             dialog.setMinimumSize(400, 500)
             dialog.setStyleSheet("""
                 QDialog {
@@ -987,25 +1106,30 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Basic properties
             properties = [
-                ("Name", getattr(asset, 'display_name', 'Unknown')),
-                ("File Path", str(getattr(asset, 'file_path', 'Unknown'))),
-                ("Asset Type", getattr(asset, 'asset_type', 'Unknown')),
-                ("ID", getattr(asset, 'id', 'Unknown')),
-                ("Is Favorite", "Yes" if getattr(asset, 'is_favorite', False) else "No"),
+                ("Name", getattr(asset, "display_name", "Unknown")),
+                ("File Path", str(getattr(asset, "file_path", "Unknown"))),
+                ("Asset Type", getattr(asset, "asset_type", "Unknown")),
+                ("ID", getattr(asset, "id", "Unknown")),
+                ("Is Favorite", "Yes" if getattr(asset, "is_favorite", False) else "No"),
             ]
 
             # Add file-specific properties if file exists
             try:
-                file_path = getattr(asset, 'file_path', None)
-                if file_path and hasattr(file_path, 'stat'):
+                file_path = getattr(asset, "file_path", None)
+                if file_path and hasattr(file_path, "stat"):
                     import datetime
+
                     stat_info = file_path.stat()
                     file_size = f"{stat_info.st_size / 1024:.1f} KB"
-                    modified_time = datetime.datetime.fromtimestamp(stat_info.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                    properties.extend([
-                        ("File Size", file_size),
-                        ("Modified", modified_time),
-                    ])
+                    modified_time = datetime.datetime.fromtimestamp(stat_info.st_mtime).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    properties.extend(
+                        [
+                            ("File Size", file_size),
+                            ("Modified", modified_time),
+                        ]
+                    )
             except Exception:
                 pass  # Skip file properties if not available
 
@@ -1020,7 +1144,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             layout.addLayout(form_layout)
 
             # Add description/notes section if available
-            description = getattr(asset, 'description', '') or getattr(asset, 'notes', '')
+            description = getattr(asset, "description", "") or getattr(asset, "notes", "")
             if description:
                 layout.addWidget(QLabel("Description:"))
                 desc_text = QTextEdit()
@@ -1030,7 +1154,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 layout.addWidget(desc_text)
 
             # Add tags if available
-            tags = getattr(asset, 'tags', [])
+            tags = getattr(asset, "tags", [])
             if tags:
                 tags_label = QLabel("Tags:")
                 layout.addWidget(tags_label)
@@ -1085,7 +1209,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 self._load_favorite_assets()
 
                 # Publish library refreshed event with asset count
-                self._event_publisher.publish(EventType.LIBRARY_REFRESHED, {'asset_count': len(assets)})
+                self._event_publisher.publish(
+                    EventType.LIBRARY_REFRESHED, {"asset_count": len(assets)}
+                )
 
             except Exception as e:
                 print(f"Error refreshing library: {e}")
@@ -1118,7 +1244,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 display_text = asset.display_name
                 tooltip_text = asset.display_name
 
-                if hasattr(asset, 'tags') and asset.tags:
+                if hasattr(asset, "tags") and asset.tags:
                     # Add tag indicator
                     tag_count = len(asset.tags)
                     display_text = f"{display_text} [TAG]×{tag_count}"
@@ -1133,8 +1259,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
                 print(f"[REFRESH] Adding asset [{i+1}]: {asset.display_name}")
                 print(f"   ID: {asset.id}")
-                if hasattr(asset, 'file_path') and asset.file_path:
+                if hasattr(asset, "file_path") and asset.file_path:
                     from pathlib import Path as PathLib
+
                     file_exists = PathLib(asset.file_path).exists()
                     print(f"   Path: {asset.file_path}")
                     print(f"   Exists: {file_exists}")
@@ -1157,7 +1284,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         item.setIcon(icon)  # type: ignore
                         print(f"[THUMB] Loaded cached thumbnail for: {asset.display_name}")
                     except Exception as e:
-                        print(f"[ERROR] Failed to load thumbnail icon for {asset.display_name}: {e}")
+                        print(
+                            f"[ERROR] Failed to load thumbnail icon for {asset.display_name}: {e}"
+                        )
                         # Generate thumbnail in background if icon loading fails
                         self._generate_thumbnail_async(asset, item, icon_size)
                 else:
@@ -1171,9 +1300,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
         def _generate_thumbnail_async(self, asset: Asset, item, size: tuple = (64, 64)) -> None:  # type: ignore
             """Generate thumbnail asynchronously - Non-blocking UI with proper size parameter"""
+
             def generate():
                 try:
-                    print(f"[REFRESH] Async thumbnail generation started for: {asset.display_name} ({size})")
+                    print(
+                        f"[REFRESH] Async thumbnail generation started for: {asset.display_name} ({size})"
+                    )
                     thumbnail_path = self._thumbnail_service.generate_thumbnail(
                         asset.file_path, size=size
                     )  # type: ignore
@@ -1181,21 +1313,28 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         print(f"[OK] Async thumbnail path received: {thumbnail_path}")
                         # Update UI on main thread
                         QTimer.singleShot(0, lambda: self._set_item_thumbnail(item, thumbnail_path))  # type: ignore
-                        print(f"[THUMB] Generated async thumbnail for: {asset.display_name} (size: {size})")
+                        print(
+                            f"[THUMB] Generated async thumbnail for: {asset.display_name} (size: {size})"
+                        )
                     else:
                         print(f"[ERROR] Failed to generate thumbnail for: {asset.display_name}")
                 except Exception as e:
-                    print(f"[ERROR] Async thumbnail generation error for {asset.display_name}: {e}")
+                    print(
+                        f"[ERROR] Async thumbnail generation error for {asset.display_name}: {e}"
+                    )
                     import traceback
+
                     traceback.print_exc()
 
             import threading
+
             threading.Thread(target=generate, daemon=True).start()
 
         def _set_item_thumbnail(self, item, thumbnail_path: str) -> None:  # type: ignore
             """Set thumbnail for list item - UI thread only with enhanced error handling"""
             try:
                 from pathlib import Path
+
                 thumb_file = Path(thumbnail_path)
 
                 if not thumb_file.exists():
@@ -1213,18 +1352,25 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             except Exception as e:
                 print(f"[ERROR] Error setting thumbnail icon: {e}")
                 import traceback
+
                 traceback.print_exc()
 
         def _load_recent_assets(self) -> None:
             """Load recent assets into tab - Single Responsibility"""
             print("[RECENT] Loading recent assets...")
             recent_assets = self._repository.get_recent_assets(20)  # type: ignore
-            recent_list = self._tab_widget.widget(1) if self._tab_widget else None  # Recent tab  # type: ignore
+            recent_list = (
+                self._tab_widget.widget(1) if self._tab_widget else None
+            )  # Recent tab  # type: ignore
 
             print(f"[RECENT] Found {len(recent_assets) if recent_assets else 0} recent assets")
-            print(f"[RECENT] Recent tab widget: {type(recent_list).__name__ if recent_list else 'None'}")
+            print(
+                f"[RECENT] Recent tab widget: {type(recent_list).__name__ if recent_list else 'None'}"
+            )
 
-            if recent_list and hasattr(recent_list, 'clear'):  # Check if it's a list widget  # type: ignore
+            if recent_list and hasattr(
+                recent_list, "clear"
+            ):  # Check if it's a list widget  # type: ignore
                 self._populate_asset_list(recent_list, recent_assets)
                 print(f"[RECENT] Populated recent assets tab with {len(recent_assets)} items")
             else:
@@ -1234,12 +1380,20 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Load favorite assets into tab - Single Responsibility"""
             print("[FAVORITE] Loading favorite assets...")
             favorite_assets = self._repository.get_favorites()  # type: ignore
-            favorites_list = self._tab_widget.widget(2) if self._tab_widget else None  # Favorites tab  # type: ignore
+            favorites_list = (
+                self._tab_widget.widget(2) if self._tab_widget else None
+            )  # Favorites tab  # type: ignore
 
-            print(f"[FAVORITE] Found {len(favorite_assets) if favorite_assets else 0} favorite assets")
-            print(f"[FAVORITE] Favorites tab widget: {type(favorites_list).__name__ if favorites_list else 'None'}")
+            print(
+                f"[FAVORITE] Found {len(favorite_assets) if favorite_assets else 0} favorite assets"
+            )
+            print(
+                f"[FAVORITE] Favorites tab widget: {type(favorites_list).__name__ if favorites_list else 'None'}"
+            )
 
-            if favorites_list and hasattr(favorites_list, 'clear'):  # Check if it's a list widget  # type: ignore
+            if favorites_list and hasattr(
+                favorites_list, "clear"
+            ):  # Check if it's a list widget  # type: ignore
                 self._populate_asset_list(favorites_list, favorite_assets)
                 print(f"[FAVORITE] Populated favorites tab with {len(favorite_assets)} items")
             else:
@@ -1292,13 +1446,17 @@ if PYSIDE_AVAILABLE and QWidget is not None:
         def set_recent_assets(self, assets: List[Any]) -> None:
             """Set recent assets from external source - Single Responsibility"""
             recent_list = self._tab_widget.widget(1) if self._tab_widget else None  # type: ignore
-            if recent_list and hasattr(recent_list, 'clear'):  # Check if it's a list widget  # type: ignore
+            if recent_list and hasattr(
+                recent_list, "clear"
+            ):  # Check if it's a list widget  # type: ignore
                 self._populate_asset_list(recent_list, assets)
 
         def set_favorite_assets(self, assets: List[Any]) -> None:
             """Set favorite assets from external source - Single Responsibility"""
             favorites_list = self._tab_widget.widget(2) if self._tab_widget else None  # type: ignore
-            if favorites_list and hasattr(favorites_list, 'clear'):  # Check if it's a list widget  # type: ignore
+            if favorites_list and hasattr(
+                favorites_list, "clear"
+            ):  # Check if it's a list widget  # type: ignore
                 self._populate_asset_list(favorites_list, assets)
 
         def _get_current_asset_list(self):  # type: ignore
@@ -1307,23 +1465,23 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 return None
 
             current_widget = self._tab_widget.currentWidget()  # type: ignore
-            return current_widget if (current_widget and hasattr(current_widget, 'clear')) else None  # type: ignore
+            return current_widget if (current_widget and hasattr(current_widget, "clear")) else None  # type: ignore
 
         def _auto_refresh(self) -> None:
             """Auto-refresh library periodically - Single Responsibility"""
             # Only refresh if we have a project loaded and it's not already refreshing
-            if self._current_project_path and not hasattr(self, '_refreshing'):
+            if self._current_project_path and not hasattr(self, "_refreshing"):
                 self._refreshing = True
                 self.refresh_library()
                 # Reset the flag after a short delay
-                QTimer.singleShot(1000, lambda: setattr(self, '_refreshing', False))  # type: ignore
+                QTimer.singleShot(1000, lambda: setattr(self, "_refreshing", False))  # type: ignore
 
         # Event handlers
 
         def _on_search_text_changed(self, text: str) -> None:
             """Handle search text changes - Real-time search"""
             # Lazy-initialize the debounce timer (created once, reused on every keystroke)
-            if not hasattr(self, '_search_timer'):
+            if not hasattr(self, "_search_timer"):
                 self._search_timer = QTimer()  # type: ignore
                 self._search_timer.timeout.connect(self._perform_search)  # type: ignore
                 self._search_timer.setSingleShot(True)  # type: ignore
@@ -1349,7 +1507,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 asset = item.data(Qt.UserRole)  # type: ignore
                 print(f"[TARGET] Item data type: {type(asset)}")
                 # Use duck typing instead of isinstance to avoid module path issues
-                if asset and hasattr(asset, 'file_path') and hasattr(asset, 'display_name'):
+                if asset and hasattr(asset, "file_path") and hasattr(asset, "display_name"):
                     self._selected_assets.append(asset)
                     print(f"[OK] Asset selected: {asset.display_name}")
 
@@ -1394,7 +1552,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             else:
                 self._refresh_asset_display(asset)
 
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+            asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
             self._set_status(f"Applied {asset_type} color to {asset_name}")
 
         def _clear_asset_color(self, asset: Any) -> None:
@@ -1404,7 +1562,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
 
             # Update UI immediately
             self._refresh_asset_display(asset)
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+            asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
             self._set_status(f"Cleared color for {asset_name}")
 
         def _apply_color_coding(self, item, color: str) -> None:  # type: ignore
@@ -1415,12 +1573,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Build dynamic color map from ASSET_TYPE_COLORS dictionary
             color_map = {
                 # Legacy simple colors
-                'red': '#ffcccc',
-                'green': '#ccffcc',
-                'blue': '#ccccff',
-                'yellow': '#ffffcc',
-                'orange': '#ffddcc',
-                'purple': '#ddccff',
+                "red": "#ffcccc",
+                "green": "#ccffcc",
+                "blue": "#ccccff",
+                "yellow": "#ffffcc",
+                "orange": "#ffddcc",
+                "purple": "#ddccff",
             }
 
             # Add Asset Type Colors dynamically from ASSET_TYPE_COLORS dictionary
@@ -1436,12 +1594,12 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 item.setBackground(bg_color)  # type: ignore
             else:
                 # Legacy color - use hex string
-                bg_color_str = color_map.get(color, '#ffffff')
+                bg_color_str = color_map.get(color, "#ffffff")
                 item.setBackground(QColor(bg_color_str))  # type: ignore
 
         def _refresh_asset_display(self, asset: Any) -> None:
             """Refresh display of specific asset - Single Responsibility"""
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else 'Unknown'
+            asset_name = asset.display_name if hasattr(asset, "display_name") else "Unknown"
             print(f"[REFRESH] _refresh_asset_display called for: {asset_name}")
             print(f"   Asset has tags: {hasattr(asset, 'tags') and asset.tags}")
 
@@ -1452,10 +1610,10 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Get Recent and Favorites tabs from tab widget
             if self._tab_widget:
                 recent_list = self._tab_widget.widget(1)  # Recent tab
-                if recent_list and hasattr(recent_list, 'count'):
+                if recent_list and hasattr(recent_list, "count"):
                     list_widgets.append(recent_list)
                 favorites_list = self._tab_widget.widget(2)  # Favorites tab
-                if favorites_list and hasattr(favorites_list, 'count'):
+                if favorites_list and hasattr(favorites_list, "count"):
                     list_widgets.append(favorites_list)
 
             print(f"   Updating {len(list_widgets)} list widgets")
@@ -1472,7 +1630,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         display_text = asset.display_name
                         tooltip_text = asset.display_name
 
-                        if hasattr(asset, 'tags') and asset.tags:
+                        if hasattr(asset, "tags") and asset.tags:
                             tag_count = len(asset.tags)
                             display_text = f"{display_text} [TAG]×{tag_count}"
                             tags_str = ", ".join(asset.tags)
@@ -1505,10 +1663,10 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Get Recent and Favorites tabs from tab widget
             if self._tab_widget:
                 recent_list = self._tab_widget.widget(1)  # Recent tab
-                if recent_list and hasattr(recent_list, 'count'):
+                if recent_list and hasattr(recent_list, "count"):
                     list_widgets.append(recent_list)
                 favorites_list = self._tab_widget.widget(2)  # Favorites tab
-                if favorites_list and hasattr(favorites_list, 'count'):
+                if favorites_list and hasattr(favorites_list, "count"):
                     list_widgets.append(favorites_list)
 
             for list_widget in list_widgets:
@@ -1524,6 +1682,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Open color coding manager - Single Responsibility"""
             try:
                 from ..dialogs.color_coding_manager_dialog import ColorCodingManagerDialog
+
                 dialog = ColorCodingManagerDialog(self)
 
                 # Store reference to dialog for color updates
@@ -1536,15 +1695,17 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             except ImportError as e:
                 print(f"[WARNING] Could not import ColorCodingManagerDialog: {e}")
                 from PySide6.QtWidgets import QMessageBox
+
                 QMessageBox.information(
                     self,
                     "Color Manager",
                     "Color Coding Manager dialog is being loaded...\n\n"
-                    "This feature allows you to customize asset type colors."
+                    "This feature allows you to customize asset type colors.",
                 )
             except Exception as e:
                 print(f"[ERROR] Error opening color manager: {e}")
                 from PySide6.QtWidgets import QMessageBox
+
                 QMessageBox.critical(self, "Error", f"Failed to open Color Manager:\n{str(e)}")
 
         def _on_color_scheme_changed(self, dialog) -> None:  # type: ignore
@@ -1570,7 +1731,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Refresh all asset displays to show updated colors
             self.refresh_library()
 
-        def get_current_color_scheme(self) -> Dict[str, 'QColor']:
+        def get_current_color_scheme(self) -> Dict[str, "QColor"]:
             """Get current color scheme as QColor dictionary - Single Responsibility"""
             from PySide6.QtGui import QColor
 
@@ -1585,7 +1746,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Add tag to asset - Single Responsibility"""
             from PySide6.QtWidgets import QInputDialog, QMessageBox
 
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+            asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
             print(f"[TAG]  _add_tag_to_asset called for: {asset_name}")
 
             # Build dynamic tag list: predefined tags + all used tags (sorted)
@@ -1595,7 +1756,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 f"[TAG]  Available tags: {len(available_tags)} total "
                 f"({len(self._predefined_tags)} predefined, {custom_tag_count} custom)"
             )
-            print(f"[TAG]  Tag list: {available_tags[:5]}{'...' if len(available_tags) > 5 else ''}")
+            print(
+                f"[TAG]  Tag list: {available_tags[:5]}{'...' if len(available_tags) > 5 else ''}"
+            )
 
             # Show dialog to select or create tag
             tag, ok = QInputDialog.getItem(
@@ -1605,7 +1768,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 f"(You can also type a custom tag name)",
                 available_tags,
                 0,
-                True  # Allow custom text - CRITICAL for custom tags!
+                True,  # Allow custom text - CRITICAL for custom tags!
             )
 
             if ok and tag:
@@ -1629,15 +1792,19 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     print(f"[TAG]  Tag '{tag}' already in registry (not adding duplicate)")
 
                 # Initialize tags list if it doesn't exist
-                if not hasattr(asset, 'tags') or asset.tags is None:
+                if not hasattr(asset, "tags") or asset.tags is None:
                     asset.tags = []
                     print("[TAG]  Initialized tags list for asset")
 
                 # Add tag if not already present on this asset
                 if tag not in asset.tags:
                     asset.tags.append(tag)
-                    print(f"[TAG]  Added tag '{tag}' to asset. Total tags on asset: {len(asset.tags)}")
-                    asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+                    print(
+                        f"[TAG]  Added tag '{tag}' to asset. Total tags on asset: {len(asset.tags)}"
+                    )
+                    asset_name = (
+                        asset.display_name if hasattr(asset, "display_name") else asset.name
+                    )
                     self._set_status(f"Added tag '{tag}' to {asset_name}")
 
                     # Save asset metadata FIRST
@@ -1656,40 +1823,34 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     print("[OK] Tag addition complete!")
                 else:
                     print(f"[WARNING]  Tag '{tag}' already exists on this asset")
-                    QMessageBox.information(
-                        self,
-                        "Tag Exists",
-                        f"Asset already has tag '{tag}'"
-                    )
+                    QMessageBox.information(self, "Tag Exists", f"Asset already has tag '{tag}'")
 
         def _remove_tags_from_asset(self, asset: Any) -> None:
             """Remove tags from asset - Single Responsibility"""
             from PySide6.QtWidgets import QInputDialog, QMessageBox
 
             # Check if asset has any tags
-            if not hasattr(asset, 'tags') or not asset.tags:
-                asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+            if not hasattr(asset, "tags") or not asset.tags:
+                asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
                 QMessageBox.information(
-                    self,
-                    "No Tags",
-                    f"Asset '{asset_name}' has no tags to remove."
+                    self, "No Tags", f"Asset '{asset_name}' has no tags to remove."
                 )
                 return
 
             # Show dialog to select tag to remove
-            asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+            asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
             tag, ok = QInputDialog.getItem(
                 self,
                 "Remove Tag",
                 f"Select a tag to remove from '{asset_name}':",
                 asset.tags,
                 0,
-                False  # Don't allow custom text
+                False,  # Don't allow custom text
             )
 
             if ok and tag:
                 asset.tags.remove(tag)
-                asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+                asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
                 self._set_status(f"Removed tag '{tag}' from {asset_name}")
 
                 # Save asset metadata
@@ -1712,20 +1873,22 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 from pathlib import Path
 
                 # Handle both Path objects and strings
-                file_path = Path(asset.file_path) if isinstance(asset.file_path, str) else asset.file_path
-                metadata_path = file_path.with_suffix(file_path.suffix + '.meta')
+                file_path = (
+                    Path(asset.file_path) if isinstance(asset.file_path, str) else asset.file_path
+                )
+                metadata_path = file_path.with_suffix(file_path.suffix + ".meta")
 
                 metadata = {
-                    'tags': asset.tags if hasattr(asset, 'tags') else [],
-                    'is_favorite': getattr(asset, 'is_favorite', False),
-                    'category': getattr(asset, 'category', 'general'),
-                    'modified_date': str(getattr(asset, 'modified_date', ''))
+                    "tags": asset.tags if hasattr(asset, "tags") else [],
+                    "is_favorite": getattr(asset, "is_favorite", False),
+                    "category": getattr(asset, "category", "general"),
+                    "modified_date": str(getattr(asset, "modified_date", "")),
                 }
 
-                with open(metadata_path, 'w', encoding='utf-8') as f:
+                with open(metadata_path, "w", encoding="utf-8") as f:
                     json.dump(metadata, f, indent=2)
 
-                asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
+                asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
                 print(f"[SAVE] Saved metadata for {asset_name}")
 
             except Exception as e:
@@ -1739,18 +1902,20 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 from pathlib import Path
 
                 # Handle both Path objects and strings
-                file_path = Path(asset.file_path) if isinstance(asset.file_path, str) else asset.file_path
-                metadata_path = file_path.with_suffix(file_path.suffix + '.meta')
+                file_path = (
+                    Path(asset.file_path) if isinstance(asset.file_path, str) else asset.file_path
+                )
+                metadata_path = file_path.with_suffix(file_path.suffix + ".meta")
 
                 if not metadata_path.exists():
                     return  # No metadata file exists yet
 
-                with open(metadata_path, 'r', encoding='utf-8') as f:
+                with open(metadata_path, "r", encoding="utf-8") as f:
                     metadata = json.load(f)
 
                 # Apply loaded metadata to asset
-                if 'tags' in metadata:
-                    asset.tags = metadata['tags']
+                if "tags" in metadata:
+                    asset.tags = metadata["tags"]
                     # Add these tags to our global tag set
                     if asset.tags:
                         before_count = len(self._all_used_tags)
@@ -1759,18 +1924,22 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         new_tags_count = after_count - before_count
                         print(f"[LOAD] Loaded {len(asset.tags)} tags from metadata: {asset.tags}")
                         if new_tags_count > 0:
-                            print(f"[LOAD] [NEW] Added {new_tags_count} NEW tags to registry. Total: {after_count}")
+                            print(
+                                f"[LOAD] [NEW] Added {new_tags_count} NEW tags to registry. Total: {after_count}"
+                            )
                         else:
-                            print(f"[LOAD] No new tags (all already in registry). Total: {after_count}")
+                            print(
+                                f"[LOAD] No new tags (all already in registry). Total: {after_count}"
+                            )
 
-                if 'is_favorite' in metadata:
-                    asset.is_favorite = metadata['is_favorite']
+                if "is_favorite" in metadata:
+                    asset.is_favorite = metadata["is_favorite"]
 
-                if 'category' in metadata:
-                    asset.category = metadata['category']
+                if "category" in metadata:
+                    asset.category = metadata["category"]
 
-                asset_name = asset.display_name if hasattr(asset, 'display_name') else asset.name
-                tag_count = len(asset.tags) if hasattr(asset, 'tags') and asset.tags else 0
+                asset_name = asset.display_name if hasattr(asset, "display_name") else asset.name
+                tag_count = len(asset.tags) if hasattr(asset, "tags") and asset.tags else 0
                 print(f"[LOAD] Loaded metadata for {asset_name}: {tag_count} tags")
 
             except Exception as e:
@@ -1788,7 +1957,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             for asset_path in asset_paths:
                 try:
                     self._thumbnail_service.clear_cache_for_file(asset_path)  # type: ignore
-                    path_name = asset_path.name if hasattr(asset_path, 'name') else asset_path
+                    path_name = asset_path.name if hasattr(asset_path, "name") else asset_path
                     print(f"[DELETE] Cleared cache for: {path_name}")
                 except Exception as e:
                     print(f"[ERROR] Failed to clear cache for {asset_path}: {e}")
@@ -1800,22 +1969,26 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # Get Recent and Favorites tabs from tab widget
             if self._tab_widget:
                 recent_list = self._tab_widget.widget(1)  # Recent tab
-                if recent_list and hasattr(recent_list, 'count'):
+                if recent_list and hasattr(recent_list, "count"):
                     list_widgets.append(recent_list)
                 favorites_list = self._tab_widget.widget(2)  # Favorites tab
-                if favorites_list and hasattr(favorites_list, 'count'):
+                if favorites_list and hasattr(favorites_list, "count"):
                     list_widgets.append(favorites_list)
 
             # Find and update items in all lists
             for list_widget in list_widgets:
                 for i in range(list_widget.count()):  # type: ignore
-                    item = list_widget.item(i)   # type: ignore
+                    item = list_widget.item(i)  # type: ignore
                     if item:
-                        asset = item.data(Qt.UserRole)   # type: ignore
+                        asset = item.data(Qt.UserRole)  # type: ignore
                         # Use duck typing instead of isinstance to avoid module path issues
-                        if asset and hasattr(asset, 'file_path') and asset.file_path in asset_paths:
+                        if (
+                            asset
+                            and hasattr(asset, "file_path")
+                            and asset.file_path in asset_paths
+                        ):
                             asset_name = (
-                                asset.display_name if hasattr(asset, 'display_name') else 'Unknown'
+                                asset.display_name if hasattr(asset, "display_name") else "Unknown"
                             )
                             print(f"[REFRESH] Refreshing thumbnail for list item: {asset_name}")
                             # Generate new thumbnail asynchronously
@@ -1844,9 +2017,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 # Check if it's a predefined tag
                 is_predefined = tag_name in self._predefined_tags
                 current_tags[tag_name] = {
-                    "color": "#2196F3" if is_predefined else "#CCCCCC",  # Blue for predefined, gray for custom
+                    "color": (
+                        "#2196F3" if is_predefined else "#CCCCCC"
+                    ),  # Blue for predefined, gray for custom
                     "description": f"{'Predefined' if is_predefined else 'Custom'} tag: {tag_name}",
-                    "predefined": is_predefined
+                    "predefined": is_predefined,
                 }
             dialog.set_tags(current_tags)
 
@@ -1856,7 +2031,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             # If user clicked OK/Save, update the global tag registry
             if result:
                 updated_tags = dialog.get_tags()
-                print(f"[TAG]  Tag Manager closed. Updating registry with {len(updated_tags)} tags")
+                print(
+                    f"[TAG]  Tag Manager closed. Updating registry with {len(updated_tags)} tags"
+                )
 
                 # Clear and rebuild the tag registry (preserving predefined tags)
                 self._all_used_tags.clear()
@@ -1866,9 +2043,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 for tag_name in updated_tags.keys():
                     self._all_used_tags.add(tag_name)
 
-                print(f"[TAG]  [OK] Global tag registry updated: {len(self._all_used_tags)} total tags")
+                print(
+                    f"[TAG]  [OK] Global tag registry updated: {len(self._all_used_tags)} total tags"
+                )
                 tag_preview = sorted(list(self._all_used_tags))[:10]
-                ellipsis = '...' if len(self._all_used_tags) > 10 else ''
+                ellipsis = "..." if len(self._all_used_tags) > 10 else ""
                 print(f"[TAG]  Tags: {tag_preview}{ellipsis}")
 
                 # Save custom tags to config file
@@ -1879,7 +2058,8 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     selected_asset = self._selected_assets[0]
                     asset_name = (
                         selected_asset.display_name
-                        if hasattr(selected_asset, 'display_name') else 'Unknown'
+                        if hasattr(selected_asset, "display_name")
+                        else "Unknown"
                     )
                     print(f"[TAG]  Refreshing info panel for selected asset: {asset_name}")
                     # Re-emit the asset_selected signal to update the info panel
@@ -1903,7 +2083,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                     print("[TAG]  No custom tags config file found")
                     return
 
-                with open(config_file, 'r', encoding='utf-8') as f:
+                with open(config_file, "r", encoding="utf-8") as f:
                     custom_tags = json.load(f)
 
                 if isinstance(custom_tags, list):
@@ -1922,7 +2102,9 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 from PySide6.QtCore import QSettings
 
                 # Get only custom tags (exclude predefined)
-                custom_tags = [tag for tag in self._all_used_tags if tag not in self._predefined_tags]
+                custom_tags = [
+                    tag for tag in self._all_used_tags if tag not in self._predefined_tags
+                ]
 
                 # Use QSettings to get config directory
                 settings = QSettings("MikeStumbo", "AssetManager")
@@ -1930,7 +2112,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                 config_dir.mkdir(parents=True, exist_ok=True)
                 config_file = config_dir / "custom_tags.json"
 
-                with open(config_file, 'w', encoding='utf-8') as f:
+                with open(config_file, "w", encoding="utf-8") as f:
                     json.dump(sorted(custom_tags), f, indent=2)
 
                 print(f"[TAG]  [SAVE] Saved {len(custom_tags)} custom tags to config")
@@ -1943,13 +2125,20 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             """Open collection manager from collections widget - Single Responsibility"""
             try:
                 from ..collection_manager_dialog import CollectionManagerDialog
+
                 dialog = CollectionManagerDialog(self)
                 dialog.exec()
             except ImportError:
                 from PySide6.QtWidgets import QMessageBox
-                QMessageBox.warning(self, "Feature Not Available", "Collection Manager is not yet fully implemented.")
+
+                QMessageBox.warning(
+                    self,
+                    "Feature Not Available",
+                    "Collection Manager is not yet fully implemented.",
+                )
             except Exception as e:
                 from PySide6.QtWidgets import QMessageBox
+
                 QMessageBox.critical(self, "Error", f"Failed to open Collection Manager: {e}")
 
         def _add_to_collection(self, asset: Any) -> None:
@@ -1960,6 +2149,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
         def _create_new_collection(self) -> None:
             """Create new collection - Single Responsibility"""
             from ..dialogs.collection_dialog import CollectionDialog
+
             dialog = CollectionDialog(self)
             if dialog.exec():
                 collection_name = dialog.get_collection_name()
@@ -1968,6 +2158,7 @@ if PYSIDE_AVAILABLE and QWidget is not None:
         def _open_collections_manager(self) -> None:
             """Open collections manager - Single Responsibility"""
             from ..dialogs.collections_manager_dialog import CollectionsManagerDialog
+
             dialog = CollectionsManagerDialog(self)
             dialog.exec()
 
@@ -1979,8 +2170,10 @@ if PYSIDE_AVAILABLE and QWidget is not None:
             print(f"[CLICK] Asset data repr: {repr(asset)}")
 
             # Use duck typing instead of isinstance - check for required attributes
-            if asset and hasattr(asset, 'file_path') and hasattr(asset, 'display_name'):
-                print(f"[OK] Valid asset object - emitting double-click signal for: {asset.display_name}")
+            if asset and hasattr(asset, "file_path") and hasattr(asset, "display_name"):
+                print(
+                    f"[OK] Valid asset object - emitting double-click signal for: {asset.display_name}"
+                )
                 self.asset_double_clicked.emit(asset)  # type: ignore
             else:
                 print("[ERROR] Asset data is not a valid asset object!")
@@ -1999,7 +2192,11 @@ if PYSIDE_AVAILABLE and QWidget is not None:
                         self.search_with_criteria(criteria)
             except ImportError:
                 from PySide6.QtWidgets import QMessageBox
-                QMessageBox.warning(self, "Feature Not Available", "Advanced Search dialog is not implemented yet.")
+
+                QMessageBox.warning(
+                    self, "Feature Not Available", "Advanced Search dialog is not implemented yet."
+                )
             except Exception as e:
                 from PySide6.QtWidgets import QMessageBox
+
                 QMessageBox.critical(self, "Error", f"Failed to open advanced search: {e}")

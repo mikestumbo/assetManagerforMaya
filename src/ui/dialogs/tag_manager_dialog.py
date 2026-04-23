@@ -9,9 +9,20 @@ Enterprise Refactoring: Clean Code & SOLID Principles
 
 try:
     from PySide6.QtWidgets import (
-        QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QPushButton,
-        QInputDialog, QMessageBox, QLabel, QLineEdit, QTextEdit,
-        QGroupBox, QSplitter, QListWidgetItem, QColorDialog
+        QDialog,
+        QVBoxLayout,
+        QHBoxLayout,
+        QListWidget,
+        QPushButton,
+        QInputDialog,
+        QMessageBox,
+        QLabel,
+        QLineEdit,
+        QTextEdit,
+        QGroupBox,
+        QSplitter,
+        QListWidgetItem,
+        QColorDialog,
     )
     from PySide6.QtCore import Signal, Qt
     from PySide6.QtGui import QColor
@@ -54,7 +65,9 @@ class TagManagerDialog(QDialog):
 
         # Title
         title_label = QLabel("Asset Tag Management")
-        title_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #cccccc; padding: 5px;")
+        title_label.setStyleSheet(
+            "font-weight: bold; font-size: 16px; color: #cccccc; padding: 5px;"
+        )
         layout.addWidget(title_label)
 
         # Create splitter for tags list and details
@@ -243,7 +256,7 @@ class TagManagerDialog(QDialog):
 
     def _on_add_tag(self) -> None:
         """Add new tag - Single Responsibility"""
-        text, ok = QInputDialog.getText(self, 'Add Tag', 'Tag name:')
+        text, ok = QInputDialog.getText(self, "Add Tag", "Tag name:")
         if ok and text.strip():
             tag_name = text.strip()
             if tag_name in self._tags:
@@ -256,7 +269,7 @@ class TagManagerDialog(QDialog):
             self._tags[tag_name] = {
                 "color": "#CCCCCC",
                 "description": f"Custom tag: {tag_name}",
-                "predefined": False  # Mark as custom tag
+                "predefined": False,  # Mark as custom tag
             }
 
             # Refresh list and select new tag
@@ -275,7 +288,7 @@ class TagManagerDialog(QDialog):
             return
 
         old_name = current_item.text()
-        new_name, ok = QInputDialog.getText(self, 'Edit Tag', 'Tag name:', text=old_name)
+        new_name, ok = QInputDialog.getText(self, "Edit Tag", "Tag name:", text=old_name)
 
         if ok and new_name.strip() and new_name.strip() != old_name:
             new_name = new_name.strip()
@@ -308,19 +321,21 @@ class TagManagerDialog(QDialog):
         # Prevent deletion of predefined tags
         if tag_data.get("predefined", False):
             QMessageBox.warning(
-                self, "Cannot Delete",
+                self,
+                "Cannot Delete",
                 f"Cannot delete predefined tag '{tag_name}'.\n\n"
-                "Predefined tags are part of the core system."
+                "Predefined tags are part of the core system.",
             )
             return
 
         reply = QMessageBox.question(
-            self, "Delete Tag",
+            self,
+            "Delete Tag",
             f"Are you sure you want to delete tag '{tag_name}'?\n\n"
             "This will remove the tag from the global registry.\n"
             "Assets using this tag will keep it until you manually remove it.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -395,7 +410,7 @@ class TagManagerDialog(QDialog):
             "Reset Color",
             f"Reset color for tag '{tag_name}' to default (#CCCCCC)?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:

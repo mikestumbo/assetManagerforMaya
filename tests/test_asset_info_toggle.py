@@ -23,10 +23,11 @@ def test_asset_info_panel_toggle():
 
     try:
         # Import the main window class
-        from src.ui.asset_manager_window import AssetManagerWindow
-
         # Check that the toggle method exists and handles panel visibility
         import inspect
+
+        from src.ui.asset_manager_window import AssetManagerWindow
+
         toggle_source = inspect.getsource(AssetManagerWindow._on_toggle_asset_info_unified)
 
         # Verify proper panel visibility handling
@@ -38,7 +39,9 @@ def test_asset_info_panel_toggle():
         print(f"✅ Toggle method syncs menu action: {syncs_menu}")
 
         # Verify button synchronization
-        syncs_button = "_info_btn.setChecked" in toggle_source and "_info_btn.setText" in toggle_source
+        syncs_button = (
+            "_info_btn.setChecked" in toggle_source and "_info_btn.setText" in toggle_source
+        )
         print(f"✅ Toggle method syncs info button: {syncs_button}")
 
         # Check that metadata panel reference is stored
@@ -62,6 +65,7 @@ def test_asset_info_panel_toggle():
     except Exception as e:
         print(f"❌ ERROR: Test failed with exception: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -71,8 +75,9 @@ def test_menu_text_correction():
     print("\n🧪 Testing Menu Text Correction...")
 
     try:
-        from src.ui.asset_manager_window import AssetManagerWindow
         import inspect
+
+        from src.ui.asset_manager_window import AssetManagerWindow
 
         # Check that menu text is simplified
         menu_source = inspect.getsource(AssetManagerWindow._create_menu_bar)
@@ -101,27 +106,34 @@ def test_ui_consistency():
     print("\n🧪 Testing UI Consistency...")
 
     try:
-        from src.ui.asset_manager_window import AssetManagerWindow
         import inspect
+
+        from src.ui.asset_manager_window import AssetManagerWindow
 
         # Check Info button is checkable and has proper text handling
         toolbar_source = inspect.getsource(AssetManagerWindow._create_main_toolbar)
-        button_checkable = 'setCheckable(True)' in toolbar_source
+        button_checkable = "setCheckable(True)" in toolbar_source
         has_initial_text = '"Hide Info"' in toolbar_source  # Initial state
 
         # Check toggle method for dynamic text changes
         toggle_source = inspect.getsource(AssetManagerWindow._on_toggle_asset_info_unified)
-        handles_text_change = 'setText(' in toggle_source and 'Hide Info' in toggle_source and 'Show Info' in toggle_source
+        handles_text_change = (
+            "setText(" in toggle_source
+            and "Hide Info" in toggle_source
+            and "Show Info" in toggle_source
+        )
 
         print(f"✅ Info button is checkable: {button_checkable}")
         print(f"✅ Info button has initial text: {has_initial_text}")
         print(f"✅ Toggle method changes button text: {handles_text_change}")
 
         # Check that both controls trigger the same unified method
-        same_handler = toolbar_source.count('_on_toggle_asset_info_unified') >= 1
+        same_handler = toolbar_source.count("_on_toggle_asset_info_unified") >= 1
         print(f"✅ Both controls use unified toggle handler: {same_handler}")
 
-        test_passed = button_checkable and has_initial_text and handles_text_change and same_handler
+        test_passed = (
+            button_checkable and has_initial_text and handles_text_change and same_handler
+        )
 
         if test_passed:
             print("\n✨ UI consistency validated!")
@@ -136,7 +148,6 @@ def test_ui_consistency():
 
 
 def main():
-
 
     print("=" * 60)
     print("ASSET INFORMATION PANEL TOGGLE TEST SUITE")
@@ -160,6 +171,10 @@ def main():
 
     return test1_passed and test2_passed and test3_passed
 
+
 if __name__ == "__main__":
-
-
+    main()
+if __name__ == "__main__":
+    main()
+if __name__ == "__main__":
+    main()

@@ -29,7 +29,7 @@ def test_usd_thumbnail_support():
         print("✅ Successfully instantiated ThumbnailServiceImpl")
 
         # Test USD file extensions support
-        usd_extensions = ['.usd', '.usda', '.usdc', '.usdz']
+        usd_extensions = [".usd", ".usda", ".usdc", ".usdz"]
         supported_count = 0
 
         print("\n🔍 Testing USD extension support:")
@@ -45,11 +45,12 @@ def test_usd_thumbnail_support():
 
         # Test if USD method exists
         print("\n🔧 Testing USD thumbnail generation method:")
-        if hasattr(service, '_generate_usd_thumbnail'):
+        if hasattr(service, "_generate_usd_thumbnail"):
             print("✅ _generate_usd_thumbnail method exists")
 
             # Check method signature
             import inspect
+
             sig = inspect.signature(service._generate_usd_thumbnail)
             params = list(sig.parameters.keys())
             print(f"✅ Method signature: _generate_usd_thumbnail({', '.join(params)})")
@@ -69,7 +70,9 @@ def test_usd_thumbnail_support():
 
         print("\n📊 USD Support Summary:")
         print(f"✅ USD extensions supported: {supported_count}/{len(usd_extensions)}")
-        print(f"✅ USD thumbnail method: {'Present' if hasattr(service, '_generate_usd_thumbnail') else 'Missing'}")
+        print(
+            f"✅ USD thumbnail method: {'Present' if hasattr(service, '_generate_usd_thumbnail') else 'Missing'}"
+        )
 
         # Test that the method can be called (without actual file)
         print("\n🧪 Testing USD thumbnail generation logic:")
@@ -89,7 +92,9 @@ def test_usd_thumbnail_support():
             print("\n🎉 SUCCESS: Full USD thumbnail support implemented!")
             return True
         else:
-            print(f"\n❌ PARTIAL: Only {supported_count}/{len(usd_extensions)} USD extensions supported")
+            print(
+                f"\n❌ PARTIAL: Only {supported_count}/{len(usd_extensions)} USD extensions supported"
+            )
             return False
 
     except ImportError as e:
@@ -110,7 +115,7 @@ def test_color_scheme_support():
         impl_file = Path("src/services/thumbnail_service_impl.py")
 
         if impl_file.exists():
-            with open(impl_file, 'r', encoding='utf-8') as f:
+            with open(impl_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Check for USD color scheme
@@ -118,7 +123,7 @@ def test_color_scheme_support():
                 print("✅ USD has dedicated color scheme in file type icon generation")
 
                 # Check for gold color scheme (premium look for industry standard)
-                if '255, 200, 100' in content:
+                if "255, 200, 100" in content:
                     print("✅ USD uses gold gradient (255, 200, 100) - premium industry standard")
                 else:
                     print("⚠️ USD color scheme present but not using expected gold theme")
@@ -137,7 +142,6 @@ def test_color_scheme_support():
 
 
 def main():
-
 
     support_test = test_usd_thumbnail_support()
     color_test = test_color_scheme_support()
@@ -161,7 +165,7 @@ def main():
             print("🔧 USD color scheme needs implementation")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

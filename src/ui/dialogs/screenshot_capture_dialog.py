@@ -18,9 +18,17 @@ import time
 # PySide6 for Maya 2025+
 try:
     from PySide6.QtWidgets import (
-        QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-        QPushButton, QCheckBox, QWidget, QMessageBox
+        QDialog,
+        QVBoxLayout,
+        QHBoxLayout,
+        QLabel,
+        QComboBox,
+        QPushButton,
+        QCheckBox,
+        QWidget,
+        QMessageBox,
     )
+
     PYSIDE_AVAILABLE = True
 except ImportError:
     print("[ERROR] PySide6 not available - Screenshot dialog disabled")
@@ -46,7 +54,9 @@ except ImportError:
     def get_container():  # type: ignore
         return None
 
+
 if PYSIDE_AVAILABLE and QDialog is not None:
+
     class ScreenshotCaptureDialog(QDialog):  # type: ignore
         """
         Professional Screenshot Capture Dialog
@@ -59,9 +69,13 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
             # Validate asset parameter - handle both Asset objects and strings
             if isinstance(asset, str):
-                raise TypeError(f"ScreenshotCaptureDialog requires Asset object, got string: {asset}")
-            if not hasattr(asset, 'file_path'):
-                raise TypeError("ScreenshotCaptureDialog requires Asset object with file_path attribute")
+                raise TypeError(
+                    f"ScreenshotCaptureDialog requires Asset object, got string: {asset}"
+                )
+            if not hasattr(asset, "file_path"):
+                raise TypeError(
+                    "ScreenshotCaptureDialog requires Asset object with file_path attribute"
+                )
 
             # Dependency injection
             container = get_container()  # type: ignore
@@ -97,6 +111,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 icon_path = self._get_screenshot_icon_path()
                 if icon_path:
                     from PySide6.QtGui import QIcon
+
                     self.setWindowIcon(QIcon(icon_path))
                     print(f"[OK] Set custom screenshot dialog icon: {icon_path}")
                 else:
@@ -134,7 +149,9 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
         def _create_instructions_section(self, layout) -> None:
             """Create instructions section - Single Responsibility"""
-            asset_name = Path(self._asset.file_path).name if self._asset.file_path else "Unknown Asset"
+            asset_name = (
+                Path(self._asset.file_path).name if self._asset.file_path else "Unknown Asset"
+            )
 
             info_text = (
                 f"[SELECT] Capture Screenshot Instructions:\n\n"
@@ -171,7 +188,7 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 ("Standard Quality (256×256)", 256),
                 ("High Quality (512×512)", 512),
                 ("Ultra HD (1024×1024)", 1024),
-                ("Maximum Quality (2048×2048)", 2048)
+                ("Maximum Quality (2048×2048)", 2048),
             ]
 
             for name, size in resolution_options:
@@ -334,8 +351,8 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
                 # Get active viewport
                 active_panel = cmds.getPanel(withFocus=True)
-                if not cmds.getPanel(typeOf=active_panel) == 'modelPanel':
-                    model_panels = cmds.getPanel(type='modelPanel')
+                if not cmds.getPanel(typeOf=active_panel) == "modelPanel":
+                    model_panels = cmds.getPanel(type="modelPanel")
                     if model_panels:
                         active_panel = model_panels[0]
                     else:
@@ -344,20 +361,20 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
                 # Apply viewport settings
                 if self._smooth_shading and self._smooth_shading.isChecked():  # type: ignore
-                    cmds.modelEditor(active_panel, edit=True, displayAppearance='smoothShaded')
+                    cmds.modelEditor(active_panel, edit=True, displayAppearance="smoothShaded")
                 else:
-                    cmds.modelEditor(active_panel, edit=True, displayAppearance='wireframe')
+                    cmds.modelEditor(active_panel, edit=True, displayAppearance="wireframe")
 
                 if self._wireframe_on_shaded:  # type: ignore
                     cmds.modelEditor(
-                        active_panel, edit=True,
-                        wireframeOnShaded=self._wireframe_on_shaded.isChecked()
+                        active_panel,
+                        edit=True,
+                        wireframeOnShaded=self._wireframe_on_shaded.isChecked(),
                     )  # type: ignore
 
                 if self._show_grid:  # type: ignore
                     cmds.modelEditor(
-                        active_panel, edit=True,
-                        grid=self._show_grid.isChecked()
+                        active_panel, edit=True, grid=self._show_grid.isChecked()
                     )  # type: ignore
 
                 print("[OK] Viewport settings applied for screenshot preview")
@@ -382,8 +399,8 @@ if PYSIDE_AVAILABLE and QDialog is not None:
 
                 # Get active viewport
                 active_panel = cmds.getPanel(withFocus=True)
-                if not cmds.getPanel(typeOf=active_panel) == 'modelPanel':
-                    model_panels = cmds.getPanel(type='modelPanel')
+                if not cmds.getPanel(typeOf=active_panel) == "modelPanel":
+                    model_panels = cmds.getPanel(type="modelPanel")
                     if model_panels:
                         active_panel = model_panels[0]
                     else:
@@ -398,11 +415,13 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 temp_path = os.path.join(temp_dir, temp_filename)
 
                 # Capture screenshot with Maya playblast
-                print(f"[CAMERA] Capturing screenshot: {resolution}x{resolution} {file_format.upper()}")
+                print(
+                    f"[CAMERA] Capturing screenshot: {resolution}x{resolution} {file_format.upper()}"
+                )
 
                 _ = cmds.playblast(
                     filename=temp_path,
-                    format='image',
+                    format="image",
                     compression=file_format,
                     quality=100,
                     percent=100,
@@ -412,11 +431,13 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                     showOrnaments=False,
                     offScreen=True,
                     frame=cmds.currentTime(query=True),
-                    completeFilename=temp_path
+                    completeFilename=temp_path,
                 )
 
                 # Maya adds frame number to filename, find the actual file
-                actual_files = [f for f in os.listdir(temp_dir) if f.startswith("maya_screenshot_")]
+                actual_files = [
+                    f for f in os.listdir(temp_dir) if f.startswith("maya_screenshot_")
+                ]
                 if not actual_files:
                     raise RuntimeError("Screenshot file not created")
 
@@ -445,14 +466,18 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 # Close dialog
                 self.accept()  # type: ignore
 
-                print(f"[OK] Screenshot captured successfully: {resolution}x{resolution} {file_format.upper()}")
+                print(
+                    f"[OK] Screenshot captured successfully: {resolution}x{resolution} {file_format.upper()}"
+                )
 
             except Exception as e:
                 print(f"[ERROR] Screenshot capture error: {e}")
                 error_msg = f"Failed to capture screenshot:\n{str(e)}"
                 QMessageBox.warning(self, "Capture Failed", error_msg)  # type: ignore
 
-        def _save_screenshot_as_thumbnail(self, temp_path: str, file_format: str, resolution: int) -> None:
+        def _save_screenshot_as_thumbnail(
+            self, temp_path: str, file_format: str, resolution: int
+        ) -> None:
             """Save screenshot as asset thumbnail using EMSA service - Single Responsibility"""
             try:
                 # Validate asset file path
@@ -498,7 +523,10 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 if "assetManager" in str(current_file):
                     # Navigate up to find the assetManager root directory
                     asset_manager_root = current_file
-                    while asset_manager_root.name != "assetManager" and asset_manager_root.parent != asset_manager_root:
+                    while (
+                        asset_manager_root.name != "assetManager"
+                        and asset_manager_root.parent != asset_manager_root
+                    ):
                         asset_manager_root = asset_manager_root.parent
 
                     # Check for icon in the assetManager directory
@@ -517,8 +545,19 @@ if PYSIDE_AVAILABLE and QDialog is not None:
                 try:
                     home = Path.home()
                     maya_paths = [
-                        home / "OneDrive" / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png",
-                        home / "Documents" / "maya" / "scripts" / "assetManager" / "screen-shot_icon.png"
+                        home
+                        / "OneDrive"
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
+                        home
+                        / "Documents"
+                        / "maya"
+                        / "scripts"
+                        / "assetManager"
+                        / "screen-shot_icon.png",
                     ]
 
                     for maya_path in maya_paths:

@@ -49,7 +49,7 @@ class UsdzPackager:
         mrig_file: Optional[Path] = None,
         rig_file: Optional[Path] = None,  # v2.0: Maya rig file (.mb/.ma)
         additional_files: Optional[List[Path]] = None,
-        include_textures: bool = True
+        include_textures: bool = True,
     ) -> Tuple[bool, str]:
         """Create USDZ package with USD and supporting files
 
@@ -76,8 +76,8 @@ class UsdzPackager:
                 return False, f"Rig file not found: {rig_file}"
 
             # Ensure output has .usdz extension
-            if output_path.suffix.lower() != '.usdz':
-                output_path = output_path.with_suffix('.usdz')
+            if output_path.suffix.lower() != ".usdz":
+                output_path = output_path.with_suffix(".usdz")
 
             # Build file list (order matters - root USD first!)
             files_to_package: List[Tuple[Path, str]] = []
@@ -101,14 +101,18 @@ class UsdzPackager:
                 # 3b. Controllers file - check .mb first (faster), then .ma for backwards compat
                 # Use parent/stem to get base path without .mrig suffix
                 base_path = mrig_file.parent / mrig_file.stem
-                controllers_mb = base_path.with_suffix('.controllers.mb')
-                controllers_ma = base_path.with_suffix('.controllers.ma')
+                controllers_mb = base_path.with_suffix(".controllers.mb")
+                controllers_ma = base_path.with_suffix(".controllers.ma")
                 if controllers_mb.exists():
                     files_to_package.append((controllers_mb, controllers_mb.name))
-                    self.logger.info(f"[PACKAGE] Including controllers .mb file: {controllers_mb.name}")
+                    self.logger.info(
+                        f"[PACKAGE] Including controllers .mb file: {controllers_mb.name}"
+                    )
                 elif controllers_ma.exists():
                     files_to_package.append((controllers_ma, controllers_ma.name))
-                    self.logger.info(f"[PACKAGE] Including controllers .ma file: {controllers_ma.name}")
+                    self.logger.info(
+                        f"[PACKAGE] Including controllers .ma file: {controllers_ma.name}"
+                    )
 
             # 3. Additional files (textures, etc.)
             if additional_files:
@@ -127,9 +131,7 @@ class UsdzPackager:
 
             # Create USDZ package (ZIP with no compression per spec)
             with zipfile.ZipFile(
-                output_path,
-                'w',
-                compression=zipfile.ZIP_STORED  # USDZ requires uncompressed!
+                output_path, "w", compression=zipfile.ZIP_STORED  # USDZ requires uncompressed!
             ) as usdz:
                 for source_path, archive_name in files_to_package:
                     usdz.write(source_path, archive_name)
@@ -152,9 +154,7 @@ class UsdzPackager:
             return False, error_msg
 
     def extract_package(
-        self,
-        usdz_path: Path,
-        output_dir: Optional[Path] = None
+        self, usdz_path: Path, output_dir: Optional[Path] = None
     ) -> Tuple[bool, dict]:
         """Extract USDZ package to directory
 
@@ -172,7 +172,7 @@ class UsdzPackager:
         """
         try:
             if not usdz_path.exists():
-                return False, {'error': f"USDZ file not found: {usdz_path}"}
+                return False, {"error": f"USDZ file not found: {usdz_path}"}
 
             # Create output directory
             if output_dir is None:
@@ -187,7 +187,7 @@ class UsdzPackager:
             rig_file = None  # v2.0: .rig.mb or .rig.ma
             textures = []
 
-            with zipfile.ZipFile(usdz_path, 'r') as usdz:
+            with zipfile.ZipFile(usdz_path, "r") as usdz:
                 file_list = usdz.namelist()
 
                 for file_name in file_list:
@@ -196,37 +196,35 @@ class UsdzPackager:
                     extracted_path.parent.mkdir(parents=True, exist_ok=True)
 
                     with usdz.open(file_name) as src:
-                        with open(extracted_path, 'wb') as dst:
+                        with open(extracted_path, "wb") as dst:
                             dst.write(src.read())
 
                     # Categorize extracted file
                     suffix = extracted_path.suffix.lower()
-                    if suffix in {'.usd', '.usda', '.usdc'}:
+                    if suffix in {".usd", ".usda", ".usdc"}:
                         usd_file = extracted_path
-                    elif suffix == '.mrig':
+                    elif suffix == ".mrig":
                         mrig_file = extracted_path
-                    elif '.rig.mb' in file_name.lower() or '.rig.ma' in file_name.lower():
+                    elif ".rig.mb" in file_name.lower() or ".rig.ma" in file_name.lower():
                         # v2.0: New rig file format
                         rig_file = extracted_path
-                    elif suffix in {'.mb', '.ma'} or '.controllers.' in file_name:
+                    elif suffix in {".mb", ".ma"} or ".controllers." in file_name:
                         # Legacy controllers file
                         controllers_file = extracted_path
-                    elif suffix in {'.png', '.jpg', '.jpeg', '.tif', '.tiff', '.exr', '.tex'}:
+                    elif suffix in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".exr", ".tex"}:
                         textures.append(extracted_path)
 
             info = {
-                'usd_file': usd_file,
-                'mrig_file': mrig_file,
-                'controllers_file': controllers_file,  # Legacy .controllers.mb or .ma
-                'rig_file': rig_file,  # v2.0: .rig.mb or .rig.ma
-                'textures': textures,
-                'extract_dir': output_dir,
-                'file_count': len(file_list)
+                "usd_file": usd_file,
+                "mrig_file": mrig_file,
+                "controllers_file": controllers_file,  # Legacy .controllers.mb or .ma
+                "rig_file": rig_file,  # v2.0: .rig.mb or .rig.ma
+                "textures": textures,
+                "extract_dir": output_dir,
+                "file_count": len(file_list),
             }
 
-            self.logger.info(
-                f"[OK] USDZ extracted: {len(file_list)} files to {output_dir}"
-            )
+            self.logger.info(f"[OK] USDZ extracted: {len(file_list)} files to {output_dir}")
             if mrig_file:
                 self.logger.info(f"   [SELECT] Found .mrig file: {mrig_file.name}")
             if rig_file:
@@ -239,7 +237,7 @@ class UsdzPackager:
         except Exception as e:
             error_msg = f"USDZ extraction failed: {e}"
             self.logger.error(error_msg, exc_info=True)
-            return False, {'error': error_msg}
+            return False, {"error": error_msg}
 
     def get_package_info(self, usdz_path: Path) -> dict:
         """Get info about USDZ package without extracting
@@ -258,33 +256,31 @@ class UsdzPackager:
         """
         try:
             if not usdz_path.exists():
-                return {'error': f"File not found: {usdz_path}"}
+                return {"error": f"File not found: {usdz_path}"}
 
-            with zipfile.ZipFile(usdz_path, 'r') as usdz:
+            with zipfile.ZipFile(usdz_path, "r") as usdz:
                 file_list = usdz.namelist()
 
                 info = {
-                    'files': file_list,
-                    'has_mrig': any(f.endswith('.mrig') for f in file_list),
-                    'has_controllers': any(
-                        '.controllers.' in f or f.endswith(('.mb', '.ma'))
+                    "files": file_list,
+                    "has_mrig": any(f.endswith(".mrig") for f in file_list),
+                    "has_controllers": any(
+                        ".controllers." in f or f.endswith((".mb", ".ma")) for f in file_list
+                    ),
+                    "has_textures": any(
+                        f.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".exr"))
                         for f in file_list
                     ),
-                    'has_textures': any(
-                        f.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.exr'))
-                        for f in file_list
+                    "usd_file": next(
+                        (f for f in file_list if f.endswith((".usd", ".usda", ".usdc"))), None
                     ),
-                    'usd_file': next(
-                        (f for f in file_list if f.endswith(('.usd', '.usda', '.usdc'))),
-                        None
-                    ),
-                    'size_bytes': usdz_path.stat().st_size
+                    "size_bytes": usdz_path.stat().st_size,
                 }
 
                 return info
 
         except Exception as e:
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def _find_referenced_textures(self, usd_file: Path) -> List[Path]:
         """Find texture files referenced in USD
@@ -307,7 +303,7 @@ class UsdzPackager:
                     # Look for asset-valued attributes
                     for prim in stage.Traverse():
                         for attr in prim.GetAttributes():
-                            if attr.GetTypeName() == 'asset':
+                            if attr.GetTypeName() == "asset":
                                 try:
                                     asset_path = attr.Get()
                                     if asset_path:
@@ -319,18 +315,21 @@ class UsdzPackager:
 
             except ImportError:
                 # Fall back to simple text parsing for ASCII USD files
-                if usd_file.suffix == '.usda':
-                    content = usd_file.read_text(errors='ignore')
+                if usd_file.suffix == ".usda":
+                    content = usd_file.read_text(errors="ignore")
 
                     # Look for @path@ asset references
                     import re
-                    asset_pattern = r'@([^@]+)@'
+
+                    asset_pattern = r"@([^@]+)@"
                     matches = re.findall(asset_pattern, content)
 
                     for match in matches:
                         # Check if it's a texture file
-                        if any(match.lower().endswith(ext)
-                               for ext in ('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.exr')):
+                        if any(
+                            match.lower().endswith(ext)
+                            for ext in (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".exr")
+                        ):
                             # Resolve relative to USD file
                             tex_path = usd_file.parent / match
                             if tex_path.exists():
@@ -343,9 +342,7 @@ class UsdzPackager:
 
 
 def create_usdz_with_mrig(
-    usd_file: Path,
-    mrig_file: Optional[Path] = None,
-    output_path: Optional[Path] = None
+    usd_file: Path, mrig_file: Optional[Path] = None, output_path: Optional[Path] = None
 ) -> Tuple[bool, str, Optional[Path]]:
     """Convenience function to create USDZ package with .mrig bundled
 
@@ -359,27 +356,24 @@ def create_usdz_with_mrig(
     """
     # Auto-detect mrig file if not provided
     if mrig_file is None:
-        mrig_file = usd_file.with_suffix('.mrig')
+        mrig_file = usd_file.with_suffix(".mrig")
         if not mrig_file.exists():
             mrig_file = None
 
     # Auto-generate output path if not provided
     if output_path is None:
-        output_path = usd_file.with_suffix('.usdz')
+        output_path = usd_file.with_suffix(".usdz")
 
     packager = UsdzPackager()
     success, message = packager.create_package(
-        output_path=output_path,
-        usd_file=usd_file,
-        mrig_file=mrig_file
+        output_path=output_path, usd_file=usd_file, mrig_file=mrig_file
     )
 
     return success, message, output_path if success else None
 
 
 def extract_usdz_with_mrig(
-    usdz_path: Path,
-    output_dir: Optional[Path] = None
+    usdz_path: Path, output_dir: Optional[Path] = None
 ) -> Tuple[bool, Optional[Path], Optional[Path]]:
     """Convenience function to extract USDZ and get USD + mrig paths
 
@@ -394,6 +388,6 @@ def extract_usdz_with_mrig(
     success, info = packager.extract_package(usdz_path, output_dir)
 
     if success:
-        return True, info.get('usd_file'), info.get('mrig_file')
+        return True, info.get("usd_file"), info.get("mrig_file")
     else:
         return False, None, None

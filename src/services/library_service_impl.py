@@ -33,9 +33,7 @@ class LibraryServiceImpl(ILibraryService):
         self._repository = repository
 
     def add_asset_to_library(
-        self,
-        source_path: Path,
-        project_path: Path
+        self, source_path: Path, project_path: Path
     ) -> Optional[Tuple[bool, Optional[Path]]]:
         """
         Add asset to library - ATOMIC operation
@@ -77,7 +75,7 @@ class LibraryServiceImpl(ILibraryService):
                 asset_type=self._get_asset_type(target_path),
                 created_date=datetime.fromtimestamp(stat_info.st_ctime),
                 modified_date=datetime.fromtimestamp(stat_info.st_mtime),
-                metadata={}
+                metadata={},
             )
 
             # Update repository with NEW asset (using library path)
@@ -141,11 +139,7 @@ class LibraryServiceImpl(ILibraryService):
             print(f"[ERROR] Failed to remove asset: {e}")
             return False
 
-    def get_library_path_for_asset(
-        self,
-        source_path: Path,
-        project_path: Path
-    ) -> Path:
+    def get_library_path_for_asset(self, source_path: Path, project_path: Path) -> Path:
         """
         Calculate target library path for an asset
 
@@ -175,17 +169,17 @@ class LibraryServiceImpl(ILibraryService):
 
         # Determine subdirectory based on file type
         file_ext = source_path.suffix.lower()
-        if file_ext in ['.ma', '.mb']:
+        if file_ext in [".ma", ".mb"]:
             target_dir = assets_dir / "scenes"
-        elif file_ext in ['.obj', '.fbx', '.abc', '.usd', '.usda', '.usdc']:
+        elif file_ext in [".obj", ".fbx", ".abc", ".usd", ".usda", ".usdc"]:
             target_dir = assets_dir / "models"
-        elif file_ext in ['.png', '.jpg', '.jpeg', '.tiff', '.tga', '.exr', '.hdr']:
+        elif file_ext in [".png", ".jpg", ".jpeg", ".tiff", ".tga", ".exr", ".hdr"]:
             target_dir = assets_dir / "textures"
-        elif file_ext in ['.mtl', '.mat']:
+        elif file_ext in [".mtl", ".mat"]:
             target_dir = assets_dir / "materials"
-        elif file_ext in ['.mov', '.mp4', '.avi']:
+        elif file_ext in [".mov", ".mp4", ".avi"]:
             target_dir = assets_dir / "animations"
-        elif file_ext in ['.zip', '.rar']:
+        elif file_ext in [".zip", ".rar"]:
             target_dir = assets_dir / "archives"
         else:
             target_dir = assets_dir  # Default to main assets folder
@@ -226,24 +220,24 @@ class LibraryServiceImpl(ILibraryService):
         ext = file_path.suffix.lower()
 
         type_mapping = {
-            '.ma': 'Maya ASCII',
-            '.mb': 'Maya Binary',
-            '.obj': 'OBJ Model',
-            '.fbx': 'FBX Model',
-            '.abc': 'Alembic Cache',
-            '.usd': 'USD Scene',
-            '.usda': 'USD ASCII',
-            '.usdc': 'USD Crate',
-            '.png': 'PNG Image',
-            '.jpg': 'JPEG Image',
-            '.jpeg': 'JPEG Image',
-            '.tiff': 'TIFF Image',
-            '.tga': 'TGA Image',
-            '.exr': 'EXR Image',
-            '.hdr': 'HDR Image',
-            '.mov': 'QuickTime Movie',
-            '.mp4': 'MP4 Video',
-            '.avi': 'AVI Video',
+            ".ma": "Maya ASCII",
+            ".mb": "Maya Binary",
+            ".obj": "OBJ Model",
+            ".fbx": "FBX Model",
+            ".abc": "Alembic Cache",
+            ".usd": "USD Scene",
+            ".usda": "USD ASCII",
+            ".usdc": "USD Crate",
+            ".png": "PNG Image",
+            ".jpg": "JPEG Image",
+            ".jpeg": "JPEG Image",
+            ".tiff": "TIFF Image",
+            ".tga": "TGA Image",
+            ".exr": "EXR Image",
+            ".hdr": "HDR Image",
+            ".mov": "QuickTime Movie",
+            ".mp4": "MP4 Video",
+            ".avi": "AVI Video",
         }
 
-        return type_mapping.get(ext, 'Unknown')
+        return type_mapping.get(ext, "Unknown")

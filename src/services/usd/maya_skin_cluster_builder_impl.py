@@ -14,6 +14,7 @@ from typing import Optional, List, Dict, Tuple, Any
 # Conditional Maya import
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -44,7 +45,7 @@ class MayaSkinClusterBuilderImpl:
         mesh_name: str,
         joint_names: List[str],
         skin_weight_data: Any,  # UsdSkinWeightData
-        skincluster_name: Optional[str] = None
+        skincluster_name: Optional[str] = None,
     ) -> Optional[str]:
         """
         Create Maya skinCluster and apply weights
@@ -84,24 +85,28 @@ class MayaSkinClusterBuilderImpl:
                 positions_to_match = skin_weight_data.vertex_positions
                 if skin_weight_data.geom_bind_transform:
                     positions_to_match = self._transform_vertex_positions(
-                        skin_weight_data.vertex_positions,
-                        skin_weight_data.geom_bind_transform
+                        skin_weight_data.vertex_positions, skin_weight_data.geom_bind_transform
                     )
                     self.logger.info("   Transformed USD positions by geomBindTransform")
 
                 usd_to_maya_vertex_map = self._build_vertex_position_map(
-                    mesh_transform,
-                    positions_to_match
+                    mesh_transform, positions_to_match
                 )
 
                 if usd_to_maya_vertex_map:
-                    self.logger.info(f"[OK] Mapped {len(usd_to_maya_vertex_map)} vertices by position")
+                    self.logger.info(
+                        f"[OK] Mapped {len(usd_to_maya_vertex_map)} vertices by position"
+                    )
                 else:
-                    self.logger.warning("[WARNING] Position mapping failed, using index-based (may be incorrect!)")
+                    self.logger.warning(
+                        "[WARNING] Position mapping failed, using index-based (may be incorrect!)"
+                    )
 
             # Apply geomBindTransform to mesh for correct bind pose
             if skin_weight_data.geom_bind_transform:
-                self._apply_geom_bind_transform(mesh_transform, skin_weight_data.geom_bind_transform)
+                self._apply_geom_bind_transform(
+                    mesh_transform, skin_weight_data.geom_bind_transform
+                )
 
             # Find joints in scene (handle namespace)
             maya_joints = self._find_maya_joints(joint_names)
@@ -113,9 +118,7 @@ class MayaSkinClusterBuilderImpl:
 
             # Create skinCluster
             skin_cluster = self._create_maya_skincluster(
-                mesh_transform,
-                maya_joints,
-                skincluster_name
+                mesh_transform, maya_joints, skincluster_name
             )
 
             if not skin_cluster:
@@ -123,11 +126,7 @@ class MayaSkinClusterBuilderImpl:
 
             # Apply weights from USD data
             success = self._apply_weights(
-                skin_cluster,
-                mesh_transform,
-                maya_joints,
-                skin_weight_data,
-                usd_to_maya_vertex_map
+                skin_cluster, mesh_transform, maya_joints, skin_weight_data, usd_to_maya_vertex_map
             )
 
             if not success:
@@ -140,6 +139,7 @@ class MayaSkinClusterBuilderImpl:
         except Exception as e:
             self.logger.error(f"Failed to create skin cluster on {mesh_name}: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -162,14 +162,16 @@ class MayaSkinClusterBuilderImpl:
 
         try:
             # Get all joints in scene
-            all_joints = cmds.ls(type='joint', long=True) or []
+            all_joints = cmds.ls(type="joint", long=True) or []
 
             # Build mapping of BOTH short name (no namespace) AND short name (with namespace) → full path
             # This handles both "Root" and "test:Root" lookups
             joint_map = {}
             for joint_path in all_joints:
-                dag_short_name = joint_path.split('|')[-1]  # Get last part of DAG path
-                short_name_no_ns = dag_short_name.split(':')[-1]  # Remove namespace: "test:Root" -> "Root"
+                dag_short_name = joint_path.split("|")[-1]  # Get last part of DAG path
+                short_name_no_ns = dag_short_name.split(":")[
+                    -1
+                ]  # Remove namespace: "test:Root" -> "Root"
 
                 # Map both versions
                 if dag_short_name not in joint_map:
@@ -183,7 +185,7 @@ class MayaSkinClusterBuilderImpl:
             # Find matching joints
             for search_name in joint_short_names:
                 # Strip namespace from search name to get base name
-                base_name = search_name.split(':')[-1]
+                base_name = search_name.split(":")[-1]
 
                 # Try to find:
                 # 1. Exact match with namespace (search_name = "test:Root")
@@ -217,11 +219,11 @@ class MayaSkinClusterBuilderImpl:
 
         try:
             # Check if it's already a transform
-            if cmds.nodeType(node_name) == 'transform':
+            if cmds.nodeType(node_name) == "transform":
                 return node_name
 
             # If it's a shape, get its transform parent
-            if cmds.nodeType(node_name) == 'mesh':
+            if cmds.nodeType(node_name) == "mesh":
                 parents = cmds.listRelatives(node_name, parent=True, fullPath=True)
                 if parents:
                     return parents[0]
@@ -239,7 +241,9 @@ class MayaSkinClusterBuilderImpl:
             self.logger.error(f"Failed to get transform node: {e}")
             return None
 
-    def _apply_geom_bind_transform(self, mesh_transform: str, geom_bind_matrix: List[float]) -> None:
+    def _apply_geom_bind_transform(
+        self, mesh_transform: str, geom_bind_matrix: List[float]
+    ) -> None:
         """
         Apply geomBindTransform to mesh before skinning
 
@@ -272,10 +276,7 @@ class MayaSkinClusterBuilderImpl:
             self.logger.warning(f"Could not apply geomBindTransform to {mesh_transform}: {e}")
 
     def _create_maya_skincluster(
-        self,
-        mesh_name: str,
-        joint_names: List[str],
-        skincluster_name: Optional[str]
+        self, mesh_name: str, joint_names: List[str], skincluster_name: Optional[str]
     ) -> Optional[str]:
         """
         Create Maya skinCluster node
@@ -304,7 +305,7 @@ class MayaSkinClusterBuilderImpl:
                 normalizeWeights=1,  # Interactive normalize
                 maximumInfluences=4,  # Default max influences
                 obeyMaxInfluences=False,  # Allow more if needed
-                name=skincluster_name
+                name=skincluster_name,
             )
 
             # skinCluster returns list, get first element
@@ -339,7 +340,7 @@ class MayaSkinClusterBuilderImpl:
 
         try:
             # Find bind pose dagPose node
-            bind_poses = cmds.ls(type='dagPose')
+            bind_poses = cmds.ls(type="dagPose")
             bind_pose_node = None
 
             for pose in bind_poses:
@@ -369,11 +370,11 @@ class MayaSkinClusterBuilderImpl:
                     members = cmds.dagPose(bind_pose_node, query=True, members=True) or []
 
                     # Match joint to dagPose member index
-                    joint_short_name = joint_name.split(':')[-1].split('|')[-1]
+                    joint_short_name = joint_name.split(":")[-1].split("|")[-1]
                     dag_pose_idx = None
 
                     for member_idx, member in enumerate(members):
-                        member_short = member.split(':')[-1].split('|')[-1]
+                        member_short = member.split(":")[-1].split("|")[-1]
                         if member_short == joint_short_name:
                             dag_pose_idx = member_idx
                             break
@@ -397,7 +398,9 @@ class MayaSkinClusterBuilderImpl:
                     continue
 
             if matrices_fixed > 0:
-                self.logger.info(f"[OK] Fixed {matrices_fixed}/{len(influences)} bind matrices from dagPose")
+                self.logger.info(
+                    f"[OK] Fixed {matrices_fixed}/{len(influences)} bind matrices from dagPose"
+                )
             else:
                 self.logger.warning("[WARNING] Could not fix any bind matrices")
 
@@ -450,7 +453,9 @@ class MayaSkinClusterBuilderImpl:
                     matrices_set += 1
 
                 except Exception as joint_error:
-                    self.logger.warning(f"Could not set bindPreMatrix for {joint_name}: {joint_error}")
+                    self.logger.warning(
+                        f"Could not set bindPreMatrix for {joint_name}: {joint_error}"
+                    )
                     continue
 
             if matrices_set == len(influences):
@@ -458,7 +463,9 @@ class MayaSkinClusterBuilderImpl:
                     f"[OK] Successfully set {matrices_set}/{len(influences)} bindPreMatrix values"
                 )
             elif matrices_set > 0:
-                self.logger.warning(f"[WARNING] Partially set {matrices_set}/{len(influences)} bindPreMatrix values")
+                self.logger.warning(
+                    f"[WARNING] Partially set {matrices_set}/{len(influences)} bindPreMatrix values"
+                )
             else:
                 self.logger.warning("[ERROR] Failed to set any bindPreMatrix values")
 
@@ -480,7 +487,7 @@ class MayaSkinClusterBuilderImpl:
 
         try:
             # Find the bind pose dagPose node
-            bind_poses = cmds.ls(type='dagPose')
+            bind_poses = cmds.ls(type="dagPose")
             bind_pose_node = None
 
             for pose in bind_poses:
@@ -495,7 +502,8 @@ class MayaSkinClusterBuilderImpl:
 
             # Use MEL to restore - it handles hierarchy correctly
             import maya.mel as mel  # type: ignore
-            mel_command = f'dagPose -restore -g -bindPose {bind_pose_node};'
+
+            mel_command = f"dagPose -restore -g -bindPose {bind_pose_node};"
             mel.eval(mel_command)
 
             self.logger.info(f"[OK] Restored bind pose: {bind_pose_node}")
@@ -519,7 +527,7 @@ class MayaSkinClusterBuilderImpl:
 
         try:
             # Find the bind pose dagPose node
-            bind_poses = cmds.ls(type='dagPose')
+            bind_poses = cmds.ls(type="dagPose")
             bind_pose_node = None
 
             for pose in bind_poses:
@@ -545,7 +553,9 @@ class MayaSkinClusterBuilderImpl:
                 try:
                     # Get the joint's current world matrix (which should be in bind pose)
                     # by querying it directly from the joint
-                    joint_world_matrix = cmds.xform(joint_name, query=True, worldSpace=True, matrix=True)
+                    joint_world_matrix = cmds.xform(
+                        joint_name, query=True, worldSpace=True, matrix=True
+                    )
 
                     # Convert to MMatrix and invert
                     m_matrix = om2.MMatrix(joint_world_matrix)
@@ -557,7 +567,9 @@ class MayaSkinClusterBuilderImpl:
                     matrices_copied += 1
 
                 except Exception as joint_error:
-                    self.logger.warning(f"Failed to copy bind matrix for {joint_name}: {joint_error}")
+                    self.logger.warning(
+                        f"Failed to copy bind matrix for {joint_name}: {joint_error}"
+                    )
                     continue
 
             if matrices_copied > 0:
@@ -569,9 +581,7 @@ class MayaSkinClusterBuilderImpl:
             self.logger.warning(f"Failed to copy bind pose matrices: {e}")
 
     def _transform_vertex_positions(
-        self,
-        vertex_positions: List[Tuple[float, float, float]],
-        transform_matrix: List[float]
+        self, vertex_positions: List[Tuple[float, float, float]], transform_matrix: List[float]
     ) -> List[Tuple[float, float, float]]:
         """
         Transform vertex positions by a 4x4 matrix
@@ -601,11 +611,13 @@ class MayaSkinClusterBuilderImpl:
                 transformed_point = point * m_matrix
 
                 # Convert back to tuple
-                transformed_positions.append((
-                    float(transformed_point.x),
-                    float(transformed_point.y),
-                    float(transformed_point.z)
-                ))
+                transformed_positions.append(
+                    (
+                        float(transformed_point.x),
+                        float(transformed_point.y),
+                        float(transformed_point.z),
+                    )
+                )
 
             return transformed_positions
 
@@ -614,9 +626,7 @@ class MayaSkinClusterBuilderImpl:
             return vertex_positions
 
     def _build_vertex_position_map(
-        self,
-        mesh_name: str,
-        usd_vertex_positions: List[Tuple[float, float, float]]
+        self, mesh_name: str, usd_vertex_positions: List[Tuple[float, float, float]]
     ) -> Optional[Dict[int, int]]:
         """
         Build mapping from USD vertex indices to Maya vertex indices by matching positions
@@ -651,21 +661,21 @@ class MayaSkinClusterBuilderImpl:
             maya_vertex_count = len(maya_points)
 
             if maya_vertex_count != len(usd_vertex_positions):
-                self.logger.error(f"Vertex count mismatch: Maya={maya_vertex_count}, USD={len(usd_vertex_positions)}")
+                self.logger.error(
+                    f"Vertex count mismatch: Maya={maya_vertex_count}, USD={len(usd_vertex_positions)}"
+                )
                 return None
 
-            self.logger.info(f"   Matching {maya_vertex_count} vertices by position (API batch)...")
+            self.logger.info(
+                f"   Matching {maya_vertex_count} vertices by position (API batch)..."
+            )
 
             # Build spatial hash of Maya vertices for faster lookup
             tolerance = 0.0001  # Position matching tolerance
             maya_position_map = {}
 
             for maya_idx, pt in enumerate(maya_points):
-                key = (
-                    round(pt.x / tolerance),
-                    round(pt.y / tolerance),
-                    round(pt.z / tolerance)
-                )
+                key = (round(pt.x / tolerance), round(pt.y / tolerance), round(pt.z / tolerance))
                 maya_position_map[key] = maya_idx
 
             # Match USD vertices to Maya vertices
@@ -676,7 +686,7 @@ class MayaSkinClusterBuilderImpl:
                 key = (
                     round(usd_pos[0] / tolerance),
                     round(usd_pos[1] / tolerance),
-                    round(usd_pos[2] / tolerance)
+                    round(usd_pos[2] / tolerance),
                 )
 
                 if key in maya_position_map:
@@ -700,7 +710,9 @@ class MayaSkinClusterBuilderImpl:
                 )
 
             if len(usd_to_maya_map) < len(usd_vertex_positions) * 0.9:  # Less than 90% matched
-                self.logger.error(f"[ERROR] Only {match_percentage:.1f}% matched - position mapping failed")
+                self.logger.error(
+                    f"[ERROR] Only {match_percentage:.1f}% matched - position mapping failed"
+                )
                 return None
 
             return usd_to_maya_map
@@ -708,6 +720,7 @@ class MayaSkinClusterBuilderImpl:
         except Exception as e:
             self.logger.error(f"Failed to build vertex position map: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -717,7 +730,7 @@ class MayaSkinClusterBuilderImpl:
         mesh_name: str,
         maya_joints: List[str],
         weight_data: Any,  # UsdSkinWeightData
-        usd_to_maya_vertex_map: Optional[Dict[int, int]] = None
+        usd_to_maya_vertex_map: Optional[Dict[int, int]] = None,
     ) -> bool:
         """
         Apply skin weights from USD data to Maya skinCluster
@@ -739,14 +752,22 @@ class MayaSkinClusterBuilderImpl:
             return False
 
         try:
-            self.logger.info(f"Applying weights to {weight_data.vertex_count} vertices (batch API)...")
+            self.logger.info(
+                f"Applying weights to {weight_data.vertex_count} vertices (batch API)..."
+            )
 
             # Use pre-computed vertex mapping (built before geomBindTransform)
             if usd_to_maya_vertex_map:
-                self.logger.info(f"Using pre-computed vertex mapping ({len(usd_to_maya_vertex_map)} vertices)")
+                self.logger.info(
+                    f"Using pre-computed vertex mapping ({len(usd_to_maya_vertex_map)} vertices)"
+                )
             else:
-                self.logger.warning("[WARNING] No vertex mapping available, using index-based matching")
-                self.logger.warning("   This may cause incorrect skinning if Maya reordered vertices!")
+                self.logger.warning(
+                    "[WARNING] No vertex mapping available, using index-based matching"
+                )
+                self.logger.warning(
+                    "   This may cause incorrect skinning if Maya reordered vertices!"
+                )
 
             # Diagnostic: Check first few vertices
             self.logger.info("📝 Sample USD weight data (first 3 vertices):")
@@ -754,11 +775,14 @@ class MayaSkinClusterBuilderImpl:
                 usd_joint_indices = weight_data.joint_indices[v_idx]
                 usd_weights = weight_data.joint_weights[v_idx]
                 non_zero = [
-                    (maya_joints[j], w) for j, w in zip(usd_joint_indices, usd_weights)
+                    (maya_joints[j], w)
+                    for j, w in zip(usd_joint_indices, usd_weights)
                     if w > 0.0001 and j < len(maya_joints)
                 ]
                 maya_vert_idx = usd_to_maya_vertex_map[v_idx] if usd_to_maya_vertex_map else v_idx
-                self.logger.info(f"   USD vtx[{v_idx}] → Maya vtx[{maya_vert_idx}]: {non_zero[:3]}")
+                self.logger.info(
+                    f"   USD vtx[{v_idx}] → Maya vtx[{maya_vert_idx}]: {non_zero[:3]}"
+                )
 
             # Try fast Maya API method first, fall back to cmds if needed
             try:
@@ -768,14 +792,18 @@ class MayaSkinClusterBuilderImpl:
             except Exception as api_error:
                 self.logger.error(f"[ERROR] API weight method failed: {api_error}")
                 import traceback
+
                 traceback.print_exc()
-                self.logger.error("[ERROR] Cannot fall back to per-vertex method (too slow for large meshes)")
+                self.logger.error(
+                    "[ERROR] Cannot fall back to per-vertex method (too slow for large meshes)"
+                )
                 self.logger.error("   Please report this error to the developer")
                 return False
 
         except Exception as e:
             self.logger.error(f"Failed to apply weights: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -785,7 +813,7 @@ class MayaSkinClusterBuilderImpl:
         mesh_name: str,
         maya_joints: List[str],
         weight_data: Any,
-        usd_to_maya_vertex_map: Optional[Dict[int, int]]
+        usd_to_maya_vertex_map: Optional[Dict[int, int]],
     ) -> bool:
         """
         Apply weights using Maya API (MFnSkinCluster) - FASTEST method.
@@ -819,14 +847,14 @@ class MayaSkinClusterBuilderImpl:
             joint_to_influence_idx[joint_name] = inf_idx
             joint_to_influence_idx[short_name] = inf_idx
             # Also map by final name component
-            final_name = short_name.split('|')[-1].split(':')[-1]
+            final_name = short_name.split("|")[-1].split(":")[-1]
             if final_name not in joint_to_influence_idx:
                 joint_to_influence_idx[final_name] = inf_idx
 
         # Map our maya_joints list indices to skin cluster influence indices
         joint_list_to_influence = []
         for joint in maya_joints:
-            short = joint.split('|')[-1].split(':')[-1]
+            short = joint.split("|")[-1].split(":")[-1]
             if joint in joint_to_influence_idx:
                 joint_list_to_influence.append(joint_to_influence_idx[joint])
             elif short in joint_to_influence_idx:
@@ -882,17 +910,23 @@ class MayaSkinClusterBuilderImpl:
         single_idx_component.addElements(list(range(maya_vertex_count)))
 
         # Apply all weights in ONE call!
-        self.logger.info(f"   Setting weights for {maya_vertex_count} vertices, {num_influences} influences...")
+        self.logger.info(
+            f"   Setting weights for {maya_vertex_count} vertices, {num_influences} influences..."
+        )
         skin_fn.setWeights(mesh_dag, vertex_comp, influence_indices, weights, normalize=True)
 
-        success_rate = vertices_processed / weight_data.vertex_count if weight_data.vertex_count > 0 else 0
+        success_rate = (
+            vertices_processed / weight_data.vertex_count if weight_data.vertex_count > 0 else 0
+        )
         self.logger.info(
             f"[OK] Weight application: {vertices_processed}/{weight_data.vertex_count} "
             f"vertices ({success_rate*100:.1f}%)"
         )
 
         if vertices_failed > 0:
-            self.logger.warning(f"[WARNING] {vertices_failed} vertices had weight application issues")
+            self.logger.warning(
+                f"[WARNING] {vertices_failed} vertices had weight application issues"
+            )
 
         return vertices_failed == 0
 
@@ -902,7 +936,7 @@ class MayaSkinClusterBuilderImpl:
         mesh_name: str,
         maya_joints: List[str],
         weight_data: Any,
-        usd_to_maya_vertex_map: Optional[Dict[int, int]]
+        usd_to_maya_vertex_map: Optional[Dict[int, int]],
     ) -> bool:
         """
         Apply weights using cmds.skinPercent in batches - fallback method.
@@ -926,7 +960,9 @@ class MayaSkinClusterBuilderImpl:
 
             for usd_v_idx in range(start_idx, end_idx):
                 try:
-                    maya_v_idx = usd_to_maya_vertex_map[usd_v_idx] if usd_to_maya_vertex_map else usd_v_idx
+                    maya_v_idx = (
+                        usd_to_maya_vertex_map[usd_v_idx] if usd_to_maya_vertex_map else usd_v_idx
+                    )
 
                     usd_joint_indices = weight_data.joint_indices[usd_v_idx]
                     usd_weights = weight_data.joint_weights[usd_v_idx]
@@ -942,31 +978,30 @@ class MayaSkinClusterBuilderImpl:
 
                     vertex_name = f"{mesh_name}.vtx[{maya_v_idx}]"
                     cmds.skinPercent(
-                        skin_cluster,
-                        vertex_name,
-                        transformValue=transform_values,
-                        normalize=True
+                        skin_cluster, vertex_name, transformValue=transform_values, normalize=True
                     )
                     vertices_processed += 1
 
                 except Exception:
                     vertices_failed += 1
 
-        success_rate = vertices_processed / weight_data.vertex_count if weight_data.vertex_count > 0 else 0
+        success_rate = (
+            vertices_processed / weight_data.vertex_count if weight_data.vertex_count > 0 else 0
+        )
         self.logger.info(
             f"Weight application: {vertices_processed}/{weight_data.vertex_count} "
             f"vertices ({success_rate*100:.1f}%)"
         )
 
         if vertices_failed > 0:
-            self.logger.warning(f"[WARNING] {vertices_failed} vertices had weight application issues")
+            self.logger.warning(
+                f"[WARNING] {vertices_failed} vertices had weight application issues"
+            )
 
         return vertices_failed == 0
 
     def validate_joint_mapping(
-        self,
-        usd_joint_names: List[str],
-        maya_joint_names: List[str]
+        self, usd_joint_names: List[str], maya_joint_names: List[str]
     ) -> Tuple[bool, List[str]]:
         """
         Validate USD joints can be mapped to Maya joints
@@ -980,7 +1015,7 @@ class MayaSkinClusterBuilderImpl:
         """
         maya_short_names = set()
         for joint in maya_joint_names:
-            short_name = joint.split('|')[-1].split(':')[-1]
+            short_name = joint.split("|")[-1].split(":")[-1]
             maya_short_names.add(short_name)
 
         missing_joints = []

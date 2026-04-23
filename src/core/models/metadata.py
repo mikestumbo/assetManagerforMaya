@@ -66,25 +66,25 @@ class FileMetadata:
     @property
     def is_maya_file(self) -> bool:
         """Check if file is a Maya file"""
-        maya_extensions = {'.ma', '.mb', '.mel'}
+        maya_extensions = {".ma", ".mb", ".mel"}
         return self.file_extension.lower() in maya_extensions
 
     @property
     def is_image_file(self) -> bool:
         """Check if file is an image"""
-        image_extensions = {'.png', '.jpg', '.jpeg', '.tiff', '.tga', '.bmp', '.gif', '.exr'}
+        image_extensions = {".png", ".jpg", ".jpeg", ".tiff", ".tga", ".bmp", ".gif", ".exr"}
         return self.file_extension.lower() in image_extensions
 
     @property
     def is_video_file(self) -> bool:
         """Check if file is a video"""
-        video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'}
+        video_extensions = {".mp4", ".avi", ".mov", ".mkv", ".wmv", ".flv"}
         return self.file_extension.lower() in video_extensions
 
     @property
     def is_audio_file(self) -> bool:
         """Check if file is audio"""
-        audio_extensions = {'.mp3', '.wav', '.aiff', '.flac', '.ogg', '.m4a'}
+        audio_extensions = {".mp3", ".wav", ".aiff", ".flac", ".ogg", ".m4a"}
         return self.file_extension.lower() in audio_extensions
 
     def get_property(self, key: str, default: Any = None) -> Any:
@@ -94,17 +94,17 @@ class FileMetadata:
     def to_dict(self) -> Dict[str, Any]:
         """Convert metadata to dictionary"""
         return {
-            'file_path': str(self.file_path),
-            'file_name': self.file_name,
-            'file_extension': self.file_extension,
-            'file_size': self.file_size,
-            'created_date': self.created_date.isoformat() if self.created_date else None,
-            'modified_date': self.modified_date.isoformat() if self.modified_date else None,
-            'accessed_date': self.accessed_date.isoformat() if self.accessed_date else None,
-            'is_readonly': self.is_readonly,
-            'is_hidden': self.is_hidden,
-            'is_system': self.is_system,
-            'mime_type': self.mime_type,
-            'encoding': self.encoding,
-            'custom_properties': self.custom_properties.copy()
+            "file_path": str(self.file_path),
+            "file_name": self.file_name,
+            "file_extension": self.file_extension,
+            "file_size": self.file_size,
+            "created_date": self.created_date.isoformat() if self.created_date else None,
+            "modified_date": self.modified_date.isoformat() if self.modified_date else None,
+            "accessed_date": self.accessed_date.isoformat() if self.accessed_date else None,
+            "is_readonly": self.is_readonly,
+            "is_hidden": self.is_hidden,
+            "is_system": self.is_system,
+            "mime_type": self.mime_type,
+            "encoding": self.encoding,
+            "custom_properties": self.custom_properties.copy(),
         }

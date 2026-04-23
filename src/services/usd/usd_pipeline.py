@@ -9,13 +9,16 @@ The implementation is split across mixin modules for Pylance performance:
   usd_pipeline_import.py    — ImportMixin
   usd_pipeline_skeleton.py  — SkeletonMixin
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 from .usd_pipeline_models import (
-    ExportOptions, ExportResult,
-    ImportOptions, ImportResult,
+    ExportOptions,
+    ExportResult,
+    ImportOptions,
+    ImportResult,
 )
 from .usd_pipeline_export import ExportMixin
 from .usd_pipeline_stages import StagesMixin
@@ -41,11 +44,7 @@ class UsdPipeline(
 # =========================================================================
 # CONVENIENCE FUNCTIONS
 # =========================================================================
-def export_rig_to_usd(
-    source_path: str,
-    output_path: str,
-    **kwargs
-) -> ExportResult:
+def export_rig_to_usd(source_path: str, output_path: str, **kwargs) -> ExportResult:
     """
     Convenience function to export a Maya rig to USD
 
@@ -62,10 +61,7 @@ def export_rig_to_usd(
     return pipeline.export(Path(source_path), Path(output_path), options)
 
 
-def import_usd_rig(
-    usd_path: str,
-    **kwargs
-) -> ImportResult:
+def import_usd_rig(usd_path: str, **kwargs) -> ImportResult:
     """
     Convenience function to import a USD rig
 

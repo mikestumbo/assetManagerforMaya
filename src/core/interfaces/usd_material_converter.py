@@ -27,10 +27,7 @@ class IUSDMaterialConverter(ABC):
 
     @abstractmethod
     def convert_to_preview_surface(
-        self,
-        material_name: str,
-        material_data: Dict[str, Any],
-        usd_stage: Any  # pxr.Usd.Stage
+        self, material_name: str, material_data: Dict[str, Any], usd_stage: Any  # pxr.Usd.Stage
     ) -> Optional[Any]:  # pxr.UsdShade.Material
         """
         Convert Maya material to UsdPreviewSurface
@@ -52,7 +49,7 @@ class IUSDMaterialConverter(ABC):
         material_name: str,
         renderman_params: Dict[str, Any],
         usd_stage: Any,
-        usd_service: Optional[Any] = None
+        usd_service: Optional[Any] = None,
     ) -> Optional[Any]:
         """
         Convert RenderMan material to USD
@@ -72,10 +69,7 @@ class IUSDMaterialConverter(ABC):
 
     @abstractmethod
     def map_texture_inputs(
-        self,
-        maya_texture_path: Path,
-        usd_output_path: Path,
-        copy_textures: bool = False
+        self, maya_texture_path: Path, usd_output_path: Path, copy_textures: bool = False
     ) -> str:
         """
         Map Maya texture file path to USD texture reference
@@ -93,9 +87,7 @@ class IUSDMaterialConverter(ABC):
 
     @abstractmethod
     def bind_material_to_geometry(
-        self,
-        geometry_prim: Any,  # pxr.Usd.Prim
-        material: Any  # pxr.UsdShade.Material
+        self, geometry_prim: Any, material: Any  # pxr.Usd.Prim  # pxr.UsdShade.Material
     ) -> bool:
         """
         Bind USD material to geometry primitive
@@ -122,10 +114,7 @@ class IUSDMaterialConverter(ABC):
         """
 
     @abstractmethod
-    def validate_texture_paths(
-        self,
-        texture_paths: list[Path]
-    ) -> tuple[list[Path], list[Path]]:
+    def validate_texture_paths(self, texture_paths: list[Path]) -> tuple[list[Path], list[Path]]:
         """
         Validate texture file paths exist
 

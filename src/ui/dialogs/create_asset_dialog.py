@@ -10,9 +10,19 @@ from typing import Dict, Any, Optional
 
 try:
     from PySide6.QtWidgets import (
-        QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-        QLineEdit, QTextEdit, QComboBox, QCheckBox, QPushButton,
-        QMessageBox, QGroupBox, QSpacerItem, QSizePolicy
+        QDialog,
+        QVBoxLayout,
+        QHBoxLayout,
+        QFormLayout,
+        QLineEdit,
+        QTextEdit,
+        QComboBox,
+        QCheckBox,
+        QPushButton,
+        QMessageBox,
+        QGroupBox,
+        QSpacerItem,
+        QSizePolicy,
     )
 except ImportError as e:
     print(f"[ERROR] PySide6 import failed: {e}")
@@ -48,17 +58,19 @@ class CreateAssetDialog(QDialog):
 
         # Asset Type/Category
         self._category_combo = QComboBox()
-        self._category_combo.addItems([
-            "General",
-            "Characters",
-            "Props",
-            "Environments",
-            "Vehicles",
-            "Textures",
-            "Materials",
-            "Rigs",
-            "Animations"
-        ])
+        self._category_combo.addItems(
+            [
+                "General",
+                "Characters",
+                "Props",
+                "Environments",
+                "Vehicles",
+                "Textures",
+                "Materials",
+                "Rigs",
+                "Animations",
+            ]
+        )
         info_layout.addRow("Category:", self._category_combo)
 
         # Description
@@ -136,16 +148,16 @@ class CreateAssetDialog(QDialog):
         tags = []
         tags_text = self._tags_edit.text().strip()
         if tags_text:
-            tags = [tag.strip() for tag in tags_text.split(',') if tag.strip()]
+            tags = [tag.strip() for tag in tags_text.split(",") if tag.strip()]
 
         self._asset_data = {
-            'name': name,
-            'category': self._category_combo.currentText(),
-            'description': self._description_edit.toPlainText().strip(),
-            'tags': tags,
-            'export_selected': self._export_selected_check.isChecked(),
-            'generate_thumbnail': self._generate_thumbnail_check.isChecked(),
-            'include_materials': self._include_materials_check.isChecked()
+            "name": name,
+            "category": self._category_combo.currentText(),
+            "description": self._description_edit.toPlainText().strip(),
+            "tags": tags,
+            "export_selected": self._export_selected_check.isChecked(),
+            "generate_thumbnail": self._generate_thumbnail_check.isChecked(),
+            "include_materials": self._include_materials_check.isChecked(),
         }
 
         self.accept()

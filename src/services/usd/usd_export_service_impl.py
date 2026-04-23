@@ -17,10 +17,7 @@ else:
     UsdService = Any  # Runtime fallback for type hints
 
 # Import interfaces
-from ...core.interfaces.usd_export_service import (
-    IUSDExportService,
-    USDExportOptions
-)
+from ...core.interfaces.usd_export_service import IUSDExportService, USDExportOptions
 from ...core.interfaces.maya_scene_parser import IMayaSceneParser, MayaSceneData, JointData
 from ...core.interfaces.usd_material_converter import IUSDMaterialConverter
 from .usd_material_converter_impl import USDMaterialConverterImpl
@@ -29,6 +26,7 @@ from ...core.interfaces.usd_rig_converter import IUSDRigConverter
 # Conditional USD import
 try:
     from pxr import Usd, UsdGeom, Sdf, UsdShade, Gf, UsdUtils, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -51,7 +49,7 @@ class ExportResult:
         skin_cluster_count,
         curve_count,
         warnings,
-        error_message
+        error_message,
     ):
         self.success = success
         self.output_file = output_file
@@ -84,7 +82,7 @@ class USDExportServiceImpl(IUSDExportService):
             USD-compliant name (e.g., model_Veteran_Geo_Grp_model_Body_Geo)
         """
         # Remove leading pipes and replace all invalid characters
-        sanitized = maya_name.lstrip('|').replace(':', '_').replace('|', '_')
+        sanitized = maya_name.lstrip("|").replace(":", "_").replace("|", "_")
         return sanitized
 
     def __init__(
@@ -92,7 +90,7 @@ class USDExportServiceImpl(IUSDExportService):
         scene_parser: IMayaSceneParser,
         material_converter: Optional[IUSDMaterialConverter] = None,
         rig_converter: Optional[IUSDRigConverter] = None,
-        usd_service: Optional[UsdService] = None
+        usd_service: Optional[UsdService] = None,
     ):
         """Initialize USD export service with dependencies
 
@@ -121,11 +119,7 @@ class USDExportServiceImpl(IUSDExportService):
         if not USD_AVAILABLE:
             self.logger.warning("USD Python libraries not available - export will fail")
 
-    def export_maya_scene(
-        self,
-        maya_file: Optional[Path],
-        options: USDExportOptions
-    ) -> bool:
+    def export_maya_scene(self, maya_file: Optional[Path], options: USDExportOptions) -> bool:
         """Export complete Maya scene to USD
 
         Clean Code: Main orchestration method
@@ -193,7 +187,7 @@ class USDExportServiceImpl(IUSDExportService):
                 0.2,
                 f"Parsed {len(scene_data.meshes)} meshes, "
                 f"{len(scene_data.materials)} materials, "
-                f"{len(scene_data.nurbs_curves)} curves"
+                f"{len(scene_data.nurbs_curves)} curves",
             )
 
             # Phase 2: Create USD stage (10%)
@@ -213,7 +207,9 @@ class USDExportServiceImpl(IUSDExportService):
                 f"mesh_count={len(scene_data.meshes)}"
             )
             if options.export_meshes:
-                self.logger.info(f"[DEBUG] Starting geometry export for {len(scene_data.meshes)} meshes")
+                self.logger.info(
+                    f"[DEBUG] Starting geometry export for {len(scene_data.meshes)} meshes"
+                )
                 self._update_progress(0.3, "Exporting geometry...")
                 if not self._export_geometry(stage, scene_data, options):
                     self._last_error = "Failed to export geometry"
@@ -242,14 +238,18 @@ class USDExportServiceImpl(IUSDExportService):
                 f"scene_data.nurbs_curves count={len(scene_data.nurbs_curves)}"
             )
             if options.export_nurbs_curves and scene_data.nurbs_curves:
-                self.logger.info(f"[TARGET] STARTING NURBS EXPORT: {len(scene_data.nurbs_curves)} curves found")
+                self.logger.info(
+                    f"[TARGET] STARTING NURBS EXPORT: {len(scene_data.nurbs_curves)} curves found"
+                )
                 self._update_progress(0.8, "Exporting NURBS curves (rig controls)...")
                 if not self._export_nurbs_curves(stage, scene_data, options):
                     self._last_error = "Failed to export NURBS curves"
                     return False
                 if self._check_cancel():
                     return False
-                self.logger.info(f"[NEW] Exported {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
+                self.logger.info(
+                    f"[NEW] Exported {len(scene_data.nurbs_curves)} NURBS curves (rig controls)"
+                )
             else:
                 self.logger.warning(
                     f"[TARGET] NURBS EXPORT SKIPPED: export_nurbs_curves="
@@ -260,13 +260,17 @@ class USDExportServiceImpl(IUSDExportService):
 
             # Phase 6: Export rig connections (functional controllers) - INDUSTRY FIRST! (5%)
             has_rig_data = (
-                scene_data.rig_connections or
-                scene_data.constraints or
-                scene_data.set_driven_keys
+                scene_data.rig_connections or scene_data.constraints or scene_data.set_driven_keys
             )
-            if (options.export_nurbs_curves and options.export_rig_connections and
-                    scene_data.nurbs_curves and has_rig_data):
-                self._update_progress(0.85, "Exporting rig connections (functional controllers)...")
+            if (
+                options.export_nurbs_curves
+                and options.export_rig_connections
+                and scene_data.nurbs_curves
+                and has_rig_data
+            ):
+                self._update_progress(
+                    0.85, "Exporting rig connections (functional controllers)..."
+                )
                 if not self._export_rig_connections(stage, scene_data, options):
                     self._last_error = "Failed to export rig connections"
                     return False
@@ -332,15 +336,19 @@ class USDExportServiceImpl(IUSDExportService):
             import os
 
             # Get plugin directory
-            plugin_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            plugin_dir = os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            )
             scripts_dir = os.path.join(plugin_dir, "scripts")
             script_path = os.path.join(scripts_dir, "HIDE_BLENDSHAPE_TARGETS.py")
 
             self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: plugin_dir = {plugin_dir}")
             self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: scripts_dir = {scripts_dir}")
             self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path = {script_path}")
-            self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path exists = {os.path.exists(script_path)}")
-            is_file = os.path.isfile(script_path) if os.path.exists(script_path) else 'N/A'
+            self.logger.info(
+                f"[TOOL] PRE-EXPORT CLEANUP: script_path exists = {os.path.exists(script_path)}"
+            )
+            is_file = os.path.isfile(script_path) if os.path.exists(script_path) else "N/A"
             self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: script_path is_file = {is_file}")
 
             # Check if we're in development (workspace) vs installed
@@ -363,7 +371,9 @@ class USDExportServiceImpl(IUSDExportService):
                     if os.path.exists(workspace_script):
                         scripts_dir = os.path.join(current_dir, "scripts")
                         script_path = workspace_script
-                        self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: Found workspace script at {script_path}")
+                        self.logger.info(
+                            f"[TOOL] PRE-EXPORT CLEANUP: Found workspace script at {script_path}"
+                        )
                         break
                 else:
                     self.logger.warning(
@@ -380,7 +390,7 @@ class USDExportServiceImpl(IUSDExportService):
                 self.logger.info(f"[TOOL] PRE-EXPORT CLEANUP: Loading script from {scripts_dir}")
 
                 # Execute the cleanup script directly (avoids import issues with paths containing spaces)
-                with open(script_path, 'r', encoding='utf-8') as f:
+                with open(script_path, "r", encoding="utf-8") as f:
                     script_code = f.read()
 
                 # Execute in a controlled namespace (exec is safe here — script_path is
@@ -388,11 +398,15 @@ class USDExportServiceImpl(IUSDExportService):
                 cleanup_namespace = {}
                 exec(script_code, cleanup_namespace)  # pylint: disable=exec-used  # nosec B102
 
-                self.logger.info("[TOOL] PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS")
+                self.logger.info(
+                    "[TOOL] PRE-EXPORT CLEANUP: Successfully loaded HIDE_BLENDSHAPE_TARGETS"
+                )
 
                 # Run cleanup for export
-                self.logger.info("[TOOL] PRE-EXPORT CLEANUP: Calling cleanup_blendshapes_for_export()")
-                bs_count, dup_count = cleanup_namespace['cleanup_blendshapes_for_export']()
+                self.logger.info(
+                    "[TOOL] PRE-EXPORT CLEANUP: Calling cleanup_blendshapes_for_export()"
+                )
+                bs_count, dup_count = cleanup_namespace["cleanup_blendshapes_for_export"]()
                 self.logger.info(
                     f"[TOOL] PRE-EXPORT CLEANUP: cleanup_blendshapes_for_export() "
                     f"returned bs_count={bs_count}, dup_count={dup_count}"
@@ -419,9 +433,7 @@ class USDExportServiceImpl(IUSDExportService):
             return 0
 
     def export_selected_objects(
-        self,
-        options: USDExportOptions,
-        object_names: Optional[List[str]] = None
+        self, options: USDExportOptions, object_names: Optional[List[str]] = None
     ) -> bool:
         """Export selected Maya objects to USD (requires Maya session)
 
@@ -510,8 +522,11 @@ class USDExportServiceImpl(IUSDExportService):
             (is_valid, error_message) - Empty string if valid
         """
         # Check file format
-        if options.file_format not in ['usda', 'usdc', 'usdz']:
-            return (False, f"Invalid file format: {options.file_format}. Must be usda, usdc, or usdz")
+        if options.file_format not in ["usda", "usdc", "usdz"]:
+            return (
+                False,
+                f"Invalid file format: {options.file_format}. Must be usda, usdc, or usdz",
+            )
 
         # Check output directory exists
         if options.output_path:
@@ -539,13 +554,9 @@ class USDExportServiceImpl(IUSDExportService):
         Returns:
             List of format extensions
         """
-        return ['usda', 'usdc', 'usdz']
+        return ["usda", "usdc", "usdz"]
 
-    def estimate_export_time(
-        self,
-        maya_file: Path,
-        options: USDExportOptions
-    ) -> float:
+    def estimate_export_time(self, maya_file: Path, options: USDExportOptions) -> float:
         """Estimate export time in seconds
 
         Clean Code: Progress estimation for UX
@@ -635,11 +646,13 @@ class USDExportServiceImpl(IUSDExportService):
             # The USD API doesn't support creating package layers via CreateNew()
             # Instead, create as .usdc (binary) and let the dialog package it into .usdz later
             actual_output_path = output_path
-            if options.file_format == 'usdz':
+            if options.file_format == "usdz":
                 # Change extension to .usdc for stage creation
                 # The dialog will package this into .usdz with .mrig bundled
-                actual_output_path = output_path.with_suffix('.usdc')
-                self.logger.info(f"USDZ format requested - creating intermediate .usdc: {actual_output_path}")
+                actual_output_path = output_path.with_suffix(".usdc")
+                self.logger.info(
+                    f"USDZ format requested - creating intermediate .usdc: {actual_output_path}"
+                )
 
             # Critical: Delete file before USD touches it
             if actual_output_path.exists():
@@ -664,13 +677,13 @@ class USDExportServiceImpl(IUSDExportService):
                 pass
 
             # Determine file format and create stage
-            if options.file_format == 'usda':
+            if options.file_format == "usda":
                 # ASCII format for readability
                 stage = Usd.Stage.CreateNew(str(actual_output_path))
-            elif options.file_format == 'usdc':
+            elif options.file_format == "usdc":
                 # Binary format for performance
                 stage = Usd.Stage.CreateNew(str(actual_output_path))
-            elif options.file_format == 'usdz':
+            elif options.file_format == "usdz":
                 # Package format - create as .usdc first, will be packaged later
                 stage = Usd.Stage.CreateNew(str(actual_output_path))
             else:
@@ -678,7 +691,7 @@ class USDExportServiceImpl(IUSDExportService):
                 return None
 
             # Set stage metadata
-            stage.SetMetadata('comment', 'Exported from Maya Asset Manager')
+            stage.SetMetadata("comment", "Exported from Maya Asset Manager")
 
             # Set up axis (Maya uses Y-up)
             UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
@@ -687,7 +700,7 @@ class USDExportServiceImpl(IUSDExportService):
             UsdGeom.SetStageMetersPerUnit(stage, 0.01)
 
             # Set default prim for easier referencing
-            default_prim = UsdGeom.Xform.Define(stage, '/root')
+            default_prim = UsdGeom.Xform.Define(stage, "/root")
             stage.SetDefaultPrim(default_prim.GetPrim())
 
             self.logger.info(f"Created USD stage: {actual_output_path}")
@@ -698,10 +711,7 @@ class USDExportServiceImpl(IUSDExportService):
             return None
 
     def _export_geometry(
-        self,
-        stage: Any,
-        scene_data: MayaSceneData,
-        options: USDExportOptions
+        self, stage: Any, scene_data: MayaSceneData, options: USDExportOptions
     ) -> bool:
         """Export mesh geometry to USD stage
 
@@ -725,7 +735,9 @@ class USDExportServiceImpl(IUSDExportService):
             mesh_count = 0
             for mesh_data in scene_data.meshes:
                 mesh_count += 1
-                self.logger.debug(f"[DEBUG] Processing mesh {mesh_count}/{len(scene_data.meshes)}: {mesh_data.name}")
+                self.logger.debug(
+                    f"[DEBUG] Processing mesh {mesh_count}/{len(scene_data.meshes)}: {mesh_data.name}"
+                )
                 if self._check_cancel():
                     return False
 
@@ -758,8 +770,7 @@ class USDExportServiceImpl(IUSDExportService):
                 if mesh_data.uvs:
                     primvar_api = UsdGeom.PrimvarsAPI(mesh)
                     uv_primvar = primvar_api.CreatePrimvar(
-                        'st',
-                        Sdf.ValueTypeNames.TexCoord2fArray
+                        "st", Sdf.ValueTypeNames.TexCoord2fArray
                     )
                     uv_primvar.Set(mesh_data.uvs)
                     if mesh_data.uv_indices:
@@ -769,8 +780,7 @@ class USDExportServiceImpl(IUSDExportService):
                 if mesh_data.vertex_colors:
                     primvar_api = UsdGeom.PrimvarsAPI(mesh)
                     color_primvar = primvar_api.CreatePrimvar(
-                        'displayColor',
-                        Sdf.ValueTypeNames.Color3fArray
+                        "displayColor", Sdf.ValueTypeNames.Color3fArray
                     )
                     color_primvar.Set(mesh_data.vertex_colors)
 
@@ -781,10 +791,22 @@ class USDExportServiceImpl(IUSDExportService):
                     matrix = mesh_data.world_matrix
                     # USD expects row-major 4x4 matrix
                     mat = Gf.Matrix4d(
-                        matrix[0], matrix[1], matrix[2], matrix[3],
-                        matrix[4], matrix[5], matrix[6], matrix[7],
-                        matrix[8], matrix[9], matrix[10], matrix[11],
-                        matrix[12], matrix[13], matrix[14], matrix[15]
+                        matrix[0],
+                        matrix[1],
+                        matrix[2],
+                        matrix[3],
+                        matrix[4],
+                        matrix[5],
+                        matrix[6],
+                        matrix[7],
+                        matrix[8],
+                        matrix[9],
+                        matrix[10],
+                        matrix[11],
+                        matrix[12],
+                        matrix[13],
+                        matrix[14],
+                        matrix[15],
                     )
 
                     # Defensive: avoid adding duplicate xformOp 'xformOp:transform'
@@ -794,7 +816,7 @@ class USDExportServiceImpl(IUSDExportService):
                         for op in existing_ops:
                             try:
                                 # XformOp has GetName(); compare to the default transform op name
-                                if op.GetName() == 'xformOp:transform':
+                                if op.GetName() == "xformOp:transform":
                                     op.Set(mat)
                                     transform_set = True
                                     break
@@ -825,14 +847,16 @@ class USDExportServiceImpl(IUSDExportService):
             if meshes_prim.IsValid():
                 mesh_children = meshes_prim.GetChildren()
                 mesh_names = [child.GetName() for child in mesh_children]
-                suffix = '...' if len(mesh_names) > 10 else ''
+                suffix = "..." if len(mesh_names) > 10 else ""
                 self.logger.info(
                     f"[DEBUG] Created {len(mesh_names)} mesh prims: {mesh_names[:10]}{suffix}"
                 )
             else:
                 self.logger.error("[DEBUG] /root/meshes prim is NOT VALID after mesh export!")
 
-            self.logger.info(f"[DEBUG] _export_geometry RETURNING TRUE - processed {mesh_count} meshes")
+            self.logger.info(
+                f"[DEBUG] _export_geometry RETURNING TRUE - processed {mesh_count} meshes"
+            )
             return True
 
         except Exception as e:
@@ -840,10 +864,7 @@ class USDExportServiceImpl(IUSDExportService):
             return False
 
     def _export_materials(
-        self,
-        stage: Any,
-        scene_data: MayaSceneData,
-        options: USDExportOptions
+        self, stage: Any, scene_data: MayaSceneData, options: USDExportOptions
     ) -> bool:
         """Export materials to USD stage
 
@@ -880,12 +901,10 @@ class USDExportServiceImpl(IUSDExportService):
                         material_name,
                         material_data.renderman_params or {},
                         stage,
-                        None  # usd_service not needed for native RenderMan-USD
+                        None,  # usd_service not needed for native RenderMan-USD
                     )
                     if usd_material:
-                        self.logger.info(
-                            f"[OK] Exported RenderMan material: {material_name}"
-                        )
+                        self.logger.info(f"[OK] Exported RenderMan material: {material_name}")
                     else:
                         self.logger.warning(
                             f"[WARNING] Failed to export RenderMan material: {material_name}"
@@ -895,17 +914,17 @@ class USDExportServiceImpl(IUSDExportService):
                     usd_material = self.material_converter.convert_to_preview_surface(
                         material_name,
                         {
-                            'diffuse_color': material_data.diffuse_color,
-                            'metallic': material_data.metallic,
-                            'roughness': material_data.roughness
+                            "diffuse_color": material_data.diffuse_color,
+                            "metallic": material_data.metallic,
+                            "roughness": material_data.roughness,
                         },
-                        stage
+                        stage,
                     )
 
                 if not usd_material:
                     self.logger.warning(f"Failed to convert material: {material_data.name}")
 
-                mat_type = 'RenderMan' if material_data.is_renderman else 'Standard'
+                mat_type = "RenderMan" if material_data.is_renderman else "Standard"
                 self.logger.debug(f"Exported material: {material_data.name} ({mat_type})")
 
             self.logger.info(f"Exported {len(scene_data.materials)} materials")
@@ -952,10 +971,7 @@ class USDExportServiceImpl(IUSDExportService):
             self.logger.debug(f"Failed to bind materials to {mesh_data.name}: {e}")
 
     def _export_nurbs_curves(
-        self,
-        stage: Any,
-        scene_data: MayaSceneData,
-        options: USDExportOptions
+        self, stage: Any, scene_data: MayaSceneData, options: USDExportOptions
     ) -> bool:
         """Export NURBS curves (rig controls) to USD - INDUSTRY FIRST!
 
@@ -975,7 +991,9 @@ class USDExportServiceImpl(IUSDExportService):
             return True
 
         try:
-            self.logger.info(f"[NEW] Exporting {len(scene_data.nurbs_curves)} NURBS curves (rig controls)")
+            self.logger.info(
+                f"[NEW] Exporting {len(scene_data.nurbs_curves)} NURBS curves (rig controls)"
+            )
 
             # Create a scope for curves (fallback for non-skeleton curves)
             UsdGeom.Scope.Define(stage, "/root/curves")
@@ -1003,7 +1021,9 @@ class USDExportServiceImpl(IUSDExportService):
                     # Parent curve to the joint in USD skeleton
                     joint_usd_path = joint_path_map[curve_data.parent_name]
                     curve_path = f"{joint_usd_path}/{curve_name}"
-                    self.logger.debug(f"Parenting curve {curve_name} to skeleton joint: {joint_usd_path}")
+                    self.logger.debug(
+                        f"Parenting curve {curve_name} to skeleton joint: {joint_usd_path}"
+                    )
                 else:
                     # Place under curves scope
                     curve_path = f"/root/curves/{curve_name}"
@@ -1013,7 +1033,11 @@ class USDExportServiceImpl(IUSDExportService):
 
                 # Set purpose based on renderability option
                 # "guide" = non-renderable (for rig controls), "default" = renderable
-                purpose = UsdGeom.Tokens.default if options.nurbs_curves_renderable else UsdGeom.Tokens.guide
+                purpose = (
+                    UsdGeom.Tokens.default
+                    if options.nurbs_curves_renderable
+                    else UsdGeom.Tokens.guide
+                )
 
                 # Set purpose using UsdGeom.Imageable API (not Prim API)
                 # UsdGeom.NurbsCurves inherits from UsdGeom.Imageable which has GetPurposeAttr()
@@ -1057,10 +1081,22 @@ class USDExportServiceImpl(IUSDExportService):
                     # Convert 16-element list to 4x4 matrix
                     matrix_values = curve_data.local_matrix
                     gf_matrix = Gf.Matrix4d(
-                        matrix_values[0], matrix_values[1], matrix_values[2], matrix_values[3],
-                        matrix_values[4], matrix_values[5], matrix_values[6], matrix_values[7],
-                        matrix_values[8], matrix_values[9], matrix_values[10], matrix_values[11],
-                        matrix_values[12], matrix_values[13], matrix_values[14], matrix_values[15]
+                        matrix_values[0],
+                        matrix_values[1],
+                        matrix_values[2],
+                        matrix_values[3],
+                        matrix_values[4],
+                        matrix_values[5],
+                        matrix_values[6],
+                        matrix_values[7],
+                        matrix_values[8],
+                        matrix_values[9],
+                        matrix_values[10],
+                        matrix_values[11],
+                        matrix_values[12],
+                        matrix_values[13],
+                        matrix_values[14],
+                        matrix_values[15],
                     )
 
                     # Use MakeMatrixXform to safely set/create transform
@@ -1072,10 +1108,11 @@ class USDExportServiceImpl(IUSDExportService):
                     # Set color as primvar (more reliable than direct attribute)
                     primvar_api = UsdGeom.PrimvarsAPI(nurbs_curve)
                     color_primvar = primvar_api.CreatePrimvar(
-                        'displayColor',
-                        Sdf.ValueTypeNames.Color3fArray
+                        "displayColor", Sdf.ValueTypeNames.Color3fArray
                     )
-                    color_primvar.Set([Gf.Vec3f(curve_data.color[0], curve_data.color[1], curve_data.color[2])])
+                    color_primvar.Set(
+                        [Gf.Vec3f(curve_data.color[0], curve_data.color[1], curve_data.color[2])]
+                    )
 
                 # Set line width if available
                 if curve_data.line_width:
@@ -1090,19 +1127,29 @@ class USDExportServiceImpl(IUSDExportService):
                     for attr_name, attr_value in curve_data.custom_attrs.items():
                         try:
                             # Create custom attribute
-                            safe_name = attr_name.replace(':', '_')  # USD doesn't like colons
+                            safe_name = attr_name.replace(":", "_")  # USD doesn't like colons
                             if isinstance(attr_value, (int, float)):
-                                attr = prim.CreateAttribute(f"userProperties:{safe_name}", Sdf.ValueTypeNames.Double)
+                                attr = prim.CreateAttribute(
+                                    f"userProperties:{safe_name}", Sdf.ValueTypeNames.Double
+                                )
                                 attr.Set(float(attr_value))
                             elif isinstance(attr_value, str):
-                                attr = prim.CreateAttribute(f"userProperties:{safe_name}", Sdf.ValueTypeNames.String)
+                                attr = prim.CreateAttribute(
+                                    f"userProperties:{safe_name}", Sdf.ValueTypeNames.String
+                                )
                                 attr.Set(attr_value)
                         except Exception as e:
-                            self.logger.debug(f"Could not export custom attribute {attr_name}: {e}")
+                            self.logger.debug(
+                                f"Could not export custom attribute {attr_name}: {e}"
+                            )
 
-                self.logger.debug(f"Exported NURBS curve: {curve_name} ({len(curve_data.control_vertices)} CVs)")
+                self.logger.debug(
+                    f"Exported NURBS curve: {curve_name} ({len(curve_data.control_vertices)} CVs)"
+                )
 
-            self.logger.info(f"[OK] Successfully exported {len(scene_data.nurbs_curves)} NURBS curves")
+            self.logger.info(
+                f"[OK] Successfully exported {len(scene_data.nurbs_curves)} NURBS curves"
+            )
             return True
 
         except Exception as e:
@@ -1110,10 +1157,7 @@ class USDExportServiceImpl(IUSDExportService):
             return False
 
     def _export_rigging(
-        self,
-        stage: Any,
-        scene_data: MayaSceneData,
-        options: USDExportOptions
+        self, stage: Any, scene_data: MayaSceneData, options: USDExportOptions
     ) -> bool:
         """Export rigging data to USD stage
 
@@ -1140,9 +1184,7 @@ class USDExportServiceImpl(IUSDExportService):
             # Step 1: Convert skeleton
             self.logger.info(f"Exporting skeleton with {len(scene_data.joints)} joints")
             skeleton = self.rig_converter.convert_skeleton(
-                scene_data.joints,
-                stage,
-                skeleton_path="/Skeleton"
+                scene_data.joints, stage, skeleton_path="/Skeleton"
             )
 
             if not skeleton:
@@ -1158,7 +1200,9 @@ class USDExportServiceImpl(IUSDExportService):
 
                 # Clean Code: Use same sanitization as mesh export for name matching
                 sanitized_mesh_name = self._sanitize_mesh_name(skin_cluster.mesh_name)
-                self.logger.debug(f"Looking for mesh: {skin_cluster.mesh_name} -> {sanitized_mesh_name}")
+                self.logger.debug(
+                    f"Looking for mesh: {skin_cluster.mesh_name} -> {sanitized_mesh_name}"
+                )
 
                 # Find corresponding mesh prim
                 mesh_prim_path = f"/root/meshes/{sanitized_mesh_name}"
@@ -1171,9 +1215,7 @@ class USDExportServiceImpl(IUSDExportService):
 
                 # Convert skin weights
                 success = self.rig_converter.convert_skin_weights(
-                    skin_cluster,
-                    skeleton,
-                    mesh_prim
+                    skin_cluster, skeleton, mesh_prim
                 )
 
                 if not success:
@@ -1187,10 +1229,7 @@ class USDExportServiceImpl(IUSDExportService):
             return False
 
     def _export_rig_connections(
-        self,
-        stage: Any,
-        scene_data: MayaSceneData,
-        options: USDExportOptions
+        self, stage: Any, scene_data: MayaSceneData, options: USDExportOptions
     ) -> bool:
         """Export rig connections for functional controllers - INDUSTRY FIRST!
 
@@ -1215,25 +1254,45 @@ class USDExportServiceImpl(IUSDExportService):
                     return False
 
                 # Create a prim for each connection
-                connection_prim = UsdGeom.Xform.Define(stage, f"/root/rigConnections/connection_{i}")
+                connection_prim = UsdGeom.Xform.Define(
+                    stage, f"/root/rigConnections/connection_{i}"
+                )
 
                 # Store connection metadata as custom attributes
                 prim = connection_prim.GetPrim()
-                prim.CreateAttribute("sourceNode", Sdf.ValueTypeNames.String).Set(connection.source_node)
-                prim.CreateAttribute("targetNode", Sdf.ValueTypeNames.String).Set(connection.target_node)
-                prim.CreateAttribute("sourceAttr", Sdf.ValueTypeNames.String).Set(connection.source_attr)
-                prim.CreateAttribute("targetAttr", Sdf.ValueTypeNames.String).Set(connection.target_attr)
-                prim.CreateAttribute("connectionType", Sdf.ValueTypeNames.String).Set(connection.connection_type)
+                prim.CreateAttribute("sourceNode", Sdf.ValueTypeNames.String).Set(
+                    connection.source_node
+                )
+                prim.CreateAttribute("targetNode", Sdf.ValueTypeNames.String).Set(
+                    connection.target_node
+                )
+                prim.CreateAttribute("sourceAttr", Sdf.ValueTypeNames.String).Set(
+                    connection.source_attr
+                )
+                prim.CreateAttribute("targetAttr", Sdf.ValueTypeNames.String).Set(
+                    connection.target_attr
+                )
+                prim.CreateAttribute("connectionType", Sdf.ValueTypeNames.String).Set(
+                    connection.connection_type
+                )
                 prim.CreateAttribute("isInput", Sdf.ValueTypeNames.Bool).Set(connection.is_input)
 
                 if connection.constraint_type:
-                    prim.CreateAttribute("constraintType", Sdf.ValueTypeNames.String).Set(connection.constraint_type)
+                    prim.CreateAttribute("constraintType", Sdf.ValueTypeNames.String).Set(
+                        connection.constraint_type
+                    )
                 if connection.constraint_node:
-                    prim.CreateAttribute("constraintNode", Sdf.ValueTypeNames.String).Set(connection.constraint_node)
+                    prim.CreateAttribute("constraintNode", Sdf.ValueTypeNames.String).Set(
+                        connection.constraint_node
+                    )
                 if connection.driver_value is not None:
-                    prim.CreateAttribute("driverValue", Sdf.ValueTypeNames.Double).Set(connection.driver_value)
+                    prim.CreateAttribute("driverValue", Sdf.ValueTypeNames.Double).Set(
+                        connection.driver_value
+                    )
                 if connection.driven_value is not None:
-                    prim.CreateAttribute("drivenValue", Sdf.ValueTypeNames.Double).Set(connection.driven_value)
+                    prim.CreateAttribute("drivenValue", Sdf.ValueTypeNames.Double).Set(
+                        connection.driven_value
+                    )
 
             # Export constraints
             for i, constraint in enumerate(scene_data.constraints):
@@ -1241,17 +1300,31 @@ class USDExportServiceImpl(IUSDExportService):
                     return False
 
                 # Create a prim for each constraint
-                constraint_prim = UsdGeom.Xform.Define(stage, f"/root/rigConnections/constraint_{i}")
+                constraint_prim = UsdGeom.Xform.Define(
+                    stage, f"/root/rigConnections/constraint_{i}"
+                )
 
                 # Store constraint metadata
                 prim = constraint_prim.GetPrim()
                 prim.CreateAttribute("name", Sdf.ValueTypeNames.String).Set(constraint.name)
-                prim.CreateAttribute("constraintType", Sdf.ValueTypeNames.String).Set(constraint.constraint_type)
-                prim.CreateAttribute("targetNode", Sdf.ValueTypeNames.String).Set(constraint.target_node)
-                prim.CreateAttribute("targetAttrs", Sdf.ValueTypeNames.StringArray).Set(constraint.target_attrs)
-                prim.CreateAttribute("driverNodes", Sdf.ValueTypeNames.StringArray).Set(constraint.driver_nodes)
-                prim.CreateAttribute("maintainOffset", Sdf.ValueTypeNames.Bool).Set(constraint.maintain_offset)
-                prim.CreateAttribute("interpolate", Sdf.ValueTypeNames.Bool).Set(constraint.interpolate)
+                prim.CreateAttribute("constraintType", Sdf.ValueTypeNames.String).Set(
+                    constraint.constraint_type
+                )
+                prim.CreateAttribute("targetNode", Sdf.ValueTypeNames.String).Set(
+                    constraint.target_node
+                )
+                prim.CreateAttribute("targetAttrs", Sdf.ValueTypeNames.StringArray).Set(
+                    constraint.target_attrs
+                )
+                prim.CreateAttribute("driverNodes", Sdf.ValueTypeNames.StringArray).Set(
+                    constraint.driver_nodes
+                )
+                prim.CreateAttribute("maintainOffset", Sdf.ValueTypeNames.Bool).Set(
+                    constraint.maintain_offset
+                )
+                prim.CreateAttribute("interpolate", Sdf.ValueTypeNames.Bool).Set(
+                    constraint.interpolate
+                )
 
                 # Store driver weights as a dictionary (serialized as string)
                 weights_str = str(constraint.driver_weights)
@@ -1271,16 +1344,22 @@ class USDExportServiceImpl(IUSDExportService):
                 prim.CreateAttribute("driverAttr", Sdf.ValueTypeNames.String).Set(sdk.driver_attr)
                 prim.CreateAttribute("drivenNode", Sdf.ValueTypeNames.String).Set(sdk.driven_node)
                 prim.CreateAttribute("drivenAttr", Sdf.ValueTypeNames.String).Set(sdk.driven_attr)
-                prim.CreateAttribute("interpolation", Sdf.ValueTypeNames.String).Set(sdk.interpolation)
+                prim.CreateAttribute("interpolation", Sdf.ValueTypeNames.String).Set(
+                    sdk.interpolation
+                )
 
                 # Store keyframe data
-                prim.CreateAttribute("driverValues", Sdf.ValueTypeNames.DoubleArray).Set(sdk.driver_values)
-                prim.CreateAttribute("drivenValues", Sdf.ValueTypeNames.DoubleArray).Set(sdk.driven_values)
+                prim.CreateAttribute("driverValues", Sdf.ValueTypeNames.DoubleArray).Set(
+                    sdk.driver_values
+                )
+                prim.CreateAttribute("drivenValues", Sdf.ValueTypeNames.DoubleArray).Set(
+                    sdk.driven_values
+                )
 
             total_connections = (
-                len(scene_data.rig_connections) +
-                len(scene_data.constraints) +
-                len(scene_data.set_driven_keys)
+                len(scene_data.rig_connections)
+                + len(scene_data.constraints)
+                + len(scene_data.set_driven_keys)
             )
             self.logger.info(f"[OK] Successfully exported {total_connections} rig connections")
             return True
@@ -1289,11 +1368,7 @@ class USDExportServiceImpl(IUSDExportService):
             self.logger.error(f"Failed to export rig connections: {e}")
             return False
 
-    def _get_joint_usd_path(
-        self,
-        joint: JointData,
-        all_joints: List[JointData]
-    ) -> Optional[str]:
+    def _get_joint_usd_path(self, joint: JointData, all_joints: List[JointData]) -> Optional[str]:
         """Get the USD path for a joint in the skeleton hierarchy
 
         Args:
@@ -1311,7 +1386,7 @@ class USDExportServiceImpl(IUSDExportService):
         current_joint = joint
 
         while current_joint:
-            joint_short_name = current_joint.name.split('|')[-1]
+            joint_short_name = current_joint.name.split("|")[-1]
             path_parts.insert(0, joint_short_name)
 
             # Move to parent
@@ -1372,10 +1447,10 @@ class USDExportServiceImpl(IUSDExportService):
             cmds.mayaUSDExport(file=str(output_path), **export_options)
 
             # Count elements in the scene (approximate post-export counts)
-            mesh_count = len(cmds.ls(type='mesh'))
-            joint_count = len(cmds.ls(type='joint'))
-            skin_cluster_count = len(cmds.ls(type='skinCluster'))
-            curve_count = len(cmds.ls(type='nurbsCurve'))
+            mesh_count = len(cmds.ls(type="mesh"))
+            joint_count = len(cmds.ls(type="joint"))
+            skin_cluster_count = len(cmds.ls(type="skinCluster"))
+            curve_count = len(cmds.ls(type="nurbsCurve"))
 
             # Check if output file exists
             if output_path.exists():
@@ -1395,7 +1470,7 @@ class USDExportServiceImpl(IUSDExportService):
                 skin_cluster_count,
                 curve_count,
                 warnings,
-                error_message
+                error_message,
             )
 
         except Exception as e:

@@ -29,7 +29,7 @@ def test_remove_asset_menu_presence():
             print("❌ AssetManagerWindow source file not found")
             return False
 
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for Assets menu remove action
@@ -40,20 +40,20 @@ def test_remove_asset_menu_presence():
             return False
 
         # Check for action connection
-        if 'remove_asset_action.triggered.connect(self._on_remove_selected_asset)' in content:
+        if "remove_asset_action.triggered.connect(self._on_remove_selected_asset)" in content:
             print("✅ Remove Asset action properly connected")
         else:
             print("❌ Remove Asset action connection not found")
             return False
 
         # Check for keyboard shortcut
-        if 'remove_asset_action.setShortcut(QKeySequence.StandardKey.Delete)' in content:
+        if "remove_asset_action.setShortcut(QKeySequence.StandardKey.Delete)" in content:
             print("✅ Delete key shortcut implemented")
         else:
             print("⚠️ Delete key shortcut may not be implemented")
 
         # Check for separator before destructive action
-        if 'assets_menu.addSeparator()' in content:
+        if "assets_menu.addSeparator()" in content:
             print("✅ Separator added before destructive action (good UX)")
         else:
             print("⚠️ No separator before destructive action")
@@ -71,18 +71,18 @@ def test_existing_connections():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check File menu connection (existing)
-        if 'remove_selected_action.triggered.connect(self._on_remove_selected_asset)' in content:
+        if "remove_selected_action.triggered.connect(self._on_remove_selected_asset)" in content:
             print("✅ File menu Remove Selected Asset connection maintained")
         else:
             print("❌ File menu connection missing")
             return False
 
         # Check toolbar button connection (existing)
-        if 'remove_btn.clicked.connect(self._on_remove_selected_asset)' in content:
+        if "remove_btn.clicked.connect(self._on_remove_selected_asset)" in content:
             print("✅ Toolbar Remove Asset button connection maintained")
         else:
             print("❌ Toolbar button connection missing")
@@ -101,47 +101,47 @@ def test_method_implementation():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for method definition
-        if 'def _on_remove_selected_asset(self) -> None:' in content:
+        if "def _on_remove_selected_asset(self) -> None:" in content:
             print("✅ _on_remove_selected_asset method found")
         else:
             print("❌ _on_remove_selected_asset method not found")
             return False
 
         # Check for key implementation features
-        method_start = content.find('def _on_remove_selected_asset(self) -> None:')
+        method_start = content.find("def _on_remove_selected_asset(self) -> None:")
         if method_start == -1:
             print("❌ Method implementation not found")
             return False
 
         # Get method content (rough extraction for testing)
-        method_end = content.find('\n    def ', method_start + 1)
+        method_end = content.find("\n    def ", method_start + 1)
         if method_end == -1:
             method_end = len(content)
         method_content = content[method_start:method_end]
 
         features_found = 0
 
-        if 'selected_assets' in method_content:
+        if "selected_assets" in method_content:
             print("✅ Asset selection check implemented")
             features_found += 1
 
-        if 'QMessageBox.question' in method_content:
+        if "QMessageBox.question" in method_content:
             print("✅ User confirmation dialog implemented")
             features_found += 1
 
-        if 'self._repository.remove_asset' in method_content:
+        if "self._repository.remove_asset" in method_content:
             print("✅ Repository removal call implemented")
             features_found += 1
 
-        if 'self._on_refresh_library()' in method_content:
+        if "self._on_refresh_library()" in method_content:
             print("✅ Library refresh after removal implemented")
             features_found += 1
 
-        if 'try:' in method_content and 'except' in method_content:
+        if "try:" in method_content and "except" in method_content:
             print("✅ Exception handling implemented")
             features_found += 1
 
@@ -165,7 +165,7 @@ def test_menu_structure():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Find Assets menu section
@@ -182,24 +182,24 @@ def test_menu_structure():
 
         # Check menu item order and structure
         menu_items = []
-        if 'Import Selected' in assets_menu_content:
-            menu_items.append('Import Selected')
-        if 'Add to Favorites' in assets_menu_content:
-            menu_items.append('Add to Favorites')
-        if 'Remove Selected Asset' in assets_menu_content:
-            menu_items.append('Remove Selected Asset')
+        if "Import Selected" in assets_menu_content:
+            menu_items.append("Import Selected")
+        if "Add to Favorites" in assets_menu_content:
+            menu_items.append("Add to Favorites")
+        if "Remove Selected Asset" in assets_menu_content:
+            menu_items.append("Remove Selected Asset")
 
         print(f"✅ Assets menu items found: {', '.join(menu_items)}")
 
         # Check logical order (import, favorites, then remove)
-        expected_order = ['Import Selected', 'Add to Favorites', 'Remove Selected Asset']
+        expected_order = ["Import Selected", "Add to Favorites", "Remove Selected Asset"]
         if menu_items == expected_order:
             print("✅ Menu items in logical order (constructive actions first, destructive last)")
         else:
             print("⚠️ Menu item order could be improved")
 
         # Check for separator before destructive action
-        if 'addSeparator()' in assets_menu_content:
+        if "addSeparator()" in assets_menu_content:
             print("✅ Separator properly separates destructive actions")
         else:
             print("⚠️ No separator found in Assets menu")
@@ -213,8 +213,8 @@ def test_menu_structure():
 
 def main():
 
-
     from PySide6.QtWidgets import QApplication
+
     print("🧪 REMOVE ASSET BUTTON FUNCTIONALITY TEST - Issue #10")
     print("=" * 60)
 
@@ -257,7 +257,7 @@ def main():
         print("⚠️ Some tests failed - check implementation")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

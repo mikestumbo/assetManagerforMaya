@@ -3,6 +3,7 @@ Material/texture mixin: RenderMan→UsdPreview, colour sampling, packaging.
 
 Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-split.
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,17 +15,19 @@ from typing import Callable, Optional
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
-    import maya.cmds as cmds          # type: ignore[import-unresolved]
-    import maya.mel as mel            # type: ignore[import-unresolved]
+    import maya.cmds as cmds  # type: ignore[import-unresolved]
+    import maya.mel as mel  # type: ignore[import-unresolved]
+
     MAYA_AVAILABLE = True
 except ImportError:
-    cmds = None   # type: ignore[assignment]
-    mel = None   # type: ignore[assignment]
+    cmds = None  # type: ignore[assignment]
+    mel = None  # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
 try:
     from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, UsdSkel, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -42,9 +45,7 @@ class MaterialsMixin:
     _mayausd_available: bool
     _progress_callback: Optional[Callable[[str, int], None]]
 
-    def _sample_pxr_texture_color(
-        self, rfm_node: str, color_attr: str
-    ):
+    def _sample_pxr_texture_color(self, rfm_node: str, color_attr: str):
         """
         Follow a PxrTexture connection on *rfm_node.color_attr* and return
         an average Gf.Vec3f sampled from that texture file, or None on failure.
@@ -72,9 +73,7 @@ class MaterialsMixin:
 
             # 1a. Direct source plug via connectionInfo (most reliable)
             try:
-                src = cmds.connectionInfo(
-                    f"{rfm_node}.{color_attr}", sourceFromDestination=True
-                )
+                src = cmds.connectionInfo(f"{rfm_node}.{color_attr}", sourceFromDestination=True)
                 if src:
                     # "PxrTexture1.resultRGB" → "PxrTexture1"
                     src_node = src.split(".")[0]
@@ -150,10 +149,10 @@ class MaterialsMixin:
 
             # ── Step 2: Find texture file path ──────────────────────────────
             FILENAME_ATTRS = (
-                "filename",         # PxrTexture (RenderMan for Maya)
-                "textureName",      # some RfM variants
+                "filename",  # PxrTexture (RenderMan for Maya)
+                "textureName",  # some RfM variants
                 "fileTextureName",  # Maya file node
-                "imageName",        # misc
+                "imageName",  # misc
             )
 
             tex_path = None
@@ -163,9 +162,7 @@ class MaterialsMixin:
                         val = cmds.getAttr(f"{node}.{attr}")
                         if val and isinstance(val, str) and len(val) > 4:
                             tex_path = val
-                            self.logger.info(
-                                f"   [TEX-DIAG] Found path on {node}.{attr}: {val}"
-                            )
+                            self.logger.info(f"   [TEX-DIAG] Found path on {node}.{attr}: {val}")
                             break
                     except Exception:
                         continue
@@ -177,9 +174,14 @@ class MaterialsMixin:
                 if unique_candidates:
                     try:
                         attrs = cmds.listAttr(unique_candidates[0], scalar=True) or []
-                        str_attrs = [a for a in attrs if 'file' in a.lower()
-                                     or 'tex' in a.lower() or 'image' in a.lower()
-                                     or 'name' in a.lower()]
+                        str_attrs = [
+                            a
+                            for a in attrs
+                            if "file" in a.lower()
+                            or "tex" in a.lower()
+                            or "image" in a.lower()
+                            or "name" in a.lower()
+                        ]
                         self.logger.info(
                             f"   [TEX-DIAG] No filename attr on {unique_candidates[0]}. "
                             f"Likely attrs: {str_attrs[:10]}"
@@ -189,27 +191,23 @@ class MaterialsMixin:
                 return None
 
             # ── Step 3: Resolve UDIM / tile tokens ──────────────────────────
-            tex_path = re.sub(r'<[Uu][Dd][Ii][Mm]>', '1001', tex_path)
-            tex_path = re.sub(r'#{4}', '1001', tex_path)
-            tex_path = re.sub(r'%04d', '1001', tex_path)
+            tex_path = re.sub(r"<[Uu][Dd][Ii][Mm]>", "1001", tex_path)
+            tex_path = re.sub(r"#{4}", "1001", tex_path)
+            tex_path = re.sub(r"%04d", "1001", tex_path)
 
             # ── Step 4: Verify file exists, try alt extensions ───────────────
             if not os.path.exists(tex_path):
                 base, _ext = os.path.splitext(tex_path)
-                for alt_ext in ('.tx', '.exr', '.tif', '.tiff', '.png', '.jpg', '.jpeg'):
+                for alt_ext in (".tx", ".exr", ".tif", ".tiff", ".png", ".jpg", ".jpeg"):
                     candidate = base + alt_ext
                     if os.path.exists(candidate):
                         tex_path = candidate
                         break
                 else:
-                    self.logger.info(
-                        f"   [TEX-DIAG] Texture file not found on disk: {tex_path}"
-                    )
+                    self.logger.info(f"   [TEX-DIAG] Texture file not found on disk: {tex_path}")
                     return None
 
-            self.logger.info(
-                f"   [TEX-DIAG] Sampling texture: {os.path.basename(tex_path)}"
-            )
+            self.logger.info(f"   [TEX-DIAG] Sampling texture: {os.path.basename(tex_path)}")
 
             # ── Resolve RenderMan .tex → source image ────────────────────────
             # RenderMan compiles source textures (PNG/EXR/TIFF) to a binary .tex
@@ -217,8 +215,8 @@ class MaterialsMixin:
             # "source.png.tex" — stripping the trailing ".tex" gets us back to the
             # original source file.  Try that first; if it doesn't exist on disk,
             # fall through and let PIL/OIIO try the .tex directly.
-            if tex_path.lower().endswith('.tex'):
-                source_candidate = tex_path[:-4]   # "body.png.tex" → "body.png"
+            if tex_path.lower().endswith(".tex"):
+                source_candidate = tex_path[:-4]  # "body.png.tex" → "body.png"
                 if os.path.exists(source_candidate):
                     self.logger.info(
                         f"   [TEX-DIAG] RenderMan .tex → source: "
@@ -246,7 +244,7 @@ class MaterialsMixin:
             # can wire a UsdUVTexture even when PIL/OIIO sampling fails below.
             # Only cache non-.tex paths — bare RenderMan .tex files are not
             # displayable by standard USD image loaders.
-            if not tex_path.lower().endswith('.tex') and os.path.isfile(tex_path):
+            if not tex_path.lower().endswith(".tex") and os.path.isfile(tex_path):
                 self._last_resolved_tex_path = tex_path
 
             # ── Attempt 0: user-supplied texture folder ───────────────────────
@@ -266,11 +264,14 @@ class MaterialsMixin:
             # of walking every .rma directory.
             _rma_lib = ""
             try:
-                _rma_lib = getattr(
-                    getattr(self, "_current_export_options", None),
-                    "renderman_library_path",
-                    ""
-                ) or ""
+                _rma_lib = (
+                    getattr(
+                        getattr(self, "_current_export_options", None),
+                        "renderman_library_path",
+                        "",
+                    )
+                    or ""
+                )
             except Exception:
                 _rma_lib = ""
 
@@ -299,22 +300,16 @@ class MaterialsMixin:
                                     + ("..." if len(sub_files) > 10 else "")
                                 )
                     except Exception as _list_err:
-                        self.logger.info(
-                            f"   [TEX-DIAG] src-lib listing error: {_list_err}"
-                        )
+                        self.logger.info(f"   [TEX-DIAG] src-lib listing error: {_list_err}")
 
                 tex_basename = os.path.basename(tex_path)
                 # Strip .tex to recover the original source filename:
                 # "Veteran_V008_Base_color_..._1001.png.tex"
                 # → "Veteran_V008_Base_color_..._1001.png"
                 tex_basename_raw = (
-                    tex_basename[:-4]
-                    if tex_basename.lower().endswith('.tex')
-                    else tex_basename
+                    tex_basename[:-4] if tex_basename.lower().endswith(".tex") else tex_basename
                 )
-                self.logger.info(
-                    f"   [TEX-DIAG] src-lib seeking: '{tex_basename_raw}'"
-                )
+                self.logger.info(f"   [TEX-DIAG] src-lib seeking: '{tex_basename_raw}'")
 
                 def _sample_png(path: str) -> "Optional[Gf.Vec3f]":
                     """Read *path* with PIL, return Gf.Vec3f color or None.
@@ -329,8 +324,9 @@ class MaterialsMixin:
                     """
                     try:
                         from PIL import Image  # type: ignore
-                        import numpy as np     # type: ignore
-                        with Image.open(path).convert('RGB') as img:
+                        import numpy as np  # type: ignore
+
+                        with Image.open(path).convert("RGB") as img:
                             thumb = img.resize((32, 32), Image.LANCZOS)
                             arr = np.array(thumb, dtype=float) / 255.0
                             r = float(arr[:, :, 0].mean())
@@ -357,9 +353,7 @@ class MaterialsMixin:
                                 self._last_resolved_tex_path = path
                                 return color_out
                     except ImportError:
-                        self.logger.info(
-                            "   [TEX-DIAG] PIL not available for src-lib scan"
-                        )
+                        self.logger.info("   [TEX-DIAG] PIL not available for src-lib scan")
                     except Exception:
                         pass
                     return None
@@ -369,7 +363,7 @@ class MaterialsMixin:
                 orig_rma_folder = os.path.basename(orig_rma_dir)  # e.g. "Body.rma"
                 rma_stem = (
                     orig_rma_folder[:-4]
-                    if orig_rma_folder.lower().endswith('.rma')
+                    if orig_rma_folder.lower().endswith(".rma")
                     else orig_rma_folder
                 )
 
@@ -385,19 +379,20 @@ class MaterialsMixin:
                 # but the .rma stem differs slightly (e.g. LfButn01 → LfButton_01,
                 # LfZipr → LfZipper, LwrTeeth → LwrTeeth_3).
                 # Only applies to base-color textures (the ones that drive diffuse).
-                if 'base_color' in tex_basename_raw.lower():
+                if "base_color" in tex_basename_raw.lower():
                     try:
                         import difflib
+
                         _bc_files = [
-                            f for f in os.listdir(_rma_lib)
-                            if f.lower().endswith('.png')
-                            and 'base_color' in f.lower()
+                            f
+                            for f in os.listdir(_rma_lib)
+                            if f.lower().endswith(".png") and "base_color" in f.lower()
                         ]
                         _matched_bc = None
                         _stem_lo = rma_stem.lower()
                         # Step A: exact prefix "{rma_stem}_"
                         for f in _bc_files:
-                            if f.lower().startswith(_stem_lo + '_'):
+                            if f.lower().startswith(_stem_lo + "_"):
                                 _matched_bc = f
                                 break
                         # Step B: backup stem starts with rma_stem
@@ -412,11 +407,9 @@ class MaterialsMixin:
                         if _matched_bc is None and _bc_files:
                             _bc_stems = []
                             for f in _bc_files:
-                                idx = f.lower().find('_base_color')
+                                idx = f.lower().find("_base_color")
                                 _bc_stems.append(f[:idx] if idx != -1 else f)
-                            best = difflib.get_close_matches(
-                                rma_stem, _bc_stems, n=1, cutoff=0.5
-                            )
+                            best = difflib.get_close_matches(rma_stem, _bc_stems, n=1, cutoff=0.5)
                             if best:
                                 _matched_bc = _bc_files[_bc_stems.index(best[0])]
                         if _matched_bc:
@@ -424,25 +417,19 @@ class MaterialsMixin:
                                 f"   [TEX-DIAG] src-lib fuzzy match: "
                                 f"'{rma_stem}' → '{_matched_bc}'"
                             )
-                            result_color = _sample_png(
-                                os.path.join(_rma_lib, _matched_bc)
-                            )
+                            result_color = _sample_png(os.path.join(_rma_lib, _matched_bc))
                             if result_color is not None:
                                 return result_color
                     except Exception as _fuzz_err:
-                        self.logger.info(
-                            f"   [TEX-DIAG] src-lib fuzzy match error: {_fuzz_err}"
-                        )
+                        self.logger.info(f"   [TEX-DIAG] src-lib fuzzy match error: {_fuzz_err}")
 
                 # ── Priority 2: targeted .rma subfolder ──────────────────────
                 # Maya's tex_path tells us which .rma subfolder owns this
                 # texture (e.g. Body.rma).  Use that name under the user's
                 # supplied root so we land in exactly the right place without
                 # having to walk every .rma directory.
-                if orig_rma_folder.lower().endswith('.rma'):
-                    targeted = os.path.join(
-                        _rma_lib, orig_rma_folder, tex_basename_raw
-                    )
+                if orig_rma_folder.lower().endswith(".rma"):
+                    targeted = os.path.join(_rma_lib, orig_rma_folder, tex_basename_raw)
                     if os.path.exists(targeted):
                         result_color = _sample_png(targeted)
                         if result_color is not None:
@@ -456,7 +443,7 @@ class MaterialsMixin:
                 # ── Priority 3: walk all .rma subfolders as last resort ───────
                 try:
                     for rma_folder in os.listdir(_rma_lib):
-                        if not rma_folder.lower().endswith('.rma'):
+                        if not rma_folder.lower().endswith(".rma"):
                             continue
                         if rma_folder == orig_rma_folder:
                             continue  # already tried above
@@ -469,9 +456,7 @@ class MaterialsMixin:
                             if result_color is not None:
                                 return result_color
                 except Exception as lib_err:
-                    self.logger.info(
-                        f"   [TEX-DIAG] src-lib .rma scan error: {lib_err}"
-                    )
+                    self.logger.info(f"   [TEX-DIAG] src-lib .rma scan error: {lib_err}")
 
             # ── Attempt 1: Maya MImage — reads .tex via RenderMan plugin ────
             # RenderMan registers a .tex format reader with Maya when the plugin
@@ -480,6 +465,7 @@ class MaterialsMixin:
             try:
                 from maya import OpenMaya as _om  # type: ignore
                 import numpy as _np_mimg
+
                 _mimg = _om.MImage()
                 _mimg.readFromFile(tex_path)
                 _w, _h = _om.MScriptUtil(), _om.MScriptUtil()
@@ -492,8 +478,7 @@ class MaterialsMixin:
                     _mimg.verticalFlip()  # MImage is bottom-up
                     _char_arr = _mimg.pixels()
                     _byte_arr = _np_mimg.frombuffer(
-                        bytes(_char_arr[:_width * _height * 4]),
-                        dtype=_np_mimg.uint8
+                        bytes(_char_arr[: _width * _height * 4]), dtype=_np_mimg.uint8
                     ).reshape(_height, _width, 4)
                     arr_f = _byte_arr[:, :, :3].astype(float) / 255.0
                     r = float(arr_f[:, :, 0].mean())
@@ -526,9 +511,9 @@ class MaterialsMixin:
 
             try:
                 from PIL import Image  # type: ignore
-                import numpy as np     # type: ignore
+                import numpy as np  # type: ignore
 
-                with Image.open(tex_path).convert('RGB') as img:
+                with Image.open(tex_path).convert("RGB") as img:
                     thumb = img.resize((32, 32), Image.LANCZOS)
                     arr = np.array(thumb, dtype=float) / 255.0
                     r = float(arr[:, :, 0].mean())
@@ -561,6 +546,7 @@ class MaterialsMixin:
             try:
                 import sys as _sys
                 import glob as _glob
+
                 _oiio_base = (
                     r"C:\Program Files\Pixar\RenderManProServer-*"
                     r"\lib\python3.11\Lib\site-packages\thirdparty"
@@ -577,7 +563,7 @@ class MaterialsMixin:
                     # ── Strategy A: ImageInput.open ──────────────────────────
                     inp = oiio.ImageInput.open(path)
                     if inp is not None:
-                        pixels = inp.read_image('float')
+                        pixels = inp.read_image("float")
                         inp.close()
                         if pixels is not None:
                             arr = np.array(pixels)
@@ -593,8 +579,7 @@ class MaterialsMixin:
                     _oiio_err = oiio.geterror()
                     self.logger.info(
                         f"   [TEX-DIAG] OIIO ImageInput.open returned None "
-                        f"for {os.path.basename(path)}"
-                        + (f": {_oiio_err}" if _oiio_err else "")
+                        f"for {os.path.basename(path)}" + (f": {_oiio_err}" if _oiio_err else "")
                     )
 
                     # ── Strategy B: ImageBuf (handles more format variants) ──
@@ -658,20 +643,19 @@ class MaterialsMixin:
                 rma_dir = os.path.dirname(tex_path)
                 if os.path.isdir(rma_dir):
                     for fname in sorted(os.listdir(rma_dir)):
-                        if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        if fname.lower().endswith((".png", ".jpg", ".jpeg")):
                             candidate = os.path.join(rma_dir, fname)
                             try:
                                 from PIL import Image  # type: ignore
-                                import numpy as np     # type: ignore
-                                with Image.open(candidate).convert('RGB') as img:
+                                import numpy as np  # type: ignore
+
+                                with Image.open(candidate).convert("RGB") as img:
                                     w, h = img.size
                                     # Centre-crop: keep the middle 50 % of each axis
                                     cx, cy = w // 2, h // 2
                                     mx = max(w // 4, 1)
                                     my = max(h // 4, 1)
-                                    center = img.crop(
-                                        (cx - mx, cy - my, cx + mx, cy + my)
-                                    )
+                                    center = img.crop((cx - mx, cy - my, cx + mx, cy + my))
                                     thumb = center.resize((16, 16), Image.LANCZOS)
                                     arr = np.array(thumb, dtype=float) / 255.0
                                     pixels = arr.reshape(-1, 3)
@@ -728,8 +712,9 @@ class MaterialsMixin:
         import hashlib
         import colorsys
         from pxr import Gf  # type: ignore
+
         h = int(hashlib.md5(name.encode()).hexdigest()[:8], 16)  # 0–4 294 967 295
-        hue = h / 4294967296.0   # uniformly spread 0.0–1.0
+        hue = h / 4294967296.0  # uniformly spread 0.0–1.0
         r, g, b = colorsys.hsv_to_rgb(hue, 0.65, 0.72)
         return Gf.Vec3f(float(r), float(g), float(b))
 
@@ -751,6 +736,7 @@ class MaterialsMixin:
         """
         import colorsys
         from pxr import Gf  # type: ignore
+
         r, g, b = float(color[0]), float(color[1]), float(color[2])
         h, s, v = colorsys.rgb_to_hsv(r, g, b)
         if s < 0.08:
@@ -819,7 +805,7 @@ class MaterialsMixin:
                     # contains "pxr" (RFM occasionally names proxies that way).
                     # ----------------------------------------------------------
                     lambert_colors = {}
-                    for lambert in (cmds.ls(type="lambert") or []):
+                    for lambert in cmds.ls(type="lambert") or []:
                         try:
                             if lambert == "lambert1" or "pxr" in lambert.lower():
                                 continue
@@ -837,7 +823,7 @@ class MaterialsMixin:
 
                     for lambert, color in lambert_colors.items():
                         try:
-                            for sg in (cmds.listConnections(lambert, type="shadingEngine") or []):
+                            for sg in cmds.listConnections(lambert, type="shadingEngine") or []:
                                 sg_to_color[sg] = color
                         except Exception:
                             pass
@@ -851,29 +837,31 @@ class MaterialsMixin:
                     # ----------------------------------------------------------
                     # ── PHASE B CODE VERSION: v5 ─────────────────────────
                     self.logger.info("   [PHASE-B] v5 — scanning RfM SGs for texture colors")
-                    _phase_b_rma_lib = getattr(
-                        getattr(self, "_current_export_options", None),
-                        "renderman_library_path", ""
-                    ) or ""
-                    if _phase_b_rma_lib:
-                        self.logger.info(
-                            f"   [PHASE-B] src-lib path: {_phase_b_rma_lib}"
+                    _phase_b_rma_lib = (
+                        getattr(
+                            getattr(self, "_current_export_options", None),
+                            "renderman_library_path",
+                            "",
                         )
+                        or ""
+                    )
+                    if _phase_b_rma_lib:
+                        self.logger.info(f"   [PHASE-B] src-lib path: {_phase_b_rma_lib}")
                     else:
                         self.logger.info(
                             "   [PHASE-B] src-lib path: (none) — texture colors from asset_100.png"
                         )
                     RFM_SHADER_TYPES = {
                         # node_type: (color_attr, gain_attr_or_None)
-                        "PxrSurface":      ("diffuseColor", "diffuseGain"),
+                        "PxrSurface": ("diffuseColor", "diffuseGain"),
                         # RfM 26+: "PxrDisney" was later registered as "PxrDisneyBsdf"
-                        "PxrDisney":       ("baseColor",    None),
-                        "PxrDisneyBsdf":   ("baseColor",    None),
+                        "PxrDisney": ("baseColor", None),
+                        "PxrDisneyBsdf": ("baseColor", None),
                         # Some RfM 27 builds register it without the 'Bsdf' suffix
-                        "PxrDisneyBSDF":   ("baseColor",    None),
-                        "PxrUnified":      ("diffuseColor", "diffuseGain"),
-                        "PxrLayer":        ("diffuseColor", None),
-                        "PxrLMDiffuse":    ("transmissionColor", None),
+                        "PxrDisneyBSDF": ("baseColor", None),
+                        "PxrUnified": ("diffuseColor", "diffuseGain"),
+                        "PxrLayer": ("diffuseColor", None),
+                        "PxrLMDiffuse": ("transmissionColor", None),
                     }
                     # Pre-collect ALL Pxr* shader nodes in the scene, keyed by
                     # their SHORT name (namespace stripped).  This lets the
@@ -891,7 +879,7 @@ class MaterialsMixin:
                         for _pxr_type in RFM_SHADER_TYPES:
                             if _pxr_type not in _registered_node_types:
                                 continue  # type not registered → skip silently
-                            for _n in (cmds.ls(type=_pxr_type) or []):
+                            for _n in cmds.ls(type=_pxr_type) or []:
                                 _short = _n.split(":")[-1]
                                 _pxr_short_to_full.setdefault(_short, _n)
                         # Broad name sweep: catches nodes with Pxr* prefix (e.g. SGs,
@@ -925,7 +913,8 @@ class MaterialsMixin:
                                     source=False,
                                     destination=True,
                                     type="shadingEngine",
-                                ) or []
+                                )
+                                or []
                             ):
                                 _sg_to_pxr_map.setdefault(_sg_name, [])
                                 if _full not in _sg_to_pxr_map[_sg_name]:
@@ -946,7 +935,7 @@ class MaterialsMixin:
                     # Also check .rmanSurface on every SG.
                     # Each SG is isolated in its own try/except so a missing
                     # .rmanSurface attribute on one SG never aborts the loop.
-                    for sg in (cmds.ls(type="shadingEngine") or []):
+                    for sg in cmds.ls(type="shadingEngine") or []:
                         if sg in sg_to_color:
                             continue
                         # Skip numbered Maya duplicate SGs (e.g. PxrDisneyBsdf18SG1,
@@ -954,7 +943,8 @@ class MaterialsMixin:
                         # processed.  These duplicates have no corresponding USD
                         # Material prim so their color values are never used.
                         import re as _re_phb  # noqa: PLC0415 (local import, intentional)
-                        _dup_match = _re_phb.match(r'^(.+SG)\d+$', sg)
+
+                        _dup_match = _re_phb.match(r"^(.+SG)\d+$", sg)
                         if _dup_match and _dup_match.group(1) in sg_to_color:
                             continue
                         try:
@@ -964,7 +954,8 @@ class MaterialsMixin:
                                 rfm_nodes = (
                                     cmds.listConnections(
                                         f"{sg}.rmanSurface", source=True, destination=False
-                                    ) or []
+                                    )
+                                    or []
                                 )
                             except Exception:
                                 rfm_nodes = []
@@ -973,7 +964,8 @@ class MaterialsMixin:
                                 rfm_nodes += (
                                     cmds.listConnections(
                                         f"{sg}.surfaceShader", source=True, destination=False
-                                    ) or []
+                                    )
+                                    or []
                                 )
                             except Exception:
                                 pass
@@ -984,7 +976,9 @@ class MaterialsMixin:
                             # the trailing "SG" gives us the shader's short name; we then
                             # look it up in _pxr_short_to_full (handles reference namespaces).
                             if sg.endswith("SG"):
-                                derived_short = sg.split(":")[-1][:-2]  # "NS:PxrDisneyBsdf1SG" → "PxrDisneyBsdf1"
+                                derived_short = sg.split(":")[-1][
+                                    :-2
+                                ]  # "NS:PxrDisneyBsdf1SG" → "PxrDisneyBsdf1"
                                 full_name = _pxr_short_to_full.get(derived_short)
                                 if full_name and full_name not in rfm_nodes:
                                     rfm_nodes.append(full_name)
@@ -995,9 +989,7 @@ class MaterialsMixin:
                             # on this SG for any Pxr* node (catches undocumented RfM attrs).
                             try:
                                 for _c in (
-                                    cmds.listConnections(
-                                        sg, source=True, destination=False
-                                    ) or []
+                                    cmds.listConnections(sg, source=True, destination=False) or []
                                 ):
                                     try:
                                         if (
@@ -1033,7 +1025,8 @@ class MaterialsMixin:
                                         f"{sg}.surfaceShader",
                                         source=True,
                                         destination=False,
-                                    ) or []
+                                    )
+                                    or []
                                 ):
                                     if cmds.nodeType(_lam) != "lambert":
                                         continue
@@ -1042,28 +1035,24 @@ class MaterialsMixin:
                                             f"{_lam}.color",
                                             source=True,
                                             destination=False,
-                                        ) or []
+                                        )
+                                        or []
                                     ):
                                         if cmds.nodeType(_lf) != "file":
                                             continue
-                                        _lfile_path = cmds.getAttr(
-                                            f"{_lf}.fileTextureName"
-                                        )
+                                        _lfile_path = cmds.getAttr(f"{_lf}.fileTextureName")
                                         if not (_lfile_path and os.path.isfile(_lfile_path)):
                                             continue
                                         try:
                                             from PIL import Image  # type: ignore
                                             import numpy as _np
+
                                             with Image.open(_lfile_path).convert("RGB") as _limg:
                                                 # Resize to a small sample for speed —
                                                 # preserves the full color distribution
                                                 # across the UV layout.
-                                                _lthumb = _limg.resize(
-                                                    (32, 32), Image.LANCZOS
-                                                )
-                                                _larr = _np.array(
-                                                    _lthumb, dtype=float
-                                                ) / 255.0
+                                                _lthumb = _limg.resize((32, 32), Image.LANCZOS)
+                                                _larr = _np.array(_lthumb, dtype=float) / 255.0
                                                 _lpix = _larr.reshape(-1, 3)
                                                 # Filter out near-black pixels
                                                 # (unmapped UV space / shadows) so
@@ -1168,7 +1157,9 @@ class MaterialsMixin:
                                             pass
                                     # Only use if meaningfully non-zero
                                     if r + g + b > 0.01:
-                                        if sg not in sg_to_color:  # don't overwrite Lambert file result
+                                        if (
+                                            sg not in sg_to_color
+                                        ):  # don't overwrite Lambert file result
                                             sg_to_color[sg] = Gf.Vec3f(
                                                 max(0.0, min(1.0, r)),
                                                 max(0.0, min(1.0, g)),
@@ -1192,9 +1183,7 @@ class MaterialsMixin:
                                         )
                                         if tex_color is not None:
                                             sg_to_color[sg] = tex_color
-                                            _ltp = getattr(
-                                                self, '_last_resolved_tex_path', None
-                                            )
+                                            _ltp = getattr(self, "_last_resolved_tex_path", None)
                                             if _ltp:
                                                 sg_to_texpath[sg] = _ltp
                                                 self._last_resolved_tex_path = None
@@ -1239,15 +1228,16 @@ class MaterialsMixin:
                             try:
                                 _nt_pbr = cmds.nodeType(_pxr_pbr)
                                 if _nt_pbr not in (
-                                    'PxrDisney', 'PxrDisneyBsdf', 'PxrDisneyBSDF',
-                                    'PxrSurface', 'PxrUnified',
+                                    "PxrDisney",
+                                    "PxrDisneyBsdf",
+                                    "PxrDisneyBSDF",
+                                    "PxrSurface",
+                                    "PxrUnified",
                                 ):
                                     continue
                                 _m_pbr, _r_pbr = 0.0, 0.5
                                 try:
-                                    _m_pbr = float(
-                                        cmds.getAttr(f"{_pxr_pbr}.metallic") or 0.0
-                                    )
+                                    _m_pbr = float(cmds.getAttr(f"{_pxr_pbr}.metallic") or 0.0)
                                 except Exception:
                                     pass
                                 try:
@@ -1263,8 +1253,8 @@ class MaterialsMixin:
                                     pass
                                 if _sg_pbr not in sg_to_pbr:
                                     sg_to_pbr[_sg_pbr] = {
-                                        'metallic': min(1.0, max(0.0, _m_pbr)),
-                                        'roughness': min(1.0, max(0.0, _r_pbr)),
+                                        "metallic": min(1.0, max(0.0, _m_pbr)),
+                                        "roughness": min(1.0, max(0.0, _r_pbr)),
                                     }
                                 break
                             except Exception:
@@ -1288,7 +1278,7 @@ class MaterialsMixin:
                     # evaluation context.  Reading 'color' first yields the
                     # authored diffuse color (correct for lamberts).
                     GENERIC_COLOR_ATTRS = ("color", "baseColor", "diffuseColor", "Kd", "outColor")
-                    for sg in (cmds.ls(type="shadingEngine") or []):
+                    for sg in cmds.ls(type="shadingEngine") or []:
                         if sg in sg_to_color:
                             continue  # already resolved
                         try:
@@ -1329,7 +1319,9 @@ class MaterialsMixin:
                             if sg in sg_to_color:
                                 break
 
-                    self.logger.info(f"[LOOKDEV] Found {len(lambert_colors)} Lambert materials in Maya")
+                    self.logger.info(
+                        f"[LOOKDEV] Found {len(lambert_colors)} Lambert materials in Maya"
+                    )
                     color_count = sum(1 for v in sg_to_color.values() if v is not None)
                     skip_count = sum(1 for v in sg_to_color.values() if v is None)
                     skipped_sgs = [k for k, v in sg_to_color.items() if v is None]
@@ -1388,21 +1380,21 @@ class MaterialsMixin:
                     # intended color unambiguously.
                     name_lower = usd_mat_name.lower()
                     NAME_COLOR_MAP = [
-                        ("red",     Gf.Vec3f(0.8, 0.1, 0.1)),
-                        ("green",   Gf.Vec3f(0.1, 0.7, 0.1)),
-                        ("blue",    Gf.Vec3f(0.1, 0.3, 0.9)),
-                        ("yellow",  Gf.Vec3f(0.9, 0.85, 0.1)),
-                        ("orange",  Gf.Vec3f(0.9, 0.5, 0.1)),
-                        ("purple",  Gf.Vec3f(0.5, 0.1, 0.8)),
-                        ("cyan",    Gf.Vec3f(0.1, 0.8, 0.8)),
-                        ("pink",    Gf.Vec3f(0.9, 0.4, 0.6)),
-                        ("brown",   Gf.Vec3f(0.45, 0.25, 0.1)),
-                        ("white",   Gf.Vec3f(0.95, 0.95, 0.95)),
-                        ("black",   Gf.Vec3f(0.02, 0.02, 0.02)),
-                        ("gray",    Gf.Vec3f(0.5, 0.5, 0.5)),
-                        ("grey",    Gf.Vec3f(0.5, 0.5, 0.5)),
-                        ("gold",    Gf.Vec3f(0.85, 0.7, 0.1)),
-                        ("silver",  Gf.Vec3f(0.75, 0.75, 0.78)),
+                        ("red", Gf.Vec3f(0.8, 0.1, 0.1)),
+                        ("green", Gf.Vec3f(0.1, 0.7, 0.1)),
+                        ("blue", Gf.Vec3f(0.1, 0.3, 0.9)),
+                        ("yellow", Gf.Vec3f(0.9, 0.85, 0.1)),
+                        ("orange", Gf.Vec3f(0.9, 0.5, 0.1)),
+                        ("purple", Gf.Vec3f(0.5, 0.1, 0.8)),
+                        ("cyan", Gf.Vec3f(0.1, 0.8, 0.8)),
+                        ("pink", Gf.Vec3f(0.9, 0.4, 0.6)),
+                        ("brown", Gf.Vec3f(0.45, 0.25, 0.1)),
+                        ("white", Gf.Vec3f(0.95, 0.95, 0.95)),
+                        ("black", Gf.Vec3f(0.02, 0.02, 0.02)),
+                        ("gray", Gf.Vec3f(0.5, 0.5, 0.5)),
+                        ("grey", Gf.Vec3f(0.5, 0.5, 0.5)),
+                        ("gold", Gf.Vec3f(0.85, 0.7, 0.1)),
+                        ("silver", Gf.Vec3f(0.75, 0.75, 0.78)),
                     ]
                     for keyword, inferred in NAME_COLOR_MAP:
                         if keyword in name_lower:
@@ -1483,9 +1475,14 @@ class MaterialsMixin:
                     else:
                         _tex_src = sg_to_texpath.get(matched_sg) if matched_sg else None
                         if (
-                            _tex_src and os.path.isfile(_tex_src)
+                            _tex_src
+                            and os.path.isfile(_tex_src)
                             and self._wire_diffuse_texture(
-                                stage, prim, preview_shader, _tex_src, usd_path.parent,
+                                stage,
+                                prim,
+                                preview_shader,
+                                _tex_src,
+                                usd_path.parent,
                                 lambert_color,
                             )
                         ):
@@ -1514,20 +1511,16 @@ class MaterialsMixin:
                         _pp = _sp.GetParent()
                         if (
                             _pp.IsValid()
-                            and _pp.GetTypeName() == 'NodeGraph'
+                            and _pp.GetTypeName() == "NodeGraph"
                             and _pp.GetPath() != prim.GetPath()
                         ):
                             _ng = UsdShade.NodeGraph(_pp)
-                            _ng_out = _ng.CreateOutput(
-                                'surface', Sdf.ValueTypeNames.Token
-                            )
-                            _ng_out.ConnectToSource(
-                                preview_shader.ConnectableAPI(), 'surface'
-                            )
+                            _ng_out = _ng.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                            _ng_out.ConnectToSource(preview_shader.ConnectableAPI(), "surface")
                             # Wire Material.outputs:surface directly to the inner
                             # shader — same bypass approach as _fix_exported_usdc.
                             material.CreateSurfaceOutput().ConnectToSource(
-                                preview_shader.ConnectableAPI(), 'surface'
+                                preview_shader.ConnectableAPI(), "surface"
                             )
                         else:
                             material.CreateSurfaceOutput().ConnectToSource(
@@ -1544,9 +1537,14 @@ class MaterialsMixin:
                     shader.CreateIdAttr("UsdPreviewSurface")
                     _tex_src = sg_to_texpath.get(matched_sg) if matched_sg else None
                     if (
-                        _tex_src and os.path.isfile(_tex_src)
+                        _tex_src
+                        and os.path.isfile(_tex_src)
                         and self._wire_diffuse_texture(
-                            stage, prim, shader, _tex_src, usd_path.parent,
+                            stage,
+                            prim,
+                            shader,
+                            _tex_src,
+                            usd_path.parent,
                             lambert_color,
                         )
                     ):
@@ -1555,16 +1553,18 @@ class MaterialsMixin:
                             f"UsdUVTexture({os.path.basename(_tex_src)})"
                         )
                     else:
-                        shader.CreateInput(
-                            "diffuseColor", Sdf.ValueTypeNames.Color3f
-                        ).Set(lambert_color)
+                        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                            lambert_color
+                        )
                         self.logger.info(
                             f"   [INJECT] {usd_mat_name} ← {matched_sg} = {lambert_color}"
                         )
                     shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
                     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
-                    shader.CreateOutput('surface', Sdf.ValueTypeNames.Token)
-                    material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+                    shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                    material.CreateSurfaceOutput().ConnectToSource(
+                        shader.ConnectableAPI(), "surface"
+                    )
                     materials_converted += 1
                     _active_shader = shader
 
@@ -1580,84 +1580,65 @@ class MaterialsMixin:
                     # the Pxr node itself (e.g. Veteran_Chain_Bsdf) carries the meaning.
                     _pxr_nodes = _sg_to_pxr_map.get(matched_sg, []) if matched_sg else []
                     _name_check = (
-                        _name_lo + ' '
-                        + ' '.join(n.split(':')[-1].lower() for n in _pxr_nodes)
+                        _name_lo + " " + " ".join(n.split(":")[-1].lower() for n in _pxr_nodes)
                     )
                     # Transfer PBR values from PxrDisney scan
                     _pbr = sg_to_pbr.get(matched_sg) if matched_sg else None
                     if _pbr:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(_pbr['metallic'])
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(_pbr['roughness'])
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(
+                            _pbr["metallic"]
+                        )
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(
+                            _pbr["roughness"]
+                        )
                         self.logger.info(
                             f"   [PBR] {usd_mat_name} -- metallic={_pbr['metallic']:.3f}, "
                             f"roughness={_pbr['roughness']:.3f}"
                         )
                     # Eye material name-based overrides
-                    if 'cornea' in _name_lo:
+                    if "cornea" in _name_lo:
                         # Cornea = transparent glass.
                         # opacity=0.0 → fully transparent in QuickLook / full USD renderers.
                         # diffuseColor set to a near-clear water tint so that viewers
                         # which do NOT support opacity (render everything as opaque) still
                         # show a plausible glossy white eye-surface rather than a muddy grey.
                         # roughness=0.02 → near-mirror wet-glass specular highlight.
-                        _active_shader.CreateInput(
-                            "diffuseColor", Sdf.ValueTypeNames.Color3f
-                        ).Set(Gf.Vec3f(0.95, 0.97, 1.0))   # near-clear water tint
-                        _active_shader.CreateInput(
-                            "opacity", Sdf.ValueTypeNames.Float
-                        ).Set(0.0)
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.0)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.02)                          # near-mirror gloss → reads as glass
+                        _active_shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                            Gf.Vec3f(0.95, 0.97, 1.0)
+                        )  # near-clear water tint
+                        _active_shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(0.0)
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(
+                            0.02
+                        )  # near-mirror gloss → reads as glass
                         self.logger.info(
                             f"   [EYE] {usd_mat_name} — opacity=0 glass cornea, "
                             f"diffuse=clear-water, roughness=0.02"
                         )
-                    elif 'sclera' in _name_lo:
+                    elif "sclera" in _name_lo:
                         # Force white regardless of Lambert proxy color
-                        _active_shader.CreateInput(
-                            "diffuseColor", Sdf.ValueTypeNames.Color3f
-                        ).Set(Gf.Vec3f(0.95, 0.95, 0.95))
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.0)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.35)
-                        self.logger.info(
-                            f"   [EYE] {usd_mat_name} — white sclera, metallic=0"
+                        _active_shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                            Gf.Vec3f(0.95, 0.95, 0.95)
                         )
-                    elif 'iris' in _name_lo:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.35)
+                        self.logger.info(f"   [EYE] {usd_mat_name} — white sclera, metallic=0")
+                    elif "iris" in _name_lo:
                         # The Lambert proxy colour for iris is near-black (~0.06)
                         # which is unusable.  Force a warm hazel-brown so the iris
                         # ring is clearly visible against both the white sclera and
                         # the black pupil in all USD viewers.
-                        _active_shader.CreateInput(
-                            "diffuseColor", Sdf.ValueTypeNames.Color3f
-                        ).Set(Gf.Vec3f(0.35, 0.20, 0.05))
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.0)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.2)
+                        _active_shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                            Gf.Vec3f(0.35, 0.20, 0.05)
+                        )
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.2)
                         self.logger.info(
                             f"   [EYE] {usd_mat_name} -- iris hazel-brown, roughness=0.2"
                         )
-                    elif 'pupil' in _name_lo:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.0)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.5)
+                    elif "pupil" in _name_lo:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
                         self.logger.info(
                             f"   [EYE] {usd_mat_name} -- pupils non-metallic, roughness=0.5"
                         )
@@ -1672,55 +1653,45 @@ class MaterialsMixin:
                     # (0.9+) suppresses all diffuse contribution leaving pure black
                     # in flat-lit web viewers.  0.45 still reads as metallic while
                     # keeping enough diffuse/texture contribution to show colour.
-                    elif 'chain' in _name_check:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.45)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.3)
+                    elif "chain" in _name_check:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.45)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.3)
                         self.logger.info(
                             f"   [METAL] {usd_mat_name} -- chain override metallic=0.45, roughness=0.3"
                         )
-                    elif 'tag' in _name_check:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.4)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.25)
+                    elif "tag" in _name_check:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.4)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.25)
                         self.logger.info(
                             f"   [METAL] {usd_mat_name} -- dog tag override metallic=0.4, roughness=0.25"
                         )
-                    elif 'zipr' in _name_check or 'zipper' in _name_check:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.4)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.35)
+                    elif "zipr" in _name_check or "zipper" in _name_check:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.4)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.35)
                         self.logger.info(
                             f"   [METAL] {usd_mat_name} -- zipper override metallic=0.4, roughness=0.35"
                         )
-                    elif 'butn' in _name_check or 'button' in _name_check:
-                        _active_shader.CreateInput(
-                            "metallic", Sdf.ValueTypeNames.Float
-                        ).Set(0.35)
-                        _active_shader.CreateInput(
-                            "roughness", Sdf.ValueTypeNames.Float
-                        ).Set(0.4)
+                    elif "butn" in _name_check or "button" in _name_check:
+                        _active_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.35)
+                        _active_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.4)
                         self.logger.info(
                             f"   [METAL] {usd_mat_name} -- button override metallic=0.35, roughness=0.4"
                         )
 
             self.logger.info(f"[LOOKDEV] Sample USD mat names: {usd_mat_name_samples}")
-            self.logger.info(f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}")
+            self.logger.info(
+                f"[LOOKDEV] Scanned {usd_mat_count} USD materials, injected/updated {materials_converted}"
+            )
             unmatched = usd_mat_count - materials_converted
             if unmatched > 0:
-                self.logger.info(f"[LOOKDEV] {unmatched} USD materials had no SG color match — check SG keys above")
+                self.logger.info(
+                    f"[LOOKDEV] {unmatched} USD materials had no SG color match — check SG keys above"
+                )
             if materials_converted > 0:
                 stage.Save()
-                self.logger.info(f"[OK] Created/updated {materials_converted} UsdPreviewSurface materials with colors")
+                self.logger.info(
+                    f"[OK] Created/updated {materials_converted} UsdPreviewSurface materials with colors"
+                )
             else:
                 self.logger.info(
                     f"[OK] No SG name matches found in {usd_mat_count} USD materials"
@@ -1787,16 +1758,16 @@ class MaterialsMixin:
             mat_path_to_shader = {}
             for prim in stage.Traverse():
                 ptype = prim.GetTypeName()
-                if ptype == 'Material':
+                if ptype == "Material":
                     mat_name_to_path[prim.GetName()] = prim.GetPath()
-                elif ptype == 'Shader':
+                elif ptype == "Shader":
                     s = UsdShade.Shader(prim)
                     sid_attr = s.GetIdAttr()
-                    if sid_attr and sid_attr.Get() == 'UsdPreviewSurface':
+                    if sid_attr and sid_attr.Get() == "UsdPreviewSurface":
                         # Walk up to find the owning Material
                         ancestor = prim.GetParent()
                         while ancestor and ancestor.IsValid():
-                            if ancestor.GetTypeName() == 'Material':
+                            if ancestor.GetTypeName() == "Material":
                                 # Keep the first (deepest) match per material
                                 if ancestor.GetPath() not in mat_path_to_shader:
                                     mat_path_to_shader[ancestor.GetPath()] = s
@@ -1834,22 +1805,18 @@ class MaterialsMixin:
                 # Ensure the shader's outputs:surface is explicitly authored.
                 # Some USDZ viewers only resolve connections to attributes that
                 # exist on the target prim — a dangling path reference is ignored.
-                preview_shader.CreateOutput('surface', Sdf.ValueTypeNames.Token)
+                preview_shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
 
                 if (
                     parent_prim.IsValid()
-                    and parent_prim.GetTypeName() == 'NodeGraph'
+                    and parent_prim.GetTypeName() == "NodeGraph"
                     and parent_prim.GetPath() != mat_prim.GetPath()
                 ):
                     # Shader is inside a NodeGraph.
                     # Wire NodeGraph.outputs:surface → shader (for NG-aware renderers).
                     node_graph = UsdShade.NodeGraph(parent_prim)
-                    ng_output = node_graph.CreateOutput(
-                        'surface', Sdf.ValueTypeNames.Token
-                    )
-                    ng_output.ConnectToSource(
-                        preview_shader.ConnectableAPI(), 'surface'
-                    )
+                    ng_output = node_graph.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                    ng_output.ConnectToSource(preview_shader.ConnectableAPI(), "surface")
                     # CRITICAL: wire Material.outputs:surface DIRECTLY to the shader
                     # inside the NodeGraph, bypassing the NodeGraph boundary.
                     # Web viewers (needle.tools, trellis3d, three.js / Babylon.js
@@ -1858,7 +1825,7 @@ class MaterialsMixin:
                     # Without this direct wire, ALL NodeGraph-wrapped materials are
                     # invisible in every web viewer.
                     material.CreateSurfaceOutput().ConnectToSource(
-                        preview_shader.ConnectableAPI(), 'surface'
+                        preview_shader.ConnectableAPI(), "surface"
                     )
                     ng_wired += 1
                     self.logger.info(
@@ -1868,12 +1835,11 @@ class MaterialsMixin:
                 else:
                     # Shader is directly under the Material — wire directly.
                     material.CreateSurfaceOutput().ConnectToSource(
-                        preview_shader.ConnectableAPI(), 'surface'
+                        preview_shader.ConnectableAPI(), "surface"
                     )
                     direct_wired += 1
                     self.logger.info(
-                        f"   [WIRE-DIRECT] {mat_prim.GetName()} → "
-                        f"{shader_prim.GetPath()}"
+                        f"   [WIRE-DIRECT] {mat_prim.GetName()} → " f"{shader_prim.GetPath()}"
                     )
                 surface_wired += 1
             self.logger.info(
@@ -1882,14 +1848,12 @@ class MaterialsMixin:
             )
 
             # ── Fix 2: Build Maya mesh→SG map (cmds available at export time) ───────
-            mesh_to_sg = {}   # USD Mesh prim transform name → Maya shading group name
+            mesh_to_sg = {}  # USD Mesh prim transform name → Maya shading group name
             if cmds is not None:
                 try:
-                    for maya_mesh_shape in (cmds.ls(type='mesh') or []):
+                    for maya_mesh_shape in cmds.ls(type="mesh") or []:
                         try:
-                            sgs = cmds.listConnections(
-                                maya_mesh_shape, type='shadingEngine'
-                            ) or []
+                            sgs = cmds.listConnections(maya_mesh_shape, type="shadingEngine") or []
                             if not sgs:
                                 continue
                             parents = (
@@ -1900,8 +1864,8 @@ class MaterialsMixin:
                             # mayaUSD can represent namespaces two ways:
                             # 1. stripNamespaces=True  → prim name = short name only
                             # 2. stripNamespaces=False → colon sanitized to underscore
-                            short_name = transform_name.split(':')[-1]
-                            sanitized = transform_name.replace(':', '_')
+                            short_name = transform_name.split(":")[-1]
+                            sanitized = transform_name.replace(":", "_")
                             mesh_to_sg.setdefault(short_name, sgs[0])
                             if sanitized != short_name:
                                 mesh_to_sg.setdefault(sanitized, sgs[0])
@@ -1913,16 +1877,14 @@ class MaterialsMixin:
 
             # ── Fix 3: Write material:binding + identify root-level Mesh prims ──────
             default_prim = stage.GetDefaultPrim()
-            default_path_prefix = (
-                str(default_prim.GetPath()) + '/' if default_prim else ''
-            )
+            default_path_prefix = str(default_prim.GetPath()) + "/" if default_prim else ""
             bindings_written = 0
             subset_bindings = 0
             root_mesh_paths = []
 
             for prim in stage.Traverse():
                 ptype = prim.GetTypeName()
-                if ptype == 'Mesh':
+                if ptype == "Mesh":
                     prim_path_str = str(prim.GetPath())
                     if default_path_prefix and not prim_path_str.startswith(default_path_prefix):
                         root_mesh_paths.append(prim.GetPath())
@@ -1943,7 +1905,7 @@ class MaterialsMixin:
                     # block a valid whole-mesh material binding from being written —
                     # those subsets exist for skinning or UV partitioning, not shading.
                     if any(
-                        c.GetTypeName() == 'GeomSubset' and c.GetName() in mat_name_to_path
+                        c.GetTypeName() == "GeomSubset" and c.GetName() in mat_name_to_path
                         for c in prim.GetChildren()
                     ):
                         continue
@@ -1954,7 +1916,8 @@ class MaterialsMixin:
                         # pipeline during multi-skincluster fixup; strip it to
                         # find the original transform in the map.
                         import re as _re
-                        base_name = _re.sub(r'_usdExport\d*$', '', prim_name)
+
+                        base_name = _re.sub(r"_usdExport\d*$", "", prim_name)
                         if base_name != prim_name:
                             sg_name = mesh_to_sg.get(base_name)
                     if sg_name and sg_name in mat_name_to_path:
@@ -1963,7 +1926,7 @@ class MaterialsMixin:
                             UsdShade.MaterialBindingAPI.Apply(prim)
                             bind_api.Bind(UsdShade.Material(mat_prim))
                             bindings_written += 1
-                elif ptype == 'GeomSubset':
+                elif ptype == "GeomSubset":
                     # Only process GeomSubsets that represent per-face material
                     # assignments.  mayaUSD names these subsets after the shading
                     # group (e.g. 'Pupils_MatSG', 'PxrDisneyBsdf1SG').  Topology
@@ -1977,9 +1940,7 @@ class MaterialsMixin:
                     # family so USD-compliant viewers treat it as a per-face binding.
                     _gs = UsdGeom.Subset(prim)
                     _gs.CreateElementTypeAttr().Set(UsdGeom.Tokens.face)
-                    _fam_attr = prim.CreateAttribute(
-                        "familyName", Sdf.ValueTypeNames.Token, False
-                    )
+                    _fam_attr = prim.CreateAttribute("familyName", Sdf.ValueTypeNames.Token, False)
                     _fam_attr.Set("materialBind")
                     bind_api = UsdShade.MaterialBindingAPI(prim)
                     existing, _ = bind_api.ComputeBoundMaterial()
@@ -2005,7 +1966,7 @@ class MaterialsMixin:
             # Duplicate _usdExport1 meshes: mayaUSD sometimes writes a numbered duplicate
             #   when the same shape is skinned by more than one skin cluster (e.g. body mesh
             #   with a secondary corrective cluster); deactivate the redundant copy.
-            fit_geo_keywords = ('FaceGroup', 'FaceFit', 'FitEye', 'FitLip', 'FitFore')
+            fit_geo_keywords = ("FaceGroup", "FaceFit", "FitEye", "FitLip", "FitFore")
             deactivated_extra = 0
 
             # Two-pass _usdExport duplicate resolution.
@@ -2020,10 +1981,11 @@ class MaterialsMixin:
             # deactivate the UN-NUMBERED (deformed-origin, no material) and keep the
             # NUMBERED one (model-origin, has material binding).
             import re as _re_dedup
+
             _usd_export_by_base = {}  # stripped_base → [(name, prim), ...]
 
             for prim in stage.Traverse():
-                if prim.GetTypeName() != 'Mesh':
+                if prim.GetTypeName() != "Mesh":
                     continue
                 p_str = str(prim.GetPath())
                 # FaceGroup fit-geometry — always deactivate immediately
@@ -2032,10 +1994,10 @@ class MaterialsMixin:
                     deactivated_extra += 1
                     continue
                 name = prim.GetName()
-                if '_usdExport' in name:
+                if "_usdExport" in name:
                     # Strip trailing digits to get the base export name
                     # "model_Body_Geo_usdExport1" → "model_Body_Geo_usdExport"
-                    base = _re_dedup.sub(r'\d+$', '', name)
+                    base = _re_dedup.sub(r"\d+$", "", name)
                     _usd_export_by_base.setdefault(base, []).append((name, prim))
 
             # Deactivate un-numbered (deformed-origin) when numbered counterpart exists.
@@ -2061,7 +2023,7 @@ class MaterialsMixin:
             #           cases where filterTypes didn't strip them) ──────────────────
             nurbs_patched = []
             for prim in stage.Traverse():
-                if prim.GetTypeName() == 'NurbsPatch':
+                if prim.GetTypeName() == "NurbsPatch":
                     nurbs_patched.append(prim.GetPath())
             for path in nurbs_patched:
                 UsdGeom.Imageable(stage.GetPrimAtPath(path)).CreatePurposeAttr().Set(
@@ -2117,25 +2079,25 @@ class MaterialsMixin:
             skel_anims_to_deactivate = []
             for prim in stage.Traverse():
                 ptype = prim.GetTypeName()
-                if ptype == 'Skeleton':
+                if ptype == "Skeleton":
                     ppath = prim.GetPath()
                     ppath_str = str(ppath)
                     if ppath in bound_skeleton_paths:
                         continue  # Mesh-bound — keep
-                    if 'FitSkeleton' in ppath_str:
+                    if "FitSkeleton" in ppath_str:
                         continue  # Advanced Skeleton face rig — keep
                     skeletons_to_retype.append(ppath)
-                elif ptype == 'SkelAnimation':
+                elif ptype == "SkelAnimation":
                     ppath_str = str(prim.GetPath())
                     # Keep SkelAnimations that live under ANY bound Skeleton or FitSkeleton
                     is_under_bound = any(
-                        ppath_str.startswith(str(bp) + '/') for bp in bound_skeleton_paths
+                        ppath_str.startswith(str(bp) + "/") for bp in bound_skeleton_paths
                     )
-                    if not is_under_bound and 'FitSkeleton' not in ppath_str:
+                    if not is_under_bound and "FitSkeleton" not in ppath_str:
                         skel_anims_to_deactivate.append(prim.GetPath())
 
             for path in skeletons_to_retype:
-                stage.GetPrimAtPath(path).SetTypeName('Xform')
+                stage.GetPrimAtPath(path).SetTypeName("Xform")
             for path in skel_anims_to_deactivate:
                 stage.GetPrimAtPath(path).SetActive(False)
 
@@ -2154,15 +2116,16 @@ class MaterialsMixin:
             # Fix: replace any absolute path with './textures/<filename>' which is
             # the correct package-relative path for our texture layout.
             import os.path as _osp_fix
+
             n_abs_fixed = 0
             for _fprim in stage.Traverse():
-                if _fprim.GetTypeName() != 'Shader':
+                if _fprim.GetTypeName() != "Shader":
                     continue
                 _fs = UsdShade.Shader(_fprim)
                 _fid = _fs.GetIdAttr()
-                if not (_fid and _fid.Get() == 'UsdUVTexture'):
+                if not (_fid and _fid.Get() == "UsdUVTexture"):
                     continue
-                _finp = _fs.GetInput('file')
+                _finp = _fs.GetInput("file")
                 if not _finp:
                     continue
                 _fval = _finp.Get()
@@ -2170,12 +2133,12 @@ class MaterialsMixin:
                     continue
                 _fraw = _fval.path  # Sdf.AssetPath.path — no surrounding '@' signs
                 # Detect Windows absolute path (D:\...) or Unix absolute path (/...)
-                if not ((len(_fraw) >= 2 and _fraw[1] == ':') or _fraw.startswith('/')):
+                if not ((len(_fraw) >= 2 and _fraw[1] == ":") or _fraw.startswith("/")):
                     continue  # Already relative — leave untouched
-                _fname = _osp_fix.basename(_fraw.replace('\\', '/'))
+                _fname = _osp_fix.basename(_fraw.replace("\\", "/"))
                 if not _fname:
                     continue
-                _finp.Set(Sdf.AssetPath(f'./textures/{_fname}'))
+                _finp.Set(Sdf.AssetPath(f"./textures/{_fname}"))
                 n_abs_fixed += 1
             if n_abs_fixed:
                 self.logger.info(
@@ -2193,30 +2156,37 @@ class MaterialsMixin:
             # is caught.  Deactivating the NodeGraph removes the unknown prims from
             # the scene graph without touching the UsdPreviewSurface wiring from Fix 1.
             _STANDARD_USD_SHADER_IDS = {
-                'UsdPreviewSurface', 'UsdUVTexture', 'UsdTransform2d',
-                'UsdPrimvarReader_float2', 'UsdPrimvarReader_float',
-                'UsdPrimvarReader_float3', 'UsdPrimvarReader_float4',
-                'UsdPrimvarReader_int', 'UsdPrimvarReader_string',
-                'UsdPrimvarReader_normal', 'UsdPrimvarReader_point',
-                'UsdPrimvarReader_vector', 'UsdPrimvarReader_matrix',
+                "UsdPreviewSurface",
+                "UsdUVTexture",
+                "UsdTransform2d",
+                "UsdPrimvarReader_float2",
+                "UsdPrimvarReader_float",
+                "UsdPrimvarReader_float3",
+                "UsdPrimvarReader_float4",
+                "UsdPrimvarReader_int",
+                "UsdPrimvarReader_string",
+                "UsdPrimvarReader_normal",
+                "UsdPrimvarReader_point",
+                "UsdPrimvarReader_vector",
+                "UsdPrimvarReader_matrix",
             }
             _rman_ng_deactivated = 0
             _ng_bad: list = []
             for _ngprim in stage.Traverse():
-                if _ngprim.GetTypeName() != 'NodeGraph' or not _ngprim.IsActive():
+                if _ngprim.GetTypeName() != "NodeGraph" or not _ngprim.IsActive():
                     continue
-                _first_bad_id: str = ''
+                _first_bad_id: str = ""
                 for _child in _ngprim.GetAllChildren():
-                    if _child.GetTypeName() != 'Shader':
+                    if _child.GetTypeName() != "Shader":
                         continue
                     _cshader = UsdShade.Shader(_child)
                     _cid_attr = _cshader.GetIdAttr()
                     if not _cid_attr:
                         continue
-                    _cid = _cid_attr.Get() or ''
+                    _cid = _cid_attr.Get() or ""
                     # Strip any namespace / path prefix
                     # (e.g. 'rendermanForMaya:PxrMayaFile', 'Pxr/PxrSurface')
-                    _bare_id = _cid.split(':')[-1].split('/')[-1]
+                    _bare_id = _cid.split(":")[-1].split("/")[-1]
                     if _bare_id not in _STANDARD_USD_SHADER_IDS:
                         _first_bad_id = _cid
                         break
@@ -2252,14 +2222,12 @@ class MaterialsMixin:
                 bypass_ng_samples = 0
                 unexpected_samples = 0
                 for vprim in vstage.Traverse():
-                    if vprim.GetTypeName() != 'Material':
+                    if vprim.GetTypeName() != "Material":
                         continue
                     vmat = UsdShade.Material(vprim)
                     vsurf = vmat.GetSurfaceOutput()
                     if not vsurf:
-                        self.logger.info(
-                            f"[VALIDATE] {vprim.GetName()} — no outputs:surface"
-                        )
+                        self.logger.info(f"[VALIDATE] {vprim.GetName()} — no outputs:surface")
                         continue
                     conns = vsurf.GetAttr().GetConnections()
                     is_direct_shader = False
@@ -2269,12 +2237,11 @@ class MaterialsMixin:
                         target_path = conns[0].GetPrimPath()
                         target_prim = vstage.GetPrimAtPath(target_path)
                         is_direct_shader = (
-                            target_prim.IsValid()
-                            and target_prim.GetTypeName() == 'Shader'
+                            target_prim.IsValid() and target_prim.GetTypeName() == "Shader"
                         )
                         bypasses_ng = (
                             is_direct_shader
-                            and target_prim.GetParent().GetTypeName() == 'NodeGraph'
+                            and target_prim.GetParent().GetTypeName() == "NodeGraph"
                         )
                     if bypasses_ng and bypass_ng_samples < 3:
                         self.logger.info(
@@ -2284,8 +2251,7 @@ class MaterialsMixin:
                         bypass_ng_samples += 1
                     elif is_direct_shader and not bypasses_ng and plain_direct_samples < 3:
                         self.logger.info(
-                            f"[VALIDATE-DIRECT] "
-                            f"{vprim.GetName()}.outputs:surface → {conns}"
+                            f"[VALIDATE-DIRECT] " f"{vprim.GetName()}.outputs:surface → {conns}"
                         )
                         plain_direct_samples += 1
                     elif not is_direct_shader and unexpected_samples < 3:
@@ -2311,12 +2277,7 @@ class MaterialsMixin:
             self.logger.warning(traceback.format_exc())
 
     def _create_usd_preview_material(
-        self,
-        stage,
-        materials_scope,
-        mesh_name: str,
-        diffuse_color: 'Gf.Vec3f',
-        mesh_prim
+        self, stage, materials_scope, mesh_name: str, diffuse_color: "Gf.Vec3f", mesh_prim
     ) -> None:
         """Create a UsdPreviewSurface material and bind it to a mesh"""
         try:
@@ -2334,7 +2295,9 @@ class MaterialsMixin:
                 shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(diffuse_color)
             else:
                 # Default to white if no color found
-                shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.8, 0.8, 0.8))
+                shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                    Gf.Vec3f(0.8, 0.8, 0.8)
+                )
 
             # Set reasonable default PBR values
             shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.5)
@@ -2395,54 +2358,40 @@ class MaterialsMixin:
             shader_scope = str(surface_shader.GetPrim().GetParent().GetPath())
 
             # UV reader — provides the mesh's 'st' primvar to the texture
-            st_reader = UsdShade.Shader.Define(
-                stage, f"{shader_scope}/TexCoordReader"
-            )
+            st_reader = UsdShade.Shader.Define(stage, f"{shader_scope}/TexCoordReader")
             st_reader.CreateIdAttr("UsdPrimvarReader_float2")
-            st_reader.CreateInput(
-                "varname", Sdf.ValueTypeNames.Token
-            ).Set("st")
+            st_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
             # When the mesh has no 'st' primvar exported (e.g. procedural chain/
             # button accessories without UV sets), the reader returns the fallback
             # value instead of (0,0).  Sampling at the texture CENTER (0.5, 0.5)
             # is far more likely to return the correct metal colour than the
             # bottom-left corner pixel (0,0) which is often black or near-black.
-            st_reader.CreateInput(
-                "fallback", Sdf.ValueTypeNames.Float2
-            ).Set(Gf.Vec2f(0.5, 0.5))
+            st_reader.CreateInput("fallback", Sdf.ValueTypeNames.Float2).Set(Gf.Vec2f(0.5, 0.5))
 
             # Diffuse texture — reads the source PNG via relative USDZ path
-            tex_shader = UsdShade.Shader.Define(
-                stage, f"{shader_scope}/DiffuseTexture"
-            )
+            tex_shader = UsdShade.Shader.Define(stage, f"{shader_scope}/DiffuseTexture")
             tex_shader.CreateIdAttr("UsdUVTexture")
-            tex_shader.CreateInput(
-                "file", Sdf.ValueTypeNames.Asset
-            ).Set(Sdf.AssetPath(f"textures/{tex_basename}"))
-            tex_shader.CreateInput(
-                "wrapS", Sdf.ValueTypeNames.Token
-            ).Set("repeat")
-            tex_shader.CreateInput(
-                "wrapT", Sdf.ValueTypeNames.Token
-            ).Set("repeat")
-            tex_shader.CreateInput(
-                "sourceColorSpace", Sdf.ValueTypeNames.Token
-            ).Set("sRGB")
+            tex_shader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(
+                Sdf.AssetPath(f"textures/{tex_basename}")
+            )
+            tex_shader.CreateInput("wrapS", Sdf.ValueTypeNames.Token).Set("repeat")
+            tex_shader.CreateInput("wrapT", Sdf.ValueTypeNames.Token).Set("repeat")
+            tex_shader.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set("sRGB")
             # Texture-file-not-found fallback — use the Phase B sampled colour so
             # the material shows a reasonable flat colour rather than black if the
             # PNG is missing from the USDZ (e.g. packaging edge-case).
             if fallback_color is not None:
-                tex_shader.CreateInput(
-                    "fallback", Sdf.ValueTypeNames.Float4
-                ).Set(Gf.Vec4f(
-                    float(fallback_color[0]),
-                    float(fallback_color[1]),
-                    float(fallback_color[2]),
-                    1.0,
-                ))
-            tex_shader.CreateInput(
-                "st", Sdf.ValueTypeNames.Float2
-            ).ConnectToSource(st_reader.ConnectableAPI(), "result")
+                tex_shader.CreateInput("fallback", Sdf.ValueTypeNames.Float4).Set(
+                    Gf.Vec4f(
+                        float(fallback_color[0]),
+                        float(fallback_color[1]),
+                        float(fallback_color[2]),
+                        1.0,
+                    )
+                )
+            tex_shader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+                st_reader.ConnectableAPI(), "result"
+            )
 
             # Explicitly author the output attributes so strict USD validators
             # and online USDZ viewers (which require outputs to be authored,
@@ -2451,9 +2400,9 @@ class MaterialsMixin:
             tex_shader.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f)
 
             # Wire texture RGB output → PreviewSurface diffuseColor
-            surface_shader.CreateInput(
-                "diffuseColor", Sdf.ValueTypeNames.Color3f
-            ).ConnectToSource(tex_shader.ConnectableAPI(), "rgb")
+            surface_shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+                tex_shader.ConnectableAPI(), "rgb"
+            )
 
             return True
 
@@ -2465,10 +2414,7 @@ class MaterialsMixin:
             return False
 
     def _create_usdz_package(
-        self,
-        usd_path: Path,
-        rig_mb_path: Optional[Path],
-        usdz_path: Path
+        self, usd_path: Path, rig_mb_path: Optional[Path], usdz_path: Path
     ) -> bool:
         """
         Create USDZ package with 64-byte aligned data payloads.
@@ -2502,23 +2448,21 @@ class MaterialsMixin:
             # We need: (fp.tell() + 30 + len(filename) + len(extra)) % 64 == 0
             assert zf.fp is not None, "ZipFile.fp is None — file not open for writing"
             current_pos = zf.fp.tell()
-            fname_len = len(arcname.encode('utf-8'))
+            fname_len = len(arcname.encode("utf-8"))
             base_hdr = 30 + fname_len
             pad = (_USDZ_ALIGN - (current_pos + base_hdr) % _USDZ_ALIGN) % _USDZ_ALIGN
-            info.extra = b'\x00' * pad
+            info.extra = b"\x00" * pad
             zf.writestr(info, data)
 
         try:
-            with zipfile.ZipFile(str(usdz_path), 'w', zipfile.ZIP_STORED) as zf:
+            with zipfile.ZipFile(str(usdz_path), "w", zipfile.ZIP_STORED) as zf:
                 # USDZ spec: root USD layer must be the FIRST archive entry.
                 _write_aligned(zf, usd_path, usd_path.name)
 
                 # Bundle texture PNGs staged by _wire_diffuse_texture.
                 textures_dir = usd_path.parent / "textures"
                 if textures_dir.is_dir():
-                    tex_files = sorted(
-                        f for f in textures_dir.iterdir() if f.is_file()
-                    )
+                    tex_files = sorted(f for f in textures_dir.iterdir() if f.is_file())
                     for tex_file in tex_files:
                         _write_aligned(zf, tex_file, f"textures/{tex_file.name}")
                     if tex_files:
@@ -2534,24 +2478,24 @@ class MaterialsMixin:
             # Post-packaging validation: verify contents and 64-byte alignment
             try:
                 all_aligned = True
-                with zipfile.ZipFile(str(usdz_path), 'r') as zcheck:
+                with zipfile.ZipFile(str(usdz_path), "r") as zcheck:
                     entries = zcheck.namelist()
                     self.logger.info(
-                        f"[USDZ-CHECK] Archive entries ({len(entries)}): "
-                        f"{entries[0]} (first)"
+                        f"[USDZ-CHECK] Archive entries ({len(entries)}): " f"{entries[0]} (first)"
                     )
                     for info in zcheck.infolist():
                         comp = "STORED" if info.compress_type == 0 else "DEFLATED"
                         # Data starts after: local header (30) + filename + extra
-                        fname_bytes = info.filename.encode('utf-8')
-                        extra_bytes = info.extra if info.extra else b''
-                        data_offset = (
-                            info.header_offset + 30
-                            + len(fname_bytes) + len(extra_bytes)
-                        )
-                        aligned = "YES" if data_offset % _USDZ_ALIGN == 0 else (
-                            f"NO (data_offset={data_offset}, "
-                            f"mod64={data_offset % _USDZ_ALIGN})"
+                        fname_bytes = info.filename.encode("utf-8")
+                        extra_bytes = info.extra if info.extra else b""
+                        data_offset = info.header_offset + 30 + len(fname_bytes) + len(extra_bytes)
+                        aligned = (
+                            "YES"
+                            if data_offset % _USDZ_ALIGN == 0
+                            else (
+                                f"NO (data_offset={data_offset}, "
+                                f"mod64={data_offset % _USDZ_ALIGN})"
+                            )
                         )
                         if "NO" in aligned:
                             all_aligned = False
@@ -2579,11 +2523,7 @@ class MaterialsMixin:
             self.logger.error(f"USDZ packaging failed: {e}")
             return False
 
-    def _cleanup_intermediate_files(
-        self,
-        usd_path: Path,
-        rig_mb_path: Optional[Path]
-    ) -> None:
+    def _cleanup_intermediate_files(self, usd_path: Path, rig_mb_path: Optional[Path]) -> None:
         """
         Delete intermediate files after USDZ packaging.
 
@@ -2599,9 +2539,7 @@ class MaterialsMixin:
 
             # Log where the rig backup lives (alongside USDZ, not inside)
             if rig_mb_path and rig_mb_path.exists():
-                self.logger.info(
-                    f"[CLEANUP] Rig backup kept alongside USDZ: {rig_mb_path.name}"
-                )
+                self.logger.info(f"[CLEANUP] Rig backup kept alongside USDZ: {rig_mb_path.name}")
 
             self.logger.info("[OK] Intermediate files cleaned up (bundled in USDZ)")
 
@@ -2615,7 +2553,7 @@ class MaterialsMixin:
         usd_path: Path,
         rig_mb_path: Optional[Path],
         zip_path: Path,
-        options: ExportOptions
+        options: ExportOptions,
     ) -> bool:
         """
         Create ZIP archive containing all export files.
@@ -2623,7 +2561,7 @@ class MaterialsMixin:
         This provides better compression and protection for asset distribution.
         """
         try:
-            with zipfile.ZipFile(str(zip_path), 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zf:
                 # If organized in subfolder, zip the entire folder
                 if subfolder and subfolder.exists():
                     for file in subfolder.iterdir():

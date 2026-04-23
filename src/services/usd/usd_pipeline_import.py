@@ -3,6 +3,7 @@ Import-side mixin: import_usd(), layered stage builder, rig controller extractio
 
 Auto-generated mixin — do not edit directly; edit usd_pipeline.py then re-split.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,21 +18,27 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 # ── Optional Maya imports (same guards as original) ──────────────────────────
 try:
-    import maya.cmds as cmds          # type: ignore[import-unresolved]
-    import maya.mel as mel            # type: ignore[import-unresolved]
+    import maya.api.OpenMaya as om  # type: ignore[import-unresolved]
+    import maya.cmds as cmds  # type: ignore[import-unresolved]
+    import maya.mel as mel  # type: ignore[import-unresolved]
+
     MAYA_AVAILABLE = True
 except ImportError:
-    cmds = None   # type: ignore[assignment]
-    mel = None   # type: ignore[assignment]
+    cmds = None  # type: ignore[assignment]
+    mel = None  # type: ignore[assignment]
+    om = None  # type: ignore[assignment]
     MAYA_AVAILABLE = False
 
 # ── Optional USD imports ──────────────────────────────────────────────────────
 try:
     from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade, UsdSkel, Vt  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
 
+from .usd_pipeline_models import MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL
+from .usd_pipeline_models import USD_AVAILABLE as _USD_AVAILABLE_MODEL
 from .usd_pipeline_models import (
     ConversionResult,
     ConversionStatus,
@@ -39,8 +46,6 @@ from .usd_pipeline_models import (
     ExportResult,
     ImportOptions,
     ImportResult,
-    MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL,
-    USD_AVAILABLE as _USD_AVAILABLE_MODEL,
 )
 
 
@@ -52,11 +57,7 @@ class ImportMixin:
     _mayausd_available: bool
     _progress_callback: Optional[Callable[[str, int], None]]
 
-    def import_usd(
-        self,
-        usd_path: Path,
-        options: Optional[ImportOptions] = None
-    ) -> ImportResult:
+    def import_usd(self, usd_path: Path, options: Optional[ImportOptions] = None) -> ImportResult:
         """
         Import USD file with smart fallback to .rig.mb
         Args:
@@ -81,7 +82,7 @@ class ImportMixin:
             rig_mb_path: Optional[Path] = None
             temp_dir: Optional[Path] = None
 
-            if usd_path.suffix.lower() == '.usdz':
+            if usd_path.suffix.lower() == ".usdz":
                 self._report_progress("Extracting USDZ package", 5)
                 actual_usd_path, rig_mb_path, temp_dir = self._extract_usdz(usd_path)
 
@@ -93,13 +94,11 @@ class ImportMixin:
                 # the .usdz for online viewer compatibility.  Check for a file
                 # named <stem>.rig.mb (or .rig.ma) alongside the source .usdz.
                 if rig_mb_path is None:
-                    for _ext in ('.rig.mb', '.rig.ma'):
+                    for _ext in (".rig.mb", ".rig.ma"):
                         _sibling = usd_path.parent / (usd_path.stem + _ext)
                         if _sibling.exists():
                             rig_mb_path = _sibling
-                            self.logger.info(
-                                f"[RIG] Found sibling rig file: {_sibling.name}"
-                            )
+                            self.logger.info(f"[RIG] Found sibling rig file: {_sibling.name}")
                             break
                     if rig_mb_path is None:
                         self.logger.info(
@@ -126,9 +125,7 @@ class ImportMixin:
                 self._report_progress("[LAYER] Building layered USD stage", 10)
                 layered_root = self._build_layered_stage(actual_usd_path, rig_mb_path)
                 if layered_root:
-                    self.logger.info(
-                        f"[OK] Proxy will load layered stage: {layered_root.name}"
-                    )
+                    self.logger.info(f"[OK] Proxy will load layered stage: {layered_root.name}")
                     actual_usd_path = layered_root
                 else:
                     self.logger.warning(
@@ -151,8 +148,10 @@ class ImportMixin:
                     # shaders created by _create_rfm_maya_shaders inside _import_with_mayausd.
                     if result.usd_materials > 0:
                         self.logger.info(
-                            f"[LOOKDEV] {result.usd_materials} USD materials: VP2 via "
-                            f"UsdPreviewSurface + RenderMan via Maya PxrSurface (Hypershade)"
+                            f"[LOOKDEV] {result.usd_materials} USD materials: "
+                            f"VP2 via UsdPreviewSurface · "
+                            f"RenderMan via Maya Pxr shaders (PxrDisneyBsdf from .rig.mb cache "
+                            f"+ synthetic PxrSurface fallback for any unmatched)"
                         )
                     if options.open_layer_editor:
                         self.logger.info(
@@ -177,7 +176,9 @@ class ImportMixin:
             )
             if options.hybrid_mode and rig_mb_path and rig_mb_path.exists():
                 self.logger.info("[OK] HYBRID MODE ACTIVATED")
-                self._report_progress("[HYBRID] Hybrid Mode: Converting USD to Maya + controllers", 20)
+                self._report_progress(
+                    "[HYBRID] Hybrid Mode: Converting USD to Maya + controllers", 20
+                )
                 success = self._import_hybrid(actual_usd_path, rig_mb_path, options, result)
                 result.success = success
                 self._report_progress("Hybrid import complete", 100)
@@ -203,7 +204,9 @@ class ImportMixin:
                     f"{result.usd_joints} skeleton prims in USD proxy shape"
                 )
                 self.logger.info("[TIP] USD prims are viewable in Maya viewport via proxy shape")
-                self.logger.info("[TIP] To convert to native Maya: Right-click proxy > Duplicate As > Maya Data")
+                self.logger.info(
+                    "[TIP] To convert to native Maya: Right-click proxy > Duplicate As > Maya Data"
+                )
 
                 result.success = True
                 self._report_progress("USD import complete", 100)
@@ -243,9 +246,7 @@ class ImportMixin:
                 else:
                     # Persistent extract_dir — do not delete; proxy shape may
                     # still reference sublayers inside it.  Log location instead.
-                    self.logger.info(
-                        f"[SAVE] USD files preserved in: {temp_dir}"
-                    )
+                    self.logger.info(f"[SAVE] USD files preserved in: {temp_dir}")
 
         except Exception as e:
             self.logger.error(f"Import failed: {e}")
@@ -255,8 +256,7 @@ class ImportMixin:
         return result
 
     def _extract_usdz(
-        self,
-        usdz_path: Path
+        self, usdz_path: Path
     ) -> Tuple[Optional[Path], Optional[Path], Optional[Path]]:
         """
         Extract USDZ package to a persistent directory alongside the source file.
@@ -278,7 +278,7 @@ class ImportMixin:
             # Remove any previously-extracted USD/rig files so we always
             # start from a clean extraction.  Existing .usda sublayers written
             # by _build_layered_stage are kept — they may contain user edits.
-            _usd_exts = {'.usd', '.usdc', '.mb', '.ma'}
+            _usd_exts = {".usd", ".usdc", ".mb", ".ma"}
             for old_file in extract_dir.iterdir():
                 if old_file.is_file() and old_file.suffix in _usd_exts:
                     try:
@@ -289,25 +289,25 @@ class ImportMixin:
             usd_path = None
             rig_mb_path = None
 
-            with zipfile.ZipFile(str(usdz_path), 'r') as zf:
+            with zipfile.ZipFile(str(usdz_path), "r") as zf:
                 for name in zf.namelist():
-                    if name.endswith('/'):
+                    if name.endswith("/"):
                         continue  # skip directory entries
 
                     flat_name = Path(name).name
 
-                    if flat_name.endswith(('.usd', '.usdc', '.usda')):
+                    if flat_name.endswith((".usd", ".usdc", ".usda")):
                         # USD stage files go to root of extract_dir so that
                         # relative paths inside the USDC (e.g. @textures/foo.png@)
                         # resolve correctly against extract_dir as the base.
                         dest = extract_dir / flat_name
-                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                        with zf.open(name) as src, open(dest, "wb") as dst:
                             dst.write(src.read())
                         usd_path = dest
                         self.logger.info(f"[FILE] Extracted USD: {flat_name}")
-                    elif flat_name.endswith(('.rig.mb', '.rig.ma')):
+                    elif flat_name.endswith((".rig.mb", ".rig.ma")):
                         dest = extract_dir / flat_name
-                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                        with zf.open(name) as src, open(dest, "wb") as dst:
                             dst.write(src.read())
                         rig_mb_path = dest
                         self.logger.info(f"[PACKAGE] Extracted rig backup: {flat_name}")
@@ -317,14 +317,16 @@ class ImportMixin:
                         # like @./textures/Chain_Base_color.png@ resolve correctly.
                         dest = extract_dir / name
                         dest.parent.mkdir(parents=True, exist_ok=True)
-                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                        with zf.open(name) as src, open(dest, "wb") as dst:
                             dst.write(src.read())
 
             # Count extracted textures for diagnostics
             tex_count = sum(
-                1 for f in extract_dir.rglob('*')
-                if f.is_file() and f.suffix.lower() in
-                {'.png', '.jpg', '.jpeg', '.exr', '.tif', '.tiff', '.tx', '.tex'}
+                1
+                for f in extract_dir.rglob("*")
+                if f.is_file()
+                and f.suffix.lower()
+                in {".png", ".jpg", ".jpeg", ".exr", ".tif", ".tiff", ".tx", ".tex"}
             )
             if tex_count:
                 self.logger.info(f"[EXTRACT] {tex_count} texture file(s) extracted")
@@ -336,10 +338,7 @@ class ImportMixin:
             return None, None, None
 
     def _import_with_mayausd(
-        self,
-        usd_path: Path,
-        options: ImportOptions,
-        result: ImportResult
+        self, usd_path: Path, options: ImportOptions, result: ImportResult
     ) -> bool:
         """
         Import USD by creating a mayaUsdProxyShape that loads the USD natively.
@@ -373,20 +372,20 @@ class ImportMixin:
                         # Count prims
                         for prim in stage.Traverse():
                             prim_type = prim.GetTypeName()
-                            if prim_type == 'Mesh':
+                            if prim_type == "Mesh":
                                 mesh_count += 1
                                 # Check if mesh has skeleton binding
                                 if prim.HasAPI(UsdSkel.BindingAPI):
                                     has_skeleton_bindings = True
-                            elif prim_type == 'Skeleton':
+                            elif prim_type == "Skeleton":
                                 skel_count += 1
                                 # Sum actual joints defined in this Skeleton
                                 joints_attr = UsdSkel.Skeleton(prim).GetJointsAttr().Get()
                                 if joints_attr:
                                     joint_count += len(joints_attr)
-                            elif prim_type in ('NurbsCurves', 'BasisCurves'):
+                            elif prim_type in ("NurbsCurves", "BasisCurves"):
                                 curve_count += 1
-                            elif prim_type == 'Material':
+                            elif prim_type == "Material":
                                 material_count += 1
 
                         self.logger.info(
@@ -412,21 +411,21 @@ class ImportMixin:
                 # time (when filePath is set), so it must be in place first.
                 # Maya confirms success with: "# Using V3 Lighting API for UsdPreviewSurface shading."
                 try:
-                    cmds.optionVar(stringValue=('mayaUsd_ShadingModeImport', 'useRegistry'))
-                    self.logger.info("[SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API")
+                    cmds.optionVar(stringValue=("mayaUsd_ShadingModeImport", "useRegistry"))
+                    self.logger.info(
+                        "[SHADING] mayaUsd_ShadingModeImport=useRegistry — VP2 will use V3 Lighting API"
+                    )
                 except Exception:
                     pass
 
                 # Sanitize the stem: Maya node names must not contain dots.
                 # e.g. "Veteran_Rig.root" → "Veteran_Rig_root"
-                node_base = usd_path.stem.replace('.', '_')
+                node_base = usd_path.stem.replace(".", "_")
 
                 # Create the proxy shape
-                proxy_transform = cmds.createNode('transform', name=node_base + '_USD')
+                proxy_transform = cmds.createNode("transform", name=node_base + "_USD")
                 proxy_shape = cmds.createNode(
-                    'mayaUsdProxyShape',
-                    parent=proxy_transform,
-                    name=node_base + '_USDShape'
+                    "mayaUsdProxyShape", parent=proxy_transform, name=node_base + "_USDShape"
                 )
 
                 # Loading the file path triggers USD stage composition.
@@ -434,8 +433,8 @@ class ImportMixin:
                 # confirming the optionVar above was respected.
                 # NOTE: Always use forward slashes — pathlib.Path on Windows gives
                 # backslashes, but PxrUSD procedural and Sdf expect POSIX separators.
-                usd_path_fwd = str(usd_path).replace('\\', '/')
-                cmds.setAttr(f"{proxy_shape}.filePath", usd_path_fwd, type='string')
+                usd_path_fwd = str(usd_path).replace("\\", "/")
+                cmds.setAttr(f"{proxy_shape}.filePath", usd_path_fwd, type="string")
 
                 # ── CRITICAL for RfM 27.2 rendering ───────────────────────────
                 # primPath tells rfm2's translator which USD prim to use as the
@@ -449,7 +448,7 @@ class ImportMixin:
                 # PxrUSD then traverses the full USD hierarchy, finds /SkelRoot
                 # and all its children (meshes, skeleton, materials) and renders
                 # them correctly.
-                cmds.setAttr(f"{proxy_shape}.primPath", '/', type='string')
+                cmds.setAttr(f"{proxy_shape}.primPath", "/", type="string")
 
                 # Enable proxy drawing
                 cmds.setAttr(f"{proxy_shape}.loadPayloads", True)
@@ -489,7 +488,9 @@ class ImportMixin:
                 # rfm2 renders the full hierarchy.  A dgdirty below handles any
                 # deferred DG evaluation that needs to pick up these attributes.
                 cmds.refresh()
-                self.logger.info("[USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)")
+                self.logger.info(
+                    "[USD] Stage loaded via mayaUsdProxyShape (primPath='/'; full hierarchy rendered)"
+                )
 
                 # ── RfM 27.2: Optional rmanAddAttr registration ──────────────────
                 # rmanAddAttr was a legacy rfm1 MEL command (pre-RfM 24). In
@@ -500,17 +501,19 @@ class ImportMixin:
                 # harmless. Guard with whatIs so the error never prints.
                 try:
                     if mel is not None:
-                        _proc_exists = mel.eval('whatIs "rmanAddAttr"') not in ('Unknown', '')
+                        _proc_exists = mel.eval('whatIs "rmanAddAttr"') not in ("Unknown", "")
                         if _proc_exists:
                             # rfm1-style session (very old RfM) — call legacy proc
                             prev_sel = cmds.ls(selection=True) or []
                             cmds.select(proxy_shape, replace=True)
-                            mel.eval('rmanAddAttr')
+                            mel.eval("rmanAddAttr")
                             if prev_sel:
                                 cmds.select(prev_sel, replace=True)
                             else:
                                 cmds.select(clear=True)
-                            self.logger.info("[RFM] rmanAddAttr — proxy shape registered with RenderMan translator")
+                            self.logger.info(
+                                "[RFM] rmanAddAttr — proxy shape registered with RenderMan translator"
+                            )
                         else:
                             # rfm2 27.2: translator auto-discovers mayaUsdProxyShape —
                             # visibility/shading set above is all that's required.
@@ -546,10 +549,10 @@ class ImportMixin:
                 # is always configured regardless of which window is focused.
                 try:
                     focused = cmds.getPanel(withFocus=True)
-                    if focused and 'modelPanel' in focused:
+                    if focused and "modelPanel" in focused:
                         panels_to_configure = [focused]
                     else:
-                        panels_to_configure = cmds.getPanel(type='modelPanel') or []
+                        panels_to_configure = cmds.getPanel(type="modelPanel") or []
 
                     configured = 0
                     for panel in panels_to_configure:
@@ -561,9 +564,9 @@ class ImportMixin:
                             # rendering.  Both VP2 and RenderMan VP2 can display
                             # the USD proxy shape with materials.
                             renderer = cmds.modelEditor(panel, query=True, rendererName=True)
-                            _rman_vp = {'renderManForMaya', 'myRenderView', 'renderManXPU'}
-                            if renderer not in _rman_vp and renderer != 'vp2Renderer':
-                                cmds.modelEditor(panel, edit=True, rendererName='vp2Renderer')
+                            _rman_vp = {"renderManForMaya", "myRenderView", "renderManXPU"}
+                            if renderer not in _rman_vp and renderer != "vp2Renderer":
+                                cmds.modelEditor(panel, edit=True, rendererName="vp2Renderer")
 
                             # Enable shaded+material display.
                             # useDefaultMaterial=False is the critical flag —
@@ -573,8 +576,8 @@ class ImportMixin:
                                 panel,
                                 edit=True,
                                 displayTextures=True,
-                                displayAppearance='smoothShaded',
-                                displayLights='default',
+                                displayAppearance="smoothShaded",
+                                displayLights="default",
                                 useDefaultMaterial=False,
                             )
                             configured += 1
@@ -587,7 +590,9 @@ class ImportMixin:
                             f"(VP2, smoothShaded, useDefaultMaterial=False)"
                         )
                     else:
-                        self.logger.warning("[WARNING] Could not configure any model panel for material display")
+                        self.logger.warning(
+                            "[WARNING] Could not configure any model panel for material display"
+                        )
 
                     cmds.refresh(force=True)
                 except Exception as vp_err:
@@ -613,9 +618,10 @@ class ImportMixin:
                 #     then use rfm2.scene_updater to trigger a full scene rebuild.
                 try:
                     import maya.mel as mel_m
-                    if mel_m.eval('whatIs "rfmUpdateUI"') not in ('Unknown', ''):
+
+                    if mel_m.eval('whatIs "rfmUpdateUI"') not in ("Unknown", ""):
                         # rfm1-style session (very old RfM) — use legacy command
-                        mel_m.eval('rfmUpdateUI')
+                        mel_m.eval("rfmUpdateUI")
                     else:
                         # rfm2 (RfM 24+ / 27.2) — DG dirty is the correct trigger.
                         # Mark the transform and shape dirty so rfm2's registered
@@ -628,6 +634,7 @@ class ImportMixin:
                         # the global render state which causes a full scene re-scan.
                         try:
                             import rfm2.scene_updater as rfm2_su
+
                             rfm2_su.update_rman_globals({})
                         except Exception:
                             pass  # rfm2 not installed or wrong signature — DG dirty above is sufficient
@@ -643,7 +650,7 @@ class ImportMixin:
                 return False
 
             # Check for proxy shapes
-            proxy_shapes = cmds.ls(type='mayaUsdProxyShape') or []
+            proxy_shapes = cmds.ls(type="mayaUsdProxyShape") or []
             if proxy_shapes:
                 self.logger.info(f"[PACKAGE] USD proxy shape(s) created: {len(proxy_shapes)}")
 
@@ -655,7 +662,9 @@ class ImportMixin:
                 # Use real joint count; skel_count is kept for threshold checks below
                 result.usd_joints = joint_count if joint_count > 0 else skel_count
                 result.usd_curves = curve_count if curve_count > 0 else result.usd_curves
-                result.usd_materials = material_count if material_count > 0 else result.usd_materials
+                result.usd_materials = (
+                    material_count if material_count > 0 else result.usd_materials
+                )
 
                 # For display, these ARE our imported counts (USD prims = content)
                 result.meshes_imported = result.usd_meshes
@@ -717,7 +726,7 @@ class ImportMixin:
 
             # Open the mayaUSD Layer Editor
             try:
-                mel.eval('mayaUsdLayerEditorWindow')
+                mel.eval("mayaUsdLayerEditorWindow")
                 self.logger.info(
                     "[LAYER] Opened mayaUSD Layer Editor — author animation as USD layers (Option B)"
                 )
@@ -727,7 +736,7 @@ class ImportMixin:
 
             # Fall back to Maya's built-in Animation Layer Editor
             try:
-                mel.eval('LayerEditorWindow')
+                mel.eval("LayerEditorWindow")
                 self.logger.info("[LAYER] Opened Animation Layer Editor (fallback)")
             except Exception as fallback_err:
                 self.logger.warning(f"[WARNING] Could not open Layer Editor: {fallback_err}")
@@ -752,6 +761,7 @@ class ImportMixin:
 
             try:
                 import mayaUsd.ufe as mayaUsdUfe  # type: ignore[import-unresolved]
+
                 try:
                     stage = mayaUsdUfe.getStage(proxy_shape)
                 except RuntimeError:
@@ -845,13 +855,13 @@ class ImportMixin:
 
             # ── Pass 1: boost UsdPreviewSurface diffuseColor ─────────────────
             for prim in stage.Traverse():
-                if prim.GetTypeName() != 'Shader':
+                if prim.GetTypeName() != "Shader":
                     continue
                 shader = UsdShade.Shader(prim)
-                if not shader or shader.GetShaderId() != 'UsdPreviewSurface':
+                if not shader or shader.GetShaderId() != "UsdPreviewSurface":
                     continue
 
-                dc_input = shader.GetInput('diffuseColor')
+                dc_input = shader.GetInput("diffuseColor")
                 if not dc_input:
                     continue
 
@@ -915,7 +925,7 @@ class ImportMixin:
             display_colored = 0
             _first_disp_err: Optional[str] = None
             for prim in stage.Traverse():
-                if prim.GetTypeName() != 'Mesh':
+                if prim.GetTypeName() != "Mesh":
                     continue
                 try:
                     color = None
@@ -923,7 +933,7 @@ class ImportMixin:
                     # ── Primary: direct material:binding relationship ──────────
                     # More reliable than ComputeBoundMaterial across USD versions
                     # because it avoids USD 22.x/23.x/24.x API signature changes.
-                    binding_rel = prim.GetRelationship('material:binding')
+                    binding_rel = prim.GetRelationship("material:binding")
                     if binding_rel and binding_rel.HasAuthoredTargets():
                         targets = binding_rel.GetForwardedTargets()
                         if targets:
@@ -937,9 +947,7 @@ class ImportMixin:
                     # ── Secondary: ComputeBoundMaterial (inherited/collection) ─
                     if color is None:
                         try:
-                            _cm_result = UsdShade.MaterialBindingAPI(
-                                prim
-                            ).ComputeBoundMaterial()
+                            _cm_result = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()
                             # Handle both tuple return (USD 22+) and bare object
                             bound_mat = (
                                 _cm_result[0]
@@ -947,13 +955,9 @@ class ImportMixin:
                                 else _cm_result
                             )
                             if bound_mat and bound_mat.GetPrim().IsValid():
-                                color = mat_path_to_color.get(
-                                    bound_mat.GetPrim().GetPath()
-                                )
+                                color = mat_path_to_color.get(bound_mat.GetPrim().GetPath())
                                 if color is None:
-                                    color = self._rfm_name_color(
-                                        bound_mat.GetPrim().GetName()
-                                    )
+                                    color = self._rfm_name_color(bound_mat.GetPrim().GetName())
                         except Exception:
                             pass
 
@@ -964,9 +968,7 @@ class ImportMixin:
                     r = float(color[0])
                     g = float(color[1])
                     b = float(color[2])
-                    UsdGeom.Gprim(prim).CreateDisplayColorAttr(
-                        Vt.Vec3fArray([Gf.Vec3f(r, g, b)])
-                    )
+                    UsdGeom.Gprim(prim).CreateDisplayColorAttr(Vt.Vec3fArray([Gf.Vec3f(r, g, b)]))
                     display_colored += 1
                 except Exception as _disp_err:
                     if _first_disp_err is None:
@@ -974,9 +976,7 @@ class ImportMixin:
                     continue
 
             if _first_disp_err:
-                self.logger.warning(
-                    f"[BOOST] displayColor: first mesh error — {_first_disp_err}"
-                )
+                self.logger.warning(f"[BOOST] displayColor: first mesh error — {_first_disp_err}")
 
             if boosted + hashed > 0:
                 stage.GetRootLayer().Save()
@@ -993,9 +993,7 @@ class ImportMixin:
             self.logger.warning(f"[BOOST] Colour boost failed: {e}")
 
     def _build_layered_stage(
-        self,
-        base_usd_path: Path,
-        rig_mb_path: Optional[Path] = None
+        self, base_usd_path: Path, rig_mb_path: Optional[Path] = None
     ) -> Optional[Path]:
         """
         Build a layered USD stage from a monolithic .usdc file.
@@ -1027,9 +1025,7 @@ class ImportMixin:
             # ── Extract rig data from .rig.mb if available ──
             rig_data = None
             if rig_mb_path and rig_mb_path.exists():
-                self.logger.info(
-                    f"[LAYER] Extracting controller data from: {rig_mb_path.name}"
-                )
+                self.logger.info(f"[LAYER] Extracting controller data from: {rig_mb_path.name}")
                 rig_data = self._extract_rig_controllers(rig_mb_path)
 
             # ── Create editorial sublayers ──
@@ -1051,7 +1047,7 @@ class ImportMixin:
                 #      the file and call CreateNew to start fresh.
                 layer = Sdf.Layer.Find(str(layer_path))
                 if layer is not None:
-                    layer.Clear()   # wipe stale content; keep cache entry intact
+                    layer.Clear()  # wipe stale content; keep cache entry intact
                 else:
                     if layer_path.exists():
                         try:
@@ -1077,9 +1073,7 @@ class ImportMixin:
 
                 # Populate skeleton sublayer with controller→joint metadata
                 if name == "skeleton" and rig_data:
-                    self._populate_skeleton_metadata(
-                        sub_stage, base_usd_path, rig_data
-                    )
+                    self._populate_skeleton_metadata(sub_stage, base_usd_path, rig_data)
 
                 # Populate materials sublayer with RenderMan ri:surface networks
                 # so the USD proxy is renderable in RenderMan for Maya 27.2+ IPR
@@ -1124,9 +1118,7 @@ class ImportMixin:
             # breaking UsdSkelImaging and hiding all material colours in VP2.
             base_stage = Usd.Stage.Open(str(base_usd_path))
             default_prim = base_stage.GetDefaultPrim() if base_stage else None
-            default_prim_name = (
-                default_prim.GetName() if default_prim else asset_name
-            )
+            default_prim_name = default_prim.GetName() if default_prim else asset_name
 
             # Set the defaultPrim metadata on the layer only — no prim spec,
             # no type opinion.  The actual prim definition (SkelRoot / Xform /
@@ -1167,12 +1159,10 @@ class ImportMixin:
                 ctrl_count = len(rig_data.get("controllers", []))
                 mapping_count = len(rig_data.get("mappings", {}))
                 ctrl_msg = (
-                    f" ({ctrl_count} controllers, "
-                    f"{mapping_count} joint mappings from .rig.mb)"
+                    f" ({ctrl_count} controllers, " f"{mapping_count} joint mappings from .rig.mb)"
                 )
             self.logger.info(
-                f"[OK] Layered stage: {root_path.name} → "
-                f"{total_sublayers} sublayers{ctrl_msg}"
+                f"[OK] Layered stage: {root_path.name} → " f"{total_sublayers} sublayers{ctrl_msg}"
             )
 
             return root_path
@@ -1184,9 +1174,7 @@ class ImportMixin:
 
     # ─── .rig.mb Controller Extraction ────────────────────────────────────
 
-    def _extract_rig_controllers(
-        self, rig_mb_path: Path
-    ) -> Optional[dict]:
+    def _extract_rig_controllers(self, rig_mb_path: Path) -> Optional[dict]:
         """
         Temporarily reference .rig.mb and extract NURBS controller data.
 
@@ -1238,22 +1226,57 @@ class ImportMixin:
             # all PxrDisney/PxrSurface SGs at the ROOT namespace rather than under
             # _rigExtract_:*.  Comparing post-load SGs to this snapshot lets us find
             # them regardless of where Maya actually puts them.
-            pre_load_sgs: set = set(cmds.ls(type='shadingEngine') or [])
+            pre_load_sgs: set = set(cmds.ls(type="shadingEngine") or [])
 
+            # NOTE: Veteran_Model_Final.ma (nested ref inside .rig.mb) was saved
+            # with Arnold and bakes `import arnold`/`import mtoa` callbacks.
+            # The "import arnold / import mtoa" text visible in Maya's console is
+            # MEL echo of the file-parse — it does NOT mean the import ran.
+            # However, `registerArnoldRenderer()` may call cmds.loadPlugin("mtoa")
+            # internally.  We snapshot loaded plugins before/after so we can
+            # detect and unload any Arnold plugin that snuck in as a side-effect.
+            _plugins_before_ref: set = set(cmds.pluginInfo(query=True, listPlugins=True) or [])
             try:
                 cmds.file(
                     str(rig_mb_path),
                     reference=True,
                     namespace=namespace,
                     returnNewNodes=False,
-                    loadReferenceDepth="all"
+                    loadReferenceDepth="all",
                 )
                 self.logger.info("[RIG] .rig.mb reference loaded successfully")
             except Exception as ref_err:
-                self.logger.warning(
-                    f"[RIG] Could not reference .rig.mb: {ref_err}"
-                )
+                self.logger.warning(f"[RIG] Could not reference .rig.mb: {ref_err}")
                 return None
+
+            # ── Detect + unload Arnold if loaded as a side-effect ────────────
+            _plugins_after_ref: set = set(cmds.pluginInfo(query=True, listPlugins=True) or [])
+            _arnold_side_effects: set = {
+                p
+                for p in (_plugins_after_ref - _plugins_before_ref)
+                if p.lower() in ("mtoa", "arnold", "htoa", "mtoacmd")
+            }
+            if _arnold_side_effects:
+                self.logger.warning(
+                    f"[RIG] Arnold plugin(s) loaded as a side-effect of .rig.mb "
+                    f"scriptNodes: {_arnold_side_effects}. "
+                    f"The .rig.mb was saved with Arnold callbacks. "
+                    f"Re-save .rig.mb without Arnold to stop this permanently. "
+                    f"Attempting to unload..."
+                )
+                for _ap in _arnold_side_effects:
+                    try:
+                        cmds.unloadPlugin(_ap, force=True)
+                        self.logger.info(f"[RIG] Unloaded Arnold plugin: {_ap}")
+                    except Exception as _uerr:
+                        self.logger.debug(
+                            f"[RIG] Could not unload {_ap} (may have node types in scene): {_uerr}"
+                        )
+            else:
+                self.logger.debug(
+                    "[RIG] No Arnold/mtoa plugins were loaded by this reference "
+                    "(the 'import arnold/mtoa' console lines are MEL echo only, not execution)"
+                )
 
             controllers = []
             mappings: dict[str, list[str]] = {}
@@ -1261,28 +1284,19 @@ class ImportMixin:
 
             try:
                 # ── Find all joints ──
-                all_joints = cmds.ls(
-                    f"{namespace}:*", type="joint", long=False
-                ) or []
+                all_joints = cmds.ls(f"{namespace}:*", type="joint", long=False) or []
                 # Strip namespace for clean names
-                joint_names = [
-                    j.replace(f"{namespace}:", "") for j in all_joints
-                ]
+                joint_names = [j.replace(f"{namespace}:", "") for j in all_joints]
 
                 # ── Find NURBS curves (controllers) ──
-                all_curves = cmds.ls(
-                    f"{namespace}:*", type="nurbsCurve", long=True
-                ) or []
+                all_curves = cmds.ls(f"{namespace}:*", type="nurbsCurve", long=True) or []
                 self.logger.info(
-                    f"[RIG] Found {len(all_curves)} NURBS curves, "
-                    f"{len(all_joints)} joints"
+                    f"[RIG] Found {len(all_curves)} NURBS curves, " f"{len(all_joints)} joints"
                 )
 
                 for curve_shape in all_curves:
                     # Get transform parent
-                    parents = cmds.listRelatives(
-                        curve_shape, parent=True, fullPath=True
-                    )
+                    parents = cmds.listRelatives(curve_shape, parent=True, fullPath=True)
                     if not parents:
                         continue
                     transform = parents[0]
@@ -1293,14 +1307,10 @@ class ImportMixin:
                     # prefixes, but we'll be inclusive and grab everything
                     try:
                         # Get curve CVs
-                        num_cvs = cmds.getAttr(
-                            f"{curve_shape}.controlPoints", size=True
-                        )
+                        num_cvs = cmds.getAttr(f"{curve_shape}.controlPoints", size=True)
                         cvs = []
                         for i in range(num_cvs):
-                            pt = cmds.getAttr(
-                                f"{curve_shape}.controlPoints[{i}]"
-                            )
+                            pt = cmds.getAttr(f"{curve_shape}.controlPoints[{i}]")
                             if pt:
                                 cvs.append(pt[0])  # [(x,y,z)]
 
@@ -1316,9 +1326,7 @@ class ImportMixin:
                         num_knots = spans + 2 * degree - 1
                         knots = []
                         try:
-                            knots_raw = cmds.getAttr(
-                                f"{curve_shape}.knots[0:{num_knots - 1}]"
-                            )
+                            knots_raw = cmds.getAttr(f"{curve_shape}.knots[0:{num_knots - 1}]")
                             if knots_raw:
                                 knots = list(knots_raw)
                         except Exception:
@@ -1335,75 +1343,64 @@ class ImportMixin:
                         # Override color (if set)
                         color = None
                         try:
-                            if cmds.getAttr(
-                                f"{transform}.overrideEnabled"
-                            ):
-                                if cmds.getAttr(
-                                    f"{transform}.overrideRGBColors"
-                                ):
-                                    cr = cmds.getAttr(
-                                        f"{transform}.overrideColorR"
-                                    )
-                                    cg = cmds.getAttr(
-                                        f"{transform}.overrideColorG"
-                                    )
-                                    cb = cmds.getAttr(
-                                        f"{transform}.overrideColorB"
-                                    )
+                            if cmds.getAttr(f"{transform}.overrideEnabled"):
+                                if cmds.getAttr(f"{transform}.overrideRGBColors"):
+                                    cr = cmds.getAttr(f"{transform}.overrideColorR")
+                                    cg = cmds.getAttr(f"{transform}.overrideColorG")
+                                    cb = cmds.getAttr(f"{transform}.overrideColorB")
                                     color = (cr, cg, cb)
                         except Exception:
                             pass
 
-                        controllers.append({
-                            "name": short_name,
-                            "cvs": cvs,
-                            "degree": degree,
-                            "form": form,
-                            "knots": knots,
-                            "translate": (tx, ty, tz),
-                            "rotate": (rx, ry, rz),
-                            "color": color,
-                        })
+                        controllers.append(
+                            {
+                                "name": short_name,
+                                "cvs": cvs,
+                                "degree": degree,
+                                "form": form,
+                                "knots": knots,
+                                "translate": (tx, ty, tz),
+                                "rotate": (rx, ry, rz),
+                                "color": color,
+                            }
+                        )
 
                     except Exception as cv_err:
-                        self.logger.debug(
-                            f"[RIG] Skipped {short_name}: {cv_err}"
-                        )
+                        self.logger.debug(f"[RIG] Skipped {short_name}: {cv_err}")
                         continue
 
                 # ── Find controller → joint mappings via constraints ──
                 constraint_types = [
-                    "parentConstraint", "orientConstraint",
-                    "pointConstraint", "aimConstraint",
-                    "scaleConstraint"
+                    "parentConstraint",
+                    "orientConstraint",
+                    "pointConstraint",
+                    "aimConstraint",
+                    "scaleConstraint",
                 ]
                 for joint in all_joints:
                     joint_short = joint.replace(f"{namespace}:", "")
                     for ctype in constraint_types:
                         try:
-                            constraints = cmds.listConnections(
-                                joint,
-                                type=ctype,
-                                source=True,
-                                destination=False
-                            ) or []
+                            constraints = (
+                                cmds.listConnections(
+                                    joint, type=ctype, source=True, destination=False
+                                )
+                                or []
+                            )
                             for con in constraints:
                                 # Find what drives this constraint
-                                drivers = cmds.listConnections(
-                                    f"{con}.target",
-                                    source=True,
-                                    destination=False
-                                ) or []
+                                drivers = (
+                                    cmds.listConnections(
+                                        f"{con}.target", source=True, destination=False
+                                    )
+                                    or []
+                                )
                                 for driver in drivers:
-                                    drv_short = driver.split(
-                                        ":"
-                                    )[-1].split("|")[-1]
+                                    drv_short = driver.split(":")[-1].split("|")[-1]
                                     if drv_short not in mappings:
                                         mappings[drv_short] = []
                                     if joint_short not in mappings[drv_short]:
-                                        mappings[drv_short].append(
-                                            joint_short
-                                        )
+                                        mappings[drv_short].append(joint_short)
                         except Exception:
                             continue
 
@@ -1412,16 +1409,17 @@ class ImportMixin:
                     joint_short = joint.replace(f"{namespace}:", "")
                     for attr in ["rotate", "translate"]:
                         try:
-                            conns = cmds.listConnections(
-                                f"{joint}.{attr}",
-                                source=True,
-                                destination=False,
-                                skipConversionNodes=True
-                            ) or []
+                            conns = (
+                                cmds.listConnections(
+                                    f"{joint}.{attr}",
+                                    source=True,
+                                    destination=False,
+                                    skipConversionNodes=True,
+                                )
+                                or []
+                            )
                             for conn in conns:
-                                conn_short = conn.split(
-                                    ":"
-                                )[-1].split("|")[-1]
+                                conn_short = conn.split(":")[-1].split("|")[-1]
                                 # Only map if it looks like a controller
                                 node_type = cmds.nodeType(conn)
                                 if node_type == "transform":
@@ -1431,13 +1429,8 @@ class ImportMixin:
                                     if shapes:
                                         if conn_short not in mappings:
                                             mappings[conn_short] = []
-                                        if (
-                                            joint_short
-                                            not in mappings[conn_short]
-                                        ):
-                                            mappings[conn_short].append(
-                                                joint_short
-                                            )
+                                        if joint_short not in mappings[conn_short]:
+                                            mappings[conn_short].append(joint_short)
                         except Exception:
                             continue
 
@@ -1466,21 +1459,15 @@ class ImportMixin:
                 # ── Remove the reference ──
                 try:
                     # Get the reference node created by file -reference
-                    ref_nodes = cmds.ls(
-                        f"{namespace}*", type="reference"
-                    ) or []
+                    ref_nodes = cmds.ls(f"{namespace}*", type="reference") or []
                     for rn in ref_nodes:
                         try:
-                            cmds.file(
-                                removeReference=True, referenceNode=rn
-                            )
+                            cmds.file(removeReference=True, referenceNode=rn)
                         except Exception:
                             pass
                     self.logger.info("[RIG] Removed .rig.mb reference")
                 except Exception as rm_err:
-                    self.logger.warning(
-                        f"[RIG] Could not remove reference: {rm_err}"
-                    )
+                    self.logger.warning(f"[RIG] Could not remove reference: {rm_err}")
 
             if not controllers:
                 self.logger.warning("[RIG] No controllers extracted")
@@ -1521,6 +1508,7 @@ class ImportMixin:
         if cmds is None:
             return None
         import tempfile as _tempfile
+
         try:
             # ── Strategy: snapshot-diff to locate SGs from the reference ─────
             # Veteran_Model_Final.ma is a nested ref inside .rig.mb.  Depending
@@ -1528,19 +1516,16 @@ class ImportMixin:
             # mergeWithRoot), the Pxr* SGs may land at ROOT namespace, under
             # _rigExtract_:*, or under _rigExtract_:sub_ns:*.
             # Using post−pre diff catches all three cases.
-            post_load_all_sgs: list = cmds.ls(type='shadingEngine') or []
+            post_load_all_sgs: list = cmds.ls(type="shadingEngine") or []
             if pre_load_sgs is not None:
                 # New SGs introduced by the reference load (any namespace)
-                new_sgs: list = [
-                    sg for sg in post_load_all_sgs
-                    if sg not in pre_load_sgs
-                ]
+                new_sgs: list = [sg for sg in post_load_all_sgs if sg not in pre_load_sgs]
             else:
                 # Fallback: namespace-prefix scan (3 levels deep)
                 new_sgs = (
-                    (cmds.ls(f'{namespace}:*', type='shadingEngine') or [])
-                    + (cmds.ls(f'{namespace}:*:*', type='shadingEngine') or [])
-                    + (cmds.ls(f'{namespace}:*:*:*', type='shadingEngine') or [])
+                    (cmds.ls(f"{namespace}:*", type="shadingEngine") or [])
+                    + (cmds.ls(f"{namespace}:*:*", type="shadingEngine") or [])
+                    + (cmds.ls(f"{namespace}:*:*:*", type="shadingEngine") or [])
                 )
             self.logger.info(
                 f"[RFM] Shader cache scan: {len(post_load_all_sgs)} total scene SGs, "
@@ -1564,8 +1549,8 @@ class ImportMixin:
                     #   'PxrSurface3SG', etc.  The SG name itself is the most
                     #   reliable indicator when attribute connections vary across
                     #   rfm2 versions / rig setups.
-                    sg_base = sg.split(':')[-1]  # strip any namespace prefix
-                    if sg_base.startswith('Pxr'):
+                    sg_base = sg.split(":")[-1]  # strip any namespace prefix
+                    if sg_base.startswith("Pxr"):
                         rfm_sgs.append(sg)
                         self.logger.debug(
                             f"[RFM] SG '{sg}' → accepted via name-pattern (Pxr* prefix)"
@@ -1582,13 +1567,15 @@ class ImportMixin:
                             all_sources = (
                                 cmds.listConnections(
                                     sg,
-                                    source=True, destination=False,
+                                    source=True,
+                                    destination=False,
                                     plugs=False,
-                                ) or []
+                                )
+                                or []
                             )
                             for src_node in all_sources:
                                 try:
-                                    if cmds.nodeType(src_node).startswith('Pxr'):
+                                    if cmds.nodeType(src_node).startswith("Pxr"):
                                         rfm_sgs.append(sg)
                                         self.logger.debug(
                                             f"[RFM] SG '{sg}' → accepted via "
@@ -1622,6 +1609,141 @@ class ImportMixin:
                 f"(sample: {rfm_sgs[:5]})"
             )
 
+            # ── Force rfm2 relay connections before BFS ───────────────────────
+            # rfm2 27.2's update_disney_nodes fires via evalDeferred, which runs
+            # AFTER cmds.file returns.  Without this call the relay connections
+            # (SG.rman__surface → relay → PxrDisneyBsdf) don't exist yet and the
+            # BFS falls back to the polluted defaultShaderList1 path which exports
+            # the ENTIRE scene's shader library instead of only the relevant
+            # network.  Calling the updater synchronously here ensures relay wiring
+            # is present before traversal.
+            for _rfm2_mod_path in (
+                "rfm2.api.scene_updater",
+                "rfm2.utils.scene_updater",
+                "rfm2.scene_updater",
+            ):
+                try:
+                    import importlib as _il
+
+                    _su = _il.import_module(_rfm2_mod_path)
+                    if hasattr(_su, "update_disney_nodes"):
+                        _su.update_disney_nodes()
+                        break
+                except Exception:
+                    pass
+
+            # ── Build SG→shader sidecar map while relay connections are live ──
+            # The update_disney_nodes() call above ensures every SG's
+            # rman__surface → relay → PxrDisneyBsdf connection exists NOW.
+            # Capture this ground-truth mapping so _rewrite_materials_usda
+            # never has to guess via topology traversal (Strategy A/B/D/C).
+            # Stored as {sg_leaf_name: pxr_shader_leaf_name}.
+            # ── Surface-shader type allow-list ───────────────────────────────
+            # rfm2 relay nodes have BOTH a surface shader (PxrDisneyBsdf /
+            # PxrSurface) AND possibly a displacement shader (PxrDisplace)
+            # connected as sources.  Taking the FIRST Pxr* node found from
+            # the relay sometimes gives PxrDisplace instead of the surface
+            # shader.  This set is used to prefer surface shader types over
+            # displacement/utility types in all relay traversals.
+            _SURFACE_SHADER_TYPES: frozenset = frozenset(
+                {
+                    "PxrDisneyBsdf",
+                    "PxrSurface",
+                    "PxrLayer",
+                    "PxrLayerSurface",
+                    "PxrLayerMixer",
+                    "PxrVolume",
+                    "PxrMarschnerHair",
+                    "PxrConstant",
+                    "PxrBlack",
+                    "PxrSkin",
+                }
+            )
+
+            _sg_shader_map: dict = {}
+            for _map_sg in rfm_sgs:
+                _map_sg_leaf = _map_sg.split(":")[-1]
+                _map_shader: Optional[str] = None
+                # Primary: relay topology SG.rman__surface → relay → Pxr*
+                # Prefer surface shader types; only fall back to other Pxr*
+                # nodes if no surface shader is found in the relay sources.
+                try:
+                    _relay_list = (
+                        cmds.listConnections(
+                            f"{_map_sg}.rman__surface",
+                            source=False,
+                            destination=True,
+                            plugs=False,
+                        )
+                        or []
+                    )
+                    _relay_best: Optional[str] = None  # surface shader
+                    _relay_fallback: Optional[str] = None  # any Pxr*
+                    for _relay in set(_relay_list):
+                        try:
+                            for _rsrc in (
+                                cmds.listConnections(
+                                    _relay,
+                                    source=True,
+                                    destination=False,
+                                    plugs=False,
+                                )
+                                or []
+                            ):
+                                if _rsrc == _map_sg:
+                                    continue
+                                try:
+                                    if cmds.ls(_rsrc, dagObjects=True):
+                                        continue
+                                    _rtype = cmds.nodeType(_rsrc)
+                                    if _rtype in _SURFACE_SHADER_TYPES:
+                                        _relay_best = _rsrc.split(":")[-1]
+                                        break  # surface shader found — stop
+                                    elif _rtype.startswith("Pxr") and _relay_fallback is None:
+                                        _relay_fallback = _rsrc.split(":")[-1]
+                                except Exception:
+                                    pass
+                            if _relay_best:
+                                break
+                        except Exception:
+                            pass
+                    _map_shader = _relay_best or _relay_fallback
+                except Exception:
+                    pass
+                # Fallback: broad incoming-source scan (surfaceShader / direct)
+                # Prefer surface shader types over displacement/utility.
+                if not _map_shader:
+                    try:
+                        _broad_best: Optional[str] = None
+                        _broad_fallback: Optional[str] = None
+                        for _bsrc in (
+                            cmds.listConnections(
+                                _map_sg,
+                                source=True,
+                                destination=False,
+                                plugs=False,
+                            )
+                            or []
+                        ):
+                            try:
+                                if not cmds.ls(_bsrc, dagObjects=True) and _bsrc != _map_sg:
+                                    _btype = cmds.nodeType(_bsrc)
+                                    if _btype in _SURFACE_SHADER_TYPES:
+                                        _broad_best = _bsrc.split(":")[-1]
+                                        break
+                                    elif _btype.startswith("Pxr") and _broad_fallback is None:
+                                        _broad_fallback = _bsrc.split(":")[-1]
+                            except Exception:
+                                pass
+                        _map_shader = _broad_best or _broad_fallback
+                    except Exception:
+                        pass
+                if _map_shader:
+                    # Keep both full SG name and leaf key to avoid collisions
+                    # when multiple namespaces contain similarly-named SGs.
+                    _sg_shader_map[_map_sg] = _map_shader
+                    _sg_shader_map.setdefault(_map_sg_leaf, _map_shader.split(":")[-1])
+
             # ── BFS: collect the full shader network (bidirectional) ──────────
             # Uses bidirectional listConnections (no source/destination filter)
             # so the rfm2 27.2 relay topology is traversed correctly:
@@ -1638,6 +1760,24 @@ class ImportMixin:
             #
             # DAG nodes (geometry, transforms, joints, curves) are pruned to
             # keep the BFS inside the shader DG graph only.
+            #
+            # Scene-wide utility nodes (defaultShaderList1, defaultTextureList1,
+            # etc.) connect to EVERY shader in the scene.  Traversing through
+            # them bloats the visited set with unrelated shaders and makes the
+            # exported .mb unnecessarily large.  These are excluded explicitly.
+            _SYSTEM_NODES_EXCLUDE: frozenset = frozenset(
+                {
+                    "defaultShaderList1",
+                    "defaultTextureList1",
+                    "defaultRenderUtilityList1",
+                    "defaultRenderingList1",
+                    "initialShadingGroup",
+                    "initialParticleSE",
+                    "lambert1",
+                    "defaultLambertShader",
+                    "particleCloud1",
+                }
+            )
             visited: set = set()
             stack = list(rfm_sgs)
             while stack:
@@ -1654,20 +1794,21 @@ class ImportMixin:
                 visited.add(node)
                 # Bidirectional — no source/destination filter so we traverse
                 # both incoming AND outgoing connections from every node.
-                connected = (
-                    cmds.listConnections(node, plugs=False) or []
-                )
+                # System-wide list nodes are excluded to keep traversal lean.
+                connected = [
+                    n
+                    for n in (cmds.listConnections(node, plugs=False) or [])
+                    if n.split(":")[-1] not in _SYSTEM_NODES_EXCLUDE
+                ]
                 stack.extend(connected)
 
             # ── Export to temp file ───────────────────────────────────────────
-            tmp_path = Path(
-                _tempfile.mktemp(suffix='_rfm_shaders.mb')
-            )
+            tmp_path = Path(_tempfile.mktemp(suffix="_rfm_shaders.mb"))
             cmds.select(list(visited), replace=True)
             cmds.file(
                 str(tmp_path),
                 exportSelected=True,
-                type='mayaBinary',
+                type="mayaBinary",
                 force=True,
                 preserveReferences=False,
             )
@@ -1676,6 +1817,29 @@ class ImportMixin:
                 f"[RFM] Shader cache: exported {len(rfm_sgs)} SGs "
                 f"({len(visited)} nodes) \u2192 {tmp_path.name}"
             )
+
+            # ── Write SG→shader sidecar JSON alongside the .mb ───────────────
+            # The importer reads this as Strategy 0 in
+            # _rewrite_materials_usda_with_disney_networks — no topology
+            # guessing required at import time.
+            import json as _json
+
+            _sidecar_path = tmp_path.with_suffix(".sg_map.json")
+            try:
+                _sidecar_path.write_text(
+                    _json.dumps(_sg_shader_map, indent=2),
+                    encoding="utf-8",
+                )
+                self._rfm_shader_cache_sg_map_path: Optional[Path] = _sidecar_path
+                self.logger.info(
+                    f"[RFM] SG\u2192shader sidecar written: "
+                    f"{len(_sg_shader_map)} entr{'y' if len(_sg_shader_map) == 1 else 'ies'} "
+                    f"\u2192 {_sidecar_path.name}"
+                )
+            except Exception as _sidecar_err:
+                self.logger.warning(f"[RFM] Sidecar write failed: {_sidecar_err}")
+                self._rfm_shader_cache_sg_map_path = None
+
             return tmp_path
 
         except Exception as err:
@@ -1686,9 +1850,7 @@ class ImportMixin:
                 pass
             return None
 
-    def _import_rfm_shaders_from_cache(
-        self, mat_prim_paths: set
-    ) -> dict:
+    def _import_rfm_shaders_from_cache(self, mat_prim_paths: set) -> dict:
         """Import the RfM shader cache created by ``_export_rfm_shaders_from_reference``.
 
         Imports the temp ``.mb`` under a fresh namespace, deletes all DAG
@@ -1707,11 +1869,11 @@ class ImportMixin:
         if cmds is None:
             return {}
 
-        cache_path: Optional[Path] = getattr(self, '_rfm_shader_cache_path', None)
+        cache_path: Optional[Path] = getattr(self, "_rfm_shader_cache_path", None)
         if not cache_path or not cache_path.exists():
             return {}
 
-        IMPORT_NS = 'rfmMat'
+        IMPORT_NS = "rfmMat"
         _file_import_err: Optional[Exception] = None
 
         # ── Pre-import snapshot ───────────────────────────────────────────────
@@ -1720,14 +1882,21 @@ class ImportMixin:
         # was exported from a mergeWithRoot reference, some nodes may land at
         # rfmMat:subNS:SgName rather than rfmMat:SgName, making a
         # 'rfmMat:*' wildcard scan miss them entirely.
-        pre_sgs: set = set(cmds.ls(type='shadingEngine') or [])
-        pre_transforms: set = set(cmds.ls(type='transform', long=True) or [])
+        pre_sgs: set = set(cmds.ls(type="shadingEngine") or [])
+        pre_transforms: set = set(cmds.ls(type="transform", long=True) or [])
+        _tex_node_types: list = [
+            "PxrTexture",
+            "PxrNormalMap",
+            "PxrPtexture",
+            "PxrManifoldFile",
+            "PxrTextureObject",
+        ]
 
         try:
             cmds.file(
                 str(cache_path),
                 i=True,
-                type='mayaBinary',
+                type="mayaBinary",
                 namespace=IMPORT_NS,
                 ignoreVersion=True,
             )
@@ -1750,59 +1919,201 @@ class ImportMixin:
                 pass
             self._rfm_shader_cache_path = None
 
-        NS_PREFIX = f'{IMPORT_NS}:'
+        # ── Load SG→shader sidecar (Strategy-0 ground-truth map) ─────────────
+        # Written during export with live relay connections (before evalDeferred
+        # fires).  Using it here avoids relying on live graph traversal which
+        # fails for deferred-wired rfm2 relay nodes at import time.
+        import json as _json_import
+
+        _sidecar_map: dict = {}
+        _sgmap_path: Optional[Path] = getattr(self, "_rfm_shader_cache_sg_map_path", None)
+        if _sgmap_path and _sgmap_path.exists():
+            try:
+                _sidecar_map = _json_import.loads(_sgmap_path.read_text(encoding="utf-8"))
+                self.logger.debug(
+                    f"[RFM] Import: sidecar loaded — {len(_sidecar_map)} entries "
+                    f"will be used as Strategy-0 SG detection"
+                )
+            except Exception as _sc_load_err:
+                self.logger.debug(
+                    f"[RFM] Import: sidecar load failed — {_sc_load_err}; "
+                    f"falling back to live graph traversal only"
+                )
+        # NOTE: do NOT delete _sgmap_path here — _rewrite_materials_usda_with_disney_networks
+        # needs it for its own Strategy-0 USD spec generation.
+
+        NS_PREFIX = f"{IMPORT_NS}:"
 
         try:
             # ── Post-import snapshot diff ─────────────────────────────────────
             # Finds every SG and transform that was introduced by the import,
             # regardless of how deep the namespace nesting is.
-            post_sgs: set = set(cmds.ls(type='shadingEngine') or [])
-            post_transforms: set = set(cmds.ls(type='transform', long=True) or [])
+            post_sgs: set = set(cmds.ls(type="shadingEngine") or [])
+            post_transforms: set = set(cmds.ls(type="transform", long=True) or [])
             all_sgs: list = [sg for sg in post_sgs if sg not in pre_sgs]
             new_transforms: list = [t for t in post_transforms if t not in pre_transforms]
 
             # ── Collect SGs with Pxr* surface shaders ────────────────────────
             rfm_sgs: dict = {}  # leaf_name (no namespace) → sg_full_name
-            for sg in all_sgs:
+
+            def _find_live_pxr_shader_for_sg(_sg_name: str) -> Optional[str]:
+                """Return a connected/derivable Pxr* shader for the SG.
+
+                If a derivable shader exists but the SG has no direct surfaceShader
+                connection yet (common while rfm2 relay wiring is still deferred),
+                this method also repairs a direct SG.surfaceShader connection so the
+                shader is visible/useful in Hypershade immediately.
+                """
+
+                def _try_repair_surface_shader(_sg: str, _shader: str) -> None:
+                    """Connect shader.outColor -> SG.surfaceShader if currently unbound."""
+                    try:
+                        _incoming = (
+                            cmds.listConnections(
+                                f"{_sg}.surfaceShader",
+                                source=True,
+                                destination=False,
+                                plugs=False,
+                            )
+                            or []
+                        )
+                        if _incoming:
+                            return
+                        if not cmds.attributeQuery("outColor", node=_shader, exists=True):
+                            return
+                        cmds.connectAttr(
+                            f"{_shader}.outColor",
+                            f"{_sg}.surfaceShader",
+                            force=True,
+                        )
+                    except Exception:
+                        pass
+
+                # A) rfm2 relay path: SG.rman__surface -> relay <- Pxr*
                 try:
-                    found_pxr: bool = False
-                    # Use the leaf name (last component after ':') so we work
-                    # correctly even for nested namespaces like rfmMat:sub:SgName.
-                    sg_base = sg.split(':')[-1]
+                    _relay_nodes = (
+                        cmds.listConnections(
+                            f"{_sg_name}.rman__surface",
+                            source=False,
+                            destination=True,
+                            plugs=False,
+                        )
+                        or []
+                    )
+                    for _relay_node in set(_relay_nodes):
+                        for _src_node in (
+                            cmds.listConnections(
+                                _relay_node,
+                                source=True,
+                                destination=False,
+                                plugs=False,
+                            )
+                            or []
+                        ):
+                            if _src_node == _sg_name:
+                                continue
+                            try:
+                                if cmds.ls(_src_node, dagObjects=True):
+                                    continue
+                                if cmds.nodeType(_src_node).startswith("Pxr"):
+                                    _try_repair_surface_shader(_sg_name, _src_node)
+                                    return _src_node
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
 
-                    # ① Name-pattern fast-path — rfm2 names SGs after the shader
-                    if sg_base.startswith('Pxr'):
-                        rfm_sgs[sg_base] = sg
-                        found_pxr = True
+                # B) direct incoming shader plugs
+                for _attr_name in ("surfaceShader", "rman__surface"):
+                    try:
+                        for _src_node in (
+                            cmds.listConnections(
+                                f"{_sg_name}.{_attr_name}",
+                                source=True,
+                                destination=False,
+                                plugs=False,
+                            )
+                            or []
+                        ):
+                            try:
+                                if cmds.nodeType(_src_node).startswith("Pxr"):
+                                    _try_repair_surface_shader(_sg_name, _src_node)
+                                    return _src_node
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
 
-                    if not found_pxr:
-                        # ② Bidirectional BFS — handles rfm2 27.2 relay topology
-                        #   where the SG is wired as SOURCE going TO the relay
-                        #   (destination-direction connection).  listHistory and
-                        #   source-only listConnections both miss this hop.  Using
-                        #   cmds.listConnections without source/dest filter finds
-                        #   all neighbours regardless of connection direction.
-                        #   DAG nodes pruned; capped at 150 nodes.
+                # C) name-derived fallback (handles deferred relay wiring)
+                # NOTE: We intentionally avoid broad graph BFS here.  BFS can
+                # cross partition/default list utility nodes and falsely treat
+                # lambert/default SGs as Pxr-backed, which breaks Hypershade
+                # material visibility and SG->shader mapping correctness.
+                try:
+                    _sg_leaf = _sg_name.split(":")[-1]
+                    _sg_ns = ":".join(_sg_name.split(":")[:-1])
+                    _bases: List[str] = [_sg_leaf]
+                    for _sfx in ("_SG", "SG"):
+                        if _sg_leaf.endswith(_sfx):
+                            _bases.insert(0, _sg_leaf[: -len(_sfx)])
+                            break
+
+                    _candidates: List[str] = []
+                    for _base in _bases:
+                        for _stype in ("PxrDisneyBsdf", "PxrSurface", "PxrLayer"):
+                            for _node in cmds.ls(type=_stype) or []:
+                                if _node.split(":")[-1] == _base:
+                                    _candidates.append(_node)
+                        _candidates.extend(cmds.ls(f"*:{_base}") or [])
+                        if _sg_ns:
+                            _candidates.append(f"{_sg_ns}:{_base}")
+
+                    for _cand in dict.fromkeys(_candidates):
                         try:
-                            _bfs_vis: set = {sg}
-                            _bfs_q: list = [sg]
-                            while _bfs_q and not found_pxr and len(_bfs_vis) < 150:
-                                cur = _bfs_q.pop(0)
-                                try:
-                                    if cmds.ls(cur, dagObjects=True):
-                                        continue  # skip mesh/transform/joint
-                                    if cur != sg and cmds.nodeType(cur).startswith('Pxr'):
-                                        rfm_sgs[sg_base] = sg
-                                        found_pxr = True
-                                        break
-                                    for _nbr in (cmds.listConnections(cur, plugs=False) or []):
-                                        if _nbr not in _bfs_vis:
-                                            _bfs_vis.add(_nbr)
-                                            _bfs_q.append(_nbr)
-                                except Exception:
-                                    pass
+                            if cmds.objExists(_cand) and cmds.nodeType(_cand).startswith("Pxr"):
+                                _try_repair_surface_shader(_sg_name, _cand)
+                                return _cand
                         except Exception:
                             pass
+                except Exception:
+                    pass
+
+                return None
+
+            for sg in all_sgs:
+                try:
+                    sg_base = sg.split(":")[-1]
+
+                    # ── Strategy 0: sidecar fast-path ─────────────────────────
+                    # The sidecar was captured during export when rfm2 relay
+                    # connections were definitively live.  Trust it without
+                    # live graph traversal (which fails before update_disney_nodes
+                    # evalDeferred fires and the SG.surfaceShader/rman__surface
+                    # links are established).
+                    if sg_base in _sidecar_map:
+                        _sidecar_shader_raw = _sidecar_map[sg_base]
+                        if isinstance(_sidecar_shader_raw, str):
+                            _sidecar_shader_leaf = _sidecar_shader_raw.split(":")[-1]
+                            # Verify shader node exists (handles any namespace depth).
+                            _sc_shader_found: bool = False
+                            for _stype in ("PxrDisneyBsdf", "PxrSurface", "PxrLayer"):
+                                for _n in cmds.ls(type=_stype) or []:
+                                    if _n.split(":")[-1] == _sidecar_shader_leaf:
+                                        _sc_shader_found = True
+                                        break
+                                if _sc_shader_found:
+                                    break
+                            # Accept SG regardless of live-shader detection:
+                            # sidecar confirms Pxr-backed, and
+                            # _rewrite_materials_usda uses its own Strategy-0
+                            # to locate the shader node for USD spec authoring.
+                            rfm_sgs[sg_base] = sg
+                            continue
+
+                    # ── Strategy 1: live graph traversal fallback ──────────────
+                    _live_shader = _find_live_pxr_shader_for_sg(sg)
+                    if _live_shader:
+                        rfm_sgs[sg_base] = sg
                 except Exception:
                     pass
 
@@ -1830,19 +2141,34 @@ class ImportMixin:
             #   b) rfmMat: namespace (imported but missed by diff for any reason)
             supplemental_added: int = 0
             for mat_path_s in (str(p) for p in mat_prim_paths):
-                mat_leaf = Sdf.Path(mat_path_s).name   # e.g. 'PxrDisneyBsdf1SG'
-                if mat_leaf in rfm_sgs:
-                    continue   # already found via snapshot-diff
-                # (a) root namespace
-                if cmds.ls(mat_leaf, type='shadingEngine'):
-                    rfm_sgs[mat_leaf] = mat_leaf
-                    supplemental_added += 1
+                mat_leaf = Sdf.Path(mat_path_s).name  # e.g. 'PxrDisneyBsdf1SG'
+                if mat_leaf in {"initialShadingGroup", "initialParticleSE"}:
                     continue
-                # (b) rfmMat: namespace
-                ns_candidate = f'{NS_PREFIX}{mat_leaf}'
-                if cmds.ls(ns_candidate, type='shadingEngine'):
-                    rfm_sgs[mat_leaf] = ns_candidate
-                    supplemental_added += 1
+                if mat_leaf.startswith("default"):
+                    continue
+                if mat_leaf in rfm_sgs:
+                    continue  # already found via snapshot-diff
+
+                # (a) root namespace — SG survived .rig.mb ref cleanup
+                if cmds.ls(mat_leaf, type="shadingEngine"):
+                    # Strategy 0: sidecar confirms Pxr-backed — no traversal needed
+                    if mat_leaf in _sidecar_map:
+                        rfm_sgs[mat_leaf] = mat_leaf
+                        supplemental_added += 1
+                    elif _find_live_pxr_shader_for_sg(mat_leaf):
+                        rfm_sgs[mat_leaf] = mat_leaf
+                        supplemental_added += 1
+                    continue
+
+                # (b) rfmMat: namespace — may have been missed by snapshot-diff
+                ns_candidate = f"{NS_PREFIX}{mat_leaf}"
+                if cmds.ls(ns_candidate, type="shadingEngine"):
+                    if mat_leaf in _sidecar_map:
+                        rfm_sgs[mat_leaf] = ns_candidate
+                        supplemental_added += 1
+                    elif _find_live_pxr_shader_for_sg(ns_candidate):
+                        rfm_sgs[mat_leaf] = ns_candidate
+                        supplemental_added += 1
 
             if supplemental_added:
                 self.logger.info(
@@ -1857,7 +2183,7 @@ class ImportMixin:
             sg_lookup: dict = {}  # lower(name) → sg_full_name
             for base_name, sg_node in rfm_sgs.items():
                 # Try both {name}SG and just {name} (some rigs don't append SG)
-                stripped = base_name[:-2] if base_name.lower().endswith('sg') else base_name
+                stripped = base_name[:-2] if base_name.lower().endswith("sg") else base_name
                 sg_lookup[stripped.lower()] = sg_node
                 sg_lookup[base_name.lower()] = sg_node
 
@@ -1875,20 +2201,40 @@ class ImportMixin:
                 f"sample: {mat_path_strs[:4]}"
             )
 
-            mat_path_to_sg: dict = {}   # str(USD mat path) → maya SG name
+            mat_path_to_sg: dict = {}  # str(USD mat path) → maya SG name
             for mat_path_str in mat_path_strs:
                 mat_name = Sdf.Path(mat_path_str).name
-                candidate = (
-                    sg_lookup.get(mat_name.lower()) or
-                    sg_lookup.get((mat_name + 'SG').lower())
+                candidate = sg_lookup.get(mat_name.lower()) or sg_lookup.get(
+                    (mat_name + "SG").lower()
                 )
                 if candidate:
+                    _cand_leaf = candidate.split(":")[-1]
+                    if _cand_leaf in {"initialShadingGroup", "initialParticleSE"}:
+                        continue
+                    if _cand_leaf.startswith("default"):
+                        continue
                     mat_path_to_sg[mat_path_str] = candidate
 
             self.logger.info(
                 f"[RFM] Import: name-matched {len(mat_path_to_sg)}/{len(mat_path_strs)} "
                 f"USD material paths to imported SGs"
             )
+
+            # ── Log unmatched paths so the user knows which 8 get Strategy 2 ─
+            _unmatched = [p for p in mat_path_strs if p not in mat_path_to_sg]
+            if _unmatched:
+                _unmatched_names = [Sdf.Path(p).name for p in _unmatched]
+                _pxr_unmatched = [n for n in _unmatched_names if n.startswith("Pxr")]
+                self.logger.info(
+                    f"[RFM] Import: {len(_unmatched)} unmatched USD paths → Strategy-2 "
+                    f"PxrSurface fallback: {_unmatched_names}"
+                )
+                if _pxr_unmatched:
+                    self.logger.warning(
+                        f"[RFM] Import: {len(_pxr_unmatched)} UNMATCHED Pxr* material(s) "
+                        f"will get synthetic PxrSurface instead of original PxrDisneyBsdf: "
+                        f"{_pxr_unmatched} — check if .rig.mb shader cache is current"
+                    )
 
             # ── Rename nodes to drop the entire namespace prefix ─────────────
             # This gives clean Hypershade node names (PxrDisneyBsdf1SG, etc.).
@@ -1903,14 +2249,16 @@ class ImportMixin:
             # now-gone old name, raises an exception, and overwrites `renamed[old]`
             # with the stale `old` value — making mat_path_to_sg keep the rfmMat:
             # prefix and causing _sg_has_texture to be called on a dead node name.
-            all_new_nodes: list = list(dict.fromkeys(
-                n for n in (cmds.ls(type='shadingEngine') or []) + (cmds.ls() or [])
-                if n not in pre_sgs and n not in pre_transforms
-                and n.startswith(NS_PREFIX)
-            ))
+            all_new_nodes: list = list(
+                dict.fromkeys(
+                    n
+                    for n in (cmds.ls(type="shadingEngine") or []) + (cmds.ls() or [])
+                    if n not in pre_sgs and n not in pre_transforms and n.startswith(NS_PREFIX)
+                )
+            )
             renamed: dict = {}  # old_name → new_name
             for node in all_new_nodes:
-                leaf = node.split(':')[-1]
+                leaf = node.split(":")[-1]
                 try:
                     new_name = cmds.rename(node, leaf)
                     renamed[node] = new_name
@@ -1922,15 +2270,229 @@ class ImportMixin:
                 if sg in renamed:
                     mat_path_to_sg[mat_path] = renamed[sg]
 
+            def _register_shader_in_default_list(_shader: str) -> bool:
+                """Ensure shader.message is connected to defaultShaderList1."""
+                try:
+                    if not cmds.objExists(_shader) or not cmds.objExists("defaultShaderList1"):
+                        return False
+                    _msg_out = (
+                        cmds.listConnections(
+                            f"{_shader}.message",
+                            source=False,
+                            destination=True,
+                            plugs=True,
+                        )
+                        or []
+                    )
+                    if any(_dst.startswith("defaultShaderList1.") for _dst in _msg_out):
+                        return True
+
+                    # Direct connectAttr only — defaultNavigation is an interactive
+                    # MEL command that calls connectWindowWith and opens the Connection
+                    # Editor when connection classification is ambiguous.
+                    for _dst_attr in ("defaultShaderList1.shaders", "defaultShaderList1.s"):
+                        try:
+                            cmds.connectAttr(
+                                f"{_shader}.message",
+                                _dst_attr,
+                                nextAvailable=True,
+                                force=True,
+                            )
+                        except Exception:
+                            pass
+
+                    _msg_out = (
+                        cmds.listConnections(
+                            f"{_shader}.message",
+                            source=False,
+                            destination=True,
+                            plugs=True,
+                        )
+                        or []
+                    )
+                    return any(_dst.startswith("defaultShaderList1.") for _dst in _msg_out)
+                except Exception:
+                    return False
+
+            def _resolve_sidecar_shader_for_sg(_sg_name: str) -> Optional[str]:
+                """Resolve sidecar SG->shader mapping to a live Pxr SURFACE node.
+
+                Only accepts surface shader types — displacement (PxrDisplace,
+                PxrDispTransform) and utility nodes are explicitly excluded.
+                """
+                # Valid surface shader types in rfm2 27.2.
+                _surf_types: frozenset = frozenset(
+                    {
+                        "PxrDisneyBsdf",
+                        "PxrSurface",
+                        "PxrLayer",
+                        "PxrLayerSurface",
+                        "PxrLayerMixer",
+                        "PxrVolume",
+                        "PxrMarschnerHair",
+                        "PxrConstant",
+                        "PxrBlack",
+                        "PxrSkin",
+                    }
+                )
+                _sg_leaf = _sg_name.split(":")[-1]
+                _shader_raw = _sidecar_map.get(_sg_name) or _sidecar_map.get(_sg_leaf)
+                if not isinstance(_shader_raw, str):
+                    return None
+
+                _shader_leaf = _shader_raw.split(":")[-1]
+                _sg_ns = ":".join(_sg_name.split(":")[:-1])
+                _candidates: List[str] = []
+                if _sg_ns:
+                    _candidates.append(f"{_sg_ns}:{_shader_leaf}")
+                _candidates.append(_shader_leaf)
+                _candidates.extend(cmds.ls(f"*:{_shader_leaf}") or [])
+
+                for _cand in dict.fromkeys(_candidates):
+                    try:
+                        if cmds.objExists(_cand) and cmds.nodeType(_cand) in _surf_types:
+                            return _cand
+                    except Exception:
+                        pass
+                return None
+
+            # ── Sidecar-first SG->shader rebinding for Hypershade visibility ─
+            # Force a direct SG.surfaceShader plug from the sidecar mapping so
+            # BSDF nodes show in Hypershade even before rfm2 relay deferred
+            # callbacks run.
+            _sidecar_rebound = 0
+            _sidecar_unresolved = 0
+            _sidecar_listed = 0
+            for _sg_name in dict.fromkeys(mat_path_to_sg.values()):
+                try:
+                    if not cmds.objExists(_sg_name):
+                        _sidecar_unresolved += 1
+                        continue
+                    _shader_node = _resolve_sidecar_shader_for_sg(_sg_name)
+                    if not _shader_node:
+                        _sidecar_unresolved += 1
+                        continue
+                    if not cmds.attributeQuery("outColor", node=_shader_node, exists=True):
+                        _sidecar_unresolved += 1
+                        continue
+                    cmds.connectAttr(
+                        f"{_shader_node}.outColor",
+                        f"{_sg_name}.surfaceShader",
+                        force=True,
+                    )
+                    if _register_shader_in_default_list(_shader_node):
+                        _sidecar_listed += 1
+                    _sidecar_rebound += 1
+                except Exception:
+                    _sidecar_unresolved += 1
+
+            if _sidecar_rebound or _sidecar_unresolved:
+                self.logger.info(
+                    f"[RFM] Import: sidecar rebinding applied to {_sidecar_rebound} SGs; "
+                    f"{_sidecar_unresolved} SGs unresolved; "
+                    f"{_sidecar_listed} shaders listed in defaultShaderList1"
+                )
+
             self.logger.info(
                 f"[RFM] Import: final mat_path_to_sg has {len(mat_path_to_sg)} entries; "
                 f"sample: {dict(list(mat_path_to_sg.items())[:3])}"
             )
 
-        except Exception as err:
-            self.logger.warning(
-                f"[RFM] Shader cache processing failed: {err}"
+            # ── Identify textured SGs via relay-aware shader history ─────────
+            # rfm2 27.2's scene updater (update_disney_nodes) rebuilds the
+            # PxrDisneyBsdf→relay→SG connection AFTER cmds.file returns, so
+            # listHistory(future=True) from a PxrTexture always stops at
+            # PxrDisneyBsdf and never reaches the SG.
+            #
+            # rfm2 relay topology:
+            #   SG.rman__surface → relay.message   (SG is SOURCE → relay is DEST)
+            #   PxrDisneyBsdf → relay.someAttr     (PxrDisney is SOURCE)
+            # The SG has NO incoming surfaceShader connection — must traverse:
+            #   SG.rman__surface (dest=True) → relay → sources → Pxr* shader
+            # Then run listHistory(shader) upstream to find PxrTexture nodes.
+            # Fallback: try stripping 'SG' suffix if relay traversal finds nothing.
+            _tex_type_set: frozenset = frozenset(_tex_node_types)
+            sgs_with_texture: set = set()
+            for sg_node in mat_path_to_sg.values():
+                _found_shader: Optional[str] = None
+
+                # Path A: rfm2 relay traversal
+                try:
+                    _relay_list = (
+                        cmds.listConnections(
+                            f"{sg_node}.rman__surface",
+                            source=False,
+                            destination=True,
+                            plugs=False,
+                        )
+                        or []
+                    )
+                    for _relay in set(_relay_list):
+                        try:
+                            for _src in (
+                                cmds.listConnections(
+                                    _relay,
+                                    source=True,
+                                    destination=False,
+                                    plugs=False,
+                                )
+                                or []
+                            ):
+                                if _src == sg_node:
+                                    continue
+                                try:
+                                    if cmds.ls(_src, dagObjects=True):
+                                        continue
+                                    if cmds.nodeType(_src).startswith("Pxr"):
+                                        _found_shader = _src
+                                        break
+                                except Exception:
+                                    pass
+                            if _found_shader:
+                                break
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+                # Path B: strip-SG-suffix convention (e.g. PxrDisneyBsdf13SG → PxrDisneyBsdf13)
+                if not _found_shader:
+                    _derived = sg_node
+                    for _sfx in ("_SG", "SG"):
+                        if sg_node.endswith(_sfx):
+                            _derived = sg_node[: -len(_sfx)]
+                            break
+                    if _derived != sg_node and cmds.ls(_derived):
+                        _found_shader = _derived
+
+                if not _found_shader:
+                    continue
+
+                # Walk upstream history of the discovered shader node
+                try:
+                    for h_node in cmds.listHistory(_found_shader, pruneDagObjects=True) or []:
+                        try:
+                            if cmds.nodeType(h_node) in _tex_type_set:
+                                sgs_with_texture.add(sg_node)
+                                break
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            # Store on instance as preliminary value; the caller
+            # (_create_rfm_maya_shaders) immediately overwrites this with the
+            # USD-sourced mat_textures dict which is more reliable than live
+            # DG traversal before rfm2's update_disney_nodes evalDeferred fires.
+            self._rfm_sgs_with_texture: set = sgs_with_texture
+            self.logger.debug(
+                f"[RFM] Import: preliminary relay check — {len(sgs_with_texture)} "
+                f"textured SGs detected pre-evalDeferred (USD-sourced mat_textures "
+                f"provides ground truth; this value will be overridden by caller)"
             )
+
+        except Exception as err:
+            self.logger.warning(f"[RFM] Shader cache processing failed: {err}")
             return {}
 
         # ── Recovery check ────────────────────────────────────────────────────
@@ -1973,10 +2535,31 @@ class ImportMixin:
         """
         if cmds is None:
             return False
-        _TEXTURE_TYPES: frozenset = frozenset({
-            'PxrTexture', 'PxrNormalMap', 'PxrPtexture',
-            'PxrManifoldFile', 'PxrTextureObject',
-        })
+
+        # ── Fast path: use the snapshot diff computed at import time ──────────
+        # _rfm_sgs_with_texture is populated by _import_rfm_shaders_from_cache
+        # immediately after the shader cache .mb is imported, using a pre/post
+        # PxrTexture node snapshot diff + listHistory(future=True) traversal.
+        # This skips all relay topology issues entirely.
+        _snap = getattr(self, "_rfm_sgs_with_texture", None)
+        if _snap is not None:
+            _leaf = sg_name.split(":")[-1]
+            if sg_name in _snap or _leaf in _snap:
+                return True
+            # _snap is populated — trust it and skip the slow fallback unless
+            # the SG genuinely wasn't in the cached result.
+            # We still fall through to the relay/BFS logic for SGs that come
+            # from Strategy 2 (synthetic, no cache used).
+
+        _TEXTURE_TYPES: frozenset = frozenset(
+            {
+                "PxrTexture",
+                "PxrNormalMap",
+                "PxrPtexture",
+                "PxrManifoldFile",
+                "PxrTextureObject",
+            }
+        )
         try:
             if not cmds.ls(sg_name):
                 return False  # node no longer exists
@@ -1985,28 +2568,30 @@ class ImportMixin:
             try:
                 relay_list = (
                     cmds.listConnections(
-                        f'{sg_name}.rman__surface',
-                        source=False, destination=True, plugs=False,
-                    ) or []
+                        f"{sg_name}.rman__surface",
+                        source=False,
+                        destination=True,
+                        plugs=False,
+                    )
+                    or []
                 )
                 for relay in set(relay_list):
                     try:
                         for src in (
                             cmds.listConnections(
-                                relay, source=True, destination=False,
+                                relay,
+                                source=True,
+                                destination=False,
                                 plugs=False,
-                            ) or []
+                            )
+                            or []
                         ):
                             if src == sg_name:
                                 continue
                             try:
                                 if cmds.ls(src, dagObjects=True):
                                     continue
-                                for h_node in (
-                                    cmds.listHistory(
-                                        src, pruneDagObjects=True
-                                    ) or []
-                                ):
+                                for h_node in cmds.listHistory(src, pruneDagObjects=True) or []:
                                     try:
                                         if cmds.nodeType(h_node) in _TEXTURE_TYPES:
                                             return True
@@ -2020,21 +2605,19 @@ class ImportMixin:
                 pass
 
             # ── B/D: standard incoming surface-shader attrs ───────────────────
-            for attr in ('surfaceShader', 'rman__surface',
-                         'volumeShader', 'displacementShader'):
+            for attr in ("surfaceShader", "rman__surface", "volumeShader", "displacementShader"):
                 try:
                     for shader in (
                         cmds.listConnections(
-                            f'{sg_name}.{attr}',
-                            source=True, destination=False, plugs=False,
-                        ) or []
+                            f"{sg_name}.{attr}",
+                            source=True,
+                            destination=False,
+                            plugs=False,
+                        )
+                        or []
                     ):
                         try:
-                            for h_node in (
-                                cmds.listHistory(
-                                    shader, pruneDagObjects=True
-                                ) or []
-                            ):
+                            for h_node in cmds.listHistory(shader, pruneDagObjects=True) or []:
                                 try:
                                     if cmds.nodeType(h_node) in _TEXTURE_TYPES:
                                         return True
@@ -2051,9 +2634,7 @@ class ImportMixin:
             # shader nodes, so this BFS reaches PxrTexture quickly (3-4 hops).
             _MAX_NODES = 100
             visited: set = {sg_name}
-            queue: list = list(
-                cmds.listConnections(sg_name, plugs=False) or []
-            )
+            queue: list = list(cmds.listConnections(sg_name, plugs=False) or [])
             visited.update(queue)
             while queue and len(visited) < _MAX_NODES:
                 node = queue.pop(0)
@@ -2062,9 +2643,7 @@ class ImportMixin:
                         return True
                     if cmds.ls(node, dagObjects=True):
                         continue
-                    for nbr in (
-                        cmds.listConnections(node, plugs=False) or []
-                    ):
+                    for nbr in cmds.listConnections(node, plugs=False) or []:
                         if nbr not in visited:
                             visited.add(nbr)
                             queue.append(nbr)
@@ -2075,9 +2654,7 @@ class ImportMixin:
             pass
         return False
 
-    def _populate_controllers_sublayer(
-        self, stage, rig_data: dict
-    ) -> None:
+    def _populate_controllers_sublayer(self, stage, rig_data: dict) -> None:
         """
         Write NURBS controllers from .rig.mb as NurbsCurves prims
         in the controllers sublayer.
@@ -2094,9 +2671,7 @@ class ImportMixin:
 
             # Create a /Controllers scope to organize them
             ctrl_scope = stage.DefinePrim("/Controllers", "Scope")
-            UsdGeom.Imageable(ctrl_scope).CreatePurposeAttr(
-                UsdGeom.Tokens.guide
-            )
+            UsdGeom.Imageable(ctrl_scope).CreatePurposeAttr(UsdGeom.Tokens.guide)
 
             written = 0
             skipped = 0
@@ -2126,13 +2701,9 @@ class ImportMixin:
                     curves = UsdGeom.NurbsCurves(prim)
 
                     # Set curve data
-                    points = Vt.Vec3fArray(
-                        [Gf.Vec3f(p[0], p[1], p[2]) for p in cvs]
-                    )
+                    points = Vt.Vec3fArray([Gf.Vec3f(p[0], p[1], p[2]) for p in cvs])
                     curves.CreatePointsAttr(points)
-                    curves.CreateCurveVertexCountsAttr(
-                        Vt.IntArray([len(cvs)])
-                    )
+                    curves.CreateCurveVertexCountsAttr(Vt.IntArray([len(cvs)]))
 
                     # Degree and order
                     degree = ctrl.get("degree", 3)
@@ -2141,22 +2712,16 @@ class ImportMixin:
                     # Knots
                     knots = ctrl.get("knots", [])
                     if knots:
-                        curves.CreateKnotsAttr(
-                            Vt.DoubleArray(knots)
-                        )
+                        curves.CreateKnotsAttr(Vt.DoubleArray(knots))
 
                     # Set purpose to "guide" so it's visible but not rendered
-                    UsdGeom.Imageable(prim).CreatePurposeAttr(
-                        UsdGeom.Tokens.guide
-                    )
+                    UsdGeom.Imageable(prim).CreatePurposeAttr(UsdGeom.Tokens.guide)
 
                     # Display color from Maya override
                     color = ctrl.get("color")
                     if color:
                         curves.CreateDisplayColorAttr(
-                            Vt.Vec3fArray(
-                                [Gf.Vec3f(color[0], color[1], color[2])]
-                            )
+                            Vt.Vec3fArray([Gf.Vec3f(color[0], color[1], color[2])])
                         )
 
                     # Transform — only add ops if non-zero
@@ -2168,20 +2733,15 @@ class ImportMixin:
                     if has_translate or has_rotate:
                         xform = UsdGeom.Xformable(prim)
                         if has_translate:
-                            xform.AddTranslateOp().Set(
-                                Gf.Vec3d(tx, ty, tz)
-                            )
+                            xform.AddTranslateOp().Set(Gf.Vec3d(tx, ty, tz))
                         if has_rotate:
-                            xform.AddRotateXYZOp().Set(
-                                Gf.Vec3f(rx, ry, rz)
-                            )
+                            xform.AddRotateXYZOp().Set(Gf.Vec3f(rx, ry, rz))
 
                     # Custom attribute: which joints this controller drives
                     driven = mappings.get(name, [])
                     if driven:
                         driven_attr = prim.CreateAttribute(
-                            "assetManager:drivenJoints",
-                            Sdf.ValueTypeNames.StringArray
+                            "assetManager:drivenJoints", Sdf.ValueTypeNames.StringArray
                         )
                         driven_attr.Set(driven)
 
@@ -2189,25 +2749,18 @@ class ImportMixin:
 
                 except Exception as ctrl_err:
                     skipped += 1
-                    self.logger.debug(
-                        f"[LAYER] Skipped controller {safe_name}: {ctrl_err}"
-                    )
+                    self.logger.debug(f"[LAYER] Skipped controller {safe_name}: {ctrl_err}")
 
             skip_msg = f", {skipped} skipped" if skipped else ""
             self.logger.info(
-                f"[LAYER] Wrote {written} NURBS controllers "
-                f"to controllers sublayer{skip_msg}"
+                f"[LAYER] Wrote {written} NURBS controllers " f"to controllers sublayer{skip_msg}"
             )
 
         except Exception as e:
-            self.logger.warning(
-                f"[LAYER] Could not populate controllers sublayer: {e}"
-            )
+            self.logger.warning(f"[LAYER] Could not populate controllers sublayer: {e}")
             self.logger.debug(traceback.format_exc())
 
-    def _populate_skeleton_metadata(
-        self, stage, base_usd_path: Path, rig_data: dict
-    ) -> None:
+    def _populate_skeleton_metadata(self, stage, base_usd_path: Path, rig_data: dict) -> None:
         """
         Write controller→joint mapping metadata into the skeleton sublayer.
 
@@ -2258,8 +2811,7 @@ class ImportMixin:
                     # Write onto the same prim path in the skeleton sublayer
                     over_prim = stage.OverridePrim(prim.GetPath())
                     map_attr = over_prim.CreateAttribute(
-                        "assetManager:controllerMap",
-                        Sdf.ValueTypeNames.String
+                        "assetManager:controllerMap", Sdf.ValueTypeNames.String
                     )
                     map_attr.Set(json.dumps(skel_map, indent=2))
                     skeletons_found += 1
@@ -2272,9 +2824,7 @@ class ImportMixin:
                 )
 
         except Exception as e:
-            self.logger.warning(
-                f"[LAYER] Could not populate skeleton metadata: {e}"
-            )
+            self.logger.warning(f"[LAYER] Could not populate skeleton metadata: {e}")
             self.logger.debug(traceback.format_exc())
 
     def _populate_geometry_primvar_fixes(
@@ -2317,8 +2867,8 @@ class ImportMixin:
                 for pv in pvars_api.GetPrimvars():
                     if not pv.IsIndexed():
                         continue
-                    indices = pv.GetIndices()   # Vt.IntArray
-                    values = pv.Get()           # Vt values array
+                    indices = pv.GetIndices()  # Vt.IntArray
+                    values = pv.Get()  # Vt values array
                     if not indices or not values:
                         continue
                     max_valid = len(values) - 1
@@ -2335,9 +2885,7 @@ class ImportMixin:
                             Sdf.ValueTypeNames.IntArray,
                             False,  # not a custom attribute
                         )
-                    fixed = Vt.IntArray(
-                        [max(0, min(int(i), max_valid)) for i in indices]
-                    )
+                    fixed = Vt.IntArray([max(0, min(int(i), max_valid)) for i in indices])
                     idx_attr.Set(fixed)
                     fix_count += 1
                     self.logger.debug(
@@ -2386,7 +2934,7 @@ class ImportMixin:
 
         # Verify rfm2 is loaded — PxrSurface only exists when rfm2 is active.
         try:
-            _probe = cmds.shadingNode('PxrSurface', asShader=True, name='__rfm_probe__')
+            _probe = cmds.shadingNode("PxrSurface", asShader=True, name="__rfm_probe__")
             cmds.delete(_probe)
         except Exception:
             self.logger.info(
@@ -2404,43 +2952,41 @@ class ImportMixin:
 
             # ── Collect materials, their UsdPreviewSurface shaders, and ─────────
             # mesh→material bindings from the composed stage.
-            mat_preview: Dict[str, Any] = {}       # mat_path_str → UsdShade.Shader
-            mat_textures: Dict[str, List] = {}     # mat_path_str → [UsdShade.Shader, …]
-            mesh_bindings: Dict[str, str] = {}     # mesh_path_str → mat_path_str
+            mat_preview: Dict[str, Any] = {}  # mat_path_str → UsdShade.Shader
+            mat_textures: Dict[str, List] = {}  # mat_path_str → [UsdShade.Shader, …]
+            mesh_bindings: Dict[str, str] = {}  # mesh_path_str → mat_path_str
 
             for prim in stage.Traverse():
                 ptype = prim.GetTypeName()
 
-                if ptype == 'Mesh':
+                if ptype == "Mesh":
                     binding_api = UsdShade.MaterialBindingAPI(prim)
                     binding = binding_api.GetDirectBinding()
                     bound_mat = binding.GetMaterial()
                     if bound_mat and bound_mat.GetPrim().IsValid():
-                        mesh_bindings[str(prim.GetPath())] = (
-                            str(bound_mat.GetPrim().GetPath())
-                        )
+                        mesh_bindings[str(prim.GetPath())] = str(bound_mat.GetPrim().GetPath())
                     continue
 
-                if ptype != 'Shader':
+                if ptype != "Shader":
                     continue
 
                 shader = UsdShade.Shader(prim)
                 try:
-                    sid = shader.GetShaderId() or ''
+                    sid = shader.GetShaderId() or ""
                 except Exception:
                     try:
-                        sid = shader.GetIdAttr().Get() or ''
+                        sid = shader.GetIdAttr().Get() or ""
                     except Exception:
-                        sid = ''
+                        sid = ""
 
-                if sid not in ('UsdPreviewSurface', 'UsdUVTexture'):
+                if sid not in ("UsdPreviewSurface", "UsdUVTexture"):
                     continue
 
                 # Walk up the hierarchy to find the enclosing Material prim.
                 ancestor = prim.GetParent()
                 mat_prim: Any = None
                 while ancestor and ancestor.IsValid():
-                    if ancestor.GetTypeName() == 'Material':
+                    if ancestor.GetTypeName() == "Material":
                         mat_prim = ancestor
                         break
                     ancestor = ancestor.GetParent()
@@ -2448,10 +2994,10 @@ class ImportMixin:
                     continue
 
                 mat_key = str(mat_prim.GetPath())
-                if sid == 'UsdPreviewSurface':
+                if sid == "UsdPreviewSurface":
                     if mat_key not in mat_preview:
                         mat_preview[mat_key] = shader
-                elif sid == 'UsdUVTexture':
+                elif sid == "UsdUVTexture":
                     mat_textures.setdefault(mat_key, []).append(shader)
 
             if not mat_preview:
@@ -2476,15 +3022,30 @@ class ImportMixin:
 
             if mat_path_to_sg:
                 created_count = len(mat_path_to_sg)
-                tex_count = sum(
-                    1 for sg in mat_path_to_sg.values()
-                    if self._sg_has_texture(sg)
-                )
+                # Use the USD-sourced mat_textures dict to determine which SGs
+                # are textured.  mat_textures was populated by scanning the
+                # exported materials.usda for UsdUVTexture shaders — it is the
+                # ground-truth record of what the exporter wrote and is 100%
+                # reliable regardless of rfm2's evalDeferred relay rebuilding or
+                # listHistory's inability to traverse plugin-node connections.
+                tex_count = sum(1 for mp in mat_path_to_sg.keys() if mat_textures.get(mp))
+                # Expose as instance set so _sg_has_texture + proxy label agree.
+                self._rfm_sgs_with_texture = {
+                    sg for mp, sg in mat_path_to_sg.items() if mat_textures.get(mp)
+                }
                 self.logger.info(
                     f"[RFM] Imported {created_count} original RfM shaders from "
                     f".rig.mb ({tex_count} textured) \u2014 exact settings from "
                     f"original Maya scene (PxrDisney/PxrSurface with full texture maps)"
                 )
+                # ── Rewrite materials.usda with real RIS networks from Maya DG ─
+                # Now that PxrDisneyBsdf/PxrSurface nodes are live in the Maya
+                # scene, replace the PxrPreviewSurface placeholders written by
+                # _populate_rfm_materials_sublayer with the actual param values
+                # and PxrTexture/PxrNormalMap connections read from the DG.
+                # This makes outputs:ri:surface in the USD stage resolve to the
+                # real Disney shader at render time (RfM IPR + batch/XPU).
+                self._rewrite_materials_usda_with_disney_networks(usd_path, mat_path_to_sg)
             _cache_used: bool = bool(mat_path_to_sg)  # True when Strategy 1 succeeded
             # ── Strategy 2: Synthetic PxrSurface from USD data (fallback) ──────
             # Runs for any material that was NOT found in the .rig.mb shader cache.
@@ -2496,14 +3057,12 @@ class ImportMixin:
                     continue
 
                 mat_name = Sdf.Path(mat_key).name
-                safe = (
-                    mat_name.replace(' ', '_').replace(':', '_').replace('.', '_')
-                )
+                safe = mat_name.replace(" ", "_").replace(":", "_").replace(".", "_")
 
                 # ── Resolve diffuse texture path ───────────────────────────────
                 diffuse_tex: Optional[str] = None
                 try:
-                    dc_inp = preview_shader.GetInput('diffuseColor')
+                    dc_inp = preview_shader.GetInput("diffuseColor")
                     if dc_inp and dc_inp.HasConnectedSource():
                         for conn in dc_inp.GetAttr().GetConnections():
                             src_prim = stage.GetPrimAtPath(conn.GetPrimPath())
@@ -2511,12 +3070,12 @@ class ImportMixin:
                                 continue
                             src_sh = UsdShade.Shader(src_prim)
                             try:
-                                src_id = src_sh.GetShaderId() or ''
+                                src_id = src_sh.GetShaderId() or ""
                             except Exception:
-                                src_id = ''
-                            if src_id != 'UsdUVTexture':
+                                src_id = ""
+                            if src_id != "UsdUVTexture":
                                 continue
-                            f_inp = src_sh.GetInput('file')
+                            f_inp = src_sh.GetInput("file")
                             if not f_inp:
                                 continue
                             asset = f_inp.Get()
@@ -2530,9 +3089,9 @@ class ImportMixin:
                 if not diffuse_tex:
                     for uv_sh in mat_textures.get(_sdf_mat_key, []):
                         cname = uv_sh.GetPrim().GetName().lower()
-                        if any(t in cname for t in ('normal', 'nrm', 'nml', 'bump', 'spec')):
+                        if any(t in cname for t in ("normal", "nrm", "nml", "bump", "spec")):
                             continue
-                        f_inp = uv_sh.GetInput('file')
+                        f_inp = uv_sh.GetInput("file")
                         if not f_inp:
                             continue
                         asset = f_inp.Get()
@@ -2543,11 +3102,9 @@ class ImportMixin:
                 # Resolve relative → absolute path.
                 if diffuse_tex and not Path(diffuse_tex).is_absolute():
                     resolved = (usd_dir / diffuse_tex).resolve()
-                    diffuse_tex = (
-                        str(resolved).replace('\\', '/') if resolved.exists() else None
-                    )
+                    diffuse_tex = str(resolved).replace("\\", "/") if resolved.exists() else None
                 elif diffuse_tex:
-                    diffuse_tex = diffuse_tex.replace('\\', '/')
+                    diffuse_tex = diffuse_tex.replace("\\", "/")
                     if not Path(diffuse_tex).exists():
                         diffuse_tex = None
 
@@ -2555,7 +3112,7 @@ class ImportMixin:
                 roughness = 0.5
                 metallic = 0.0
                 try:
-                    r_inp = preview_shader.GetInput('roughness')
+                    r_inp = preview_shader.GetInput("roughness")
                     if r_inp and not r_inp.HasConnectedSource():
                         v = r_inp.Get()
                         if v is not None:
@@ -2563,7 +3120,7 @@ class ImportMixin:
                 except Exception:
                     pass
                 try:
-                    m_inp = preview_shader.GetInput('metallic')
+                    m_inp = preview_shader.GetInput("metallic")
                     if m_inp and not m_inp.HasConnectedSource():
                         v = m_inp.Get()
                         if v is not None:
@@ -2573,56 +3130,51 @@ class ImportMixin:
 
                 # ── Create Maya PxrSurface node + shading group ────────────────
                 try:
-                    pxr_surf = cmds.shadingNode(
-                        'PxrSurface', asShader=True, name=f'rfm_{safe}'
-                    )
+                    pxr_surf = cmds.shadingNode("PxrSurface", asShader=True, name=f"rfm_{safe}")
                     # Strip any trailing 'SG'/'sg' from safe before appending 'SG'
                     # so USD mat names like 'PxrDisneyBsdf1SG' don't become
                     # 'rfm_PxrDisneyBsdf1SGSG' — the SG suffix is added here.
-                    safe_no_sg = safe[:-2] if safe.lower().endswith('sg') else safe
+                    safe_no_sg = safe[:-2] if safe.lower().endswith("sg") else safe
                     sg = cmds.sets(
                         renderable=True,
                         noSurfaceShader=True,
                         empty=True,
-                        name=f'rfm_{safe_no_sg}SG'
+                        name=f"rfm_{safe_no_sg}SG",
                     )
-                    cmds.connectAttr(
-                        f'{pxr_surf}.outColor', f'{sg}.surfaceShader', force=True
-                    )
+                    cmds.connectAttr(f"{pxr_surf}.outColor", f"{sg}.surfaceShader", force=True)
 
                     # Specular roughness (UsdPreviewSurface roughness → PxrSurface)
                     try:
-                        cmds.setAttr(f'{pxr_surf}.specularRoughness', roughness)
+                        cmds.setAttr(f"{pxr_surf}.specularRoughness", roughness)
                     except Exception:
                         pass
 
                     # Metallic approximation: reduce diffuse gain for metallic surfaces.
                     if metallic > 0.1:
                         try:
-                            cmds.setAttr(f'{pxr_surf}.diffuseGain', max(0.05, 1.0 - metallic))
+                            cmds.setAttr(f"{pxr_surf}.diffuseGain", max(0.05, 1.0 - metallic))
                         except Exception:
                             pass
 
                     # ── Diffuse: PxrTexture node or static color ───────────────
                     if diffuse_tex:
                         pxr_tex = cmds.shadingNode(
-                            'PxrTexture', asTexture=True, name=f'rfm_tex_{safe}'
+                            "PxrTexture", asTexture=True, name=f"rfm_tex_{safe}"
                         )
                         # Set texture file path
                         try:
-                            cmds.setAttr(f'{pxr_tex}.filename', diffuse_tex, type='string')
+                            cmds.setAttr(f"{pxr_tex}.filename", diffuse_tex, type="string")
                         except Exception:
                             pass
                         # Convert sRGB → linear for physically correct shading
                         try:
-                            cmds.setAttr(f'{pxr_tex}.linearize', 1)
+                            cmds.setAttr(f"{pxr_tex}.linearize", 1)
                         except Exception:
                             pass
                         # Connect PxrTexture.resultRGB → PxrSurface.diffuseColor
                         try:
                             cmds.connectAttr(
-                                f'{pxr_tex}.resultRGB', f'{pxr_surf}.diffuseColor',
-                                force=True
+                                f"{pxr_tex}.resultRGB", f"{pxr_surf}.diffuseColor", force=True
                             )
                             tex_count += 1
                         except Exception:
@@ -2630,16 +3182,16 @@ class ImportMixin:
                     else:
                         # No texture: copy static diffuseColor from UsdPreviewSurface
                         try:
-                            dc_inp = preview_shader.GetInput('diffuseColor')
+                            dc_inp = preview_shader.GetInput("diffuseColor")
                             if dc_inp and not dc_inp.HasConnectedSource():
                                 dc_val = dc_inp.Get()
                                 if dc_val is not None:
                                     cmds.setAttr(
-                                        f'{pxr_surf}.diffuseColor',
+                                        f"{pxr_surf}.diffuseColor",
                                         float(dc_val[0]),
                                         float(dc_val[1]),
                                         float(dc_val[2]),
-                                        type='double3'
+                                        type="double3",
                                     )
                         except Exception:
                             pass
@@ -2653,14 +3205,227 @@ class ImportMixin:
                     )
                     continue
 
+            # Ensure SG.surfaceShader is bound for Hypershade visibility.
+            # rfm2 relay wiring can be deferred, leaving SGs renderable but not
+            # consistently visible in Hypershade until update_disney_nodes runs.
+            if mat_path_to_sg:
+                self._ensure_hypershade_shader_bindings(mat_path_to_sg)
+
+            # ── Deferred post-rfm2 Hypershade registration (definitive fix) ──
+            #
+            # CONFIRMED PROBLEM (log analysis): executeDeferred fired BEFORE
+            # rfm2's update_disney_nodes, AND the sidecar incorrectly mapped 9
+            # SGs to PxrDisplace (displacement) instead of PxrDisneyBsdf.
+            #
+            # Fix 1 — timing: evalDeferred(lowestPriority=True) pushes our
+            #   callback to the END of the deferred queue, which means it runs
+            #   AFTER rfm2's update_disney_nodes (already in queue from file load).
+            # Fix 2 — shader type: direct scan of ALL PxrDisneyBsdf/PxrSurface
+            #   nodes, no sidecar dependency.  Surface-shader type allow-list
+            #   prevents displacement/utility nodes from being wired incorrectly.
+            if mat_path_to_sg:
+                try:
+                    _sg_snapshot: Dict[str, str] = dict(mat_path_to_sg)
+                    _sgmap_snap: Optional[Path] = getattr(
+                        self, "_rfm_shader_cache_sg_map_path", None
+                    )
+                    _log = self.logger
+
+                    def _deferred_rfm2_hypershade_registration() -> None:
+                        """Post-rfm2 Hypershade registration — runs after update_disney_nodes.
+
+                        1. Direct scan: ALL PxrDisneyBsdf/PxrSurface in scene.
+                        2. Register every one in defaultShaderList1 (Hypershade).
+                        3. Repair SG.surfaceShader using live relay — surface types only.
+                        """
+                        try:
+                            import json as _json_d
+
+                            import maya.cmds as _cmds_d
+                            import maya.mel as _mel_d
+
+                            _surf_d: frozenset = frozenset(
+                                {
+                                    "PxrDisneyBsdf",
+                                    "PxrSurface",
+                                    "PxrLayer",
+                                    "PxrLayerSurface",
+                                    "PxrLayerMixer",
+                                    "PxrVolume",
+                                    "PxrMarschnerHair",
+                                    "PxrConstant",
+                                    "PxrBlack",
+                                    "PxrSkin",
+                                }
+                            )
+
+                            _sidecar_d: Dict[str, str] = {}
+                            if _sgmap_snap and _sgmap_snap.exists():
+                                try:
+                                    _sidecar_d = _json_d.loads(
+                                        _sgmap_snap.read_text(encoding="utf-8")
+                                    )
+                                except Exception:
+                                    pass
+
+                            # 1) DIRECT SCAN — no sidecar, no snapshot dependency.
+                            _all_surface: list = list(
+                                dict.fromkeys(
+                                    (_cmds_d.ls(type="PxrDisneyBsdf") or [])
+                                    + (_cmds_d.ls(type="PxrSurface") or [])
+                                )
+                            )
+                            _reg = 0
+                            _skip = 0
+                            for _sh in _all_surface:
+                                try:
+                                    if not _cmds_d.objExists(_sh):
+                                        continue
+                                    _out = (
+                                        _cmds_d.listConnections(
+                                            f"{_sh}.message",
+                                            source=False,
+                                            destination=True,
+                                            plugs=True,
+                                        )
+                                        or []
+                                    )
+                                    if any(_d.startswith("defaultShaderList1.") for _d in _out):
+                                        _skip += 1
+                                        continue
+                                    _listed = False
+                                    try:
+                                        # Direct connectAttr — never defaultNavigation
+                                        # (interactive MEL that opens Connection Editor)
+                                        _cmds_d.connectAttr(
+                                            f"{_sh}.message",
+                                            "defaultShaderList1.shaders",
+                                            nextAvailable=True,
+                                        )
+                                        _listed = True
+                                    except Exception:
+                                        pass
+                                    if _listed:
+                                        _reg += 1
+                                except Exception:
+                                    pass
+
+                            # 2) SG.surfaceShader repair — surface types only.
+                            _repaired = 0
+                            _already_ok = 0
+                            for _sg in dict.fromkeys(_sg_snapshot.values()):
+                                try:
+                                    if not _cmds_d.objExists(_sg):
+                                        continue
+                                    _cur = (
+                                        _cmds_d.listConnections(
+                                            f"{_sg}.surfaceShader",
+                                            source=True,
+                                            destination=False,
+                                        )
+                                        or []
+                                    )
+                                    if any(
+                                        _cmds_d.objExists(_c) and _cmds_d.nodeType(_c) in _surf_d
+                                        for _c in _cur
+                                    ):
+                                        _already_ok += 1
+                                        continue
+
+                                    _shader_found: Optional[str] = None
+                                    _relay_fb: Optional[str] = None
+                                    for _relay in (
+                                        _cmds_d.listConnections(
+                                            f"{_sg}.rman__surface",
+                                            source=False,
+                                            destination=True,
+                                        )
+                                        or []
+                                    ):
+                                        for _src in (
+                                            _cmds_d.listConnections(
+                                                _relay,
+                                                source=True,
+                                                destination=False,
+                                            )
+                                            or []
+                                        ):
+                                            if _src == _sg:
+                                                continue
+                                            try:
+                                                _st = _cmds_d.nodeType(_src)
+                                                if _st in _surf_d:
+                                                    _shader_found = _src
+                                                    break
+                                                elif _st.startswith("Pxr") and _relay_fb is None:
+                                                    _relay_fb = _src
+                                            except Exception:
+                                                pass
+                                        if _shader_found:
+                                            break
+                                    _shader_found = _shader_found or _relay_fb
+
+                                    if not _shader_found and _sidecar_d:
+                                        _sg_lf = _sg.split(":")[-1]
+                                        _raw = _sidecar_d.get(_sg) or _sidecar_d.get(_sg_lf)
+                                        if _raw:
+                                            _sl = str(_raw).split(":")[-1]
+                                            for _cand in [_sl] + (_cmds_d.ls(f"*:{_sl}") or []):
+                                                try:
+                                                    if (
+                                                        _cmds_d.objExists(_cand)
+                                                        and _cmds_d.nodeType(_cand) in _surf_d
+                                                    ):
+                                                        _shader_found = _cand
+                                                        break
+                                                except Exception:
+                                                    pass
+
+                                    if (
+                                        _shader_found
+                                        and _cmds_d.objExists(_shader_found)
+                                        and _cmds_d.attributeQuery(
+                                            "outColor", node=_shader_found, exists=True
+                                        )
+                                    ):
+                                        try:
+                                            _cmds_d.connectAttr(
+                                                f"{_shader_found}.outColor",
+                                                f"{_sg}.surfaceShader",
+                                                force=True,
+                                            )
+                                            _repaired += 1
+                                        except Exception:
+                                            pass
+                                except Exception:
+                                    pass
+
+                            _log.info(
+                                f"[RFM] Deferred post-rfm2 (lowestPriority): "
+                                f"{_reg} shaders added to defaultShaderList1, "
+                                f"{_skip} already listed; "
+                                f"SG.surfaceShader: {_already_ok} OK, {_repaired} repaired"
+                            )
+                        except Exception:
+                            pass
+
+                    # lowestPriority=True → END of deferred queue, AFTER
+                    # rfm2's update_disney_nodes which was queued during file load.
+                    cmds.evalDeferred(
+                        _deferred_rfm2_hypershade_registration,
+                        lowestPriority=True,
+                    )
+                except Exception as _defer_err:
+                    self.logger.debug(
+                        f"[RFM] Could not schedule deferred registration: {_defer_err}"
+                    )
+
             if created_count == 0:
                 return 0
 
             if not _cache_used:
                 # Strategy 2 (synthetic) ran — log what was created
-                tex_label = (
-                    f'{tex_count} with PxrTexture' if tex_count else 'static colors'
-                )
+                tex_label = f"{tex_count} with PxrTexture" if tex_count else "static colors"
                 self.logger.info(
                     f"[RFM] Created {created_count} Maya PxrSurface shaders from USD "
                     f"data ({tex_label}) \u2014 visible in Hypershade + renderable via rfm2 RIS"
@@ -2668,28 +3433,26 @@ class ImportMixin:
 
             # ── Bind materials to USD mesh prims + register proxy with rfm2 ──
             #
-            # rfm2 translates a mayaUsdProxyShape as a single PxrUSD procedural.
-            # The PxrUSD procedural opens the USD stage at render time and uses
-            # material:binding + outputs:ri:surface (authored in materials.usda)
-            # to resolve per-mesh RenderMan shaders.  Maya SG membership does
-            # NOT drive per-mesh materials — but the proxy shape itself MUST be
-            # a member of a RenderMan SG (not initialShadingGroup) for rfm2 to
-            # include it in the RIB and mark it as "uses RenderMan materials".
-            #
-            # Two-phase approach:
+            # Three-phase approach:
             #   Phase A: Session-layer material:binding (for Hydra VP2 display)
-            #   Phase B: Always assign proxy shape to a PxrSurface SG (for rfm2)
+            #   Phase B: Assign proxy shape to a PxrSurface SG (rfm2 include in RIB)
+            #   Phase C: Per-prim rfm2 SG assignment via |transform|shape,/PrimPath
+            #
+            # Phase C is the CRITICAL render fix.  rfm2 27.2 renders a
+            # mayaUsdProxyShape by walking the USD hierarchy and checking SG
+            # membership on each prim.  Per-prim SG assignments are authored with
+            # Maya's |transform|shape,/Prim/Path selection syntax, which maps
+            # each USD mesh prim to the correct PxrDisneyBsdf SG directly in the
+            # Maya DG.  rfm2 reads these assignments and emits per-mesh shading in
+            # the RIB — producing correct per-mesh RIS shading in IPR and XPU.
+            # Without Phase C rfm2 renders the whole proxy with one shader (Phase B).
 
             # ── Phase A: Session-layer material:binding for VP2 Hydra ──────────
             # Normalise mesh_bindings mat-path values to str to match the
             # str keys now stored in mat_path_to_sg (Strategy 1 or 2).
-            mesh_bindings_str: dict = {
-                str(mesh): str(mat) for mesh, mat in mesh_bindings.items()
-            }
+            mesh_bindings_str: dict = {str(mesh): str(mat) for mesh, mat in mesh_bindings.items()}
             bound = 0
-            total_bindings = sum(
-                1 for mk in mesh_bindings_str.values() if mk in mat_path_to_sg
-            )
+            total_bindings = sum(1 for mk in mesh_bindings_str.values() if mk in mat_path_to_sg)
             try:
                 import mayaUsd.lib as mayaUsdLib  # type: ignore[import-unresolved]
 
@@ -2714,37 +3477,211 @@ class ImportMixin:
                                 and mat_prim
                                 and mat_prim.IsValid()
                             ):
-                                api = UsdShade.MaterialBindingAPI.Apply(
-                                    mesh_prim
-                                )
-                                api.Bind(UsdShade.Material(mat_prim))
+                                usd_mat = UsdShade.Material(mat_prim)
+                                api = UsdShade.MaterialBindingAPI.Apply(mesh_prim)
+                                # Generic binding — VP2 Hydra (UsdPreviewSurface)
+                                api.Bind(usd_mat)
+                                # RenderMan-specific binding — HdPrman (rfm2 V2 IPR
+                                # and XPU) resolves material:binding:ri first, then
+                                # reads outputs:ri:surface from the Material prim.
+                                # Without this, HdPrman may fall back to the Maya
+                                # SG material (Phase B = one shader for all meshes).
+                                try:
+                                    api.Bind(
+                                        usd_mat,
+                                        UsdShade.Tokens.fallbackStrength,
+                                        "ri",
+                                    )
+                                except Exception:
+                                    pass  # older USD build without render-context API
                                 bound += 1
                     finally:
                         live_stage.SetEditTarget(prev_target)
             except ImportError:
                 pass  # mayaUsd.lib unavailable — session bindings skipped
             except Exception as phase_a_err:
-                self.logger.debug(
-                    f"[RFM] Session-layer binding: {phase_a_err}"
-                )
+                self.logger.debug(f"[RFM] Session-layer binding: {phase_a_err}")
 
             if bound > 0:
                 self.logger.info(
                     f"[RFM] Bound {bound}/{total_bindings} materials "
-                    f"to USD mesh prims (session layer — VP2 Hydra display)"
+                    f"to USD mesh prims (session layer — VP2 Hydra + rfm2 HdPrman)"
                 )
+
+            # ── Phase C: Per-prim rfm2 SG assignment ─────────────────────────
+            # rfm2 renders USD mesh prims by checking their Maya SG membership.
+            # Maya's |transform|shape,/Prim/Path syntax selects a specific USD
+            # prim inside a proxy shape — cmds.sets(forceElement) then creates
+            # a proper Maya SG membership for that prim so rfm2 emits per-prim
+            # RIS shading in the RIB (not just one shader for the whole proxy).
+            #
+            # ORDER: Phase C MUST run before Phase B (proxy still in
+            # initialShadingGroup so partition doesn't block shape-level removal).
+            #
+            # PARTITION BYPASS: rfm2 SGs are connected to renderPartition the
+            # moment they're imported from the .rig.mb cache.  renderPartition
+            # marks them as "exclusive" — component-level forceElement is blocked
+            # regardless of which SG the proxy shape itself is in.  Fix: for each
+            # target SG, temporarily disconnect it from renderPartition, perform
+            # the sub-prim forceElement, then reconnect.  Maya enforces partition
+            # exclusivity only at write-time, not retroactively, so the component
+            # membership survives the reconnection.
+
+            def _assign_prim_bypass_partition(sg: str, selector: str) -> bool:
+                """Assign selector to sg, bypassing renderPartition exclusivity.
+
+                Temporarily disconnects sg from renderPartition so the set
+                loses partition exclusivity, calls forceElement, then
+                reconnects.  Returns True if the forceElement succeeded.
+
+                Bug notes on earlier naive implementation:
+                  1. `sg.partition` is a multi-attr (sg.partition[0], [1]…).
+                     `disconnectAttr('sg.partition', dst)` fails silently
+                     because the source needs the indexed form — e.g.
+                     'sg.partition[0]'.  Fix: use `connections=True` in
+                     listConnections which returns the actual indexed plug.
+                  2. The reconnect used `renderPartition.members` which
+                     does not exist on a partition node.  The correct attr
+                     is `renderPartition.sets`.
+                  3. `cmds.sets(sg, query=True)` does NOT enumerate USD proxy
+                     prim components, so membership-count comparison always
+                     returned 0.  Fix: treat absence of exception as success
+                     (verified select selected something first).
+                """
+                # connections=True yields alternating [srcPlug, dstPlug, ...]
+                # giving us the EXACT indexed plug (e.g. sg.partition[0])
+                # needed for a successful disconnectAttr call.
+                try:
+                    _raw = (
+                        cmds.listConnections(
+                            f"{sg}.partition",
+                            connections=True,
+                            plugs=True,
+                            source=False,
+                            destination=True,
+                        )
+                        or []
+                    )
+                except Exception:
+                    _raw = []
+
+                _pairs: list = [(_raw[_i], _raw[_i + 1]) for _i in range(0, len(_raw) - 1, 2)]
+
+                # Disconnect — lifts the partition's exclusivity restriction
+                _disconnected: list = []
+                for _src_p, _dst_p in _pairs:
+                    try:
+                        cmds.disconnectAttr(_src_p, _dst_p)
+                        _disconnected.append((_src_p, _dst_p))
+                    except Exception:
+                        pass
+
+                success = False
+                try:
+                    # Pass the selector string directly to cmds.sets — no
+                    # intermediate cmds.select required.  With renderPartition
+                    # disconnected the "Cannot add" exclusivity error should be
+                    # gone; if any other error occurs, log it so the next test
+                    # run exposes the exact root cause.
+                    #
+                    # NOTE: Maya's shadingEngine nodes cannot accept USD proxy
+                    # sub-prim component selectors as set members — Maya emits
+                    # a "Cannot add… set has restrictions on membership" WARNING
+                    # (not an exception) and silently rejects the member.
+                    # success=True here means "no exception was raised," NOT
+                    # that the membership was actually created.  Phase A's
+                    # USD-native material:binding + materials.usda outputs:surface
+                    # is the reliable per-mesh shading path for rfm2 rendering.
+                    cmds.sets(selector, edit=True, forceElement=sg)
+                    success = True
+                except Exception as _fe_err:
+                    self.logger.warning(
+                        f"[RFM][Phase-C] forceElement failed — "
+                        f"sg={sg!r}  selector={selector!r}  "
+                        f"→ {type(_fe_err).__name__}: {_fe_err}"
+                    )
+                finally:
+                    # Reconnect — try to restore the original slot first
+                    # (keeps the partition index stable for other tools);
+                    # fall back to nextAvailable if that slot was re-taken.
+                    for _src_p, _dst_p in _disconnected:
+                        try:
+                            cmds.connectAttr(_src_p, _dst_p, force=True)
+                        except Exception:
+                            try:
+                                _pnode = _dst_p.split(".")[0]
+                                cmds.connectAttr(
+                                    _src_p,
+                                    f"{_pnode}.sets",
+                                    nextAvailable=True,
+                                    force=True,
+                                )
+                            except Exception:
+                                pass
+
+                return success
+
+            _prim_assigned = 0
+            _prim_failed = 0
+            _prim_rejected = 0
+            _proxy_long_name: Optional[str] = None
+            try:
+                proxy_long = cmds.ls(proxy_shape, long=True)
+                _proxy_long_name = proxy_long[0] if proxy_long else proxy_shape
+                _first_prim_logged = False
+                for mesh_path_str, mat_path_str in mesh_bindings_str.items():
+                    _sg_for_mesh = mat_path_to_sg.get(mat_path_str)
+                    if not _sg_for_mesh:
+                        continue
+                    if not cmds.objExists(_sg_for_mesh):
+                        continue
+                    # Selector: "|transform|shape,/Prim/Path"
+                    _prim_selector = f"{_proxy_long_name},{mesh_path_str}"
+                    if not _first_prim_logged:
+                        self.logger.info(
+                            f"[RFM][Phase-C] first selector: {_prim_selector!r}  "
+                            f"sg={_sg_for_mesh!r}"
+                        )
+                        _first_prim_logged = True
+                    try:
+                        if _assign_prim_bypass_partition(_sg_for_mesh, _prim_selector):
+                            _prim_assigned += 1
+                        else:
+                            _prim_rejected += 1
+                    except Exception:
+                        _prim_failed += 1
+
+                if _prim_rejected > 0 or _prim_failed > 0:
+                    self.logger.warning(
+                        f"[RFM] Per-prim SG assignment (Phase C): "
+                        f"{_prim_assigned} assigned, {_prim_rejected} rejected, "
+                        f"{_prim_failed} errored — "
+                        f"USD stage outputs:ri:surface provides per-mesh fallback."
+                    )
+                else:
+                    self.logger.info(
+                        f"[RFM] Per-prim SG assignment (Phase C): "
+                        f"{_prim_assigned}/{len(mesh_bindings_str)} mesh prims "
+                        f"assigned — rfm2 renders each USD mesh with correct shader"
+                    )
+            except Exception as _phase_c_err:
+                self.logger.warning(f"[RFM] Phase C per-prim SG assignment failed: {_phase_c_err}")
 
             # ── Phase B: Assign proxy shape to PxrSurface SG for rfm2 ─────────
             # MANDATORY — rfm2's Maya translator checks SG membership on the
             # shape node.  If the shape is in `initialShadingGroup` (Lambert),
-            # rfm2 never emits a RenderMan surface, and the PxrUSD procedural
-            # renders with no material (solid grey / invisible).
+            # rfm2 never emits a RenderMan surface and the proxy renders grey.
             #
-            # By moving the proxy to a PxrSurface SG, rfm2 marks the shape as
-            # "has RenderMan shading" in the RIB.  The PxrUSD procedural then
-            # uses the USD-authored outputs:ri:surface (in materials.usda) for
-            # per-mesh material resolution — the Maya SG is only used to flag
-            # the shape, not to drive per-mesh assignments.
+            # Phase B runs AFTER Phase C.  This is intentional:
+            #   • When Phase C ran first, the proxy was in initialShadingGroup
+            #     (not a render SG), so renderPartition placed no restrictions on
+            #     the component-level sub-prim assignments.
+            #   • Phase B now assigns the SHAPE (not components) to a render SG.
+            #     Maya's SG system keeps shape-level and component-level
+            #     memberships independent — the Phase C component assignments
+            #     are preserved as per-prim overrides above the Phase B fallback.
+            #   • rfm2 renders each mesh prim with the Phase C SG shader;
+            #     prims without a Phase C assignment fall back to Phase B SG.
             proxy_assigned_sg = False
             if mat_path_to_sg:
                 # Prefer a Strategy-1 (real rfm2) SG — these are the original
@@ -2759,8 +3696,8 @@ class ImportMixin:
                 # connections) makes texture detection unreliable.  A real
                 # PxrDisneyBsdf SG is ALWAYS better than a synthetic rfm_ node.
                 for _candidate_key, sg_candidate in mat_path_to_sg.items():
-                    base_leaf = sg_candidate.split(':')[-1]
-                    if not base_leaf.startswith('rfm_'):
+                    base_leaf = sg_candidate.split(":")[-1]
+                    if not base_leaf.startswith("rfm_"):
                         best_sg = sg_candidate
                         break
 
@@ -2768,8 +3705,8 @@ class ImportMixin:
                 # if _sg_has_texture now works with bidirectional BFS)
                 if best_sg and not self._sg_has_texture(best_sg):
                     for _candidate_key, sg_candidate in mat_path_to_sg.items():
-                        base_leaf = sg_candidate.split(':')[-1]
-                        if not base_leaf.startswith('rfm_') and self._sg_has_texture(sg_candidate):
+                        base_leaf = sg_candidate.split(":")[-1]
+                        if not base_leaf.startswith("rfm_") and self._sg_has_texture(sg_candidate):
                             best_sg = sg_candidate
                             break
 
@@ -2785,28 +3722,29 @@ class ImportMixin:
                 try:
                     # Remove from initialShadingGroup so rfm2 doesn't see Lambert
                     try:
-                        cmds.sets(
-                            proxy_shape, remove='initialShadingGroup'
-                        )
+                        cmds.sets(proxy_shape, remove="initialShadingGroup")
                     except Exception:
                         pass  # may not be a member
 
-                    cmds.sets(
-                        proxy_shape, edit=True, forceElement=first_sg
-                    )
+                    cmds.sets(proxy_shape, edit=True, forceElement=first_sg)
                     proxy_assigned_sg = True
-                    _is_rfm2_sg = best_sg and not best_sg.split(':')[-1].startswith('rfm_')
+                    _is_rfm2_sg = best_sg and not best_sg.split(":")[-1].startswith("rfm_")
                     _has_tex = best_sg and self._sg_has_texture(best_sg)
-                    tex_flag = " [textured]" if _has_tex else " [rfm2-unverified]" if _is_rfm2_sg else ""
+                    tex_flag = (
+                        " [textured]" if _has_tex else " [rfm2-unverified]" if _is_rfm2_sg else ""
+                    )
+                    _phase_c_summary = (
+                        f"; {_prim_assigned}/{len(mesh_bindings_str)} prims override "
+                        f"via Phase C per-prim SGs"
+                        if _prim_assigned > 0
+                        else " (Phase C failed — all prims will use this fallback shader)"
+                    )
                     self.logger.info(
                         f"[RFM] Proxy shape → {first_sg}{tex_flag} "
-                        f"(rfm2 RenderMan shading enabled; per-mesh materials "
-                        f"driven by USD outputs:ri:surface in materials.usda)"
+                        f"(fallback shader for rfm2 include-in-RIB{_phase_c_summary})"
                     )
                 except Exception as sg_err:
-                    self.logger.warning(
-                        f"[RFM] Could not assign proxy shape to SG: {sg_err}"
-                    )
+                    self.logger.warning(f"[RFM] Could not assign proxy shape to SG: {sg_err}")
 
             # Restore viewport selection
             prev_sel = cmds.ls(selection=True, long=True) or []
@@ -2832,6 +3770,852 @@ class ImportMixin:
             self.logger.warning(f"[RFM] Maya shader creation failed: {e}")
             self.logger.debug(traceback.format_exc())
             return 0
+
+    def _ensure_hypershade_shader_bindings(self, mat_path_to_sg: Dict[str, str]) -> None:
+        """Ensure each mapped SG has a direct Pxr source on surfaceShader.
+
+        This keeps imported RenderMan materials visible in Hypershade even when
+        relay links are still being rebuilt by deferred rfm2 scene-updater work.
+        """
+        if cmds is None:
+            return
+
+        import json as _json_hs
+
+        # Strategy-0 sidecar map captured during export while rfm2 relay
+        # connections were guaranteed live.
+        _sidecar_map: Dict[str, str] = {}
+        _sgmap_path: Optional[Path] = getattr(self, "_rfm_shader_cache_sg_map_path", None)
+        if _sgmap_path and _sgmap_path.exists():
+            try:
+                _raw = _json_hs.loads(_sgmap_path.read_text(encoding="utf-8"))
+                if isinstance(_raw, dict):
+                    _sidecar_map = {
+                        str(_k): str(_v)
+                        for _k, _v in _raw.items()
+                        if isinstance(_k, str) and isinstance(_v, str)
+                    }
+            except Exception:
+                _sidecar_map = {}
+
+        def _resolve_shader_node(_shader_leaf: str, _sg_name: str) -> Optional[str]:
+            """Resolve a Pxr SURFACE shader by leaf name, favoring SG namespace locality.
+
+            Only accepts surface shader types — displacement/utility nodes excluded.
+            """
+            _surf_types: frozenset = frozenset(
+                {
+                    "PxrDisneyBsdf",
+                    "PxrSurface",
+                    "PxrLayer",
+                    "PxrLayerSurface",
+                    "PxrLayerMixer",
+                    "PxrVolume",
+                    "PxrMarschnerHair",
+                    "PxrConstant",
+                    "PxrBlack",
+                    "PxrSkin",
+                }
+            )
+            if not _shader_leaf:
+                return None
+            _candidates: List[str] = []
+            _sg_ns = ":".join(_sg_name.split(":")[:-1])
+            if _sg_ns:
+                _candidates.append(f"{_sg_ns}:{_shader_leaf}")
+            _candidates.append(_shader_leaf)
+            _candidates.extend(cmds.ls(f"*:{_shader_leaf}") or [])
+
+            for _cand in dict.fromkeys(_candidates):
+                try:
+                    if cmds.objExists(_cand) and cmds.nodeType(_cand) in _surf_types:
+                        return _cand
+                except Exception:
+                    pass
+            return None
+
+        def _register_shader_in_default_list(_shader: str) -> bool:
+            """Ensure shader.message is connected to defaultShaderList1."""
+            try:
+                if not cmds.objExists(_shader):
+                    return False
+                if not cmds.objExists("defaultShaderList1"):
+                    return False
+
+                _msg_out = (
+                    cmds.listConnections(
+                        f"{_shader}.message",
+                        source=False,
+                        destination=True,
+                        plugs=True,
+                    )
+                    or []
+                )
+                if any(_dst.startswith("defaultShaderList1.") for _dst in _msg_out):
+                    return True
+
+                # Direct connectAttr only — defaultNavigation is an interactive
+                # MEL command that calls connectWindowWith and opens the Connection
+                # Editor when connection classification is ambiguous.
+                for _dst_attr in ("defaultShaderList1.shaders", "defaultShaderList1.s"):
+                    try:
+                        cmds.connectAttr(
+                            f"{_shader}.message",
+                            _dst_attr,
+                            nextAvailable=True,
+                            force=True,
+                        )
+                    except Exception:
+                        pass
+
+                _msg_out = (
+                    cmds.listConnections(
+                        f"{_shader}.message",
+                        source=False,
+                        destination=True,
+                        plugs=True,
+                    )
+                    or []
+                )
+                return any(_dst.startswith("defaultShaderList1.") for _dst in _msg_out)
+            except Exception:
+                return False
+
+        def _find_pxr_shader_for_sg(_sg_name: str) -> Optional[str]:
+            # Surface shader types — displacement/utility are explicitly excluded.
+            _surf_types: frozenset = frozenset(
+                {
+                    "PxrDisneyBsdf",
+                    "PxrSurface",
+                    "PxrLayer",
+                    "PxrLayerSurface",
+                    "PxrLayerMixer",
+                    "PxrVolume",
+                    "PxrMarschnerHair",
+                    "PxrConstant",
+                    "PxrBlack",
+                    "PxrSkin",
+                }
+            )
+
+            # Strategy 0: sidecar SG->shader mapping (most reliable).
+            # _resolve_shader_node already filters to surface shader types only.
+            _sg_leaf = _sg_name.split(":")[-1]
+            for _key in (_sg_name, _sg_leaf):
+                _shader_name = _sidecar_map.get(_key)
+                if not _shader_name:
+                    continue
+                _shader_leaf = _shader_name.split(":")[-1]
+                _resolved = _resolve_shader_node(_shader_leaf, _sg_name)
+                if _resolved:
+                    return _resolved
+
+            # Direct Maya surfaceShader connection — filter to surface types.
+            try:
+                for _n in (
+                    cmds.listConnections(
+                        f"{_sg_name}.surfaceShader",
+                        source=True,
+                        destination=False,
+                        plugs=False,
+                    )
+                    or []
+                ):
+                    try:
+                        if cmds.nodeType(_n) in _surf_types:
+                            return _n
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            # rfm2 relay path: SG.rman__surface -> relay <- Pxr* SURFACE
+            # Prefer surface shader types — relay nodes have both surface AND
+            # displacement shaders as sources; we must take the surface one.
+            try:
+                _relay_best: Optional[str] = None
+                _relay_fallback: Optional[str] = None
+                for _relay in set(
+                    cmds.listConnections(
+                        f"{_sg_name}.rman__surface",
+                        source=False,
+                        destination=True,
+                        plugs=False,
+                    )
+                    or []
+                ):
+                    for _src in (
+                        cmds.listConnections(
+                            _relay,
+                            source=True,
+                            destination=False,
+                            plugs=False,
+                        )
+                        or []
+                    ):
+                        if _src == _sg_name:
+                            continue
+                        try:
+                            if cmds.ls(_src, dagObjects=True):
+                                continue
+                            _st = cmds.nodeType(_src)
+                            if _st in _surf_types:
+                                _relay_best = _src
+                                break
+                            elif _st.startswith("Pxr") and _relay_fallback is None:
+                                _relay_fallback = _src
+                        except Exception:
+                            pass
+                    if _relay_best:
+                        break
+                if _relay_best or _relay_fallback:
+                    return _relay_best or _relay_fallback
+            except Exception:
+                pass
+
+            # Name-derived fallback: SG name without SG suffix.
+            try:
+                _leaf = _sg_name.split(":")[-1]
+                _base = _leaf
+                for _sfx in ("_SG", "SG"):
+                    if _leaf.endswith(_sfx):
+                        _base = _leaf[: -len(_sfx)]
+                        break
+                for _stype in ("PxrDisneyBsdf", "PxrSurface", "PxrLayer"):
+                    for _cand in cmds.ls(type=_stype) or []:
+                        if _cand.split(":")[-1] == _base:
+                            return _cand
+            except Exception:
+                pass
+
+            return None
+
+        already_bound = 0
+        repaired = 0
+        unresolved = 0
+        already_listed = 0
+        newly_listed = 0
+
+        for _sg_name in dict.fromkeys(mat_path_to_sg.values()):
+            try:
+                if not cmds.objExists(_sg_name):
+                    unresolved += 1
+                    continue
+
+                _incoming = (
+                    cmds.listConnections(
+                        f"{_sg_name}.surfaceShader",
+                        source=True,
+                        destination=False,
+                        plugs=False,
+                    )
+                    or []
+                )
+                _has_pxr_incoming = False
+                for _n in _incoming:
+                    try:
+                        if cmds.objExists(_n) and cmds.nodeType(_n).startswith("Pxr"):
+                            _has_pxr_incoming = True
+                            break
+                    except Exception:
+                        pass
+
+                if _has_pxr_incoming:
+                    for _n in _incoming:
+                        try:
+                            if cmds.objExists(_n) and cmds.nodeType(_n).startswith("Pxr"):
+                                if _register_shader_in_default_list(_n):
+                                    _post = (
+                                        cmds.listConnections(
+                                            f"{_n}.message",
+                                            source=False,
+                                            destination=True,
+                                            plugs=True,
+                                        )
+                                        or []
+                                    )
+                                    if any(_d.startswith("defaultShaderList1.") for _d in _post):
+                                        already_listed += 1
+                                break
+                        except Exception:
+                            pass
+                    already_bound += 1
+                    continue
+
+                _shader = _find_pxr_shader_for_sg(_sg_name)
+                if not _shader:
+                    unresolved += 1
+                    continue
+                if not cmds.attributeQuery("outColor", node=_shader, exists=True):
+                    unresolved += 1
+                    continue
+
+                cmds.connectAttr(
+                    f"{_shader}.outColor",
+                    f"{_sg_name}.surfaceShader",
+                    force=True,
+                )
+                if _register_shader_in_default_list(_shader):
+                    newly_listed += 1
+                repaired += 1
+            except Exception:
+                unresolved += 1
+
+        self.logger.info(
+            f"[RFM] Hypershade SG bindings: {already_bound} already bound, "
+            f"{repaired} repaired, {unresolved} unresolved"
+        )
+        self.logger.info(
+            f"[RFM] Hypershade shader-list registration: "
+            f"{already_listed} already listed, {newly_listed} registered"
+        )
+
+    def _rewrite_materials_usda_with_disney_networks(
+        self,
+        usd_path: Path,
+        mat_path_to_sg: dict,
+    ) -> None:
+        """Overwrite the PxrPreviewSurface placeholders in materials.usda with
+        real RIS shader networks read directly from the Maya DG.
+
+        ``_populate_rfm_materials_sublayer`` runs during stage construction
+        (before the .rig.mb is loaded) and writes ``PxrPreviewSurface`` USD
+        specs into materials.usda — the only shader data available from the
+        base USDC at that point.
+
+        This method is called *after* ``_import_rfm_shaders_from_cache`` has
+        loaded the real ``PxrDisneyBsdf`` / ``PxrSurface`` SGs into the Maya
+        scene.  It reads each shader's parameter values and upstream
+        ``PxrTexture`` / ``PxrNormalMap`` connections from the live Maya DG and
+        writes them as proper USD RIS shader specs, replacing the per-material
+        ``PxrPreviewSurface`` child prims.
+
+        After saving, it calls ``Sdf.Layer.Reload()`` so the live MayaUSD stage
+        picks up the new specs without requiring a scene reload.
+
+        Materials NOT present in *mat_path_to_sg* (Strategy-2 synthetics) are
+        left unchanged — their ``PxrPreviewSurface`` fallback is still valid.
+
+        Args:
+            usd_path: Path to the composed root ``.usda`` (or base ``.usdc``).
+            mat_path_to_sg: ``{USD mat path str → Maya SG name}`` mapping
+                produced by ``_import_rfm_shaders_from_cache``.
+        """
+        if not USD_AVAILABLE or cmds is None:
+            return
+
+        # Resolve the .materials.usda sibling path
+        asset_stem = usd_path.stem  # e.g. 'Veteran_Rig.root' or 'Veteran_Rig'
+        if asset_stem.endswith(".root"):
+            asset_stem = asset_stem[:-5]
+        mat_usda_path = usd_path.parent / f"{asset_stem}.materials.usda"
+        if not mat_usda_path.exists():
+            self.logger.warning(
+                f"[RFM] materials.usda not found at {mat_usda_path} — "
+                f"PxrDisneyBsdf rewrite skipped"
+            )
+            return
+
+        try:
+            # Open the in-memory Sdf layer (avoids a second file-open)
+            mat_layer = Sdf.Layer.Find(str(mat_usda_path))
+            if mat_layer is None:
+                mat_layer = Sdf.Layer.FindOrOpen(str(mat_usda_path))
+            if mat_layer is None:
+                self.logger.warning(
+                    "[RFM] Could not open materials.usda Sdf layer for Disney rewrite"
+                )
+                return
+
+            # Open a transient stage rooted at the materials layer so we can
+            # use Usd.Stage.RemovePrim / DefinePrim against it directly.
+            mat_stage = Usd.Stage.Open(mat_layer)
+
+            # Texture node types whose outputs we'll re-wire into USD
+            _TEX_TYPES: frozenset = frozenset(
+                ("PxrTexture", "PxrNormalMap", "PxrManifold2D", "PxrManifoldFile")
+            )
+
+            disney_written = 0
+            fallback_kept = 0
+
+            # ── Load SG→shader sidecar written at export time ─────────────────
+            # _export_rfm_shaders_from_reference captures the ground-truth
+            # SG→PxrDisneyBsdf mapping while relay connections are definitively
+            # live.  Loading it once here lets Strategy 0 (below) skip all
+            # topology traversal for every matched SG.
+            import json as _json_r
+
+            _sg_shader_sidecar: dict = {}
+            _sidecar_r = getattr(self, "_rfm_shader_cache_sg_map_path", None)
+            if _sidecar_r:
+                try:
+                    _sidecar_r_path = Path(_sidecar_r)
+                    if _sidecar_r_path.exists():
+                        _sg_shader_sidecar = _json_r.loads(
+                            _sidecar_r_path.read_text(encoding="utf-8")
+                        )
+                        self.logger.info(
+                            f"[RFM] Loaded SG\u2192shader sidecar: "
+                            f"{len(_sg_shader_sidecar)} entries"
+                        )
+                except Exception as _sc_err:
+                    self.logger.warning(f"[RFM] Sidecar load failed: {_sc_err}")
+
+            for mat_path_str, sg_name in mat_path_to_sg.items():
+                mat_prim_path = Sdf.Path(mat_path_str)
+
+                # ── Get the surface shader connected to this SG ──────────────
+                # rfm2 27.2 relay topology:
+                #   SG.rman__surface → relay.message   (SG is SOURCE → relay is DEST)
+                #   PxrDisneyBsdf.out → relay.someAttr (PxrDisney is SOURCE → relay DEST)
+                # The standard Maya surfaceShader attribute is NEVER wired by rfm2 27.x.
+                # Must traverse via: SG.rman__surface → relay → filter sources → Pxr*
+                maya_shader: Optional[str] = None
+
+                # Strategy 0: ground-truth sidecar lookup (fastest, most reliable)
+                # Written by _export_rfm_shaders_from_reference while the relay
+                # was live — no topology guessing required.
+                _sg_leaf_0 = sg_name.split(":")[-1]
+                _sidecar_keys = [sg_name, _sg_leaf_0]
+                _shader_candidates: List[str] = []
+                _sg_ns = ":".join(sg_name.split(":")[:-1])
+                for _sk in _sidecar_keys:
+                    if _sk not in _sg_shader_sidecar:
+                        continue
+                    _raw_shader = _sg_shader_sidecar[_sk]
+                    if not isinstance(_raw_shader, str):
+                        continue
+                    _shader_candidates.append(_raw_shader)
+                    _raw_leaf = _raw_shader.split(":")[-1]
+                    if _sg_ns:
+                        _shader_candidates.append(f"{_sg_ns}:{_raw_leaf}")
+                    _shader_candidates.extend(cmds.ls(f"*:{_raw_leaf}") or [])
+
+                for _cand_0 in dict.fromkeys(_shader_candidates):
+                    try:
+                        if cmds.objExists(_cand_0) and cmds.nodeType(_cand_0).startswith("Pxr"):
+                            maya_shader = _cand_0
+                            break
+                    except Exception:
+                        pass
+
+                # Strategy A: rfm2 relay topology
+                if not maya_shader:
+                    try:
+                        relay_list = (
+                            cmds.listConnections(
+                                f"{sg_name}.rman__surface",
+                                source=False,
+                                destination=True,
+                                plugs=False,
+                            )
+                            or []
+                        )
+                        for relay in set(relay_list):
+                            try:
+                                for src in (
+                                    cmds.listConnections(
+                                        relay,
+                                        source=True,
+                                        destination=False,
+                                        plugs=False,
+                                    )
+                                    or []
+                                ):
+                                    if src == sg_name:
+                                        continue
+                                    try:
+                                        if cmds.ls(src, dagObjects=True):
+                                            continue
+                                        src_type = cmds.nodeType(src)
+                                        if src_type.startswith("Pxr"):
+                                            maya_shader = src
+                                            break
+                                    except Exception:
+                                        pass
+                                if maya_shader:
+                                    break
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+
+                # Strategy B: standard Maya surfaceShader attribute (non-rfm2 rigs /
+                # rfm1 legacy connections that wired directly to SG.surfaceShader)
+                if not maya_shader:
+                    for _attr in ("surfaceShader", "rman__surface"):
+                        try:
+                            for s in (
+                                cmds.listConnections(
+                                    f"{sg_name}.{_attr}",
+                                    source=True,
+                                    destination=False,
+                                    plugs=False,
+                                )
+                                or []
+                            ):
+                                try:
+                                    if cmds.nodeType(s).startswith("Pxr"):
+                                        maya_shader = s
+                                        break
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                        if maya_shader:
+                            break
+
+                # Strategy D: type-enumeration with leaf-name matching.
+                # Called before BFS because it is O(N_shaders) and doesn't
+                # rely on relay connections being established.  Matches the
+                # rfm2 naming convention where the ShadingEngine is named
+                # after its shader node: 'PxrDisneyBsdf18SG' → 'PxrDisneyBsdf18'.
+                if not maya_shader:
+                    _sg_leaf_d = sg_name.split(":")[-1]
+                    for _sfx_d in ("_SG", "SG"):
+                        if _sg_leaf_d.endswith(_sfx_d):
+                            _shader_base_d = _sg_leaf_d[: -len(_sfx_d)]
+                            for _stype_d in ("PxrDisneyBsdf", "PxrSurface", "PxrLayer"):
+                                for _cand_d in cmds.ls(type=_stype_d) or []:
+                                    if _cand_d.split(":")[-1] == _shader_base_d:
+                                        maya_shader = _cand_d
+                                        break
+                                if maya_shader:
+                                    break
+                            break
+
+                # Strategy C: bidirectional BFS safety net (covers unusual topologies
+                # and artist-named SGs where the name convention doesn't apply).
+                # NOTE: _bfs_vis is NOT pre-filled from the initial neighbour list —
+                # pre-filling consumes the entire 400-node cap budget if the SG has
+                # 60+ geometry dagSetMembers connections, preventing deeper traversal.
+                if not maya_shader:
+                    try:
+                        _bfs_vis: set = {sg_name}
+                        _bfs_q: list = list(cmds.listConnections(sg_name, plugs=False) or [])
+                        while _bfs_q and len(_bfs_vis) < 400:
+                            _cur = _bfs_q.pop(0)
+                            if _cur in _bfs_vis:
+                                continue
+                            _bfs_vis.add(_cur)
+                            try:
+                                if cmds.ls(_cur, dagObjects=True):
+                                    continue
+                                _cur_type = cmds.nodeType(_cur)
+                                if _cur_type.startswith("Pxr") and _cur != sg_name:
+                                    # Must be a shading node (ShadingEngine subclass
+                                    # would also start 'Pxr' — skip those)
+                                    if _cur_type not in ("PxrShadingEngine",):
+                                        maya_shader = _cur
+                                        break
+                                for _nbr in cmds.listConnections(_cur, plugs=False) or []:
+                                    if _nbr not in _bfs_vis:
+                                        _bfs_q.append(_nbr)
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+
+                if not maya_shader:
+                    fallback_kept += 1
+                    continue
+
+                try:
+                    shader_type = cmds.nodeType(maya_shader)
+                except Exception:
+                    fallback_kept += 1
+                    continue
+
+                if not shader_type.startswith("Pxr"):
+                    fallback_kept += 1
+                    continue
+
+                # ── Collect upstream texture / normal-map connections ─────────
+                # cmds.listConnections(conn=True, plugs=True) returns pairs:
+                #   [dest_plug, src_plug, dest_plug, src_plug, …]
+                upstream_tex: dict = {}  # dest_attr_name → (src_node, src_node_type)
+                try:
+                    conns = (
+                        cmds.listConnections(
+                            maya_shader,
+                            connections=True,
+                            plugs=True,
+                            source=True,
+                            destination=False,
+                        )
+                        or []
+                    )
+                    for i in range(0, len(conns) - 1, 2):
+                        dest_plug = conns[i]
+                        src_plug = conns[i + 1]
+                        dest_attr = dest_plug.split(".")[-1]
+                        src_node = src_plug.split(".")[0]
+                        try:
+                            src_type = cmds.nodeType(src_node)
+                        except Exception:
+                            continue
+                        if src_type in _TEX_TYPES:
+                            upstream_tex[dest_attr] = (src_node, src_type)
+                except Exception:
+                    pass
+
+                # ── Remove stale export-phase shader children ─────────────────
+                # Replace existing children so we don't get duplicate specs.
+                # Remove both old rfm2-named and current USD-named variants.
+                for _child in (
+                    "PxrPreviewSurface",
+                    "UsdPreviewSurface",
+                    "PxrTexture_diffuse",
+                    "UsdUVTexture_diffuse",
+                ):
+                    _stale = mat_stage.GetPrimAtPath(mat_prim_path.AppendChild(_child))
+                    if _stale and _stale.IsValid():
+                        mat_stage.RemovePrim(mat_prim_path.AppendChild(_child))
+
+                # ── Override the Material prim ────────────────────────────────
+                mat_override = mat_stage.OverridePrim(mat_prim_path)
+                mat_override.SetTypeName("Material")
+
+                # ── Define the RIS surface shader ─────────────────────────────
+                shader_leaf = maya_shader.split(":")[-1]
+                shader_usd_path = mat_prim_path.AppendChild(shader_leaf)
+                # Remove any stale spec (e.g. from a previous import run)
+                _sx = mat_stage.GetPrimAtPath(shader_usd_path)
+                if _sx and _sx.IsValid():
+                    mat_stage.RemovePrim(shader_usd_path)
+                shader_prim = mat_stage.DefinePrim(shader_usd_path, "Shader")
+                usd_shader = UsdShade.Shader(shader_prim)
+                # rfm2 27.2 HdPrman's Hydra USD renderer ships ONE compiled
+                # surface bxdf: UsdPreviewSurfaceParameters.oso, which rfm2
+                # exposes as info:id "PxrPreviewSurface".  PxrSurface and
+                # PxrDisneyBsdf are .dll RIS shaders; HdPrman's Riley conversion
+                # scene index rejects them with "Invalid info:id X node" warnings
+                # and falls back to the default grey RIS shader.  Map everything
+                # to "PxrPreviewSurface" — the only valid surface bxdf for
+                # rfm2 27.2 HdPrman USD rendering.
+                # rfm2 27.2 HdPrman Hydra USD renderer ships exactly ONE compiled
+                # surface bxdf: UsdPreviewSurfaceParameters.oso  →  info:id = "UsdPreviewSurface".
+                # (strip the "Parameters.oso" suffix to get the registered shader ID).
+                # PxrSurface, PxrDisneyBsdf, and PxrPreviewSurface are .dll RIS shaders
+                # with no .oso counterpart in the USD shader path; HdPrman's Riley
+                # conversion scene index rejects them with "Invalid info:id X node".
+                usd_shader.CreateIdAttr("UsdPreviewSurface")
+
+                # Per-source-type read-attr → UsdPreviewSurface write-attr tables.
+                # Keys are MAYA shader attribute names; values are the matching
+                # UsdPreviewSurface input names.
+                _FLOAT_MAP: dict = {
+                    "PxrDisneyBsdf": {
+                        "roughness": "roughness",
+                        "metallic": "metallic",
+                        "ior": "ior",
+                        "clearcoat": "clearcoat",
+                        "presence": "opacity",
+                    },
+                    "PxrSurface": {
+                        "specularRoughness": "roughness",
+                        "presence": "opacity",
+                    },
+                    "PxrBlack": {},
+                }.get(shader_type, {})
+
+                _COLOR_MAP: dict = {
+                    "PxrDisneyBsdf": {
+                        "baseColor": "diffuseColor",
+                        "emitColor": "emissiveColor",
+                    },
+                    "PxrSurface": {
+                        "diffuseColor": "diffuseColor",
+                        "glowColor": "emissiveColor",
+                    },
+                    "PxrBlack": {},
+                }.get(shader_type, {})
+
+                # Texture-connection dest_attr (Maya shader attr) →
+                # UsdPreviewSurface write-attr.  Also encodes the UsdUVTexture
+                # output channel needed (suffix after ":"):
+                #   "roughness:R" → UsdUVTexture.outputs:r  (Float, sourceColorSpace=raw)
+                #   "diffuseColor:RGB" → UsdUVTexture.outputs:rgb  (Color3f, sRGB)
+                #   "normal:N" → UsdUVTexture.outputs:rgb  (Color3f, raw, with bias/scale)
+                _TEX_MAP: dict = {
+                    "PxrDisneyBsdf": {
+                        "baseColor": "diffuseColor:RGB",
+                        "roughness": "roughness:R",
+                        "metallic": "metallic:R",
+                        "bumpNormal": "normal:N",
+                        "emitColor": "emissiveColor:RGB",
+                        "presence": "opacity:R",
+                    },
+                    "PxrSurface": {
+                        "diffuseColor": "diffuseColor:RGB",
+                        "bumpNormal": "normal:N",
+                        "specularRoughness": "roughness:R",
+                        "glowColor": "emissiveColor:RGB",
+                        "presence": "opacity:R",
+                    },
+                    "PxrBlack": {},
+                }.get(shader_type, {})
+
+                # ── Copy scalar float inputs ──────────────────────────────────
+                for src_attr, dst_attr in _FLOAT_MAP.items():
+                    if src_attr in upstream_tex:
+                        continue  # will be wired via texture connection below
+                    try:
+                        val = cmds.getAttr(f"{maya_shader}.{src_attr}")
+                        if val is not None:
+                            usd_shader.CreateInput(dst_attr, Sdf.ValueTypeNames.Float).Set(
+                                float(val)
+                            )
+                    except Exception:
+                        pass
+
+                # ── Copy Color3f inputs ───────────────────────────────────────
+                for src_attr, dst_attr in _COLOR_MAP.items():
+                    if src_attr in upstream_tex:
+                        continue
+                    try:
+                        raw = cmds.getAttr(f"{maya_shader}.{src_attr}")
+                        # Maya returns list-of-tuple for compound attrs: [(r,g,b)]
+                        if raw is not None:
+                            v = (
+                                raw[0]
+                                if (
+                                    isinstance(raw, (list, tuple))
+                                    and len(raw) > 0
+                                    and isinstance(raw[0], (list, tuple))
+                                )
+                                else raw
+                            )
+                            usd_shader.CreateInput(dst_attr, Sdf.ValueTypeNames.Color3f).Set(
+                                Gf.Vec3f(float(v[0]), float(v[1]), float(v[2]))
+                            )
+                    except Exception:
+                        pass
+
+                # PxrBlack: explicit flat-black PxrPreviewSurface values
+                if shader_type == "PxrBlack":
+                    usd_shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+                        Gf.Vec3f(0.0, 0.0, 0.0)
+                    )
+                    usd_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(1.0)
+                    usd_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+
+                # ── Wire upstream texture/normalmap nodes ─────────────────────
+                # Maya PxrTexture/PxrNormalMap nodes are rfm2 RIS nodes not
+                # recognised by HdPrman's USD shader registry.  Translate to
+                # UsdUVTexture (matches UsdUVTexture.oso in rfm2 27.2 usd3 path)
+                # using the standard USD attribute names: inputs:file (not
+                # inputs:filename) and inputs:sourceColorSpace (not inputs:linearize).
+                for dest_attr, (tex_node, _tex_type) in upstream_tex.items():
+                    # Look up the UsdPreviewSurface destination + channel suffix.
+                    tex_spec = _TEX_MAP.get(dest_attr)
+                    if tex_spec is None:
+                        continue  # no UsdPreviewSurface equivalent — skip
+
+                    usd_dest_attr, channel = tex_spec.split(":", 1)
+
+                    tex_leaf = tex_node.split(":")[-1]
+                    tex_usd_path = mat_prim_path.AppendChild(tex_leaf)
+                    _tx = mat_stage.GetPrimAtPath(tex_usd_path)
+                    if _tx and _tx.IsValid():
+                        mat_stage.RemovePrim(tex_usd_path)
+
+                    tex_prim = mat_stage.DefinePrim(tex_usd_path, "Shader")
+                    usd_tex = UsdShade.Shader(tex_prim)
+                    # UsdUVTexture is the only texture shader with a compiled .oso
+                    # in rfm2 27.2's usd3/resources/shaders/ path.  PxrTexture and
+                    # PxrNormalMap are RIS-only and invalid in HdPrman USD mode.
+                    usd_tex.CreateIdAttr("UsdUVTexture")
+
+                    # inputs:file (Asset) — UsdUVTexture uses "file" not "filename"
+                    # Try both Maya attribute names since PxrTexture uses "filename"
+                    # and PxrNormalMap also uses "filename"
+                    try:
+                        fname = cmds.getAttr(f"{tex_node}.filename")
+                        if fname:
+                            usd_tex.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(
+                                Sdf.AssetPath(str(fname))
+                            )
+                    except Exception:
+                        pass
+
+                    # inputs:sourceColorSpace: "sRGB" for colour textures (RGB channel),
+                    # "raw" for linear data (greyscale channels R, and normal maps N).
+                    if channel == "RGB":
+                        usd_tex.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set(
+                            "sRGB"
+                        )
+                    else:  # "R" (float greyscale) or "N" (normal map) — both linear
+                        usd_tex.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set(
+                            "raw"
+                        )
+
+                    # Normal maps need bias/scale to unpack [0,1] → [-1,1] tangent vectors.
+                    if channel == "N":
+                        usd_tex.CreateInput("bias", Sdf.ValueTypeNames.Float4).Set(
+                            Gf.Vec4f(-1.0, -1.0, -1.0, 0.0)
+                        )
+                        usd_tex.CreateInput("scale", Sdf.ValueTypeNames.Float4).Set(
+                            Gf.Vec4f(2.0, 2.0, 2.0, 2.0)
+                        )
+
+                    # UsdUVTexture output names: "rgb" (Color3f), "r" (Float).
+                    # Normal maps connect via outputs:rgb → UsdPreviewSurface.inputs:normal.
+                    if channel == "N":
+                        out_name = "rgb"  # Color3f → Normal3f implicit cast
+                        out_vtype = Sdf.ValueTypeNames.Color3f
+                        in_vtype = Sdf.ValueTypeNames.Normal3f
+                    elif channel == "R":
+                        out_name = "r"  # Float greyscale
+                        out_vtype = Sdf.ValueTypeNames.Float
+                        in_vtype = Sdf.ValueTypeNames.Float
+                    else:  # RGB
+                        out_name = "rgb"
+                        out_vtype = Sdf.ValueTypeNames.Color3f
+                        in_vtype = Sdf.ValueTypeNames.Color3f
+
+                    tex_out = usd_tex.CreateOutput(out_name, out_vtype)
+                    usd_shader.CreateInput(usd_dest_attr, in_vtype).ConnectToSource(tex_out)
+
+                # ── Wire surface outputs ──────────────────────────────────────
+                surf_out = usd_shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
+                mat_usd = UsdShade.Material(mat_override)
+                # outputs:ri:surface — used by rfm2 HdPrman IPR when it resolves
+                # the "ri" render context explicitly.
+                mat_usd.CreateSurfaceOutput("ri").ConnectToSource(surf_out)
+                # outputs:surface (generic override) — rfm2's usd_proc calls
+                # ComputeSurfaceSource() WITHOUT a render context, so it reads
+                # outputs:surface. Without this override it falls through to the
+                # original USDC's UsdPreviewSurface which is not a valid RIS
+                # shader → renders grey. VP2 Hydra will fall back to
+                # primvars:displayColor (written for all 21 meshes during export).
+                mat_usd.CreateSurfaceOutput().ConnectToSource(surf_out)
+
+                disney_written += 1
+
+            mat_stage.Save()
+
+            self.logger.info(
+                f"[RFM] materials.usda rewritten: {disney_written} UsdPreviewSurface "
+                f"networks authored "
+                f"(PxrDisneyBsdf/PxrSurface/PxrBlack → UsdPreviewSurface + UsdUVTexture; "
+                f"UsdPreviewSurfaceParameters.oso is the ONLY valid bxdf .oso in rfm2 27.2 "
+                f"HdPrman usd3 shader path; outputs:surface + outputs:ri:surface wired). "
+                f"{fallback_kept} materials retained export-phase UsdPreviewSurface."
+            )
+
+            # Reload so the live MayaUSD stage picks up the new layer content
+            # without the user needing to close and reopen the scene.
+            try:
+                mat_layer.Reload()
+                self.logger.debug("[RFM] materials.usda layer reloaded in live stage")
+            except Exception as _rel_err:
+                self.logger.debug(f"[RFM] materials.usda layer reload: {_rel_err}")
+
+        except Exception as e:
+            self.logger.warning(f"[RFM] Disney materials.usda rewrite failed: {e}")
+            self.logger.debug(traceback.format_exc())
 
     def _populate_rfm_materials_sublayer(
         self,
@@ -2877,22 +4661,22 @@ class ImportMixin:
             # depth inside a material — direct children, NodeGraph subscopes,   ──
             # or deeply nested hierarchies.  The previous GetAllChildren() approach ──
             # only found 8/30 materials because 22 had shaders nested in NodeGraphs.──
-            mat_preview: dict = {}        # Sdf.Path → UsdShade.Shader (UsdPreviewSurface)
-            mat_uv_textures: dict = {}    # Sdf.Path → list[UsdShade.Shader] (UsdUVTexture)
+            mat_preview: dict = {}  # Sdf.Path → UsdShade.Shader (UsdPreviewSurface)
+            mat_uv_textures: dict = {}  # Sdf.Path → list[UsdShade.Shader] (UsdUVTexture)
 
             for prim in base_stage.Traverse():
-                if prim.GetTypeName() != 'Shader':
+                if prim.GetTypeName() != "Shader":
                     continue
                 shader = UsdShade.Shader(prim)
                 try:
-                    sid = shader.GetShaderId() or ''
+                    sid = shader.GetShaderId() or ""
                 except Exception:
                     try:
-                        sid = shader.GetIdAttr().Get() or ''
+                        sid = shader.GetIdAttr().Get() or ""
                     except Exception:
-                        sid = ''
+                        sid = ""
 
-                if sid not in ('UsdPreviewSurface', 'UsdUVTexture'):
+                if sid not in ("UsdPreviewSurface", "UsdUVTexture"):
                     continue
 
                 # Walk up the hierarchy to find the enclosing Material prim.
@@ -2901,7 +4685,7 @@ class ImportMixin:
                 ancestor = prim.GetParent()
                 mat_prim = None
                 while ancestor and ancestor.IsValid():
-                    if ancestor.GetTypeName() == 'Material':
+                    if ancestor.GetTypeName() == "Material":
                         mat_prim = ancestor
                         break
                     ancestor = ancestor.GetParent()
@@ -2910,10 +4694,10 @@ class ImportMixin:
                     continue
 
                 mat_path = mat_prim.GetPath()
-                if sid == 'UsdPreviewSurface':
-                    if mat_path not in mat_preview:          # keep first found
+                if sid == "UsdPreviewSurface":
+                    if mat_path not in mat_preview:  # keep first found
                         mat_preview[mat_path] = shader
-                elif sid == 'UsdUVTexture':
+                elif sid == "UsdUVTexture":
                     mat_uv_textures.setdefault(mat_path, []).append(shader)
 
             # ── Step 2: Author PxrPreviewSurface overrides for every material ──
@@ -2925,20 +4709,18 @@ class ImportMixin:
                 # sibling, inside a NodeGraph, or deeply nested.
                 diffuse_tex_file: Optional[str] = None
                 try:
-                    dc_inp = preview_shader.GetInput('diffuseColor')
+                    dc_inp = preview_shader.GetInput("diffuseColor")
                     if dc_inp and dc_inp.HasConnectedSource():
                         for conn_path in dc_inp.GetAttr().GetConnections():
-                            src_prim = base_stage.GetPrimAtPath(
-                                conn_path.GetPrimPath()
-                            )
+                            src_prim = base_stage.GetPrimAtPath(conn_path.GetPrimPath())
                             if src_prim and src_prim.IsValid():
                                 src_shader = UsdShade.Shader(src_prim)
                                 try:
-                                    src_id = src_shader.GetShaderId() or ''
+                                    src_id = src_shader.GetShaderId() or ""
                                 except Exception:
-                                    src_id = ''
-                                if src_id == 'UsdUVTexture':
-                                    file_inp = src_shader.GetInput('file')
+                                    src_id = ""
+                                if src_id == "UsdUVTexture":
+                                    file_inp = src_shader.GetInput("file")
                                     if file_inp:
                                         asset = file_inp.Get()
                                         if asset:
@@ -2952,9 +4734,9 @@ class ImportMixin:
                     for uv_shader in mat_uv_textures.get(mat_path, []):
                         try:
                             cname = uv_shader.GetPrim().GetName().lower()
-                            if 'normal' in cname or 'nrm' in cname or 'nml' in cname:
+                            if "normal" in cname or "nrm" in cname or "nml" in cname:
                                 continue
-                            file_inp = uv_shader.GetInput('file')
+                            file_inp = uv_shader.GetInput("file")
                             if file_inp:
                                 asset = file_inp.Get()
                                 if asset:
@@ -2973,76 +4755,76 @@ class ImportMixin:
                 # way to assign the type opinion to an existing prim.
                 mat_override.SetTypeName("Material")
 
-                # PxrPreviewSurface — RenderMan 27.x ships this shader in
-                # $RMANTREE/lib/shaders/ as a first-class RIS surface shader
-                # that implements the same Disney PBR model as UsdPreviewSurface.
-                pxr_surf_path = mat_path.AppendChild('PxrPreviewSurface')
-                pxr_surf_prim = sub_stage.DefinePrim(pxr_surf_path, 'Shader')
+                # UsdPreviewSurface — rfm2 27.2 HdPrman Hydra path ships
+                # UsdPreviewSurfaceParameters.oso in usd3/resources/shaders/.
+                # The registered shader ID is "UsdPreviewSurface" (strip the
+                # "Parameters.oso" suffix).  "PxrPreviewSurface" has no .oso
+                # counterpart and is rejected with "Invalid info:id" warnings.
+                pxr_surf_path = mat_path.AppendChild("UsdPreviewSurface")
+                pxr_surf_prim = sub_stage.DefinePrim(pxr_surf_path, "Shader")
                 pxr_surf = UsdShade.Shader(pxr_surf_prim)
-                pxr_surf.CreateIdAttr('PxrPreviewSurface')
+                pxr_surf.CreateIdAttr("UsdPreviewSurface")
 
                 # ── Copy scalar inputs ────────────────────────────────────────
-                for attr_name in ('roughness', 'metallic', 'opacity'):
+                for attr_name in ("roughness", "metallic", "opacity"):
                     try:
                         inp = preview_shader.GetInput(attr_name)
                         if inp and not inp.HasConnectedSource():
                             val = inp.Get()
                             if val is not None:
-                                pxr_surf.CreateInput(
-                                    attr_name, Sdf.ValueTypeNames.Float
-                                ).Set(float(val))
+                                pxr_surf.CreateInput(attr_name, Sdf.ValueTypeNames.Float).Set(
+                                    float(val)
+                                )
                     except Exception:
                         pass
 
                 # ── diffuseColor: connect PxrTexture or copy static value ─────
                 if diffuse_tex_file:
-                    pxr_tex_path = mat_path.AppendChild('PxrTexture_diffuse')
-                    pxr_tex_prim = sub_stage.DefinePrim(pxr_tex_path, 'Shader')
+                    pxr_tex_path = mat_path.AppendChild("UsdUVTexture_diffuse")
+                    pxr_tex_prim = sub_stage.DefinePrim(pxr_tex_path, "Shader")
                     pxr_tex = UsdShade.Shader(pxr_tex_prim)
-                    pxr_tex.CreateIdAttr('PxrTexture')
-                    pxr_tex.CreateInput(
-                        'filename', Sdf.ValueTypeNames.Asset
-                    ).Set(Sdf.AssetPath(diffuse_tex_file))
-                    # linearize=1: convert sRGB PNG/JPEG to linear before shading
-                    pxr_tex.CreateInput(
-                        'linearize', Sdf.ValueTypeNames.Int
-                    ).Set(1)
-                    tex_out = pxr_tex.CreateOutput(
-                        'resultRGB', Sdf.ValueTypeNames.Color3f
+                    # UsdUVTexture matches UsdUVTexture.oso in rfm2 27.2 usd3 shader path.
+                    # Use inputs:file (not inputs:filename) and inputs:sourceColorSpace
+                    # (not inputs:linearize) — these are the standard USD attribute names.
+                    pxr_tex.CreateIdAttr("UsdUVTexture")
+                    pxr_tex.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(
+                        Sdf.AssetPath(diffuse_tex_file)
                     )
+                    # Diffuse textures are sRGB (PNG/JPEG gamma-encoded)
+                    pxr_tex.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set("sRGB")
+                    # UsdUVTexture output is "rgb" (not "resultRGB")
+                    tex_out = pxr_tex.CreateOutput("rgb", Sdf.ValueTypeNames.Color3f)
                     pxr_surf.CreateInput(
-                        'diffuseColor', Sdf.ValueTypeNames.Color3f
+                        "diffuseColor", Sdf.ValueTypeNames.Color3f
                     ).ConnectToSource(tex_out)
                     tex_count += 1
                 else:
                     try:
-                        dc_inp = preview_shader.GetInput('diffuseColor')
+                        dc_inp = preview_shader.GetInput("diffuseColor")
                         if dc_inp and not dc_inp.HasConnectedSource():
                             dc_val = dc_inp.Get()
                             if dc_val is not None:
                                 pxr_surf.CreateInput(
-                                    'diffuseColor', Sdf.ValueTypeNames.Color3f
-                                ).Set(Gf.Vec3f(
-                                    float(dc_val[0]),
-                                    float(dc_val[1]),
-                                    float(dc_val[2])
-                                ))
+                                    "diffuseColor", Sdf.ValueTypeNames.Color3f
+                                ).Set(
+                                    Gf.Vec3f(float(dc_val[0]), float(dc_val[1]), float(dc_val[2]))
+                                )
                     except Exception:
                         pass
 
                 # ── Wire outputs:ri:surface via the proper render-context API ─
                 # UsdShadeMaterial.CreateSurfaceOutput('ri') creates the
                 # outputs:ri:surface attribute with correct USD schema metadata.
-                pxr_surf_out = pxr_surf.CreateOutput('out', Sdf.ValueTypeNames.Token)
-                ri_surface_out = UsdShade.Material(mat_override).CreateSurfaceOutput('ri')
+                pxr_surf_out = pxr_surf.CreateOutput("out", Sdf.ValueTypeNames.Token)
+                ri_surface_out = UsdShade.Material(mat_override).CreateSurfaceOutput("ri")
                 ri_surface_out.ConnectToSource(pxr_surf_out)
 
                 rfm_count += 1
 
             if rfm_count > 0:
                 self.logger.info(
-                    f"[RFM] Wrote PxrPreviewSurface ri:surface for {rfm_count} "
-                    f"materials ({tex_count} with PxrTexture diffuse) in "
+                    f"[RFM] Wrote UsdPreviewSurface ri:surface for {rfm_count} "
+                    f"materials ({tex_count} with UsdUVTexture diffuse) in "
                     f"materials.usda \u2014 renderable in RenderMan for Maya 27.2+ "
                     f"via IPR (.it) and XPU batch render"
                 )
@@ -3054,4 +4836,6 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
+            self.logger.debug(traceback.format_exc())
+            self.logger.debug(traceback.format_exc())
             self.logger.debug(traceback.format_exc())

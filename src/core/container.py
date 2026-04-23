@@ -6,7 +6,7 @@
 from typing import Dict, Any, Type, TypeVar, Optional
 import threading
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class EMSAContainer:
@@ -27,6 +27,7 @@ class EMSAContainer:
             # Register the plugin service first
             from .services.plugin_service import PluginService
             from .interfaces.iplugin_service import IPluginService
+
             self.register_singleton(IPluginService, PluginService)
 
             # Now register all other essential services using the robust factory
@@ -38,6 +39,7 @@ class EMSAContainer:
             try:
                 from .services.plugin_service import PluginService
                 from .interfaces.iplugin_service import IPluginService
+
                 self.register_singleton(IPluginService, PluginService)
             except ImportError:
                 print("[WARNING] Could not register plugin service")
@@ -56,22 +58,24 @@ class EMSAContainer:
             # Use the existing service factory if available
             try:
                 from .service_factory import get_service_factory
+
                 factory = get_service_factory()
                 services = factory.get_all_services()
 
                 # Register services from factory
-                if 'asset_repository' in services:
-                    self.register_instance(IAssetRepository, services['asset_repository'])
+                if "asset_repository" in services:
+                    self.register_instance(IAssetRepository, services["asset_repository"])
                 else:
                     # Fallback to direct registration
                     from .repositories.file_asset_repository import FileAssetRepository
+
                     self.register_singleton(IAssetRepository, FileAssetRepository)
 
-                if 'thumbnail_service' in services:
-                    self.register_instance(IThumbnailService, services['thumbnail_service'])
+                if "thumbnail_service" in services:
+                    self.register_instance(IThumbnailService, services["thumbnail_service"])
 
-                if 'event_publisher' in services:
-                    self.register_instance(IEventPublisher, services['event_publisher'])
+                if "event_publisher" in services:
+                    self.register_instance(IEventPublisher, services["event_publisher"])
 
                 # Register RenderMan service (always available, checks internally)
                 try:
@@ -111,6 +115,7 @@ class EMSAContainer:
             except ImportError:
                 # Direct registration as fallback
                 from .repositories.file_asset_repository import FileAssetRepository
+
                 self.register_singleton(IAssetRepository, FileAssetRepository)
                 print("[OK] Core services registered (direct)")
 
@@ -118,6 +123,7 @@ class EMSAContainer:
             # This is outside the try-except to ensure it always executes
             try:
                 from ..services.library_service_impl import LibraryServiceImpl
+
                 # Get repository (either from factory or fallback)
                 repo = self.resolve(IAssetRepository)
                 library_service = LibraryServiceImpl(repo)
@@ -126,6 +132,7 @@ class EMSAContainer:
             except Exception as lib_error:
                 print(f"[WARNING] Library service registration failed: {lib_error}")
                 import traceback
+
                 traceback.print_exc()
 
         except Exception as e:
@@ -221,9 +228,11 @@ class EMSAContainer:
         Returns:
             True if service is registered
         """
-        return (interface in self._services or
-                interface in self._factories or
-                interface in self._singletons)
+        return (
+            interface in self._services
+            or interface in self._factories
+            or interface in self._singletons
+        )
 
     def clear(self) -> None:
         """
@@ -299,6 +308,7 @@ def configure_services() -> ServiceContainer:
 
         # Use the robust service factory
         from .service_factory import get_service_factory
+
         factory = get_service_factory()
 
         print("[TOOL] Configuring services...")
@@ -307,20 +317,20 @@ def configure_services() -> ServiceContainer:
         services = factory.get_all_services()
 
         # Register available services as instances using actual interface classes
-        if 'thumbnail_service' in services:
-            container.register_instance(IThumbnailService, services['thumbnail_service'])
+        if "thumbnail_service" in services:
+            container.register_instance(IThumbnailService, services["thumbnail_service"])
             print("[OK] Registered thumbnail service")
         else:
             print("[WARNING] Creating fallback thumbnail service")
             fallback_service = _create_fallback_thumbnail_service()
             container.register_instance(IThumbnailService, fallback_service)
 
-        if 'asset_repository' in services:
-            container.register_instance(IAssetRepository, services['asset_repository'])
+        if "asset_repository" in services:
+            container.register_instance(IAssetRepository, services["asset_repository"])
             print("[OK] Registered asset repository")
 
-        if 'event_publisher' in services:
-            container.register_instance(IEventPublisher, services['event_publisher'])
+        if "event_publisher" in services:
+            container.register_instance(IEventPublisher, services["event_publisher"])
             print("[OK] Registered event publisher")
         else:
             # Ensure event publisher is always available - create fallback
@@ -332,6 +342,7 @@ def configure_services() -> ServiceContainer:
         # Register Library Service (depends on asset repository)
         try:
             from ..services.library_service_impl import LibraryServiceImpl
+
             # Get the repository that was just registered
             repo = container.resolve(IAssetRepository)
             library_service = LibraryServiceImpl(repo)
@@ -340,6 +351,7 @@ def configure_services() -> ServiceContainer:
         except Exception as lib_error:
             print(f"[WARNING] Failed to register library service: {lib_error}")
             import traceback
+
             traceback.print_exc()
 
         print(f"[TARGET] Successfully configured {len(services)} services")
@@ -376,6 +388,7 @@ def _configure_fallback_services(container: ServiceContainer) -> ServiceContaine
         # Register Library Service with fallback repository
         try:
             from ..services.library_service_impl import LibraryServiceImpl
+
             library_service = LibraryServiceImpl(asset_repository)
             container.register_instance(ILibraryService, library_service)
             print("[OK] Fallback library service configured")
@@ -413,16 +426,22 @@ def _create_fallback_asset_repository():
         def find_all(self, directory):
             assets = []
             if directory.exists():
-                for file_path in directory.rglob('*'):
+                for file_path in directory.rglob("*"):
                     if file_path.is_file():
                         # Create minimal asset-like object
-                        assets.append(type('Asset', (), {
-                            'id': str(file_path),
-                            'name': file_path.name,
-                            'file_path': file_path,
-                            'display_name': file_path.name,
-                            'is_favorite': False
-                        })())
+                        assets.append(
+                            type(
+                                "Asset",
+                                (),
+                                {
+                                    "id": str(file_path),
+                                    "name": file_path.name,
+                                    "file_path": file_path,
+                                    "display_name": file_path.name,
+                                    "is_favorite": False,
+                                },
+                            )()
+                        )
             return assets
 
         # Add missing abstract method implementations as stubs
@@ -496,6 +515,7 @@ def _create_fallback_asset_repository():
         def get_assets_from_directory(self, directory):
             # Get assets from the specified directory.
             from pathlib import Path
+
             return self.find_all(Path(directory))
 
     return FallbackAssetRepository()
@@ -516,7 +536,7 @@ def _create_fallback_event_publisher():
             print(f"📢 Fallback Event: {event_type} with data: {event_data}")
 
             # Try to call any registered subscribers
-            if hasattr(event_type, 'value'):
+            if hasattr(event_type, "value"):
                 event_key = event_type.value
             else:
                 event_key = str(event_type)
@@ -530,7 +550,7 @@ def _create_fallback_event_publisher():
 
         def subscribe(self, event_type, callback):
             # Subscribe to event - enhanced implementation
-            if hasattr(event_type, 'value'):
+            if hasattr(event_type, "value"):
                 event_key = event_type.value
             else:
                 event_key = str(event_type)
@@ -548,7 +568,7 @@ def _create_fallback_event_publisher():
 
         def get_subscribers_count(self, event_type):
             # Get subscriber count - IEventPublisher interface compatibility
-            if hasattr(event_type, 'value'):
+            if hasattr(event_type, "value"):
                 event_key = event_type.value
             else:
                 event_key = str(event_type)

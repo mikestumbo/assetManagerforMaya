@@ -13,9 +13,18 @@ License: MIT
 from typing import List, Dict, Optional, Any
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-    QPushButton, QLabel, QComboBox, QSplitter,
-    QMessageBox, QInputDialog, QFrame
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QLabel,
+    QComboBox,
+    QSplitter,
+    QMessageBox,
+    QInputDialog,
+    QFrame,
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon, QFont, QPixmap, QPainter, QColor
@@ -134,7 +143,9 @@ class CollectionsDisplayWidget(QWidget):
 
         self.collection_desc_label = QLabel("Select a collection to view its assets and details.")
         self.collection_desc_label.setWordWrap(True)
-        self.collection_desc_label.setStyleSheet("color: #999999; font-style: italic; padding: 4px;")
+        self.collection_desc_label.setStyleSheet(
+            "color: #999999; font-style: italic; padding: 4px;"
+        )
         info_layout.addWidget(self.collection_desc_label)
 
         # Statistics
@@ -213,32 +224,40 @@ class CollectionsDisplayWidget(QWidget):
                 "assets": ["Hero_Character.ma", "Villain_Character.ma", "NPC_Guard.ma"],
                 "created": "2024-01-15",
                 "category": "Characters",
-                "asset_count": 3
+                "asset_count": 3,
             },
             "Environments": {
                 "description": "Environment scenes and props for level design",
-                "assets": ["Forest_Scene.ma", "Castle_Interior.ma", "Desert_Landscape.ma", "Ocean_Vista.ma"],
+                "assets": [
+                    "Forest_Scene.ma",
+                    "Castle_Interior.ma",
+                    "Desert_Landscape.ma",
+                    "Ocean_Vista.ma",
+                ],
                 "created": "2024-01-20",
                 "category": "Environments",
-                "asset_count": 4
+                "asset_count": 4,
             },
             "Props": {
                 "description": "Miscellaneous props and objects for scene decoration",
                 "assets": [
-                    "Sword_Medieval.ma", "Shield_Knight.ma", "Treasure_Chest.ma",
-                    "Magic_Staff.ma", "Ancient_Book.ma"
+                    "Sword_Medieval.ma",
+                    "Shield_Knight.ma",
+                    "Treasure_Chest.ma",
+                    "Magic_Staff.ma",
+                    "Ancient_Book.ma",
                 ],
                 "created": "2024-01-25",
                 "category": "Props",
-                "asset_count": 5
+                "asset_count": 5,
             },
             "Vehicles": {
                 "description": "Transportation and mechanical assets",
                 "assets": ["Spaceship_Fighter.ma", "Motorcycle_Racing.ma"],
                 "created": "2024-02-01",
                 "category": "Vehicles",
-                "asset_count": 2
-            }
+                "asset_count": 2,
+            },
         }
 
         self.collections_data = sample_collections
@@ -290,10 +309,7 @@ class CollectionsDisplayWidget(QWidget):
         """Create a new collection - Single Responsibility"""
         # Prompt user for collection name
         collection_name, ok = QInputDialog.getText(
-            self,
-            "New Collection",
-            "Enter collection name:",
-            text="My Collection"
+            self, "New Collection", "Enter collection name:", text="My Collection"
         )
 
         if not ok or not collection_name.strip():
@@ -308,7 +324,7 @@ class CollectionsDisplayWidget(QWidget):
             QMessageBox.warning(
                 self,
                 "Collection Exists",
-                f"A collection named '{collection_name}' already exists.\nPlease choose a different name."
+                f"A collection named '{collection_name}' already exists.\nPlease choose a different name.",
             )
             self._reset_dropdown_selection()
             return
@@ -318,7 +334,7 @@ class CollectionsDisplayWidget(QWidget):
             self,
             "Collection Description",
             f"Enter description for '{collection_name}' (optional):",
-            text="A new asset collection"
+            text="A new asset collection",
         )
 
         if not ok:
@@ -330,7 +346,7 @@ class CollectionsDisplayWidget(QWidget):
             "created": "2025-09-06",  # Current date
             "assets": [],  # Empty initially
             "tags": ["user-created"],
-            "category": "user"
+            "category": "user",
         }
 
         # Add to collections data
@@ -350,7 +366,7 @@ class CollectionsDisplayWidget(QWidget):
             self,
             "Collection Created",
             f"Collection '{collection_name}' has been created successfully.\n\n"
-            "You can now add assets to this collection."
+            "You can now add assets to this collection.",
         )
 
     def _reset_dropdown_selection(self) -> None:
@@ -472,8 +488,7 @@ class CollectionsDisplayWidget(QWidget):
         # In a real implementation, this would reload from the collection manager
         self._populate_collection_selector()
         QMessageBox.information(
-            self, "Collections Refreshed",
-            f"Refreshed {len(self.collections_data)} collections"
+            self, "Collections Refreshed", f"Refreshed {len(self.collections_data)} collections"
         )
 
     def update_collections(self, collections_data: Dict[str, Any]) -> None:

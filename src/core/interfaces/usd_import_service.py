@@ -84,12 +84,14 @@ class ImportResult:
         if self.import_method:
             summary.append(f"METHOD: Method: {self.import_method}")
 
-        summary.extend([
-            f"MESHES: Imported {len(self.imported_meshes)} meshes",
-            f"JOINTS: Imported {len(self.imported_joints)} joints",
-            f"CURVES: Imported {len(self.imported_curves)} NURBS curves",
-            f"SKIN_CLUSTERS: Created {self.skin_clusters_created} skin clusters"
-        ])
+        summary.extend(
+            [
+                f"MESHES: Imported {len(self.imported_meshes)} meshes",
+                f"JOINTS: Imported {len(self.imported_joints)} joints",
+                f"CURVES: Imported {len(self.imported_curves)} NURBS curves",
+                f"SKIN_CLUSTERS: Created {self.skin_clusters_created} skin clusters",
+            ]
+        )
 
         if self.warnings:
             summary.append(f"WARNINGS: {len(self.warnings)} warnings")
@@ -113,9 +115,7 @@ class IUsdImportService(ABC):
 
     @abstractmethod
     def import_usd_file(
-        self,
-        usd_path: Path,
-        options: Optional[UsdImportOptions] = None
+        self, usd_path: Path, options: Optional[UsdImportOptions] = None
     ) -> ImportResult:
         """
         Import USD file into Maya scene
@@ -140,9 +140,7 @@ class IUsdImportService(ABC):
 
     @abstractmethod
     def import_with_skinning(
-        self,
-        usd_path: Path,
-        namespace: Optional[str] = None
+        self, usd_path: Path, namespace: Optional[str] = None
     ) -> ImportResult:
         """
         Convenience method: Import USD with automatic skinning

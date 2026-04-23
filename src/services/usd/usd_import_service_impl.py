@@ -15,6 +15,7 @@ from typing import Optional, Dict, Any
 # USD imports
 try:
     from pxr import Usd, UsdGeom, UsdSkel  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -25,21 +26,15 @@ except ImportError:
 # Maya imports
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
     cmds: Any = None  # type: ignore
 
 # Internal imports
-from ...core.interfaces.usd_import_service import (
-    IUsdImportService,
-    UsdImportOptions,
-    ImportResult
-)
-from .usd_skeleton_reader_impl import (
-    UsdSkeletonReaderImpl,
-    UsdSkeletonData
-)
+from ...core.interfaces.usd_import_service import IUsdImportService, UsdImportOptions, ImportResult
+from .usd_skeleton_reader_impl import UsdSkeletonReaderImpl, UsdSkeletonData
 from .maya_skin_cluster_builder_impl import MayaSkinClusterBuilderImpl
 from .pure_python_usd_reader_impl import get_pure_python_usd_reader
 from .external_usd_bridge_impl import get_usdview_bridge
@@ -81,18 +76,18 @@ class UsdImportServiceImpl(IUsdImportService):
         self.usdview_bridge = get_usdview_bridge()
 
         # Log available methods
-        methods = ['mayaUSD']
+        methods = ["mayaUSD"]
         if self.pure_python_reader:
-            methods.append('Pure Python')
+            methods.append("Pure Python")
         if self.usdview_bridge.is_available():
-            methods.append('USD View')
+            methods.append("USD View")
 
-        self.logger.info(f"USD Import Service initialized with {len(methods)} methods: {', '.join(methods)}")
+        self.logger.info(
+            f"USD Import Service initialized with {len(methods)} methods: {', '.join(methods)}"
+        )
 
     def import_usd_file(
-        self,
-        usd_path: Path,
-        options: Optional[UsdImportOptions] = None
+        self, usd_path: Path, options: Optional[UsdImportOptions] = None
     ) -> ImportResult:
         """
         Import USD file with automatic skinning reconstruction
@@ -105,10 +100,7 @@ class UsdImportServiceImpl(IUsdImportService):
             ImportResult with detailed feedback
         """
         if not USD_AVAILABLE or not MAYA_AVAILABLE:
-            return ImportResult(
-                success=False,
-                error_message="USD or Maya not available"
-            )
+            return ImportResult(success=False, error_message="USD or Maya not available")
 
         # Use default options if not provided
         if options is None:
@@ -132,7 +124,7 @@ class UsdImportServiceImpl(IUsdImportService):
             # Try Method 1: MayaUSD (fastest, most compatible)
             namespace = self._import_with_mayausd(usd_path, options, result)
             if namespace:
-                import_method = 'mayaUSD'
+                import_method = "mayaUSD"
                 self.logger.info("[IMPORT] mayaUSD import successful")
 
             # Try Method 2: Pure Python USD Reader (no plugin dependencies)
@@ -140,7 +132,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 self.logger.warning("MayaUSD import failed, trying Pure Python method...")
                 namespace = self._import_with_pure_python(usd_path, options, result)
                 if namespace:
-                    import_method = 'Pure Python'
+                    import_method = "Pure Python"
                     self.logger.info("[IMPORT] Pure Python import successful")
 
             # Try Method 3: USD View conversion (Pixar's official tools)
@@ -148,12 +140,14 @@ class UsdImportServiceImpl(IUsdImportService):
                 self.logger.warning("Pure Python import failed, trying USD View conversion...")
                 namespace = self._import_with_usdview(usd_path, options, result)
                 if namespace:
-                    import_method = 'USD View'
+                    import_method = "USD View"
                     self.logger.info("[IMPORT] USD View conversion successful")
 
             # All methods failed
             if not namespace:
-                result.error_message = "All USD import methods failed (mayaUSD, Pure Python, USD View)"
+                result.error_message = (
+                    "All USD import methods failed (mayaUSD, Pure Python, USD View)"
+                )
                 self.logger.error(result.error_message)
                 return result
 
@@ -168,16 +162,22 @@ class UsdImportServiceImpl(IUsdImportService):
             if options.apply_skin_weights:
                 self.logger.info("[SKINNING] Calling _apply_skin_weights_from_usd...")
                 self._apply_skin_weights_from_usd(usd_path, namespace, options, result)
-                self.logger.info(
-                    f"[SKINNING] Created {result.skin_clusters_created} skinClusters"
-                )
+                self.logger.info(f"[SKINNING] Created {result.skin_clusters_created} skinClusters")
             else:
                 self.logger.info("[SKINNING] Skipping — apply_skin_weights=False")
 
             # Step 4: Reconstruct rig connections for functional controllers - INDUSTRY FIRST!
-            if options.import_nurbs_curves and options.import_rig_connections and result.imported_curves:
-                self.logger.info("[TARGET] Reconstructing rig connections for functional controllers...")
-                connections_restored = self._reconstruct_rig_connections(usd_path, namespace, options, result)
+            if (
+                options.import_nurbs_curves
+                and options.import_rig_connections
+                and result.imported_curves
+            ):
+                self.logger.info(
+                    "[TARGET] Reconstructing rig connections for functional controllers..."
+                )
+                connections_restored = self._reconstruct_rig_connections(
+                    usd_path, namespace, options, result
+                )
                 self.logger.info(
                     f"[NEW] Restored {connections_restored} rig connections "
                     "— controllers are now functional!"
@@ -190,6 +190,7 @@ class UsdImportServiceImpl(IUsdImportService):
         except Exception as e:
             self.logger.error(f"USD import failed: {e}")
             import traceback
+
             traceback.print_exc()
             result.success = False
             result.error_message = str(e)
@@ -197,9 +198,7 @@ class UsdImportServiceImpl(IUsdImportService):
         return result
 
     def import_with_skinning(
-        self,
-        usd_path: Path,
-        namespace: Optional[str] = None
+        self, usd_path: Path, namespace: Optional[str] = None
     ) -> ImportResult:
         """
         Convenience method: Import USD with automatic skinning
@@ -211,10 +210,7 @@ class UsdImportServiceImpl(IUsdImportService):
         Returns:
             ImportResult
         """
-        options = UsdImportOptions(
-            apply_skin_weights=True,
-            namespace=namespace
-        )
+        options = UsdImportOptions(apply_skin_weights=True, namespace=namespace)
         return self.import_usd_file(usd_path, options)
 
     def validate_usd_file(self, usd_path: Path) -> tuple[bool, str]:
@@ -236,7 +232,7 @@ class UsdImportServiceImpl(IUsdImportService):
                 return False, f"File not found: {usd_path}"
 
             # Check file extension
-            if usd_path.suffix.lower() not in {'.usd', '.usda', '.usdc', '.usdz'}:
+            if usd_path.suffix.lower() not in {".usd", ".usda", ".usdc", ".usdz"}:
                 return False, f"Not a USD file: {usd_path.suffix}"
 
             # Try to open USD stage
@@ -264,12 +260,12 @@ class UsdImportServiceImpl(IUsdImportService):
             Dictionary of USD file information
         """
         info = {
-            'file_path': str(usd_path),
-            'file_size': 0,
-            'mesh_count': 0,
-            'skeleton_count': 0,
-            'has_animation': False,
-            'valid': False
+            "file_path": str(usd_path),
+            "file_size": 0,
+            "mesh_count": 0,
+            "skeleton_count": 0,
+            "has_animation": False,
+            "valid": False,
         }
 
         if not USD_AVAILABLE:
@@ -277,28 +273,28 @@ class UsdImportServiceImpl(IUsdImportService):
 
         try:
             # File size
-            info['file_size'] = usd_path.stat().st_size
+            info["file_size"] = usd_path.stat().st_size
 
             # Open stage
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
                 return info
 
-            info['valid'] = True
+            info["valid"] = True
 
             # Count meshes
             mesh_count = 0
             for prim in stage.Traverse():
                 if prim.IsA(UsdGeom.Mesh):
                     mesh_count += 1
-            info['mesh_count'] = mesh_count
+            info["mesh_count"] = mesh_count
 
             # Find skeletons
             skeletons = self.skeleton_reader.find_skeletons(stage)
-            info['skeleton_count'] = len(skeletons)
+            info["skeleton_count"] = len(skeletons)
 
             # Check for animation data
-            info['has_animation'] = self._check_for_animation(stage, skeletons)
+            info["has_animation"] = self._check_for_animation(stage, skeletons)
 
         except Exception as e:
             self.logger.error(f"Failed to get USD info: {e}")
@@ -325,7 +321,9 @@ class UsdImportServiceImpl(IUsdImportService):
             # Check skeleton animation
             for skel_prim in skeletons:
                 skel = UsdSkel.Skeleton(skel_prim)
-                if self.skeleton_reader._check_skeleton_animation(skel):  # pylint: disable=protected-access
+                if self.skeleton_reader._check_skeleton_animation(
+                    skel
+                ):  # pylint: disable=protected-access
                     return True
 
             # Check for time-sampled transforms on any prim
@@ -350,10 +348,7 @@ class UsdImportServiceImpl(IUsdImportService):
     # ==================== Private Implementation ====================
 
     def _import_with_mayausd(
-        self,
-        usd_path: Path,
-        options: UsdImportOptions,
-        result: ImportResult
+        self, usd_path: Path, options: UsdImportOptions, result: ImportResult
     ) -> Optional[str]:
         """
         Import USD file using mayaUSD plugin
@@ -366,7 +361,9 @@ class UsdImportServiceImpl(IUsdImportService):
         Returns:
             Namespace used for import, or None if failed
         """
-        self.logger.info(f"[IMPORT] mayaUSD starting: {usd_path.name}, namespace={options.namespace}")
+        self.logger.info(
+            f"[IMPORT] mayaUSD starting: {usd_path.name}, namespace={options.namespace}"
+        )
 
         if not MAYA_AVAILABLE:
             self.logger.error("ERROR: MAYA_AVAILABLE is False!")
@@ -374,9 +371,9 @@ class UsdImportServiceImpl(IUsdImportService):
 
         try:
             # Ensure mayaUSD plugin is loaded
-            if not cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True):
+            if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
                 self.logger.info("Loading mayaUSD plugin...")
-                cmds.loadPlugin('mayaUsdPlugin')
+                cmds.loadPlugin("mayaUsdPlugin")
 
             # Determine namespace
             namespace = options.namespace
@@ -408,25 +405,27 @@ class UsdImportServiceImpl(IUsdImportService):
                 # For RenderMan: use 'pxrRis' mode
                 # For standard: use 'useRegistry' with 'UsdPreviewSurface'
                 import_args = {
-                    'file': str(usd_path),
-                    'readAnimData': True,
-                    'useAsAnimationCache': False,
-                    'importInstances': True,
-                    'importUSDZTextures': True,  # Import textures from USDZ
+                    "file": str(usd_path),
+                    "readAnimData": True,
+                    "useAsAnimationCache": False,
+                    "importInstances": True,
+                    "importUSDZTextures": True,  # Import textures from USDZ
                 }
 
                 # Set shading mode based on renderer
                 if use_renderman:
                     # For RenderMan: try multiple approaches
-                    import_args['shadingMode'] = [['pxrRis', 'default']]
+                    import_args["shadingMode"] = [["pxrRis", "default"]]
                     self.logger.info("[LOOKDEV] Using pxrRis shading mode for RenderMan materials")
                 else:
-                    import_args['shadingMode'] = [['useRegistry', 'UsdPreviewSurface']]
+                    import_args["shadingMode"] = [["useRegistry", "UsdPreviewSurface"]]
                     self.logger.info("Using useRegistry shading mode for standard materials")
 
                 self.logger.info(f"mayaUSDImport args: {import_args}")
                 imported_nodes = cmds.mayaUSDImport(**import_args)
-                self.logger.info(f"mayaUSDImport returned {len(imported_nodes) if imported_nodes else 0} nodes")
+                self.logger.info(
+                    f"mayaUSDImport returned {len(imported_nodes) if imported_nodes else 0} nodes"
+                )
 
             except Exception as e:
                 self.logger.warning(f"mayaUsdImport failed ({e}), using cmds.file fallback")
@@ -442,7 +441,7 @@ class UsdImportServiceImpl(IUsdImportService):
                     mergeNamespacesOnClash=False,
                     namespace=namespace,
                     options=import_options,
-                    returnNewNodes=True
+                    returnNewNodes=True,
                 )
 
             if not imported_nodes:
@@ -454,16 +453,16 @@ class UsdImportServiceImpl(IUsdImportService):
             # Categorize imported nodes
             for node in imported_nodes:
                 try:
-                    if cmds.nodeType(node) == 'mesh':
+                    if cmds.nodeType(node) == "mesh":
                         # Get transform parent
                         parents = cmds.listRelatives(node, parent=True, fullPath=True)
                         if parents:
                             result.imported_meshes.append(parents[0])
 
-                    elif cmds.nodeType(node) == 'joint':
+                    elif cmds.nodeType(node) == "joint":
                         result.imported_joints.append(node)
 
-                    elif cmds.nodeType(node) == 'nurbsCurve':
+                    elif cmds.nodeType(node) == "nurbsCurve":
                         parents = cmds.listRelatives(node, parent=True, fullPath=True)
                         if parents:
                             result.imported_curves.append(parents[0])
@@ -485,13 +484,13 @@ class UsdImportServiceImpl(IUsdImportService):
                 # Get first joint's namespace
                 first_joint = result.imported_joints[0]
                 # Extract namespace from full path (format: |namespace:object or namespace:object)
-                if ':' in first_joint:
+                if ":" in first_joint:
                     # Remove leading pipe if present
-                    node_name = first_joint.lstrip('|')
+                    node_name = first_joint.lstrip("|")
                     # Split on first colon to get namespace
-                    detected_ns = node_name.split(':')[0]
+                    detected_ns = node_name.split(":")[0]
                     # Remove any path components
-                    detected_ns = detected_ns.split('|')[-1]
+                    detected_ns = detected_ns.split("|")[-1]
 
                     if detected_ns != namespace:
                         self.logger.warning(
@@ -504,13 +503,13 @@ class UsdImportServiceImpl(IUsdImportService):
                 # Get first mesh's namespace
                 first_mesh = result.imported_meshes[0]
                 # Extract namespace from full path
-                if ':' in first_mesh:
+                if ":" in first_mesh:
                     # Remove leading pipe if present
-                    node_name = first_mesh.lstrip('|')
+                    node_name = first_mesh.lstrip("|")
                     # Split on first colon to get namespace
-                    detected_ns = node_name.split(':')[0]
+                    detected_ns = node_name.split(":")[0]
                     # Remove any path components
-                    detected_ns = detected_ns.split('|')[-1]
+                    detected_ns = detected_ns.split("|")[-1]
 
                     if detected_ns != namespace:
                         self.logger.warning(
@@ -534,6 +533,7 @@ class UsdImportServiceImpl(IUsdImportService):
         except Exception as e:
             self.logger.error(f"mayaUSD import failed: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -548,13 +548,15 @@ class UsdImportServiceImpl(IUsdImportService):
             # Check if RenderMan is available
             renderman_available = False
             try:
-                __import__('rfm2')
+                __import__("rfm2")
                 renderman_available = True
             except ImportError:
                 pass
 
             if not renderman_available:
-                self.logger.info("RenderMan for Maya not detected - materials may display as lambert")
+                self.logger.info(
+                    "RenderMan for Maya not detected - materials may display as lambert"
+                )
                 return
 
             # Check materials assigned to meshes
@@ -566,13 +568,13 @@ class UsdImportServiceImpl(IUsdImportService):
                     # Get shading groups
                     shapes = cmds.listRelatives(mesh, shapes=True) or []
                     for shape in shapes:
-                        sgs = cmds.listConnections(shape, type='shadingEngine') or []
+                        sgs = cmds.listConnections(shape, type="shadingEngine") or []
                         for sg in sgs:
                             # Get material connected to shading group
                             mats = cmds.listConnections(f"{sg}.surfaceShader") or []
                             for mat in mats:
                                 mat_type = cmds.nodeType(mat)
-                                if mat_type.startswith('Pxr'):
+                                if mat_type.startswith("Pxr"):
                                     renderman_materials.append(mat)
                                 else:
                                     standard_materials.append(mat)
@@ -588,7 +590,9 @@ class UsdImportServiceImpl(IUsdImportService):
                 self.logger.warning(
                     f"[WARNING] Standard materials found instead of RenderMan: {len(set(standard_materials))}"
                 )
-                self.logger.info("   Tip: Set RenderMan as active renderer before import for full material support")
+                self.logger.info(
+                    "   Tip: Set RenderMan as active renderer before import for full material support"
+                )
             else:
                 self.logger.info("No materials detected on imported meshes")
 
@@ -596,11 +600,7 @@ class UsdImportServiceImpl(IUsdImportService):
             self.logger.debug(f"Material verification error: {e}")
 
     def _apply_skin_weights_from_usd(
-        self,
-        usd_path: Path,
-        namespace: str,
-        options: UsdImportOptions,
-        result: ImportResult
+        self, usd_path: Path, namespace: str, options: UsdImportOptions, result: ImportResult
     ) -> None:
         """
         Read skin weights from USD and create Maya skinClusters
@@ -646,15 +646,12 @@ class UsdImportServiceImpl(IUsdImportService):
         except Exception as e:
             self.logger.error(f"[SKINNING] Failed to apply skin weights: {e}")
             import traceback
+
             traceback.print_exc()
             result.add_warning(f"Skin weight application error: {e}")
 
     def _process_skeleton(
-        self,
-        stage: Any,
-        skeleton_path: str,
-        namespace: str,
-        result: ImportResult
+        self, stage: Any, skeleton_path: str, namespace: str, result: ImportResult
     ) -> None:
         """
         Process a single skeleton and its bound meshes
@@ -685,13 +682,11 @@ class UsdImportServiceImpl(IUsdImportService):
 
             # Process each mesh
             for i, mesh_path in enumerate(skinned_meshes, 1):
-                self.logger.info(f"[SKINNING] Processing mesh {i}/{len(skinned_meshes)}: {mesh_path}")
+                self.logger.info(
+                    f"[SKINNING] Processing mesh {i}/{len(skinned_meshes)}: {mesh_path}"
+                )
                 self._create_skin_cluster_for_mesh(
-                    stage,
-                    mesh_path,
-                    skeleton_data,
-                    namespace,
-                    result
+                    stage, mesh_path, skeleton_data, namespace, result
                 )
 
         except Exception as e:
@@ -703,7 +698,7 @@ class UsdImportServiceImpl(IUsdImportService):
         mesh_path: str,
         skeleton_data: UsdSkeletonData,
         namespace: str,
-        result: ImportResult
+        result: ImportResult,
     ) -> None:
         """
         Create skinCluster for a single mesh
@@ -717,30 +712,32 @@ class UsdImportServiceImpl(IUsdImportService):
         """
         try:
             # Get mesh name from USD
-            mesh_short_name = mesh_path.split('/')[-1]
+            mesh_short_name = mesh_path.split("/")[-1]
 
             # Search for mesh transform in scene by short name
             # USD mesh paths point to transforms, not shapes
-            all_transforms = cmds.ls(type='transform', long=True) or []
+            all_transforms = cmds.ls(type="transform", long=True) or []
             maya_mesh_name = None
 
             for transform in all_transforms:
                 # Check if short name matches (with or without namespace)
-                transform_short = transform.split('|')[-1]  # Get short name from DAG path
+                transform_short = transform.split("|")[-1]  # Get short name from DAG path
 
                 # Remove namespace prefix if present
-                if ':' in transform_short:
-                    name_without_ns = transform_short.split(':')[-1]
+                if ":" in transform_short:
+                    name_without_ns = transform_short.split(":")[-1]
                 else:
                     name_without_ns = transform_short
 
                 # Match if the name (without namespace) equals mesh_short_name
                 if name_without_ns == mesh_short_name:
                     # Verify it has a mesh shape child
-                    shapes = cmds.listRelatives(transform, shapes=True, type='mesh')
+                    shapes = cmds.listRelatives(transform, shapes=True, type="mesh")
                     if shapes:
                         maya_mesh_name = transform
-                        self.logger.debug(f"Found mesh transform: {mesh_short_name} -> {maya_mesh_name}")
+                        self.logger.debug(
+                            f"Found mesh transform: {mesh_short_name} -> {maya_mesh_name}"
+                        )
                         break
 
             if not maya_mesh_name:
@@ -750,25 +747,23 @@ class UsdImportServiceImpl(IUsdImportService):
             self.logger.info(f"Processing mesh: {maya_mesh_name}")
 
             # Read skin weights from USD
-            weight_data = self.skeleton_reader.read_skin_weights(
-                stage,
-                mesh_path,
-                skeleton_data
-            )
+            weight_data = self.skeleton_reader.read_skin_weights(stage, mesh_path, skeleton_data)
 
             if not weight_data:
                 self.logger.warning(f"No skin weights found for: {mesh_path}")
                 return
 
             # Get joint names with namespace
-            maya_joint_names = [f"{namespace}:{name}" for name in skeleton_data.get_joint_short_names()]
+            maya_joint_names = [
+                f"{namespace}:{name}" for name in skeleton_data.get_joint_short_names()
+            ]
 
             # Create skinCluster
             skin_cluster = self.skin_builder.create_skin_cluster(
                 maya_mesh_name,
                 maya_joint_names,
                 weight_data,
-                skincluster_name=f"{namespace}:{mesh_short_name}_skinCluster"
+                skincluster_name=f"{namespace}:{mesh_short_name}_skinCluster",
             )
 
             if skin_cluster:
@@ -782,13 +777,11 @@ class UsdImportServiceImpl(IUsdImportService):
         except Exception as e:
             self.logger.error(f"Failed to create skinCluster for {mesh_path}: {e}")
             import traceback
+
             traceback.print_exc()
 
     def _import_with_pure_python(
-        self,
-        usd_path: Path,
-        options: UsdImportOptions,
-        result: ImportResult
+        self, usd_path: Path, options: UsdImportOptions, result: ImportResult
     ) -> Optional[str]:
         """
         Import USD using Pure Python method (no plugins)
@@ -809,14 +802,14 @@ class UsdImportServiceImpl(IUsdImportService):
             # Use pure Python reader
             import_result = self.pure_python_reader.import_usd(usd_path, namespace)
 
-            if import_result.get('success'):
+            if import_result.get("success"):
                 # Populate result object
                 result.created_namespaces.append(namespace)
 
-                for mesh_info in import_result.get('meshes', []):
-                    result.imported_meshes.append(mesh_info['maya_mesh'])
+                for mesh_info in import_result.get("meshes", []):
+                    result.imported_meshes.append(mesh_info["maya_mesh"])
 
-                for joint in import_result.get('joints', []):
+                for joint in import_result.get("joints", []):
                     result.imported_joints.append(joint)
 
                 self.logger.info(
@@ -832,10 +825,7 @@ class UsdImportServiceImpl(IUsdImportService):
             return None
 
     def _position_joints_in_bind_pose(
-        self,
-        usd_path: Path,
-        namespace: str,
-        result: ImportResult
+        self, usd_path: Path, namespace: str, result: ImportResult
     ) -> None:
         """
         Position imported joints in their bind pose from USD bindTransforms
@@ -916,7 +906,9 @@ class UsdImportServiceImpl(IUsdImportService):
                         joints_positioned += 1
 
                 except Exception as skel_error:
-                    self.logger.warning(f"Failed to position joints for skeleton {skel_path}: {skel_error}")
+                    self.logger.warning(
+                        f"Failed to position joints for skeleton {skel_path}: {skel_error}"
+                    )
 
             self.logger.info(f"[OK] Positioned {joints_positioned} joints in bind pose")
 
@@ -924,10 +916,7 @@ class UsdImportServiceImpl(IUsdImportService):
             self.logger.error(f"Failed to position joints in bind pose: {e}")
 
     def _import_with_usdview(
-        self,
-        usd_path: Path,
-        options: UsdImportOptions,
-        result: ImportResult
+        self, usd_path: Path, options: UsdImportOptions, result: ImportResult
     ) -> Optional[str]:
         """
         Import USD via USD View tools format conversion
@@ -945,12 +934,12 @@ class UsdImportServiceImpl(IUsdImportService):
         try:
             # First validate the USD file
             validation = self.usdview_bridge.validate_usd_file(usd_path)
-            if not validation.get('valid'):
+            if not validation.get("valid"):
                 self.logger.error(f"USD validation failed: {validation.get('errors')}")
                 return None
 
             # Convert to ASCII USD for better compatibility
-            usda_path = self.usdview_bridge.convert_format(usd_path, 'usda')
+            usda_path = self.usdview_bridge.convert_format(usd_path, "usda")
             if not usda_path:
                 return None
 
@@ -979,7 +968,7 @@ class UsdImportServiceImpl(IUsdImportService):
         usd_path: Path,
         namespace: Optional[str],
         options: UsdImportOptions,
-        result: ImportResult
+        result: ImportResult,
     ) -> int:
         """Reconstruct rig connections for functional controllers - INDUSTRY FIRST!
 
@@ -1101,7 +1090,9 @@ class UsdImportServiceImpl(IUsdImportService):
             driver_nodes = [f"{ns_prefix}{node}" for node in driver_nodes]
 
             # Check if nodes exist
-            if not cmds.objExists(target_node) or not all(cmds.objExists(node) for node in driver_nodes):
+            if not cmds.objExists(target_node) or not all(
+                cmds.objExists(node) for node in driver_nodes
+            ):
                 self.logger.debug(f"Constraint nodes don't exist: {driver_nodes} -> {target_node}")
                 return False
 
@@ -1144,7 +1135,9 @@ class UsdImportServiceImpl(IUsdImportService):
             driver_values = prim.GetAttribute("driverValues").Get()
             driven_values = prim.GetAttribute("drivenValues").Get()
 
-            if not all([driver_node, driver_attr, driven_node, driven_attr, driver_values, driven_values]):
+            if not all(
+                [driver_node, driver_attr, driven_node, driven_attr, driver_values, driven_values]
+            ):
                 return False
 
             # Apply namespace prefix
@@ -1153,13 +1146,14 @@ class UsdImportServiceImpl(IUsdImportService):
 
             # Check if nodes exist
             if not cmds.objExists(driver_node) or not cmds.objExists(driven_node):
-                self.logger.debug(f"SDK nodes don't exist: {driver_node}.{driver_attr} -> {driven_node}.{driven_attr}")
+                self.logger.debug(
+                    f"SDK nodes don't exist: {driver_node}.{driver_attr} -> {driven_node}.{driven_attr}"
+                )
                 return False
 
             # Create set-driven key
             cmds.setDrivenKeyframe(
-                f"{driven_node}.{driven_attr}",
-                currentDriver=f"{driver_node}.{driver_attr}"
+                f"{driven_node}.{driven_attr}", currentDriver=f"{driver_node}.{driver_attr}"
             )
 
             # Set keyframe values
@@ -1168,10 +1162,12 @@ class UsdImportServiceImpl(IUsdImportService):
                     f"{driven_node}.{driven_attr}",
                     currentDriver=f"{driver_node}.{driver_attr}",
                     driverValue=driver_val,
-                    value=driven_val
+                    value=driven_val,
                 )
 
-            self.logger.debug(f"Reconstructed SDK: {driver_node}.{driver_attr} -> {driven_node}.{driven_attr}")
+            self.logger.debug(
+                f"Reconstructed SDK: {driver_node}.{driver_attr} -> {driven_node}.{driven_attr}"
+            )
             return True
 
         except Exception as e:

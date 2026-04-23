@@ -25,10 +25,11 @@ def test_refresh_library_method():
 
     try:
         from ui.asset_manager_window import AssetManagerWindow
+
         print("✅ AssetManagerWindow imported successfully")
 
         # Check for refresh method
-        if hasattr(AssetManagerWindow, '_on_refresh_library'):
+        if hasattr(AssetManagerWindow, "_on_refresh_library"):
             print("✅ _on_refresh_library method found")
         else:
             print("❌ Missing _on_refresh_library method")
@@ -36,12 +37,13 @@ def test_refresh_library_method():
 
         # Check method signature and implementation
         import inspect
+
         refresh_sig = inspect.signature(AssetManagerWindow._on_refresh_library)
         print(f"✅ Refresh method signature: {refresh_sig}")
 
         # Get method source to verify enhancement
         source_lines = inspect.getsourcelines(AssetManagerWindow._on_refresh_library)[0]
-        source_text = ''.join(source_lines)
+        source_text = "".join(source_lines)
 
         # Check for enhanced features
         enhancements_found = 0
@@ -95,7 +97,7 @@ def test_menu_connection():
             print("❌ AssetManagerWindow source file not found")
             return False
 
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for menu action creation
@@ -131,7 +133,7 @@ def test_button_connection():
 
     try:
         asset_manager_file = Path("src/ui/asset_manager_window.py")
-        with open(asset_manager_file, 'r', encoding='utf-8') as f:
+        with open(asset_manager_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for button creation
@@ -163,8 +165,8 @@ def test_button_connection():
 
 def main():
 
-
     from PySide6.QtWidgets import QApplication
+
     print("🧪 REFRESH LIBRARY FUNCTIONALITY TEST - Issue #9")
     print("=" * 60)
 
@@ -206,7 +208,7 @@ def main():
         print("⚠️ Some tests failed - check implementation")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

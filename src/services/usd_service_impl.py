@@ -29,7 +29,9 @@ class UsdService:
         self._check_usd_availability()
 
         if self._usd_available:
-            print("[OK] USD Service initialized - Disney's Universal Scene Description support active")
+            print(
+                "[OK] USD Service initialized - Disney's Universal Scene Description support active"
+            )
         else:
             print("[INFO] USD Service initialized - USD API not available (optional)")
 
@@ -40,18 +42,19 @@ class UsdService:
             import maya.cmds as cmds  # type: ignore
 
             # Try to load mayaUSD plugin if not loaded
-            if not cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True):
+            if not cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True):
                 try:
-                    cmds.loadPlugin('mayaUsdPlugin', quiet=True)
+                    cmds.loadPlugin("mayaUsdPlugin", quiet=True)
                     print("[OK] mayaUsdPlugin loaded successfully")
                 except Exception as e:
                     print(f"[INFO] mayaUsdPlugin not available: {e}")
 
-            self._mayausd_available = cmds.pluginInfo('mayaUsdPlugin', query=True, loaded=True)
+            self._mayausd_available = cmds.pluginInfo("mayaUsdPlugin", query=True, loaded=True)
 
             # Check for pxr USD Python API
             try:
                 from pxr import Usd  # type: ignore
+
                 self._pxr_available = Usd is not None
                 print("[OK] Pixar USD Python API available")
             except ImportError:
@@ -75,10 +78,10 @@ class UsdService:
     def get_usd_info(self) -> Dict[str, Any]:
         """Get USD system information"""
         return {
-            'usd_available': self._usd_available,
-            'mayausd_available': self._mayausd_available,
-            'pxr_available': self._pxr_available,
-            'supported_formats': ['.usd', '.usda', '.usdc', '.usdz']
+            "usd_available": self._usd_available,
+            "mayausd_available": self._mayausd_available,
+            "pxr_available": self._pxr_available,
+            "supported_formats": [".usd", ".usda", ".usdc", ".usdz"],
         }
 
     def detect_usd_content(self, file_path: Path) -> Dict[str, Any]:
@@ -93,9 +96,9 @@ class UsdService:
         """
         if not self._pxr_available:
             return {
-                'is_usd': file_path.suffix.lower() in ['.usd', '.usda', '.usdc', '.usdz'],
-                'format': file_path.suffix.lower(),
-                'detailed_info_available': False
+                "is_usd": file_path.suffix.lower() in [".usd", ".usda", ".usdc", ".usdz"],
+                "format": file_path.suffix.lower(),
+                "detailed_info_available": False,
             }
 
         try:
@@ -104,7 +107,7 @@ class UsdService:
             # Open USD stage
             stage = Usd.Stage.Open(str(file_path))
             if not stage:
-                return {'is_usd': False, 'error': 'Failed to open USD stage'}
+                return {"is_usd": False, "error": "Failed to open USD stage"}
 
             # Get root layer
             root_layer = stage.GetRootLayer()
@@ -122,28 +125,30 @@ class UsdService:
             metadata = self._extract_stage_metadata(stage)
 
             return {
-                'is_usd': True,
-                'format': file_path.suffix.lower(),
-                'detailed_info_available': True,
-                'stage_info': {
-                    'root_path': str(root_layer.identifier),
-                    'default_prim': stage.GetDefaultPrim().GetName() if stage.GetDefaultPrim() else None,
-                    'frame_range': (stage.GetStartTimeCode(), stage.GetEndTimeCode()),
-                    'fps': stage.GetFramesPerSecond() if hasattr(stage, 'GetFramesPerSecond') else None,
+                "is_usd": True,
+                "format": file_path.suffix.lower(),
+                "detailed_info_available": True,
+                "stage_info": {
+                    "root_path": str(root_layer.identifier),
+                    "default_prim": (
+                        stage.GetDefaultPrim().GetName() if stage.GetDefaultPrim() else None
+                    ),
+                    "frame_range": (stage.GetStartTimeCode(), stage.GetEndTimeCode()),
+                    "fps": (
+                        stage.GetFramesPerSecond()
+                        if hasattr(stage, "GetFramesPerSecond")
+                        else None
+                    ),
                 },
-                'prim_counts': prim_counts,
-                'layers': layer_info,
-                'variants': variant_info,
-                'metadata': metadata
+                "prim_counts": prim_counts,
+                "layers": layer_info,
+                "variants": variant_info,
+                "metadata": metadata,
             }
 
         except Exception as e:
             logger.error(f"Error detecting USD content in {file_path}: {e}")
-            return {
-                'is_usd': True,
-                'format': file_path.suffix.lower(),
-                'error': str(e)
-            }
+            return {"is_usd": True, "format": file_path.suffix.lower(), "error": str(e)}
 
     def _count_prims(self, stage) -> Dict[str, Any]:
         """Count different types of prims in a USD stage"""
@@ -151,45 +156,45 @@ class UsdService:
             from pxr import UsdGeom, UsdShade, UsdLux  # type: ignore
 
             counts = {
-                'total': 0,
-                'mesh': 0,
-                'curve': 0,
-                'points': 0,
-                'xform': 0,
-                'camera': 0,
-                'light': 0,
-                'material': 0,
-                'scope': 0,
-                'other': 0
+                "total": 0,
+                "mesh": 0,
+                "curve": 0,
+                "points": 0,
+                "xform": 0,
+                "camera": 0,
+                "light": 0,
+                "material": 0,
+                "scope": 0,
+                "other": 0,
             }
 
             for prim in stage.Traverse():
-                counts['total'] += 1
+                counts["total"] += 1
 
                 if prim.IsA(UsdGeom.Mesh):
-                    counts['mesh'] += 1
+                    counts["mesh"] += 1
                 elif prim.IsA(UsdGeom.BasisCurves) or prim.IsA(UsdGeom.NurbsCurves):
-                    counts['curve'] += 1
+                    counts["curve"] += 1
                 elif prim.IsA(UsdGeom.Points):
-                    counts['points'] += 1
+                    counts["points"] += 1
                 elif prim.IsA(UsdGeom.Xform):
-                    counts['xform'] += 1
+                    counts["xform"] += 1
                 elif prim.IsA(UsdGeom.Camera):
-                    counts['camera'] += 1
-                elif hasattr(UsdLux, 'Light') and prim.IsA(UsdLux.Light):
-                    counts['light'] += 1
+                    counts["camera"] += 1
+                elif hasattr(UsdLux, "Light") and prim.IsA(UsdLux.Light):
+                    counts["light"] += 1
                 elif prim.IsA(UsdShade.Material):
-                    counts['material'] += 1
+                    counts["material"] += 1
                 elif prim.IsA(UsdGeom.Scope):
-                    counts['scope'] += 1
+                    counts["scope"] += 1
                 else:
-                    counts['other'] += 1
+                    counts["other"] += 1
 
             return counts
 
         except Exception as e:
             logger.error(f"Error counting prims: {e}")
-            return {'total': 0, 'error': str(e)}
+            return {"total": 0, "error": str(e)}
 
     def _get_layer_info(self, stage) -> List[Dict[str, Any]]:
         """Get information about USD layers"""
@@ -199,10 +204,10 @@ class UsdService:
 
             for layer in layer_stack:
                 layer_info = {
-                    'identifier': layer.identifier,
-                    'display_name': layer.GetDisplayName(),
-                    'anonymous': layer.anonymous,
-                    'has_authored_metadata': bool(layer.GetAllAuthoredMetadata())
+                    "identifier": layer.identifier,
+                    "display_name": layer.GetDisplayName(),
+                    "anonymous": layer.anonymous,
+                    "has_authored_metadata": bool(layer.GetAllAuthoredMetadata()),
                 }
                 layers.append(layer_info)
 
@@ -224,12 +229,14 @@ class UsdService:
 
                     for set_name in set_names:
                         variant_set = variant_sets.GetVariantSet(set_name)
-                        variants.append({
-                            'prim_path': str(prim.GetPath()),
-                            'set_name': set_name,
-                            'variants': variant_set.GetVariantNames(),
-                            'selection': variant_set.GetVariantSelection()
-                        })
+                        variants.append(
+                            {
+                                "prim_path": str(prim.GetPath()),
+                                "set_name": set_name,
+                                "variants": variant_set.GetVariantNames(),
+                                "selection": variant_set.GetVariantSelection(),
+                            }
+                        )
 
             return variants
 
@@ -244,25 +251,26 @@ class UsdService:
             metadata = {}
 
             # Get common metadata
-            if root_layer.HasInfo('comment'):
-                metadata['comment'] = root_layer.GetInfo('comment')
+            if root_layer.HasInfo("comment"):
+                metadata["comment"] = root_layer.GetInfo("comment")
 
-            if root_layer.HasInfo('documentation'):
-                metadata['documentation'] = root_layer.GetInfo('documentation')
+            if root_layer.HasInfo("documentation"):
+                metadata["documentation"] = root_layer.GetInfo("documentation")
 
             # Get custom layer data
             custom_data = root_layer.customLayerData
             if custom_data:
-                metadata['custom_data'] = dict(custom_data)
+                metadata["custom_data"] = dict(custom_data)
 
             # Get up axis
             from pxr import UsdGeom  # type: ignore
+
             up_axis = UsdGeom.GetStageUpAxis(stage)
-            metadata['up_axis'] = up_axis
+            metadata["up_axis"] = up_axis
 
             # Get metrics
-            if hasattr(UsdGeom, 'GetStageMetersPerUnit'):
-                metadata['meters_per_unit'] = UsdGeom.GetStageMetersPerUnit(stage)
+            if hasattr(UsdGeom, "GetStageMetersPerUnit"):
+                metadata["meters_per_unit"] = UsdGeom.GetStageMetersPerUnit(stage)
 
             return metadata
 
@@ -282,28 +290,31 @@ class UsdService:
         """
         content = self.detect_usd_content(file_path)
 
-        if not content.get('is_usd'):
-            return {'error': 'Not a valid USD file'}
+        if not content.get("is_usd"):
+            return {"error": "Not a valid USD file"}
 
         metadata = {
-            'format': content.get('format'),
-            'file_size': file_path.stat().st_size if file_path.exists() else 0,
+            "format": content.get("format"),
+            "file_size": file_path.stat().st_size if file_path.exists() else 0,
         }
 
-        if content.get('detailed_info_available'):
-            metadata.update({
-                'stage_info': content.get('stage_info', {}),
-                'prim_counts': content.get('prim_counts', {}),
-                'layer_count': len(content.get('layers', [])),
-                'variant_count': len(content.get('variants', [])),
-                'has_variants': len(content.get('variants', [])) > 0,
-                'metadata': content.get('metadata', {})
-            })
+        if content.get("detailed_info_available"):
+            metadata.update(
+                {
+                    "stage_info": content.get("stage_info", {}),
+                    "prim_counts": content.get("prim_counts", {}),
+                    "layer_count": len(content.get("layers", [])),
+                    "variant_count": len(content.get("variants", [])),
+                    "has_variants": len(content.get("variants", [])) > 0,
+                    "metadata": content.get("metadata", {}),
+                }
+            )
 
         return metadata
 
-    def generate_usd_thumbnail(self, file_path: Path, output_path: Path,
-                               size: Tuple[int, int] = (256, 256)) -> bool:
+    def generate_usd_thumbnail(
+        self, file_path: Path, output_path: Path, size: Tuple[int, int] = (256, 256)
+    ) -> bool:
         """
         Generate thumbnail for USD file using Maya viewport
 
@@ -340,7 +351,7 @@ class UsdService:
                     namespace=namespace,
                     returnNewNodes=True,
                     options="primPath=/",
-                    type="USD Import"
+                    type="USD Import",
                 )
 
                 if not imported_nodes:
@@ -350,10 +361,10 @@ class UsdService:
                 print(f"[OK] Imported {len(imported_nodes)} nodes from USD")
 
                 # Find geometry
-                meshes = cmds.ls(f"{namespace}:*", type='mesh', long=True) or []
+                meshes = cmds.ls(f"{namespace}:*", type="mesh", long=True) or []
                 if not meshes:
                     # Try without namespace prefix
-                    meshes = cmds.ls(imported_nodes, type='mesh', long=True) or []
+                    meshes = cmds.ls(imported_nodes, type="mesh", long=True) or []
 
                 if not meshes:
                     print("[WARNING] No geometry found in USD file")
@@ -371,7 +382,7 @@ class UsdService:
 
                 if transforms:
                     cmds.select(transforms)
-                    mel.eval('fitPanel -selected;')
+                    mel.eval("fitPanel -selected;")
                     cmds.select(clear=True)
 
                 # Create output directory
@@ -388,8 +399,8 @@ class UsdService:
 
                 cmds.playblast(
                     filename=temp_file,
-                    format='image',
-                    compression='png',
+                    format="image",
+                    compression="png",
                     quality=100,
                     percent=100,
                     width=width,
@@ -398,14 +409,12 @@ class UsdService:
                     showOrnaments=False,
                     offScreen=True,
                     frame=1,
-                    completeFilename=f"{temp_file}.0001.png"
+                    completeFilename=f"{temp_file}.0001.png",
                 )
 
                 # Find generated file
                 generated_files = [
-                    os.path.join(temp_dir, f)
-                    for f in os.listdir(temp_dir)
-                    if f.endswith('.png')
+                    os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.endswith(".png")
                 ]
 
                 if generated_files:
@@ -443,8 +452,9 @@ class UsdService:
             print(f"[ERROR] USD thumbnail generation failed: {e}")
             return False
 
-    def import_usd_file(self, file_path: Path, namespace: Optional[str] = None,
-                        prim_path: str = "/") -> List[str]:
+    def import_usd_file(
+        self, file_path: Path, namespace: Optional[str] = None, prim_path: str = "/"
+    ) -> List[str]:
         """
         Import USD file into Maya scene
 
@@ -474,7 +484,7 @@ class UsdService:
                 namespace=namespace,
                 returnNewNodes=True,
                 options=f"primPath={prim_path}",
-                type="USD Import"
+                type="USD Import",
             )
 
             print(f"[OK] Imported USD file: {file_path.name} ({len(imported_nodes)} nodes)")
@@ -497,24 +507,26 @@ class UsdService:
         """
         content = self.detect_usd_content(file_path)
 
-        if not content.get('is_usd'):
-            return {'error': 'Not a valid USD file'}
+        if not content.get("is_usd"):
+            return {"error": "Not a valid USD file"}
 
         info = {
-            'format': content.get('format'),
-            'valid': True,
+            "format": content.get("format"),
+            "valid": True,
         }
 
-        if content.get('detailed_info_available'):
-            info.update({
-                'stage_info': content.get('stage_info', {}),
-                'prim_counts': content.get('prim_counts', {}),
-                'has_layers': len(content.get('layers', [])) > 1,
-                'layer_count': len(content.get('layers', [])),
-                'has_variants': len(content.get('variants', [])) > 0,
-                'variant_sets': len(content.get('variants', [])),
-                'metadata': content.get('metadata', {})
-            })
+        if content.get("detailed_info_available"):
+            info.update(
+                {
+                    "stage_info": content.get("stage_info", {}),
+                    "prim_counts": content.get("prim_counts", {}),
+                    "has_layers": len(content.get("layers", [])) > 1,
+                    "layer_count": len(content.get("layers", [])),
+                    "has_variants": len(content.get("variants", [])) > 0,
+                    "variant_sets": len(content.get("variants", [])),
+                    "metadata": content.get("metadata", {}),
+                }
+            )
 
         return info
 

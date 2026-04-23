@@ -14,7 +14,6 @@ from pathlib import Path
 
 def test_enhanced_asset_info_widget():
 
-
     print("📝 Enhanced Asset Information Widget Validation")
     print("=" * 55)
 
@@ -24,7 +23,7 @@ def test_enhanced_asset_info_widget():
         print("❌ Enhanced asset info widget file not found")
         return False
 
-    with open(widget_file, 'r', encoding='utf-8') as f:
+    with open(widget_file, "r", encoding="utf-8") as f:
         widget_content = f.read()
 
     print("\n🔤 FONT SIZE IMPROVEMENTS:")
@@ -76,7 +75,7 @@ def test_enhanced_asset_info_widget():
         print("❌ Main window file not found")
         return False
 
-    with open(main_window_file, 'r', encoding='utf-8') as f:
+    with open(main_window_file, "r", encoding="utf-8") as f:
         main_content = f.read()
 
     integration_checks = []
@@ -118,7 +117,7 @@ def test_enhanced_asset_info_widget():
         ("Visual feedback system", feedback_available),
         ("Widget import integration", import_ok),
         ("RIGHT_B panel integration", usage_ok),
-        ("Enhanced method calls", methods_ok)
+        ("Enhanced method calls", methods_ok),
     ]
 
     passed_features = 0
@@ -146,7 +145,7 @@ def test_enhanced_asset_info_widget():
         print(f"\n⚠️  PARTIAL IMPLEMENTATION: {missing} features missing")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

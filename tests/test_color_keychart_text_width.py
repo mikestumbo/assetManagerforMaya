@@ -14,18 +14,17 @@ from pathlib import Path
 
 def test_text_width_requirements():
 
-
     print("📏 Color Keychart Text Width Validation")
     print("=" * 45)
 
     # Asset types that need to display properly
     asset_types = [
-        "Maya Scene",    # 10 characters
-        "3D Model",      # 8 characters
-        "Image",         # 5 characters
-        "Video",         # 5 characters
-        "Material",      # 8 characters
-        "Archive"        # 7 characters
+        "Maya Scene",  # 10 characters
+        "3D Model",  # 8 characters
+        "Image",  # 5 characters
+        "Video",  # 5 characters
+        "Material",  # 8 characters
+        "Archive",  # 7 characters
     ]
 
     print("\n📝 ASSET TYPE TEXT ANALYSIS:")
@@ -73,7 +72,7 @@ def test_text_width_requirements():
         print("❌ Color keychart file not found")
         return False
 
-    with open(keychart_file, 'r', encoding='utf-8') as f:
+    with open(keychart_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     print("\n📐 WIDGET WIDTH CHECK:")
@@ -118,7 +117,7 @@ def test_text_width_requirements():
         print(f"\n⚠️  RECOMMENDATION: Increase width to at least {total_width_needed + 40}px")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

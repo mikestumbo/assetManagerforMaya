@@ -68,9 +68,9 @@ class ImportHelper:
             return fallback_value
 
         # Security: Allow only specific module patterns for our plugin
-        allowed_prefixes = ['core.', 'ui.', 'services.', 'integrations.', 'config.']
+        allowed_prefixes = ["core.", "ui.", "services.", "integrations.", "config."]
         if not any(module_name.startswith(prefix) for prefix in allowed_prefixes):
-            if module_name not in ['core', 'ui', 'services', 'integrations', 'config']:
+            if module_name not in ["core", "ui", "services", "integrations", "config"]:
                 print(f"[ERROR] Module not in allowlist: {module_name}")
                 return fallback_value
 
@@ -80,14 +80,15 @@ class ImportHelper:
 
             # Use importlib instead of __import__ for security
             import importlib
+
             try:
                 module = importlib.import_module(module_name)
                 return module
             except ImportError:
                 # Fallback to relative import if absolute fails
-                if '.' in module_name:
-                    parent_module = module_name.rsplit('.', 1)[0]
-                    child_name = module_name.rsplit('.', 1)[1]
+                if "." in module_name:
+                    parent_module = module_name.rsplit(".", 1)[0]
+                    child_name = module_name.rsplit(".", 1)[1]
                     parent = importlib.import_module(parent_module)
                     return getattr(parent, child_name, fallback_value)
                 return fallback_value
@@ -119,6 +120,7 @@ class ImportHelper:
         except Exception as e:
             print(f"[ERROR] Failed to get class {class_name} from {module_path}: {e}")
             return None
+
 
 # Note: No global path modification for security
 # Path setup is done per-operation with restoration

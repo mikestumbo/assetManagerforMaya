@@ -29,6 +29,7 @@ from dataclasses import dataclass, asdict
 # Maya imports (conditional)
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -39,6 +40,7 @@ except ImportError:
 @dataclass
 class ControllerData:
     """Controller/control curve data"""
+
     name: str
     transform: Dict[str, List[float]]  # translate, rotate, scale
     shape_type: str  # nurbs, locator
@@ -52,6 +54,7 @@ class ControllerData:
 @dataclass
 class ConstraintData:
     """Constraint data"""
+
     name: str
     type: str  # parentConstraint, orientConstraint, etc.
     driven: str
@@ -65,6 +68,7 @@ class ConstraintData:
 @dataclass
 class SpaceSwitchData:
     """v1.5.0: Space switch configuration"""
+
     name: str
     control: str
     attribute: str  # The enum attribute for switching
@@ -75,6 +79,7 @@ class SpaceSwitchData:
 @dataclass
 class IKHandleData:
     """IK handle data"""
+
     name: str
     start_joint: str
     end_joint: str
@@ -86,6 +91,7 @@ class IKHandleData:
 @dataclass
 class BlendShapeData:
     """Blendshape deformer data"""
+
     name: str
     base_geometry: str
     targets: List[Dict]  # target name, weight, deltas, in-betweens
@@ -94,6 +100,7 @@ class BlendShapeData:
 @dataclass
 class BlendShapeConnectionData:
     """Connection driving a blendshape target"""
+
     blendshape: str
     target: str
     driver: str  # e.g., "Smile_Ctrl.translateY"
@@ -104,6 +111,7 @@ class BlendShapeConnectionData:
 @dataclass
 class SetDrivenKeyData:
     """Set Driven Key data"""
+
     driver: str  # "Control.attribute"
     driven: str  # "Target.attribute"
     keys: List[List[float]]  # [[driver_value, driven_value], ...]
@@ -112,6 +120,7 @@ class SetDrivenKeyData:
 @dataclass
 class ValidationResult:
     """v1.5.0: Pre-export validation result"""
+
     valid: bool
     errors: List[str]
     warnings: List[str]
@@ -167,10 +176,7 @@ class MayaRigExporter:
         """
         if not MAYA_AVAILABLE or cmds is None:
             return ValidationResult(
-                valid=False,
-                errors=["Maya not available"],
-                warnings=[],
-                unsupported_nodes=[]
+                valid=False, errors=["Maya not available"], warnings=[], unsupported_nodes=[]
             )
 
         errors = []
@@ -184,9 +190,7 @@ class MayaRigExporter:
             errors.append(f"Skeleton root '{skeleton_root}' not found")
 
         # Check for unsupported node types
-        unsupported_types = [
-            'expression', 'script', 'unknown', 'reference'
-        ]
+        unsupported_types = ["expression", "script", "unknown", "reference"]
         for node_type in unsupported_types:
             nodes = cmds.ls(type=node_type) or []
             for node in nodes:
@@ -196,21 +200,28 @@ class MayaRigExporter:
 
         # Check for broken constraints
         constraint_types = [
-            'parentConstraint', 'orientConstraint', 'pointConstraint',
-            'aimConstraint', 'scaleConstraint'
+            "parentConstraint",
+            "orientConstraint",
+            "pointConstraint",
+            "aimConstraint",
+            "scaleConstraint",
         ]
         for ctype in constraint_types:
             constraints = cmds.ls(type=ctype) or []
             for constraint in constraints:
                 # Check if constraint has targets
-                targets = cmds.parentConstraint(constraint, q=True, tl=True) if ctype == 'parentConstraint' else []
+                targets = (
+                    cmds.parentConstraint(constraint, q=True, tl=True)
+                    if ctype == "parentConstraint"
+                    else []
+                )
                 if not targets:
                     warnings.append(f"Constraint {constraint} may have no valid targets")
 
         self._report_progress("Checking blendshapes", 50)
 
         # Check blendshape connections
-        blendshapes = cmds.ls(type='blendShape') or []
+        blendshapes = cmds.ls(type="blendShape") or []
         for bs in blendshapes:
             # Check if base geometry exists
             geo = cmds.blendShape(bs, q=True, geometry=True) or []
@@ -220,7 +231,7 @@ class MayaRigExporter:
         self._report_progress("Checking IK handles", 75)
 
         # Check IK handles
-        ik_handles = cmds.ls(type='ikHandle') or []
+        ik_handles = cmds.ls(type="ikHandle") or []
         for ik in ik_handles:
             start = cmds.ikHandle(ik, q=True, startJoint=True)
             end = cmds.ikHandle(ik, q=True, endEffector=True)
@@ -230,10 +241,7 @@ class MayaRigExporter:
         self._report_progress("Validation complete", 100)
 
         return ValidationResult(
-            valid=len(errors) == 0,
-            errors=errors,
-            warnings=warnings,
-            unsupported_nodes=unsupported
+            valid=len(errors) == 0, errors=errors, warnings=warnings, unsupported_nodes=unsupported
         )
 
     def export_rig(
@@ -241,7 +249,7 @@ class MayaRigExporter:
         output_path: Path,
         skeleton_root: Optional[str] = None,
         options: Optional[Dict] = None,
-        progress_callback: Optional[Callable[[str, int], None]] = None
+        progress_callback: Optional[Callable[[str, int], None]] = None,
     ) -> Tuple[bool, str]:
         """
         Export rig data to rig file
@@ -274,24 +282,24 @@ class MayaRigExporter:
             options = options or {}
 
             # v2.0: Check if we're using Maya format (fast) or legacy .mrig (slow)
-            rig_format = options.get('rig_format', None)
-            rig_path = options.get('rig_path', None)
+            rig_format = options.get("rig_format", None)
+            rig_path = options.get("rig_path", None)
 
             # If rig_format is specified, export directly to Maya file
-            if rig_format in ('mayaBinary', 'mayaAscii'):
+            if rig_format in ("mayaBinary", "mayaAscii"):
                 self.logger.info(f"🎮 v2.0: Exporting rig directly to Maya format ({rig_format})")
                 return self._export_maya_rig_file(
                     output_path=rig_path or output_path,
                     rig_format=rig_format,
                     skeleton_root=skeleton_root,
-                    options=options
+                    options=options,
                 )
 
             # Legacy: Export to .mrig JSON format
             self._report_progress("Initializing export", 0)
 
             # v1.5.0: Run validation if requested
-            if options.get('validate_before_export', True):
+            if options.get("validate_before_export", True):
                 self._report_progress("Validating rig", 5)
                 validation = self.validate_rig(skeleton_root)
                 if not validation.valid:
@@ -301,78 +309,78 @@ class MayaRigExporter:
 
             # Build rig data structure
             rig_data = {
-                'version': '1.5.0',  # v1.5.0: Updated version
-                'skeleton_root': skeleton_root,
-                'controllers': [],
-                'constraints': [],
-                'space_switches': [],  # v1.5.0: Space switches
-                'ik_handles': [],
-                'blendshapes': [],
-                'blendshape_connections': [],
-                'set_driven_keys': [],
-                'custom_attributes': []  # v1.5.0: Custom attrs
+                "version": "1.5.0",  # v1.5.0: Updated version
+                "skeleton_root": skeleton_root,
+                "controllers": [],
+                "constraints": [],
+                "space_switches": [],  # v1.5.0: Space switches
+                "ik_handles": [],
+                "blendshapes": [],
+                "blendshape_connections": [],
+                "set_driven_keys": [],
+                "custom_attributes": [],  # v1.5.0: Custom attrs
             }
 
             # Extract scene name from current file
             scene_file = cmds.file(query=True, sceneName=True)
             if scene_file:
-                rig_data['source_scene'] = Path(scene_file).name
+                rig_data["source_scene"] = Path(scene_file).name
 
             # Collect rig components based on options
             self.logger.info(f"[TOOL] Exporting rig data to: {output_path}")
 
             # Extract controllers (NURBS curves, locators) with custom/proxy attrs
             self._report_progress("Extracting controllers", 15)
-            if options.get('export_controllers', True):
+            if options.get("export_controllers", True):
                 controllers = self._extract_controllers(
-                    include_custom_attrs=options.get('export_custom_attrs', True),
-                    include_proxy_attrs=options.get('export_proxy_attrs', True)
+                    include_custom_attrs=options.get("export_custom_attrs", True),
+                    include_proxy_attrs=options.get("export_proxy_attrs", True),
                 )
-                rig_data['controllers'] = controllers
+                rig_data["controllers"] = controllers
                 self.logger.info(f"     [OK] {len(controllers)} controllers")
 
             # Extract constraints
             self._report_progress("Extracting constraints", 30)
-            if options.get('export_constraints', True):
+            if options.get("export_constraints", True):
                 constraints = self._extract_constraints()
-                rig_data['constraints'] = constraints
+                rig_data["constraints"] = constraints
                 self.logger.info(f"     [OK] {len(constraints)} constraints")
 
             # v1.5.0: Extract space switches
             self._report_progress("Extracting space switches", 40)
-            if options.get('export_space_switches', True):
+            if options.get("export_space_switches", True):
                 space_switches = self._extract_space_switches()
-                rig_data['space_switches'] = space_switches
+                rig_data["space_switches"] = space_switches
                 self.logger.info(f"     [OK] {len(space_switches)} space switches")
 
             # Extract IK handles
             self._report_progress("Extracting IK handles", 55)
-            if options.get('export_ik_handles', True):
+            if options.get("export_ik_handles", True):
                 ik_handles = self._extract_ik_handles()
-                rig_data['ik_handles'] = ik_handles
+                rig_data["ik_handles"] = ik_handles
                 self.logger.info(f"     [OK] {len(ik_handles)} IK handles")
 
             # Extract blendshapes
             self._report_progress("Extracting blendshapes", 70)
-            if options.get('export_blendshapes', True):
+            if options.get("export_blendshapes", True):
                 blendshapes, connections = self._extract_blendshapes()
-                rig_data['blendshapes'] = blendshapes
-                rig_data['blendshape_connections'] = connections
+                rig_data["blendshapes"] = blendshapes
+                rig_data["blendshape_connections"] = connections
                 self.logger.info(
                     f"     [OK] {len(blendshapes)} blendshapes, {len(connections)} connections"
                 )
 
             # Extract Set Driven Keys
             self._report_progress("Extracting SDKs", 85)
-            if options.get('export_sdks', True):
+            if options.get("export_sdks", True):
                 sdks = self._extract_set_driven_keys()
-                rig_data['set_driven_keys'] = sdks
+                rig_data["set_driven_keys"] = sdks
                 self.logger.info(f"     [OK] {len(sdks)} SDKs")
 
             # Write to JSON file
             self._report_progress("Writing file", 90)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(rig_data, f, indent=2, default=self._json_encoder)
 
             # Log success
@@ -382,12 +390,12 @@ class MayaRigExporter:
             # v1.5.0: Export controllers to separate .ma file for referencing
             # This avoids trying to recreate NURBS curves from JSON
             self._report_progress("Exporting controllers .ma", 95)
-            if options.get('export_controllers', True) and rig_data.get('controllers'):
-                ma_path = self._export_controllers_ma(output_path, rig_data['controllers'])
+            if options.get("export_controllers", True) and rig_data.get("controllers"):
+                ma_path = self._export_controllers_ma(output_path, rig_data["controllers"])
                 if ma_path:
-                    rig_data['controllers_ma_file'] = ma_path.name
+                    rig_data["controllers_ma_file"] = ma_path.name
                     # Re-write .mrig with the .ma reference added
-                    with open(output_path, 'w', encoding='utf-8') as f:
+                    with open(output_path, "w", encoding="utf-8") as f:
                         json.dump(rig_data, f, indent=2, default=self._json_encoder)
                     self.logger.info(f"[OK] Controllers .ma exported: {ma_path.name}")
 
@@ -403,7 +411,7 @@ class MayaRigExporter:
         output_path: Path,
         rig_format: str,
         skeleton_root: Optional[str] = None,
-        options: Optional[Dict] = None
+        options: Optional[Dict] = None,
     ) -> Tuple[bool, str]:
         """
         v2.0: Export rig directly to Maya Binary/ASCII file
@@ -439,32 +447,32 @@ class MayaRigExporter:
             self._report_progress("Collecting controllers", 10)
 
             # NURBS curves (most common controller type)
-            nurbs_curves = cmds.ls(type='nurbsCurve', long=True) or []
+            nurbs_curves = cmds.ls(type="nurbsCurve", long=True) or []
             curve_transforms = []
             for curve in nurbs_curves:
                 parents = cmds.listRelatives(curve, parent=True, fullPath=True)
                 if parents:
                     curve_transforms.append(parents[0])
             nodes_to_export.extend(curve_transforms)
-            node_counts['NURBS Controllers'] = len(curve_transforms)
+            node_counts["NURBS Controllers"] = len(curve_transforms)
 
             # Locators (often used for pole vectors, space targets)
-            locators = cmds.ls(type='locator', long=True) or []
+            locators = cmds.ls(type="locator", long=True) or []
             locator_transforms = []
             for loc in locators:
                 parents = cmds.listRelatives(loc, parent=True, fullPath=True)
                 if parents:
                     locator_transforms.append(parents[0])
             nodes_to_export.extend(locator_transforms)
-            node_counts['Locators'] = len(locator_transforms)
+            node_counts["Locators"] = len(locator_transforms)
 
             # ================================================================
             # SKELETON
             # ================================================================
             self._report_progress("Collecting skeleton", 20)
-            joints = cmds.ls(type='joint', long=True) or []
+            joints = cmds.ls(type="joint", long=True) or []
             nodes_to_export.extend(joints)
-            node_counts['Joints'] = len(joints)
+            node_counts["Joints"] = len(joints)
 
             # ================================================================
             # IK SYSTEM
@@ -472,14 +480,14 @@ class MayaRigExporter:
             self._report_progress("Collecting IK system", 30)
 
             # IK handles
-            ik_handles = cmds.ls(type='ikHandle', long=True) or []
+            ik_handles = cmds.ls(type="ikHandle", long=True) or []
             nodes_to_export.extend(ik_handles)
-            node_counts['IK Handles'] = len(ik_handles)
+            node_counts["IK Handles"] = len(ik_handles)
 
             # IK effectors
-            ik_effectors = cmds.ls(type='ikEffector', long=True) or []
+            ik_effectors = cmds.ls(type="ikEffector", long=True) or []
             nodes_to_export.extend(ik_effectors)
-            node_counts['IK Effectors'] = len(ik_effectors)
+            node_counts["IK Effectors"] = len(ik_effectors)
 
             # Spline IK curves
             # (already captured as nurbsCurve, but ensure ikSplineHandle curves are included)
@@ -489,16 +497,22 @@ class MayaRigExporter:
             # ================================================================
             self._report_progress("Collecting constraints", 40)
             constraint_types = [
-                'parentConstraint', 'orientConstraint', 'pointConstraint',
-                'aimConstraint', 'scaleConstraint', 'poleVectorConstraint',
-                'tangentConstraint', 'geometryConstraint', 'normalConstraint'
+                "parentConstraint",
+                "orientConstraint",
+                "pointConstraint",
+                "aimConstraint",
+                "scaleConstraint",
+                "poleVectorConstraint",
+                "tangentConstraint",
+                "geometryConstraint",
+                "normalConstraint",
             ]
             total_constraints = 0
             for ctype in constraint_types:
                 constraints = cmds.ls(type=ctype, long=True) or []
                 nodes_to_export.extend(constraints)
                 total_constraints += len(constraints)
-            node_counts['Constraints'] = total_constraints
+            node_counts["Constraints"] = total_constraints
 
             # ================================================================
             # DEFORMERS
@@ -506,25 +520,25 @@ class MayaRigExporter:
             self._report_progress("Collecting deformers", 50)
 
             # Blendshapes (facial, correctives)
-            blendshapes = cmds.ls(type='blendShape') or []
+            blendshapes = cmds.ls(type="blendShape") or []
             nodes_to_export.extend(blendshapes)
-            node_counts['Blendshapes'] = len(blendshapes)
+            node_counts["Blendshapes"] = len(blendshapes)
 
             # Clusters (often used in ribbon rigs, face rigs)
-            clusters = cmds.ls(type='cluster') or []
+            clusters = cmds.ls(type="cluster") or []
             cluster_handles = []
             for cluster in clusters:
                 # Get the cluster handle transform
-                handle = cmds.listConnections(cluster + '.matrix', source=True)
+                handle = cmds.listConnections(cluster + ".matrix", source=True)
                 if handle:
                     cluster_handles.extend(handle)
             nodes_to_export.extend(clusters)
             nodes_to_export.extend(cluster_handles)
-            node_counts['Clusters'] = len(clusters)
+            node_counts["Clusters"] = len(clusters)
 
             # Lattices (for squash/stretch, bulge effects)
-            lattices = cmds.ls(type='lattice', long=True) or []
-            ffd_deformers = cmds.ls(type='ffd') or []
+            lattices = cmds.ls(type="lattice", long=True) or []
+            ffd_deformers = cmds.ls(type="ffd") or []
             lattice_transforms = []
             for lattice in lattices:
                 parents = cmds.listRelatives(lattice, parent=True, fullPath=True)
@@ -533,48 +547,53 @@ class MayaRigExporter:
             nodes_to_export.extend(lattices)
             nodes_to_export.extend(ffd_deformers)
             nodes_to_export.extend(lattice_transforms)
-            node_counts['Lattices'] = len(lattices)
+            node_counts["Lattices"] = len(lattices)
 
             # Wire deformers
-            wires = cmds.ls(type='wire') or []
+            wires = cmds.ls(type="wire") or []
             nodes_to_export.extend(wires)
-            node_counts['Wire Deformers'] = len(wires)
+            node_counts["Wire Deformers"] = len(wires)
 
             # Wrap deformers
-            wraps = cmds.ls(type='wrap') or []
+            wraps = cmds.ls(type="wrap") or []
             nodes_to_export.extend(wraps)
-            node_counts['Wrap Deformers'] = len(wraps)
+            node_counts["Wrap Deformers"] = len(wraps)
 
             # Non-linear deformers (bend, twist, squash, flare, sine, wave)
             nonlinear_types = [
-                'nonLinear', 'deformBend', 'deformTwist',
-                'deformSquash', 'deformFlare', 'deformSine', 'deformWave'
+                "nonLinear",
+                "deformBend",
+                "deformTwist",
+                "deformSquash",
+                "deformFlare",
+                "deformSine",
+                "deformWave",
             ]
             nonlinears = []
             for nltype in nonlinear_types:
                 nl = cmds.ls(type=nltype, long=True) or []
                 nonlinears.extend(nl)
             nodes_to_export.extend(nonlinears)
-            node_counts['Non-Linear Deformers'] = len(nonlinears)
+            node_counts["Non-Linear Deformers"] = len(nonlinears)
 
             # Skinning (skinCluster, deltaMush, tension)
-            skin_clusters = cmds.ls(type='skinCluster') or []
+            skin_clusters = cmds.ls(type="skinCluster") or []
             nodes_to_export.extend(skin_clusters)
-            node_counts['Skin Clusters'] = len(skin_clusters)
+            node_counts["Skin Clusters"] = len(skin_clusters)
 
-            delta_mush = cmds.ls(type='deltaMush') or []
+            delta_mush = cmds.ls(type="deltaMush") or []
             nodes_to_export.extend(delta_mush)
-            node_counts['Delta Mush'] = len(delta_mush)
+            node_counts["Delta Mush"] = len(delta_mush)
 
-            tension = cmds.ls(type='tension') or []
+            tension = cmds.ls(type="tension") or []
             nodes_to_export.extend(tension)
-            node_counts['Tension Deformers'] = len(tension)
+            node_counts["Tension Deformers"] = len(tension)
 
             # Proximity wrap (Maya 2020+)
             try:
-                prox_wrap = cmds.ls(type='proximityWrap') or []
+                prox_wrap = cmds.ls(type="proximityWrap") or []
                 nodes_to_export.extend(prox_wrap)
-                node_counts['Proximity Wrap'] = len(prox_wrap)
+                node_counts["Proximity Wrap"] = len(prox_wrap)
             except Exception:
                 pass  # Type may not exist in older Maya
 
@@ -584,19 +603,20 @@ class MayaRigExporter:
             self._report_progress("Collecting animation/SDKs", 60)
 
             # SDK animation curves (driven by attributes, not time)
-            anim_curves = cmds.ls(type=[
-                'animCurveUA', 'animCurveUL', 'animCurveUT', 'animCurveUU'
-            ]) or []
+            anim_curves = (
+                cmds.ls(type=["animCurveUA", "animCurveUL", "animCurveUT", "animCurveUU"]) or []
+            )
             nodes_to_export.extend(anim_curves)
-            node_counts['SDK Curves'] = len(anim_curves)
+            node_counts["SDK Curves"] = len(anim_curves)
 
             # Time-based animation curves (if user wants animation)
-            if options.get('export_animation', False):
-                time_curves = cmds.ls(type=[
-                    'animCurveTL', 'animCurveTA', 'animCurveTT', 'animCurveTU'
-                ]) or []
+            if options.get("export_animation", False):
+                time_curves = (
+                    cmds.ls(type=["animCurveTL", "animCurveTA", "animCurveTT", "animCurveTU"])
+                    or []
+                )
                 nodes_to_export.extend(time_curves)
-                node_counts['Animation Curves'] = len(time_curves)
+                node_counts["Animation Curves"] = len(time_curves)
 
             # ================================================================
             # UTILITY NODES
@@ -605,33 +625,55 @@ class MayaRigExporter:
 
             # Multiply/Divide, Condition, Reverse, Clamp, etc.
             utility_types = [
-                'multiplyDivide', 'plusMinusAverage', 'reverse', 'clamp',
-                'condition', 'blendColors', 'blendTwoAttr', 'setRange',
-                'remapValue', 'unitConversion', 'distanceBetween',
-                'vectorProduct', 'pointOnCurveInfo', 'pointOnSurfaceInfo',
-                'closestPointOnSurface', 'closestPointOnMesh', 'nearestPointOnCurve',
-                'curveInfo', 'arcLengthDimension', 'angleBetween',
-                'addDoubleLinear', 'multDoubleLinear'
+                "multiplyDivide",
+                "plusMinusAverage",
+                "reverse",
+                "clamp",
+                "condition",
+                "blendColors",
+                "blendTwoAttr",
+                "setRange",
+                "remapValue",
+                "unitConversion",
+                "distanceBetween",
+                "vectorProduct",
+                "pointOnCurveInfo",
+                "pointOnSurfaceInfo",
+                "closestPointOnSurface",
+                "closestPointOnMesh",
+                "nearestPointOnCurve",
+                "curveInfo",
+                "arcLengthDimension",
+                "angleBetween",
+                "addDoubleLinear",
+                "multDoubleLinear",
             ]
             total_utils = 0
             for utype in utility_types:
                 utils = cmds.ls(type=utype) or []
                 nodes_to_export.extend(utils)
                 total_utils += len(utils)
-            node_counts['Utility Nodes'] = total_utils
+            node_counts["Utility Nodes"] = total_utils
 
             # Matrix nodes (common in modern rigs)
             matrix_types = [
-                'decomposeMatrix', 'composeMatrix', 'inverseMatrix',
-                'multMatrix', 'wtAddMatrix', 'pointMatrixMult',
-                'fourByFourMatrix', 'holdMatrix', 'aimMatrix', 'blendMatrix'
+                "decomposeMatrix",
+                "composeMatrix",
+                "inverseMatrix",
+                "multMatrix",
+                "wtAddMatrix",
+                "pointMatrixMult",
+                "fourByFourMatrix",
+                "holdMatrix",
+                "aimMatrix",
+                "blendMatrix",
             ]
             total_matrix = 0
             for mtype in matrix_types:
                 mtx = cmds.ls(type=mtype) or []
                 nodes_to_export.extend(mtx)
                 total_matrix += len(mtx)
-            node_counts['Matrix Nodes'] = total_matrix
+            node_counts["Matrix Nodes"] = total_matrix
 
             # ================================================================
             # SELECTION SETS
@@ -639,20 +681,24 @@ class MayaRigExporter:
             self._report_progress("Collecting sets", 75)
 
             # Object sets (control sets, deformer sets)
-            all_sets = cmds.ls(type='objectSet') or []
+            all_sets = cmds.ls(type="objectSet") or []
             # Filter to rig-related sets (exclude default sets)
             default_sets = [
-                'defaultLightSet', 'defaultObjectSet', 'initialParticleSE',
-                'initialShadingGroup', 'defaultTextureList1'
+                "defaultLightSet",
+                "defaultObjectSet",
+                "initialParticleSE",
+                "initialShadingGroup",
+                "defaultTextureList1",
             ]
             rig_sets = [
-                s for s in all_sets
+                s
+                for s in all_sets
                 if s not in default_sets
-                and not s.startswith('tweakSet')
-                and not cmds.objectType(s, isAType='shadingEngine')
+                and not s.startswith("tweakSet")
+                and not cmds.objectType(s, isAType="shadingEngine")
             ]
             nodes_to_export.extend(rig_sets)
-            node_counts['Selection Sets'] = len(rig_sets)
+            node_counts["Selection Sets"] = len(rig_sets)
 
             # ================================================================
             # RIG GROUPS & TRANSFORMS
@@ -661,7 +707,7 @@ class MayaRigExporter:
 
             # Get transforms that are likely rig organization groups
             # (transforms with children but no shape)
-            all_transforms = cmds.ls(type='transform', long=True) or []
+            all_transforms = cmds.ls(type="transform", long=True) or []
             rig_groups = []
             for xform in all_transforms:
                 # Skip if already collected (controller parents, etc.)
@@ -678,7 +724,7 @@ class MayaRigExporter:
                             rig_groups.append(xform)
                             break
             nodes_to_export.extend(rig_groups)
-            node_counts['Rig Groups'] = len(rig_groups)
+            node_counts["Rig Groups"] = len(rig_groups)
 
             # Remove duplicates while preserving order
             seen = set()
@@ -703,8 +749,8 @@ class MayaRigExporter:
             cmds.select(unique_nodes, replace=True, noExpand=True)
 
             # Suppress warnings during export
-            original_warning = mel.eval('scriptEditorInfo -q -suppressWarnings')
-            mel.eval('scriptEditorInfo -suppressWarnings true')
+            original_warning = mel.eval("scriptEditorInfo -q -suppressWarnings")
+            mel.eval("scriptEditorInfo -suppressWarnings true")
 
             try:
                 # Ensure output directory exists
@@ -719,14 +765,14 @@ class MayaRigExporter:
                     force=True,
                     preserveReferences=False,
                     constructionHistory=True,  # Keep history for SDKs
-                    channels=True,             # Keep animation channels
-                    constraints=True,          # Keep constraints
-                    expressions=True,          # Keep expressions if any
-                    shader=False               # Don't need shaders
+                    channels=True,  # Keep animation channels
+                    constraints=True,  # Keep constraints
+                    expressions=True,  # Keep expressions if any
+                    shader=False,  # Don't need shaders
                 )
 
             finally:
-                mel.eval(f'scriptEditorInfo -suppressWarnings {original_warning}')
+                mel.eval(f"scriptEditorInfo -suppressWarnings {original_warning}")
                 cmds.select(clear=True)
 
             # Report success with breakdown
@@ -748,20 +794,17 @@ class MayaRigExporter:
         except Exception as e:
             self.logger.error(f"[ERROR] Failed to export Maya rig file: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
             return False, f"Maya rig export failed: {e}"
 
     def _json_encoder(self, obj):
         """Custom JSON encoder for dataclasses"""
-        if hasattr(obj, '__dataclass_fields__'):
+        if hasattr(obj, "__dataclass_fields__"):
             return asdict(obj)
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
-    def _export_controllers_ma(
-        self,
-        mrig_path: Path,
-        controllers: List[Dict]
-    ) -> Optional[Path]:
+    def _export_controllers_ma(self, mrig_path: Path, controllers: List[Dict]) -> Optional[Path]:
         """
         v1.5.0: Export controller curves to a separate .ma file for referencing
 
@@ -778,13 +821,13 @@ class MayaRigExporter:
         if cmds is None or not controllers:
             return None
 
-        mb_path = mrig_path.with_suffix('.controllers.mb')
+        mb_path = mrig_path.with_suffix(".controllers.mb")
 
         try:
             # Get list of controller transform names
             controller_names = []
             for ctrl in controllers:
-                name = ctrl.get('name')
+                name = ctrl.get("name")
                 if name and cmds.objExists(name):
                     controller_names.append(name)
 
@@ -801,10 +844,11 @@ class MayaRigExporter:
             # These occur because controllers may have constraint connections that
             # reference locked attributes - safe to ignore during export
             import maya.mel as mel
-            original_warning_level = mel.eval('scriptEditorInfo -q -suppressWarnings')
-            original_error_level = mel.eval('scriptEditorInfo -q -suppressErrors')
-            mel.eval('scriptEditorInfo -suppressWarnings true')
-            mel.eval('scriptEditorInfo -suppressErrors true')
+
+            original_warning_level = mel.eval("scriptEditorInfo -q -suppressWarnings")
+            original_error_level = mel.eval("scriptEditorInfo -q -suppressErrors")
+            mel.eval("scriptEditorInfo -suppressWarnings true")
+            mel.eval("scriptEditorInfo -suppressErrors true")
 
             try:
                 # Export directly as Maya Binary with options to exclude connections
@@ -812,19 +856,21 @@ class MayaRigExporter:
                 cmds.file(
                     str(mb_path),
                     exportSelected=True,
-                    type='mayaBinary',
+                    type="mayaBinary",
                     force=True,
                     preserveReferences=False,
                     constructionHistory=False,
                     channels=False,
                     constraints=False,
                     expressions=False,
-                    shader=False
+                    shader=False,
                 )
             finally:
                 # Restore original warning/error levels
-                mel.eval(f'scriptEditorInfo -suppressWarnings {str(original_warning_level).lower()}')
-                mel.eval(f'scriptEditorInfo -suppressErrors {str(original_error_level).lower()}')
+                mel.eval(
+                    f"scriptEditorInfo -suppressWarnings {str(original_warning_level).lower()}"
+                )
+                mel.eval(f"scriptEditorInfo -suppressErrors {str(original_error_level).lower()}")
 
             cmds.select(clear=True)
 
@@ -836,9 +882,7 @@ class MayaRigExporter:
             return None
 
     def _extract_controllers(
-        self,
-        include_custom_attrs: bool = True,
-        include_proxy_attrs: bool = True
+        self, include_custom_attrs: bool = True, include_proxy_attrs: bool = True
     ) -> List[Dict]:
         """
         Extract controller curves and locators
@@ -853,7 +897,7 @@ class MayaRigExporter:
         controllers = []
 
         # Find all NURBS curves (typical controllers)
-        nurbs_curves = cmds.ls(type='nurbsCurve') or []
+        nurbs_curves = cmds.ls(type="nurbsCurve") or []
 
         for curve_shape in nurbs_curves:
             try:
@@ -894,18 +938,14 @@ class MayaRigExporter:
                     proxy_attrs = self._extract_proxy_attributes(transform)
 
                 controller_data = ControllerData(
-                    name=transform.split('|')[-1],  # Short name
-                    transform={
-                        'translate': translate,
-                        'rotate': rotate,
-                        'scale': scale
-                    },
-                    shape_type='nurbs',
+                    name=transform.split("|")[-1],  # Short name
+                    transform={"translate": translate, "rotate": rotate, "scale": scale},
+                    shape_type="nurbs",
                     color=color,
-                    parent=parent.split('|')[-1] if parent else None,
+                    parent=parent.split("|")[-1] if parent else None,
                     curve_data=curve_data,
                     custom_attrs=custom_attrs,
-                    proxy_attrs=proxy_attrs
+                    proxy_attrs=proxy_attrs,
                 )
 
                 controllers.append(asdict(controller_data))
@@ -942,24 +982,24 @@ class MayaRigExporter:
                     value = cmds.getAttr(attr_path)
 
                     attr_data = {
-                        'type': attr_type,
-                        'value': value,
-                        'keyable': cmds.getAttr(attr_path, keyable=True),
-                        'channelBox': cmds.getAttr(attr_path, channelBox=True)
+                        "type": attr_type,
+                        "value": value,
+                        "keyable": cmds.getAttr(attr_path, keyable=True),
+                        "channelBox": cmds.getAttr(attr_path, channelBox=True),
                     }
 
                     # Get min/max for numeric types
-                    if attr_type in ['double', 'float', 'long', 'short']:
+                    if attr_type in ["double", "float", "long", "short"]:
                         if cmds.attributeQuery(attr, node=node, minExists=True):
-                            attr_data['min'] = cmds.attributeQuery(attr, node=node, min=True)[0]
+                            attr_data["min"] = cmds.attributeQuery(attr, node=node, min=True)[0]
                         if cmds.attributeQuery(attr, node=node, maxExists=True):
-                            attr_data['max'] = cmds.attributeQuery(attr, node=node, max=True)[0]
+                            attr_data["max"] = cmds.attributeQuery(attr, node=node, max=True)[0]
 
                     # Get enum names for enum type
-                    if attr_type == 'enum':
+                    if attr_type == "enum":
                         enum_str = cmds.attributeQuery(attr, node=node, listEnum=True)
                         if enum_str:
-                            attr_data['enum_names'] = enum_str[0].split(':')
+                            attr_data["enum_names"] = enum_str[0].split(":")
 
                     custom_attrs[attr] = attr_data
 
@@ -996,16 +1036,17 @@ class MayaRigExporter:
                     attr_path = f"{node}.{attr}"
 
                     # Check if this attribute is a proxy (has incoming connection)
-                    connections = cmds.listConnections(
-                        attr_path, source=True, destination=False, plugs=True
-                    ) or []
+                    connections = (
+                        cmds.listConnections(attr_path, source=True, destination=False, plugs=True)
+                        or []
+                    )
 
                     if connections:
                         source = connections[0]
-                        source_node, source_attr = source.split('.')
+                        source_node, source_attr = source.split(".")
                         proxy_attrs[attr] = {
-                            'source_node': source_node,
-                            'source_attr': source_attr
+                            "source_node": source_node,
+                            "source_attr": source_attr,
                         }
 
                 except Exception as e:
@@ -1032,7 +1073,7 @@ class MayaRigExporter:
         space_switches = []
 
         # Find parent constraints (most space switches use these)
-        parent_constraints = cmds.ls(type='parentConstraint') or []
+        parent_constraints = cmds.ls(type="parentConstraint") or []
 
         for pc in parent_constraints:
             try:
@@ -1042,9 +1083,9 @@ class MayaRigExporter:
                     continue  # Need at least 2 spaces for a switch
 
                 # Get the driven object
-                driven = cmds.listConnections(
-                    f"{pc}.constraintParentInverseMatrix", source=True
-                ) or []
+                driven = (
+                    cmds.listConnections(f"{pc}.constraintParentInverseMatrix", source=True) or []
+                )
                 if not driven:
                     continue
                 driven = driven[0]
@@ -1054,28 +1095,30 @@ class MayaRigExporter:
                 space_attr = self._find_space_attribute(driven, pc)
 
                 if space_attr:
-                    control, attr_name = space_attr.split('.')
+                    control, attr_name = space_attr.split(".")
 
                     # Get enum values
                     enum_str = cmds.attributeQuery(attr_name, node=control, listEnum=True)
-                    space_names = enum_str[0].split(':') if enum_str else []
+                    space_names = enum_str[0].split(":") if enum_str else []
 
                     # Build space data
                     spaces = []
                     for i, target in enumerate(targets):
                         weight_attr = f"{pc}.{target}W{i}"
-                        spaces.append({
-                            'name': space_names[i] if i < len(space_names) else target,
-                            'target': target,
-                            'weight_attr': weight_attr
-                        })
+                        spaces.append(
+                            {
+                                "name": space_names[i] if i < len(space_names) else target,
+                                "target": target,
+                                "weight_attr": weight_attr,
+                            }
+                        )
 
                     space_switch = SpaceSwitchData(
                         name=f"{driven}_spaceSwitch",
                         control=control,
                         attribute=attr_name,
                         spaces=spaces,
-                        constraint=pc
+                        constraint=pc,
                     )
                     space_switches.append(asdict(space_switch))
 
@@ -1105,11 +1148,11 @@ class MayaRigExporter:
                     attr_path = f"{check_node}.{attr}"
                     attr_type = cmds.getAttr(attr_path, type=True)
 
-                    if attr_type == 'enum':
+                    if attr_type == "enum":
                         # Check if this enum connects to the constraint weights
-                        connections = cmds.listConnections(
-                            attr_path, destination=True, plugs=True
-                        ) or []
+                        connections = (
+                            cmds.listConnections(attr_path, destination=True, plugs=True) or []
+                        )
 
                         for conn in connections:
                             if constraint in conn:
@@ -1135,14 +1178,12 @@ class MayaRigExporter:
             num_cvs = degree + spans
             cvs = []
             for i in range(num_cvs):
-                pos = cmds.xform(f"{curve_shape}.cv[{i}]", query=True, translation=True, worldSpace=False)
+                pos = cmds.xform(
+                    f"{curve_shape}.cv[{i}]", query=True, translation=True, worldSpace=False
+                )
                 cvs.append(pos)
 
-            return {
-                'degree': degree,
-                'form': form,
-                'cvs': cvs
-            }
+            return {"degree": degree, "form": form, "cvs": cvs}
 
         except Exception as e:
             self.logger.debug(f"Failed to extract curve data: {e}")
@@ -1154,12 +1195,12 @@ class MayaRigExporter:
 
         # Get all constraint types
         constraint_types = [
-            'parentConstraint',
-            'orientConstraint',
-            'pointConstraint',
-            'aimConstraint',
-            'scaleConstraint',
-            'poleVectorConstraint'
+            "parentConstraint",
+            "orientConstraint",
+            "pointConstraint",
+            "aimConstraint",
+            "scaleConstraint",
+            "poleVectorConstraint",
         ]
 
         for constraint_type in constraint_types:
@@ -1177,11 +1218,15 @@ class MayaRigExporter:
 
         return constraints
 
-    def _extract_constraint_data(self, constraint: str, constraint_type: str) -> Optional[ConstraintData]:
+    def _extract_constraint_data(
+        self, constraint: str, constraint_type: str
+    ) -> Optional[ConstraintData]:
         """Extract data from a single constraint"""
         try:
             # Get driven object (the constrained object)
-            driven_list = cmds.listConnections(f"{constraint}.constraintParentInverseMatrix", source=True)
+            driven_list = cmds.listConnections(
+                f"{constraint}.constraintParentInverseMatrix", source=True
+            )
             if not driven_list:
                 return None
             driven = driven_list[0]
@@ -1191,27 +1236,27 @@ class MayaRigExporter:
             weights = []
 
             # Query targets using constraint command
-            if constraint_type == 'parentConstraint':
+            if constraint_type == "parentConstraint":
                 drivers = cmds.parentConstraint(constraint, query=True, targetList=True) or []
                 weights = cmds.parentConstraint(constraint, query=True, weightAliasList=True) or []
                 weights = [cmds.getAttr(f"{constraint}.{w}") for w in weights] if weights else []
-            elif constraint_type == 'orientConstraint':
+            elif constraint_type == "orientConstraint":
                 drivers = cmds.orientConstraint(constraint, query=True, targetList=True) or []
                 weights = cmds.orientConstraint(constraint, query=True, weightAliasList=True) or []
                 weights = [cmds.getAttr(f"{constraint}.{w}") for w in weights] if weights else []
-            elif constraint_type == 'pointConstraint':
+            elif constraint_type == "pointConstraint":
                 drivers = cmds.pointConstraint(constraint, query=True, targetList=True) or []
                 weights = cmds.pointConstraint(constraint, query=True, weightAliasList=True) or []
                 weights = [cmds.getAttr(f"{constraint}.{w}") for w in weights] if weights else []
-            elif constraint_type == 'aimConstraint':
+            elif constraint_type == "aimConstraint":
                 drivers = cmds.aimConstraint(constraint, query=True, targetList=True) or []
                 weights = cmds.aimConstraint(constraint, query=True, weightAliasList=True) or []
                 weights = [cmds.getAttr(f"{constraint}.{w}") for w in weights] if weights else []
-            elif constraint_type == 'scaleConstraint':
+            elif constraint_type == "scaleConstraint":
                 drivers = cmds.scaleConstraint(constraint, query=True, targetList=True) or []
                 weights = cmds.scaleConstraint(constraint, query=True, weightAliasList=True) or []
                 weights = [cmds.getAttr(f"{constraint}.{w}") for w in weights] if weights else []
-            elif constraint_type == 'poleVectorConstraint':
+            elif constraint_type == "poleVectorConstraint":
                 drivers = cmds.poleVectorConstraint(constraint, query=True, targetList=True) or []
                 weights = [1.0]  # Pole vector constraints don't have weights
 
@@ -1220,42 +1265,43 @@ class MayaRigExporter:
 
             # Get maintain offset
             maintain_offset = True
-            if constraint_type != 'poleVectorConstraint':
-                offset_attrs = cmds.listAttr(constraint, string='*Offset*') or []
+            if constraint_type != "poleVectorConstraint":
+                offset_attrs = cmds.listAttr(constraint, string="*Offset*") or []
                 if offset_attrs:
                     # Check if any offset attribute is non-zero
                     maintain_offset = any(
                         abs(cmds.getAttr(f"{constraint}.{attr}")) > 0.001
                         for attr in offset_attrs
-                        if cmds.attributeQuery(attr, node=constraint, attributeType=True) in ['double', 'float']
+                        if cmds.attributeQuery(attr, node=constraint, attributeType=True)
+                        in ["double", "float"]
                     )
 
             # Get skip translate/rotate
             skip_translate = []
             skip_rotate = []
-            if constraint_type in ['parentConstraint', 'pointConstraint']:
-                for axis in ['x', 'y', 'z']:
+            if constraint_type in ["parentConstraint", "pointConstraint"]:
+                for axis in ["x", "y", "z"]:
                     attr = f"skip{axis.upper()}"
                     if cmds.attributeQuery(attr, node=constraint, exists=True):
                         if cmds.getAttr(f"{constraint}.{attr}"):
                             skip_translate.append(axis)
 
-            if constraint_type in ['parentConstraint', 'orientConstraint']:
-                for axis in ['x', 'y', 'z']:
+            if constraint_type in ["parentConstraint", "orientConstraint"]:
+                for axis in ["x", "y", "z"]:
                     attr = f"skip{axis.upper()}"
                     if cmds.attributeQuery(attr, node=constraint, exists=True):
                         if cmds.getAttr(f"{constraint}.{attr}"):
                             skip_rotate.append(axis)
 
             return ConstraintData(
-                name=constraint.split('|')[-1],
+                name=constraint.split("|")[-1],
                 type=constraint_type,
-                driven=driven.split('|')[-1],
-                drivers=[d.split('|')[-1] for d in drivers],
+                driven=driven.split("|")[-1],
+                drivers=[d.split("|")[-1] for d in drivers],
                 maintain_offset=maintain_offset,
                 weights=weights,
                 skip_translate=skip_translate,
-                skip_rotate=skip_rotate
+                skip_rotate=skip_rotate,
             )
 
         except Exception as e:
@@ -1266,7 +1312,7 @@ class MayaRigExporter:
         """Extract IK handle data"""
         ik_handles = []
 
-        ik_handle_nodes = cmds.ls(type='ikHandle') or []
+        ik_handle_nodes = cmds.ls(type="ikHandle") or []
 
         for ik in ik_handle_nodes:
             try:
@@ -1275,7 +1321,9 @@ class MayaRigExporter:
                 # Get end effector
                 end_effector = cmds.ikHandle(ik, query=True, endEffector=True)
                 # Get end joint from effector
-                end_joint = cmds.listConnections(f"{end_effector}.translateX", source=True, destination=False)
+                end_joint = cmds.listConnections(
+                    f"{end_effector}.translateX", source=True, destination=False
+                )
                 if end_joint:
                     end_joint = end_joint[0]
 
@@ -1287,21 +1335,30 @@ class MayaRigExporter:
 
                 # Get pole vector constraint if exists
                 pole_vector = None
-                pole_constraints = cmds.listConnections(
-                    f"{ik}.poleVector", source=True, destination=False, type='poleVectorConstraint'
-                ) or []
+                pole_constraints = (
+                    cmds.listConnections(
+                        f"{ik}.poleVector",
+                        source=True,
+                        destination=False,
+                        type="poleVectorConstraint",
+                    )
+                    or []
+                )
                 if pole_constraints:
-                    pole_targets = cmds.poleVectorConstraint(pole_constraints[0], query=True, targetList=True) or []
+                    pole_targets = (
+                        cmds.poleVectorConstraint(pole_constraints[0], query=True, targetList=True)
+                        or []
+                    )
                     if pole_targets:
                         pole_vector = pole_targets[0]
 
                 ik_data = IKHandleData(
-                    name=ik.split('|')[-1],
-                    start_joint=start_joint.split('|')[-1] if start_joint else "",
-                    end_joint=end_joint.split('|')[-1] if end_joint else "",
+                    name=ik.split("|")[-1],
+                    start_joint=start_joint.split("|")[-1] if start_joint else "",
+                    end_joint=end_joint.split("|")[-1] if end_joint else "",
                     solver=solver,
                     priority=priority,
-                    pole_vector=pole_vector.split('|')[-1] if pole_vector else None
+                    pole_vector=pole_vector.split("|")[-1] if pole_vector else None,
                 )
 
                 ik_handles.append(asdict(ik_data))
@@ -1317,7 +1374,7 @@ class MayaRigExporter:
         blendshapes = []
         connections = []
 
-        blendshape_nodes = cmds.ls(type='blendShape') or []
+        blendshape_nodes = cmds.ls(type="blendShape") or []
 
         for bs in blendshape_nodes:
             try:
@@ -1341,7 +1398,7 @@ class MayaRigExporter:
                         weight = cmds.getAttr(f"{bs}.{target_attr}")
 
                         # Get target index
-                        target_idx = int(target_attr.split('[')[-1].rstrip(']'))
+                        target_idx = int(target_attr.split("[")[-1].rstrip("]"))
 
                         # Get target data (deltas) - deferred until full delta extraction is implemented
                         deltas = None  # _get_blendshape_deltas is a placeholder that always returns None
@@ -1350,9 +1407,12 @@ class MayaRigExporter:
                         inbetweens = self._get_blendshape_inbetweens(bs, target_idx)
 
                         # Check for connections
-                        input_connections = cmds.listConnections(
-                            f"{bs}.{target_attr}", source=True, destination=False, plugs=True
-                        ) or []
+                        input_connections = (
+                            cmds.listConnections(
+                                f"{bs}.{target_attr}", source=True, destination=False, plugs=True
+                            )
+                            or []
+                        )
                         for conn in input_connections:
                             # Parse connection: "source.attr" -> blendshape.target
                             driver = conn
@@ -1360,36 +1420,40 @@ class MayaRigExporter:
                             sdk_keys = None
 
                             # Check if it's driven by an animCurve (SDK)
-                            anim_curve = cmds.listConnections(conn, source=True, type='animCurve') or []
+                            anim_curve = (
+                                cmds.listConnections(conn, source=True, type="animCurve") or []
+                            )
                             if anim_curve:
                                 connection_type = "sdk"
                                 sdk_keys = self._get_anim_curve_keys(anim_curve[0])
 
                             connection = BlendShapeConnectionData(
-                                blendshape=bs.split('|')[-1],
+                                blendshape=bs.split("|")[-1],
                                 target=target_name,
                                 driver=driver,
                                 connection_type=connection_type,
-                                sdk_keys=sdk_keys
+                                sdk_keys=sdk_keys,
                             )
                             connections.append(asdict(connection))
 
-                        targets.append({
-                            'name': target_name,
-                            'weight': weight,
-                            'index': target_idx,
-                            'deltas': deltas,
-                            'inbetweens': inbetweens
-                        })
+                        targets.append(
+                            {
+                                "name": target_name,
+                                "weight": weight,
+                                "index": target_idx,
+                                "deltas": deltas,
+                                "inbetweens": inbetweens,
+                            }
+                        )
 
                     except Exception as e:
                         self.logger.debug(f"Skipping blendshape target {target_name}: {e}")
                         continue
 
                 bs_data = BlendShapeData(
-                    name=bs.split('|')[-1],
-                    base_geometry=base_geometry.split('|')[-1],
-                    targets=targets
+                    name=bs.split("|")[-1],
+                    base_geometry=base_geometry.split("|")[-1],
+                    targets=targets,
                 )
 
                 blendshapes.append(asdict(bs_data))
@@ -1400,7 +1464,9 @@ class MayaRigExporter:
 
         return blendshapes, connections
 
-    def _get_blendshape_deltas(self, blendshape: str, target_idx: int, base_geometry: str) -> Optional[List]:
+    def _get_blendshape_deltas(
+        self, blendshape: str, target_idx: int, base_geometry: str
+    ) -> Optional[List]:
         """Get vertex deltas for a blendshape target (simplified - could be stored)"""
         try:
             # For performance, we might skip storing deltas and rely on Maya recreating them
@@ -1422,23 +1488,23 @@ class MayaRigExporter:
         try:
             # Query in-between weights for this target
             # inputTargetGroup[target_idx].targetItem[*].inputTargetWeights
-            target_items = cmds.ls(
-                f"{blendshape}.inputTarget[0].inputTargetGroup[{target_idx}].targetItem[*]",
-                flatten=True
-            ) or []
+            target_items = (
+                cmds.ls(
+                    f"{blendshape}.inputTarget[0].inputTargetGroup[{target_idx}].targetItem[*]",
+                    flatten=True,
+                )
+                or []
+            )
 
             for item in target_items:
                 # Extract weight from attribute path
-                weight_match = item.split('targetItem[')[-1].split(']')[0]
+                weight_match = item.split("targetItem[")[-1].split("]")[0]
                 if weight_match.isdigit():
                     weight_idx = int(weight_match)
                     # In-between weights are typically at indices like 5000, 6000 (representing 0.5, 0.6, etc.)
                     if weight_idx != 6000:  # 6000 is the main target (weight 1.0)
                         weight_value = weight_idx / 6000.0
-                        inbetweens.append({
-                            'weight': weight_value,
-                            'index': weight_idx
-                        })
+                        inbetweens.append({"weight": weight_value, "index": weight_idx})
 
         except Exception as e:
             self.logger.debug(f"Could not get in-betweens: {e}")
@@ -1450,20 +1516,26 @@ class MayaRigExporter:
         sdks = []
 
         # Find all animCurve nodes (SDKs are stored as animCurves)
-        anim_curves = cmds.ls(type='animCurve') or []
+        anim_curves = cmds.ls(type="animCurve") or []
 
         for anim_curve in anim_curves:
             try:
                 # Get the driven attribute
-                driven_connections = cmds.listConnections(anim_curve, source=False, destination=True, plugs=True) or []
+                driven_connections = (
+                    cmds.listConnections(anim_curve, source=False, destination=True, plugs=True)
+                    or []
+                )
                 if not driven_connections:
                     continue
                 driven = driven_connections[0]
 
                 # Get the driver attribute
-                driver_connections = cmds.listConnections(
-                    f"{anim_curve}.input", source=True, destination=False, plugs=True
-                ) or []
+                driver_connections = (
+                    cmds.listConnections(
+                        f"{anim_curve}.input", source=True, destination=False, plugs=True
+                    )
+                    or []
+                )
                 if not driver_connections:
                     continue
                 driver = driver_connections[0]
@@ -1473,11 +1545,7 @@ class MayaRigExporter:
                 if not keys:
                     continue
 
-                sdk_data = SetDrivenKeyData(
-                    driver=driver,
-                    driven=driven,
-                    keys=keys
-                )
+                sdk_data = SetDrivenKeyData(driver=driver, driven=driven, keys=keys)
 
                 sdks.append(asdict(sdk_data))
 

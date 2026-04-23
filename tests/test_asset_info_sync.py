@@ -14,6 +14,7 @@ sys.path.insert(0, str(src_dir))
 
 try:
     from PySide6.QtWidgets import QApplication
+
     print("✅ PySide6 available")
 except ImportError:
     print("❌ PySide6 not available - cannot test UI synchronization")
@@ -26,23 +27,24 @@ def test_asset_info_synchronization():
 
     try:
         from ui.asset_manager_window import AssetManagerWindow
+
         print("✅ AssetManagerWindow imported successfully")
 
         # Check for unified method
-        if hasattr(AssetManagerWindow, '_on_toggle_asset_info_unified'):
+        if hasattr(AssetManagerWindow, "_on_toggle_asset_info_unified"):
             print("✅ Unified method _on_toggle_asset_info_unified found")
         else:
             print("❌ Missing unified method _on_toggle_asset_info_unified")
             return False
 
         # Check for legacy methods
-        if hasattr(AssetManagerWindow, '_on_toggle_asset_info'):
+        if hasattr(AssetManagerWindow, "_on_toggle_asset_info"):
             print("✅ Legacy method _on_toggle_asset_info maintained")
         else:
             print("❌ Missing legacy method _on_toggle_asset_info")
             return False
 
-        if hasattr(AssetManagerWindow, '_on_show_asset_info'):
+        if hasattr(AssetManagerWindow, "_on_show_asset_info"):
             print("✅ Legacy method _on_show_asset_info maintained")
         else:
             print("❌ Missing legacy method _on_show_asset_info")
@@ -84,7 +86,6 @@ def test_method_signatures():
 
 def main():
 
-
     print("🧪 ASSET INFORMATION SYNCHRONIZATION TEST - Issue #8")
     print("=" * 60)
 
@@ -125,7 +126,7 @@ def main():
         print("⚠️ Some tests failed - check implementation")
         return False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     sys.exit(0 if success else 1)

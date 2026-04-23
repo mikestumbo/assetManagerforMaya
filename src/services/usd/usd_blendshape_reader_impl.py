@@ -12,6 +12,7 @@ from pathlib import Path
 
 try:
     from pxr import Usd, UsdGeom, UsdSkel  # type: ignore
+
     USD_AVAILABLE = True
 except ImportError:
     USD_AVAILABLE = False
@@ -21,6 +22,7 @@ except ImportError:
 
 try:
     import maya.cmds as cmds  # type: ignore
+
     MAYA_AVAILABLE = True
 except ImportError:
     MAYA_AVAILABLE = False
@@ -32,6 +34,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class UsdBlendShapeData:
     """Container for USD BlendShape data"""
+
     mesh_path: str
     target_paths: List[str]  # Paths to blendshape target geometries
     target_names: List[str]  # Names for each target
@@ -51,10 +54,7 @@ class UsdBlendShapeReader:
         self.logger = logging.getLogger(__name__)
 
     def read_blendshapes_for_mesh(
-        self,
-        stage: Any,  # Usd.Stage
-        mesh_prim: Any,  # Usd.Prim
-        skel_root: Any  # Usd.Prim
+        self, stage: Any, mesh_prim: Any, skel_root: Any  # Usd.Stage  # Usd.Prim  # Usd.Prim
     ) -> Optional[UsdBlendShapeData]:
         """
         Read blendshape data for a skinned mesh
@@ -90,7 +90,9 @@ class UsdBlendShapeReader:
                     if blend_shapes_attr:
                         blend_shape_names = blend_shapes_attr.Get()
                         if blend_shape_names:
-                            self.logger.info(f"Found {len(blend_shape_names)} blendshapes in SkelAnimation")
+                            self.logger.info(
+                                f"Found {len(blend_shape_names)} blendshapes in SkelAnimation"
+                            )
 
                             # Get blendshape weights
                             weights_attr = anim.GetBlendShapeWeightsAttr()
@@ -103,7 +105,7 @@ class UsdBlendShapeReader:
                                 mesh_path=mesh_path,
                                 target_paths=[],  # TODO: Find targets
                                 target_names=list(blend_shape_names) if blend_shape_names else [],
-                                weights=list(weights) if weights else []
+                                weights=list(weights) if weights else [],
                             )
 
             # Method 3: Look for sibling meshes that might be blendshape targets
@@ -131,7 +133,7 @@ class UsdBlendShapeReader:
                         mesh_path=mesh_path,
                         target_paths=possible_targets,
                         target_names=target_names,
-                        weights=[0.0] * len(possible_targets)
+                        weights=[0.0] * len(possible_targets),
                     )
 
             return None
@@ -139,6 +141,7 @@ class UsdBlendShapeReader:
         except Exception as e:
             self.logger.error(f"Error reading blendshapes for {mesh_prim.GetPath()}: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -155,7 +158,7 @@ class MayaBlendShapeBuilder:
         target_meshes: List[str],
         target_names: List[str],
         weights: List[float],
-        namespace: str = ""
+        namespace: str = "",
     ) -> Optional[str]:
         """
         Create Maya blendShape node
@@ -193,14 +196,13 @@ class MayaBlendShapeBuilder:
                 return None
 
             # Create blendShape node
-            blend_shape_name = f"{namespace}:{base_mesh}_blendShape" if namespace else f"{base_mesh}_blendShape"
+            blend_shape_name = (
+                f"{namespace}:{base_mesh}_blendShape" if namespace else f"{base_mesh}_blendShape"
+            )
 
             # Create blendShape with all targets
             blend_node = cmds.blendShape(
-                *valid_targets,
-                base_mesh,
-                name=blend_shape_name,
-                origin="world"
+                *valid_targets, base_mesh, name=blend_shape_name, origin="world"
             )[0]
 
             # Set target names and weights
@@ -220,11 +222,14 @@ class MayaBlendShapeBuilder:
 
                 cmds.setAttr(f"{target_shape}.intermediateObject", True)
 
-            self.logger.info(f"[OK] Created blendShape: {blend_node} with {len(valid_targets)} targets")
+            self.logger.info(
+                f"[OK] Created blendShape: {blend_node} with {len(valid_targets)} targets"
+            )
             return blend_node
 
         except Exception as e:
             self.logger.error(f"Failed to create blendShape: {e}")
             import traceback
+
             traceback.print_exc()
             return None

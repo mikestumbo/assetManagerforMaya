@@ -90,7 +90,7 @@ class FileAssetRepository(IAssetRepository):
                 name=name,
                 file_path=file_path,
                 file_extension=file_extension,
-                file_size=file_size
+                file_size=file_size,
             )
 
             # Add to internal list and cache
@@ -150,11 +150,11 @@ class FileAssetRepository(IAssetRepository):
         """
         try:
             # Remove from internal tracking
-            if hasattr(self, '_assets') and asset in self._assets:
+            if hasattr(self, "_assets") and asset in self._assets:
                 self._assets.remove(asset)
 
             # Remove from any cached collections
-            if hasattr(self, '_asset_cache'):
+            if hasattr(self, "_asset_cache"):
                 self._asset_cache.pop(str(asset.file_path), None)
 
             # Optionally remove the actual file (be careful!)
@@ -165,7 +165,7 @@ class FileAssetRepository(IAssetRepository):
                         asset.file_path.unlink()  # Delete the file
 
                         # Also remove any associated metadata files
-                        metadata_file = asset.file_path.with_suffix('.meta')
+                        metadata_file = asset.file_path.with_suffix(".meta")
                         if metadata_file.exists():
                             metadata_file.unlink()
 
@@ -194,7 +194,7 @@ class FileAssetRepository(IAssetRepository):
                     return True
 
             # Fallback: check common asset file extensions
-            asset_extensions = {'.ma', '.mb', '.fbx', '.obj', '.abc', '.usd', '.usda', '.usdc'}
+            asset_extensions = {".ma", ".mb", ".fbx", ".obj", ".abc", ".usd", ".usda", ".usdc"}
             return file_path.suffix.lower() in asset_extensions
 
         except Exception:

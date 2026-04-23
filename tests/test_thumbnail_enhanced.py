@@ -23,9 +23,9 @@ def test_with_qt_application():
     print("🔧 Testing with Qt Application Context...")
 
     try:
-        from PySide6.QtWidgets import QApplication
-        from PySide6.QtGui import QPixmap, QPainter, QColor
         from PySide6.QtCore import Qt
+        from PySide6.QtGui import QColor, QPainter, QPixmap
+        from PySide6.QtWidgets import QApplication
 
         # Create QApplication if it doesn't exist
         app = QApplication.instance()
@@ -57,7 +57,7 @@ def test_with_qt_application():
             painter.end()
 
             # Save test file
-            if pixmap.save(str(test_file), 'PNG'):
+            if pixmap.save(str(test_file), "PNG"):
                 print(f"✅ Created test file: {test_file}")
                 print(f"📊 Test file size: {test_file.stat().st_size} bytes")
 
@@ -101,6 +101,7 @@ def test_with_qt_application():
         except Exception as e:
             print(f"❌ Error in Qt testing: {e}")
             import traceback
+
             traceback.print_exc()
 
         finally:
@@ -111,6 +112,7 @@ def test_with_qt_application():
     except Exception as e:
         print(f"❌ Error setting up Qt application: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -128,7 +130,7 @@ def check_thumbnail_cache_keys():
             Path("C:/test/asset.ma"),
             Path("C:\\test\\asset.ma"),
             Path("./test/asset.ma"),
-            Path("test/asset.obj")
+            Path("test/asset.obj"),
         ]
 
         for test_path in test_paths:
@@ -173,6 +175,7 @@ def debug_asset_library_thumbnail_loading():
 
         if asset_files:
             from src.services.thumbnail_service_impl import ThumbnailServiceImpl
+
             service = ThumbnailServiceImpl()
 
             # Test with first few files
@@ -196,7 +199,6 @@ def debug_asset_library_thumbnail_loading():
 
 def main():
 
-
     print("=" * 70)
     print("🔍 ENHANCED THUMBNAIL GENERATION DIAGNOSTIC")
     print("=" * 70)
@@ -209,6 +211,6 @@ def main():
     print("🏁 ENHANCED DIAGNOSTIC COMPLETE")
     print("=" * 70)
 
+
 if __name__ == "__main__":
-
-
+    main()
