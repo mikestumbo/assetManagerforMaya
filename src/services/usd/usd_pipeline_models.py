@@ -48,9 +48,9 @@ License: MIT
 import logging
 import os
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Callable
 from enum import Enum, auto
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Maya imports (conditional)
 try:
@@ -65,7 +65,7 @@ except ImportError:
 
 # USD imports (conditional)
 try:
-    from pxr import Usd, UsdSkel, UsdGeom, Vt, Gf  # type: ignore
+    from pxr import Gf, Usd, UsdGeom, UsdSkel, Vt  # type: ignore
 
     USD_AVAILABLE = True
 except ImportError:
@@ -409,3 +409,25 @@ class ImportOptions:
     flatten_layers: bool = False  # Flatten layers on import (combine into one)
     create_edit_layer: bool = True  # Create editable layer for local edits
     open_layer_editor: bool = False  # Open mayaUSD Layer Editor after proxy import (Option B)
+
+    # ── Render-Ready Native Import (architectural pivot, 2024-Q4) ─────────────
+    # RfM 27.2 has NO translator for `mayaUsdProxyShape` and the bundled
+    # mayaHydra 0.7.3 only exposes Hydra Storm (rasterizer) — neither path can
+    # deliver per-mesh PxrDisneyBsdf shading in IPR. To get true per-mesh
+    # RenderMan shading, this flag triggers a parallel `mayaUSDImport` of the
+    # USD geometry as native Maya polygons (after the proxy is built), then
+    # binds each native mesh to its corresponding Maya shading group via the
+    # mesh→material→SG map produced by `_create_rfm_maya_shaders`.
+    #
+    # FROZEN (2026-04-23, Apex + user agreement): disabled by default.  In the
+    # current MayaUSD 0.35.0 / RfM 27.2 environment, mayaUSDImport collides on
+    # name with the already-loaded .rig.mb shapes (auto-renames imported
+    # geometry to `*_usdExport`/`*_usdExport1`) and the rig's deformed shapes
+    # are locked through their skinCluster history, so per-mesh SG
+    # reassignment is rejected with "Source node will not allow the
+    # connection."  Until MayaUSD ships flow-viewport mayaHydra (no public
+    # ETA) the canonical render path is the **Hybrid Importer Workflow**.
+    # The Animation Importer remains in USD-proxy mode for layout/anim
+    # authoring — set this flag True only for experimentation.
+    render_ready_native_import: bool = False
+    hide_proxy_after_render_ready: bool = False  # Keep proxy visible for anim/layout

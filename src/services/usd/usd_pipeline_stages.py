@@ -83,7 +83,6 @@ class StagesMixin:
             return True
 
         try:
-            from pxr import Usd, UsdSkel, Sdf, Gf, Vt
 
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
@@ -254,7 +253,6 @@ class StagesMixin:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] Skeleton merge failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -278,7 +276,6 @@ class StagesMixin:
             return False
 
         try:
-            from pxr import Usd, UsdSkel  # type: ignore[import-unresolved]
 
             # Open the source USD with edit access
             stage = Usd.Stage.Open(str(base_usd_path))
@@ -475,7 +472,6 @@ class StagesMixin:
 
         except Exception as e:
             self.logger.error(f"Animation cleanup failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -501,7 +497,6 @@ class StagesMixin:
             return True
 
         try:
-            from pxr import Usd, UsdSkel, UsdGeom, Gf
 
             stage = Usd.Stage.Open(str(usd_path))
             if not stage:
@@ -557,7 +552,6 @@ class StagesMixin:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] geomBindTransform fix failed (non-fatal): {e}")
-            import traceback
 
             self.logger.debug(traceback.format_exc())
             return True  # Non-fatal
@@ -807,7 +801,6 @@ class StagesMixin:
 
         except Exception as e:
             self.logger.warning(f"[WARNING] BlendShape export failed (non-fatal): {e}")
-            import traceback
 
             self.logger.debug(traceback.format_exc())
             return 0
@@ -1035,6 +1028,5 @@ class StagesMixin:
 
         except Exception as e:
             self.logger.warning(f"USD validation error: {e}")
-            import traceback
 
             self.logger.warning(f"USD validation traceback: {traceback.format_exc()}")

@@ -39,7 +39,7 @@ import mtoa.viewport;mtoa.viewport.add_controls()
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
 // Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
 # Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
-# Read 2 files in  7.3 seconds.
+# Read 2 files in  7.5 seconds.
 // Error: mirror: could not initialize vertex mapping
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
 // Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
@@ -480,13 +480,13 @@ evalDeferred "shaderBallRendererMenuUpdate";
 // src.services.usd.usd_pipeline_export : [RFM] Shader cache scan: 40 total scene SGs, 38 new SG(s) from reference load
 // src.services.usd.usd_pipeline_export : [RFM] New SG names (first 10): ['Cornea_Mat_SG', 'Iris_MatSG', 'Pupils_MatSG', 'PxrDisneyBsdf1SG', 'PxrDisneyBsdf2SG', 'PxrDisneyBsdf3SG', 'PxrDisneyBsdf5SG', 'PxrDisneyBsdf6SG', 'PxrDisneyBsdf7SG', 'PxrDisneyBsdf8SG']
 // src.services.usd.usd_pipeline_export : [RFM] Shader cache: 23 Pxr* SG(s) accepted (sample: ['Cornea_Mat_SG', 'Iris_MatSG', 'Pupils_MatSG', 'PxrDisneyBsdf1SG', 'PxrDisneyBsdf2SG'])
-// src.services.usd.usd_pipeline_export : [RFM] SG→shader sidecar written: 21 entries → tmpy0ai6poz_rfm_shaders.sg_map.json
+// src.services.usd.usd_pipeline_export : [RFM] SG→shader sidecar written: 21 entries → tmpplc6u4ye_rfm_shaders.sg_map.json
 // src.services.usd.usd_pipeline_export : [RFM] RfM shader cache written — original PxrSurface/PxrDisney nodes will be used on import
 // src.services.usd.usd_pipeline_export : [RIG] Removed .rig.mb reference
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.animation.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote 642 NURBS controllers to controllers sublayer
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.controllers.usda
-// src.services.usd.usd_pipeline_export : [RFM] Wrote PxrPreviewSurface ri:surface for 30 materials (17 with PxrTexture diffuse) in materials.usda — renderable in RenderMan for Maya 27.2+ via IPR (.it) and XPU batch render
+// src.services.usd.usd_pipeline_export : [RFM] Wrote UsdPreviewSurface ri:surface for 30 materials (17 with UsdUVTexture diffuse) in materials.usda — renderable in RenderMan for Maya 27.2+ via IPR (.it) and XPU batch render
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.materials.usda
 // src.services.usd.usd_pipeline_export : [LAYER] Wrote controller→joint mappings for 1 skeleton(s) — 116 joints mapped
 // src.services.usd.usd_pipeline_export :    [LAYER] Veteran_Rig.skeleton.usda
@@ -533,29 +533,25 @@ evalDeferred "shaderBallRendererMenuUpdate";
 // src.services.usd.usd_pipeline_export :    Sublayer: ./Veteran_Rig.geometry.usda
 // src.services.usd.usd_pipeline_export :    Sublayer: ./Veteran_Rig.usdc
 // src.services.usd.usd_pipeline_export : [LOOKDEV] Verifying USD material colors...
-// src.services.usd.usd_pipeline_export : [LOOKDEV] 30/30 materials have UsdPreviewSurface, 13 with non-black diffuseColor
+// src.services.usd.usd_pipeline_export : [LOOKDEV] 60/30 materials have UsdPreviewSurface, 26 with non-black diffuseColor
 // src.services.usd.usd_pipeline_export : 📚 Total USD layers loaded: 7
 // src.services.usd.usd_pipeline_export : [OK] USD Stage loaded - 21 meshes, 2 skeleton rig(s) / 124 joints, 642 curves, 30 materials
 requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
 requires "stereoCamera" "10.0";
 requires -nodeType "PxrBlend" -nodeType "PxrDispTransform" -nodeType "PxrManifold2D" -nodeType "PxrMatteID" -nodeType "PxrNormalMap" -nodeType "PxrRamp" -nodeType "PxrTexture" -nodeType "PxrBlack" -nodeType "PxrDisneyBsdf" -nodeType "PxrDisplace" -nodeType "PxrSurface" "RenderMan_for_Maya.py" "27.2 @ 2396366";
 requires "stereoCamera" "10.0";
-# Warning: "rfmMat:_rigExtract_:IKCurveInfoAllMultiplySpine_M": basicExpression has encountered a divide by zero. Result is unpredictable.
-# Warning: "rfmMat:_rigExtract_:PoleLockMainScalerIKXElbow_L": basicExpression has encountered a divide by zero. Result is unpredictable.
-# Warning: "rfmMat:_rigExtract_:PoleLockMainScalerIKXElbow_L": basicExpression has encountered a divide by zero. Result is unpredictable.
-# File read in  1.8 seconds.
-# Warning: "rfmMat:_rigExtract_:PoleLockMainScalerIKXElbow_L": basicExpression has encountered a divide by zero. Result is unpredictable.
-# Warning: "rfmMat:_rigExtract_:PoleLockMainScalerIKXElbow_L": basicExpression has encountered a divide by zero. Result is unpredictable.
+# File read in  1.7 seconds.
 // src.services.usd.usd_pipeline_export : [RFM] Import: snapshot-diff found 38 total new SGs; Pxr* filter accepted 21; supplemental lookup will fill the remainder
-// src.services.usd.usd_pipeline_export : [RFM] Import: 21 SGs collected; sg_lookup has 42 keys; sample keys: ['pxrdisneybsdf12', 'pxrdisneybsdf12sg', 'pupils_mat', 'pupils_matsg', 'pxrdisneybsdf9', 'pxrdisneybsdf9sg']
-// src.services.usd.usd_pipeline_export : [RFM] Import: 30 mat_prim_paths; sample: ['/SkelRoot/Group/Looks/PxrDisneyBsdf18SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf6SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf16SG', '/SkelRoot/Group/Looks/asBlueSG']
+// src.services.usd.usd_pipeline_export : [RFM] Import: 21 SGs collected; sg_lookup has 42 keys; sample keys: ['pxrdisneybsdf16', 'pxrdisneybsdf16sg', 'pxrdisneybsdf14', 'pxrdisneybsdf14sg', 'pxrdisneybsdf13', 'pxrdisneybsdf13sg']
+// src.services.usd.usd_pipeline_export : [RFM] Import: 30 mat_prim_paths; sample: ['/SkelRoot/Group/Looks/PxrDisneyBsdf8SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf15SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf2SG', '/SkelRoot/Group/Looks/Cornea_Mat_SG']
 // src.services.usd.usd_pipeline_export : [RFM] Import: name-matched 21/30 USD material paths to imported SGs
-// src.services.usd.usd_pipeline_export : [RFM] Import: 9 unmatched USD paths → Strategy-2 PxrSurface fallback: ['asBlueSG', 'asGreen2SG', 'asBlue2SG', 'initialShadingGroup', 'asRedSG', 'asClusterControlShaderSG', 'asGreenSG', 'asWhiteSG', 'asBlackSG']
+// src.services.usd.usd_pipeline_export : [RFM] Import: 9 unmatched USD paths → Strategy-2 PxrSurface fallback: ['asGreen2SG', 'asBlue2SG', 'asGreenSG', 'asBlueSG', 'asWhiteSG', 'asClusterControlShaderSG', 'initialShadingGroup', 'asBlackSG', 'asRedSG']
 // src.services.usd.usd_pipeline_export : [RFM] Import: sidecar rebinding applied to 21 SGs; 0 SGs unresolved; 21 shaders listed in defaultShaderList1
-// src.services.usd.usd_pipeline_export : [RFM] Import: final mat_path_to_sg has 21 entries; sample: {'/SkelRoot/Group/Looks/PxrDisneyBsdf18SG': 'PxrDisneyBsdf18SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf6SG': 'PxrDisneyBsdf6SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf16SG': 'PxrDisneyBsdf16SG'}
+// src.services.usd.usd_pipeline_export : [RFM] Import: final mat_path_to_sg has 21 entries; sample: {'/SkelRoot/Group/Looks/PxrDisneyBsdf8SG': 'PxrDisneyBsdf8SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf15SG': 'PxrDisneyBsdf15SG', '/SkelRoot/Group/Looks/PxrDisneyBsdf2SG': 'PxrDisneyBsdf2SG'}
 // src.services.usd.usd_pipeline_export : [RFM] Imported 21 original RfM shaders from .rig.mb (17 textured) — exact settings from original Maya scene (PxrDisney/PxrSurface with full texture maps)
 // src.services.usd.usd_pipeline_export : [RFM] Loaded SG→shader sidecar: 21 entries
-// src.services.usd.usd_pipeline_export : [RFM] materials.usda rewritten: 21 PxrPreviewSurface RIS networks authored (PxrDisneyBsdf/PxrSurface/PxrBlack → PxrPreviewSurface; only valid bxdf info:id for rfm2 27.2 HdPrman Hydra path; per-shader attr remapping; outputs:surface + outputs:ri:surface wired). 0 materials retained export-phase PxrPreviewSurface.
+// src.services.usd.usd_pipeline_export : [RFM] materials.usda rewritten: 21 UsdPreviewSurface networks authored (PxrDisneyBsdf/PxrSurface/PxrBlack → UsdPreviewSurface + UsdUVTexture; UsdPreviewSurfaceParameters.oso is the ONLY valid bxdf .oso in rfm2 27.2 HdPrman usd3 shader path; outputs:surface + outputs:ri:surface wired). 0 materials retained export-phase UsdPreviewSurface. FIX7: 19 mesh material:binding overrides written to materials.usda file layer (rfm2 HdPrman reads file layer, not session layer).
+// src.services.usd.usd_pipeline_export : [RFM][DIAG] materials.usda sample '/SkelRoot/Group/Looks/PxrDisneyBsdf8SG': outputs:ri:surface=[Sdf.Path('/SkelRoot/Group/Looks/PxrDisneyBsdf8SG/UsdPreviewSurface.outputs:surface')], outputs:surface=[Sdf.Path('/SkelRoot/Group/Looks/PxrDisneyBsdf8SG/UsdPreviewSurface.outputs:surface')]
 // src.services.usd.usd_pipeline_export : [RFM] Hypershade SG bindings: 30 already bound, 0 repaired, 0 unresolved
 // src.services.usd.usd_pipeline_export : [RFM] Hypershade shader-list registration: 30 already listed, 0 registered
 // src.services.usd.usd_pipeline_export : [RFM] Bound 19/19 materials to USD mesh prims (session layer — VP2 Hydra + rfm2 HdPrman)
@@ -599,7 +595,91 @@ requires "stereoCamera" "10.0";
 # Warning: Cannot add the following items to the set since the set has restrictions on membership: |Veteran_Rig_root_USD|Veteran_Rig_root_USDShape,/SkelRoot/model_Veteran_Geo_Grp/model_R_Zipper_Geo_usdExport
 # Warning: None of the items can be added to the set
 // src.services.usd.usd_pipeline_export : [RFM] Per-prim SG assignment (Phase C): 19/19 mesh prims assigned — rfm2 renders each USD mesh with correct shader
-// src.services.usd.usd_pipeline_export : [RFM] Proxy shape → PxrDisneyBsdf18SG [textured] (fallback shader for rfm2 include-in-RIB; 19/19 prims override via Phase C per-prim SGs)
+// src.services.usd.usd_pipeline_export : [RFM] Proxy shape → PxrDisneyBsdf8SG [textured] (fallback shader for rfm2 include-in-RIB; 19/19 prims override via Phase C per-prim SGs)
+// Warning: src.services.usd.usd_pipeline_export : [RFM][FIX8] No HdPrman renderer plugin registered. mayaHydra may not be loaded, or RfM 27.2's HdPrman loader plug-ins are not on PXR_PLUGINPATH_NAME. Available renderers: ['vp2Renderer', 'base_OpenGL_Renderer', 'hwRender_OpenGL_Renderer', 'stub_Renderer']. Per-mesh USD bindings will not appear in RfM IPR until mayaHydra+HdPrman is enabled.
+// src.services.usd.usd_pipeline_export : [RR] Excluding 646 non-mesh prim(s) from native import (NurbsCurves/Skeleton/Camera/Light).
+// src.services.usd.usd_pipeline_export : [RR] mayaUSDImport does not support excludePrimPath in this MayaUSD build; importing full stage and relying on post-import non-mesh sweep instead.
+# Importing 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda'
+// src.services.usd.usd_pipeline_export : [RR] Post-import sweep removed: 642 curve(s), 2 joint(s), 0 camera(s), 0 light(s).
+// src.services.usd.usd_pipeline_export : [RR] mayaUSDImport created 47 native Maya mesh shape(s) from USD geometry (no shading networks generated).
+# Warning: Node 'model_LwrTeeth_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf2SG' shader.
+// Warning: line 1: Node 'model_LwrTeeth_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf2SG' shader.
+// Error: line 1: Connection not made: 'model_LwrTeeth_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf2SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_Tongue_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf18SG' shader.
+// Warning: line 1: Node 'model_Tongue_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf18SG' shader.
+// Error: line 1: Connection not made: 'model_Tongue_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf18SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_UprTeeth_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf3SG' shader.
+// Warning: line 1: Node 'model_UprTeeth_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf3SG' shader.
+// Error: line 1: Connection not made: 'model_UprTeeth_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf3SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_Chain_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf17SG' shader.
+// Warning: line 1: Node 'model_Chain_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf17SG' shader.
+// Error: line 1: Connection not made: 'model_Chain_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf17SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_Tags_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf5SG' shader.
+// Warning: line 1: Node 'model_Tags_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf5SG' shader.
+// Error: line 1: Connection not made: 'model_Tags_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf5SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_Button_03_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf14SG' shader.
+// Warning: line 1: Node 'model_L_Button_03_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf14SG' shader.
+// Error: line 1: Connection not made: 'model_L_Button_03_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf14SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_Button_03_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf8SG' shader.
+// Warning: line 1: Node 'model_R_Button_03_GeoShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf8SG' shader.
+// Error: line 1: Connection not made: 'model_R_Button_03_GeoShape.instObjGroups[0]' -> 'PxrDisneyBsdf8SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_OutrEye_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'Cornea_Mat_SG' shader.
+// Warning: line 1: Node 'model_L_OutrEye_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'Cornea_Mat_SG' shader.
+// Error: line 1: Connection not made: 'model_L_OutrEye_Geo_usdExportShape.instObjGroups[0]' -> 'Cornea_Mat_SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_OutrEye_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'Cornea_Mat_SG' shader.
+// Warning: line 1: Node 'model_R_OutrEye_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'Cornea_Mat_SG' shader.
+// Error: line 1: Connection not made: 'model_R_OutrEye_Geo_usdExportShape.instObjGroups[0]' -> 'Cornea_Mat_SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_Body_Geo_usdExport1Shape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf1SG' shader.
+// Warning: line 1: Node 'model_Body_Geo_usdExport1Shape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf1SG' shader.
+// Error: line 1: Connection not made: 'model_Body_Geo_usdExport1Shape.instObjGroups[0]' -> 'PxrDisneyBsdf1SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_Jacket_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf11SG' shader.
+// Warning: line 1: Node 'model_Jacket_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf11SG' shader.
+// Error: line 1: Connection not made: 'model_Jacket_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf11SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_Button_01_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf16SG' shader.
+// Warning: line 1: Node 'model_L_Button_01_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf16SG' shader.
+// Error: line 1: Connection not made: 'model_L_Button_01_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf16SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_Button_02_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf15SG' shader.
+// Warning: line 1: Node 'model_L_Button_02_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf15SG' shader.
+// Error: line 1: Connection not made: 'model_L_Button_02_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf15SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_Button_04_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf13SG' shader.
+// Warning: line 1: Node 'model_L_Button_04_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf13SG' shader.
+// Error: line 1: Connection not made: 'model_L_Button_04_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf13SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_L_Zipper_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf12SG' shader.
+// Warning: line 1: Node 'model_L_Zipper_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf12SG' shader.
+// Error: line 1: Connection not made: 'model_L_Zipper_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf12SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_Button_01_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf10SG' shader.
+// Warning: line 1: Node 'model_R_Button_01_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf10SG' shader.
+// Error: line 1: Connection not made: 'model_R_Button_01_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf10SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_Button_02_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf9SG' shader.
+// Warning: line 1: Node 'model_R_Button_02_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf9SG' shader.
+// Error: line 1: Connection not made: 'model_R_Button_02_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf9SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_Button_04_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf7SG' shader.
+// Warning: line 1: Node 'model_R_Button_04_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf7SG' shader.
+// Error: line 1: Connection not made: 'model_R_Button_04_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf7SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+# Warning: Node 'model_R_Zipper_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf6SG' shader.
+// Warning: line 1: Node 'model_R_Zipper_Geo_usdExportShape.instObjGroups[0]': cannot make assignment to 'PxrDisneyBsdf6SG' shader.
+// Error: line 1: Connection not made: 'model_R_Zipper_Geo_usdExportShape.instObjGroups[0]' -> 'PxrDisneyBsdf6SG.dagSetMembers[-1]'.  Source node will not allow the connection.
+// Error: line 1: Error while parsing arguments.
+// src.services.usd.usd_pipeline_export : [RR] Verified SG bindings: 0/19 native meshes confirmed connected to their original RfM PxrDisneyBsdf SG (via instObjGroups[0]→shadingEngine read-back).
+// Warning: src.services.usd.usd_pipeline_export : [RR] 19 native mesh(es) did not bind to their target SG even after hyperShade fallback. First 5: ['|SkelRoot|model_Veteran_Geo_Grp|model_LwrTeeth_Geo|model_LwrTeeth_GeoShape → PxrDisneyBsdf2SG', '|SkelRoot|model_Veteran_Geo_Grp|model_Tongue_Geo|model_Tongue_GeoShape → PxrDisneyBsdf18SG', '|SkelRoot|model_Veteran_Geo_Grp|model_UprTeeth_Geo|model_UprTeeth_GeoShape → PxrDisneyBsdf3SG', '|SkelRoot|model_Veteran_Geo_Grp|model_Chain_Geo|model_Chain_GeoShape → PxrDisneyBsdf17SG', '|SkelRoot|model_Veteran_Geo_Grp|model_Tags_Geo|model_Tags_GeoShape → PxrDisneyBsdf5SG']
 // src.services.usd.usd_pipeline_export : [LAYER] Edit target set to 'animation' sublayer — keyframes will be authored here
 // src.services.usd.usd_pipeline_export : [TIP] Select USD prims in viewport → press S to set keyframes on the animation layer
 mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_root_USDShape" 1 "D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.root.usda";
@@ -607,16 +687,6 @@ mayaUsdLayerEditor -edit -refreshSystemLock  "|Veteran_Rig_root_USD|Veteran_Rig_
 // src.services.usd.usd_pipeline_export : [OK] USD Proxy created: 21 meshes, 124 joints in USD
 // src.services.usd.usd_pipeline_export : [LOOKDEV] 30 USD materials: VP2 via UsdPreviewSurface · RenderMan via Maya Pxr shaders (PxrDisneyBsdf from .rig.mb cache + synthetic PxrSurface fallback for any unmatched)
 // src.services.usd.usd_pipeline_export : [TIP] USD Layer Editor opened — author animation as a non-destructive layer (Option B)
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf5SG/Veteran_Tags_Bsdf
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf17SG/Veteran_Chain_Bsdf
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf14SG/Veteran_LfButn03_Bsdf
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf8SG/Veteran_RtButn03_Bsdf
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/Pupils_MatSG/Pupils_Mat
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf9SG/Veteran_RtButn02_Bsdf
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/Sclera_MatSG/Sclera_Mat
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/Iris_MatSG/Iris_Mat
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/Cornea_Mat_SG/Cornea_Mat
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf1SG/Veteran_Body_Bsdf
 updateRendererUI;
 # Error: AttributeError: file C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\arnoldmenu.py line 146: module 'maya.cmds' has no attribute 'arnoldPlugins'
 [MtoA] Error parsing AETemplate file aiAreaLightTemplate
@@ -671,5 +741,6 @@ RuntimeError: (kInvalidParameter): Invalid parameter
 # Error: AttributeError: file C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\viewport.py line 236: module 'maya.cmds' has no attribute 'arnoldViewport'
 # [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
 # src.services.usd.usd_pipeline_export : [RFM] Deferred post-rfm2 (lowestPriority): 0 shaders added to defaultShaderList1, 29 already listed; SG.surfaceShader: 30 OK, 0 repaired
-// Warning: Invalid info:id PxrPreviewSurface node: /SkelRoot/Group/Looks/PxrDisneyBsdf11SG/Veteran_MainMesh_Bsdf -- and 41 similar
 // src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1751
+[OK] Window state saved: 1389x795
+[OK] Asset Manager singleton reference cleared

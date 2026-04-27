@@ -35,6 +35,8 @@ try:
 except ImportError:
     USD_AVAILABLE = False
 
+from .usd_pipeline_models import MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL
+from .usd_pipeline_models import USD_AVAILABLE as _USD_AVAILABLE_MODEL
 from .usd_pipeline_models import (
     ConversionResult,
     ConversionStatus,
@@ -42,8 +44,6 @@ from .usd_pipeline_models import (
     ExportResult,
     ImportOptions,
     ImportResult,
-    MAYA_AVAILABLE as _MAYA_AVAILABLE_MODEL,
-    USD_AVAILABLE as _USD_AVAILABLE_MODEL,
 )
 
 
@@ -144,7 +144,6 @@ class SkeletonMixin:
             return
 
         try:
-            from pxr import Usd, UsdSkel  # pyright: ignore[reportMissingImports]
 
             # Open the USD stage
             stage = Usd.Stage.Open(str(usd_path))
@@ -261,7 +260,6 @@ class SkeletonMixin:
             return
 
         try:
-            from pxr import Usd, UsdSkel  # pyright: ignore[reportMissingImports]
 
             total_meshes = 0
             total_skeletons = 0
@@ -353,7 +351,6 @@ class SkeletonMixin:
     def _verify_material_colors(self, stage, total_materials: int = 0) -> None:
         """Verify UsdPreviewSurface diffuseColor values are present on all injected materials."""
         try:
-            from pxr import UsdShade  # pyright: ignore[reportMissingImports]
 
             self.logger.info("[LOOKDEV] Verifying USD material colors...")
 
@@ -543,7 +540,6 @@ class SkeletonMixin:
 
             except Exception as import_err:
                 self.logger.error(f"[ERROR] USD import failed: {import_err}")
-                import traceback
 
                 self.logger.error(traceback.format_exc())
                 return False
@@ -635,7 +631,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"Hybrid import failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -733,7 +728,6 @@ class SkeletonMixin:
             return False
 
         try:
-            from pxr import Usd, UsdSkel, UsdGeom
 
             # Get the USD stage from the proxy
             stage_attr = f"{proxy_shape}.filePath"
@@ -874,7 +868,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"[ERROR] Skinned mesh conversion failed: {e}")
-            import traceback
 
             self.logger.debug(traceback.format_exc())
             return False
@@ -897,7 +890,6 @@ class SkeletonMixin:
             True if bindings exist or were created successfully
         """
         try:
-            from pxr import Usd, UsdSkel, UsdGeom, Sdf  # type: ignore
 
             self.logger.info("🔗 Checking USD skeleton bindings...")
 
@@ -1019,7 +1011,6 @@ class SkeletonMixin:
             return False
         except Exception as e:
             self.logger.error(f"[ERROR] Binding creation failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -1042,7 +1033,6 @@ class SkeletonMixin:
             True if joints created successfully
         """
         try:
-            from pxr import Usd, UsdSkel
 
             self.logger.info("[SKEL] Phase 2: Creating Maya joint proxies from .rig.mb file...")
 
@@ -1640,7 +1630,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"[ERROR] Joint proxy creation failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -1695,15 +1684,12 @@ class SkeletonMixin:
                 if not stage_path:
                     self.logger.error("[ERROR] Could not get USD stage")
                     return False
-                from pxr import Usd
 
                 stage = Usd.Stage.Open(stage_path)
 
             if not stage:
                 self.logger.error("[ERROR] Could not open USD stage")
                 return False
-
-            from pxr import Usd, UsdSkel  # type: ignore[import-unresolved]
 
             # Find USD skeleton
             skeletons = [p for p in stage.Traverse() if p.IsA(UsdSkel.Skeleton)]
@@ -1784,7 +1770,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"[ERROR] Proxy connection failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
@@ -1929,7 +1914,6 @@ class SkeletonMixin:
                 """Callback to push Maya joint transforms to USD skeleton."""
                 try:
                     import mayaUsd.ufe as mayaUsdUfe  # type: ignore[import-unresolved]
-                    from pxr import UsdSkel, Gf  # type: ignore[import-unresolved]
 
                     stage = mayaUsdUfe.getStage(proxy_shape)
                     if not stage:
@@ -2000,7 +1984,6 @@ class SkeletonMixin:
             True if weights found and bindings verified
         """
         try:
-            from pxr import Usd, UsdSkel, UsdGeom  # type: ignore
 
             self.logger.info("[BLEND] Phase 3.2: Verifying USD skin bindings...")
 
@@ -2140,7 +2123,6 @@ class SkeletonMixin:
             return False
         except Exception as e:
             self.logger.error(f"[ERROR] Binding verification failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return False
@@ -2160,7 +2142,6 @@ class SkeletonMixin:
             True if repairs successful
         """
         try:
-            from pxr import Usd, UsdSkel, UsdGeom, Sdf  # type: ignore
 
             binding_info = getattr(result, "_usd_binding_info", None)
             if not binding_info or not binding_info.get("binding_issues"):
@@ -2235,7 +2216,6 @@ class SkeletonMixin:
             True if weights transferred successfully
         """
         try:
-            from pxr import Usd, UsdSkel, UsdGeom, Sdf, Vt, Gf  # type: ignore
 
             self.logger.info("[BLEND] Phase 3.2: Transferring skin weights...")
 
@@ -2369,7 +2349,6 @@ class SkeletonMixin:
             return False
         except Exception as e:
             self.logger.error(f"[ERROR] Weight transfer failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             self._cleanup_imported_rig(result)
@@ -2556,7 +2535,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"[ERROR] Controller import failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return 0
@@ -2654,7 +2632,6 @@ class SkeletonMixin:
 
         except Exception as e:
             self.logger.error(f"[ERROR] Controller connection failed: {e}")
-            import traceback
 
             self.logger.error(traceback.format_exc())
             return 0

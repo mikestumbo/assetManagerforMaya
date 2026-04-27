@@ -692,6 +692,36 @@ class ImportMixin:
                 if USD_AVAILABLE and result.usd_materials > 0:
                     self._create_rfm_maya_shaders(usd_path, proxy_transform, proxy_shape)
 
+                    # ── RENDER-READY NATIVE IMPORT (FROZEN — opt-in only) ────
+                    # Architecture seam: MayaUSD 0.35.0 / RfM 27.2 has no
+                    # working per-mesh path for `mayaUsdProxyShape`.  The
+                    # native-import workaround collides with already-loaded
+                    # .rig.mb shape names (mayaUSDImport renames to
+                    # `*_usdExport`) and the rig's skinned shapes reject SG
+                    # reassignment ("Source node will not allow the
+                    # connection").  Disabled by default — the Animation
+                    # Importer stays in USD-proxy mode for layout/anim;
+                    # rendering is owned by the Hybrid Importer Workflow.
+                    if getattr(options, "render_ready_native_import", False):
+                        mb = getattr(self, "_last_mesh_bindings", None) or {}
+                        m2sg = getattr(self, "_last_mat_path_to_sg", None) or {}
+                        rr_count = self._render_ready_native_import(
+                            usd_path, proxy_transform, mb, m2sg
+                        )
+                        if rr_count > 0 and getattr(
+                            options, "hide_proxy_after_render_ready", False
+                        ):
+                            try:
+                                cmds.setAttr(f"{proxy_transform}.visibility", False)
+                                self.logger.info(
+                                    f"[RR] Hid USD proxy '{proxy_transform}' — "
+                                    f"renderer will use {rr_count} native mesh(es) "
+                                    f"with original RfM SGs.  Re-show the proxy "
+                                    f"any time for live USD animation/layout."
+                                )
+                            except Exception as hide_err:
+                                self.logger.debug(f"[RR] Could not hide proxy: {hide_err}")
+
                 # Open USD Layer Editor if requested (Option B animation authoring)
                 if options.open_layer_editor:
                     self._open_usd_layer_editor(proxy_shape)
@@ -3019,6 +3049,9 @@ class ImportMixin:
             # etc. — instead of the lossy USD→PxrSurface reconstruction below.
             mat_prim_paths = set(mat_preview.keys()) | set(mesh_bindings.values())
             mat_path_to_sg = self._import_rfm_shaders_from_cache(mat_prim_paths)
+            # Expose for Render-Ready Native Import (post-call SG assignment).
+            self._last_mesh_bindings = dict(mesh_bindings)
+            self._last_mat_path_to_sg = dict(mat_path_to_sg)
 
             if mat_path_to_sg:
                 created_count = len(mat_path_to_sg)
@@ -3045,7 +3078,9 @@ class ImportMixin:
                 # and PxrTexture/PxrNormalMap connections read from the DG.
                 # This makes outputs:ri:surface in the USD stage resolve to the
                 # real Disney shader at render time (RfM IPR + batch/XPU).
-                self._rewrite_materials_usda_with_disney_networks(usd_path, mat_path_to_sg)
+                self._rewrite_materials_usda_with_disney_networks(
+                    usd_path, mat_path_to_sg, mesh_bindings=mesh_bindings
+                )
             _cache_used: bool = bool(mat_path_to_sg)  # True when Strategy 1 succeeded
             # ── Strategy 2: Synthetic PxrSurface from USD data (fallback) ──────
             # Runs for any material that was NOT found in the .rig.mb shader cache.
@@ -3764,12 +3799,489 @@ class ImportMixin:
                     "select proxy shape → RMB → Assign Existing Material."
                 )
 
+            # ── FIX 8: Auto-switch viewport renderer to mayaHydra HdPrman ─────
+            # NOTE: As of the Render-Ready Native Import pivot, this code path
+            # is only useful on installs that ship a newer mayaHydra (MayaUSD
+            # ≥ 0.37) which actually exposes HdPrman as a Maya viewport
+            # renderer.  On the bundled MayaUSD 0.35 + mayaHydra 0.7.3 it will
+            # always log "No HdPrman renderer plugin registered" because that
+            # mayaHydra build only registers `mayaHydraRenderOverride` (Storm).
+            # Render-Ready Native Import (called from `_import_with_mayausd`
+            # right after this method returns) is the actual fix for grey
+            # IPR — this Fix 8 call is left in as a forward-compatible no-op.
+            self._enable_hydra_render_for_usd_proxy(proxy_shape)
+
             return created_count
 
         except Exception as e:
             self.logger.warning(f"[RFM] Maya shader creation failed: {e}")
             self.logger.debug(traceback.format_exc())
             return 0
+
+    def _enable_hydra_render_for_usd_proxy(self, proxy_shape: str) -> None:
+        """Switch active model panels to mayaHydra HdPrman renderer.
+
+        RfM 27.2's RIB-based `it` IPR has no translator for
+        `mayaUsdProxyShape` (verified via `mayaTranslation.json` registry
+        scan), so it renders proxy meshes as flat grey.  The Hydra Render
+        Delegate path (mayaHydra + HdPrman) walks the USD stage natively and
+        honors `material:binding` per-prim, which is what we author in
+        Phase A and Fix 7.
+
+        This method tries to switch each model panel's viewport renderer to
+        an HdPrman delegate.  It is fully reversible — the user can revert
+        any time via the panel's Renderer menu.  Failures are logged but
+        never raised, since this is a render-quality enhancement and must
+        not break the import pipeline.
+
+        Args:
+            proxy_shape: Long DAG path to the `mayaUsdProxyShape` (only used
+                for diagnostic logging).
+        """
+        if cmds is None:
+            return
+
+        try:
+            # ── FIX 9: Auto-load the mayaHydra Maya plugin first ──────────
+            # Without it, Maya only registers `vp2Renderer` + basic OpenGL
+            # renderers and there is no HdPrman delegate to switch to —
+            # exactly what the previous test caught:
+            #   Available renderers: ['vp2Renderer', 'base_OpenGL_Renderer',
+            #     'hwRender_OpenGL_Renderer', 'stub_Renderer']
+            # The plugin ships with MayaUSD (`mayaHydra.mll` under MAYAHYDRA
+            # 0.7.3 module).  Loading is idempotent and reversible.
+            try:
+                if not cmds.pluginInfo("mayaHydra", q=True, loaded=True):
+                    cmds.loadPlugin("mayaHydra", quiet=True)
+                    self.logger.info(
+                        "[RFM][FIX8] Loaded mayaHydra plugin so HdPrman "
+                        "viewport renderer registers."
+                    )
+            except Exception as plugin_err:
+                self.logger.warning(
+                    f"[RFM][FIX8] Could not load mayaHydra plugin: {plugin_err}. "
+                    "Per-mesh USD bindings will not appear in RfM IPR. "
+                    "Install MayaUSD's MAYAHYDRA module or load 'mayaHydra' "
+                    "via Window → Settings/Preferences → Plug-in Manager."
+                )
+                # Continue — modelEditor query below will report what IS
+                # available so the diagnostic message is still useful.
+
+            # Discover renderer plugins that mayaHydra registered.  In
+            # Maya 2026 + mayaHydra 0.7.3 the typical names are:
+            #   - "HdStormRendererPlugin"        (Hydra Storm — VP2 fallback)
+            #   - "HdPrmanLoaderRendererPlugin"  (HdPrman CPU/GPU loader)
+            #   - "HdPrmanXpuLoaderRendererPlugin"
+            #   - "HdPrmanXpuCpuLoaderRendererPlugin"
+            #   - "HdPrmanXpuGpuLoaderRendererPlugin"
+            panels = cmds.getPanel(type="modelPanel") or []
+            if not panels:
+                self.logger.info(
+                    "[RFM][FIX8] No modelPanel found; skipping Hydra renderer switch."
+                )
+                return
+
+            # Use the first model panel to enumerate available renderers.
+            # All panels share the same renderer plugin registry.
+            sample_panel = panels[0]
+            available: List[str] = list(
+                cmds.modelEditor(sample_panel, q=True, rendererList=True) or []
+            )
+            self.logger.debug(f"[RFM][FIX8] Available viewport renderers: {available}")
+
+            # Prefer XPU GPU > XPU CPU > XPU loader > RIS loader.  Storm is
+            # the explicit fallback the user already gets in VP2 — switching
+            # to Storm would be a no-op for RfM IPR purposes.
+            preferred_order = [
+                "HdPrmanXpuGpuLoaderRendererPlugin",
+                "HdPrmanXpuLoaderRendererPlugin",
+                "HdPrmanXpuCpuLoaderRendererPlugin",
+                "HdPrmanLoaderRendererPlugin",
+            ]
+            chosen: Optional[str] = next(
+                (name for name in preferred_order if name in available), None
+            )
+
+            if chosen is None:
+                self.logger.warning(
+                    "[RFM][FIX8] No HdPrman renderer plugin registered. "
+                    "mayaHydra may not be loaded, or RfM 27.2's HdPrman "
+                    "loader plug-ins are not on PXR_PLUGINPATH_NAME. "
+                    f"Available renderers: {available}. "
+                    "Per-mesh USD bindings will not appear in RfM IPR until "
+                    "mayaHydra+HdPrman is enabled."
+                )
+                return
+
+            switched = 0
+            for panel in panels:
+                try:
+                    current = cmds.modelEditor(panel, q=True, rendererName=True)
+                    if current == chosen:
+                        switched += 1
+                        continue
+                    cmds.modelEditor(panel, edit=True, rendererName=chosen)
+                    switched += 1
+                except Exception as panel_err:
+                    self.logger.debug(
+                        f"[RFM][FIX8] Panel {panel} renderer switch failed: {panel_err}"
+                    )
+
+            self.logger.info(
+                f"[RFM][FIX8] Switched {switched}/{len(panels)} model panel(s) to "
+                f"'{chosen}' so the Hydra Render Delegate honors USD "
+                f"material:binding on the proxy shape ({proxy_shape}). "
+                f"Use Renderer menu in any viewport to revert."
+            )
+        except Exception as fix8_err:
+            self.logger.warning(f"[RFM][FIX8] Hydra renderer auto-switch failed: {fix8_err}")
+            self.logger.debug(traceback.format_exc())
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Render-Ready Native Import (architectural pivot)
+    # ─────────────────────────────────────────────────────────────────────────
+    def _render_ready_native_import(
+        self,
+        usd_path: Path,
+        proxy_transform: str,
+        mesh_bindings: Dict[str, str],
+        mat_path_to_sg: Dict[str, str],
+    ) -> int:
+        """Import USD geometry as native Maya meshes and assign existing SGs.
+
+        WHY THIS EXISTS:
+            RfM 27.2 has no translator entry for ``mayaUsdProxyShape`` (verified
+            via ``config/mayaTranslation.json`` — 51 entries, none matching the
+            proxy type), and the bundled mayaHydra 0.7.3 only exposes the
+            Hydra Storm rasterizer in the viewport — not HdPrman.  Neither
+            path can deliver per-mesh PxrDisneyBsdf shading in IPR or batch.
+
+            This method bypasses both limitations by importing the USD content
+            as **native Maya polygon meshes** via ``mayaUSDImport`` (with
+            ``shadingMode=none`` so we keep the original PxrDisneyBsdf SGs
+            already imported from the .rig.mb cache) and then assigning each
+            native mesh shape to its correct SG using the
+            ``mesh_bindings → mat_path_to_sg`` map produced by
+            ``_create_rfm_maya_shaders``.  The proxy is hidden by default so
+            the renderer sees only native geometry; toggle it back on for live
+            USD animation/layout.
+
+        Args:
+            usd_path: Path to the composed root .usda the proxy was loaded from.
+            proxy_transform: Maya transform above the ``mayaUsdProxyShape``,
+                used to derive a unique namespace and to hide the proxy.
+            mesh_bindings: ``{usd_mesh_prim_path: usd_material_prim_path}``
+                from the USD stage traversal.
+            mat_path_to_sg: ``{usd_material_prim_path: maya_SG_name}`` from
+                the .rig.mb shader cache import.
+
+        Returns:
+            Number of native Maya meshes successfully assigned to a SG.
+        """
+        if cmds is None:
+            return 0
+        if not mesh_bindings or not mat_path_to_sg:
+            self.logger.info(
+                "[RR] Skipping Render-Ready Native Import — no mesh→SG map available."
+            )
+            return 0
+
+        # ── Snapshot scene state so we can identify newly-imported nodes ─────
+        meshes_before: set = set(cmds.ls(type="mesh", long=True) or [])
+
+        # Use a unique namespace to keep render-ready nodes isolated from the
+        # original .rig.mb-loaded controllers and the proxy.
+        ns_base = proxy_transform.replace("|", "").replace(":", "_") + "_RR"
+        ns = ns_base
+        suffix = 1
+        try:
+            while cmds.namespace(exists=ns):
+                suffix += 1
+                ns = f"{ns_base}{suffix}"
+        except Exception:
+            ns = ns_base
+
+        usd_path_fwd = str(usd_path).replace("\\", "/")
+
+        # ── Pre-scan stage: build excludePrimPath for non-mesh content ───────
+        # The composed USD stage contains NurbsCurves prims authored by
+        # `_write_nurbs_controllers_to_usd` (i.e., the .rig.mb rig controllers
+        # round-tripped into USD), plus Skeletons, Cameras and Lights.  Without
+        # filtering, mayaUSDImport pulls ALL of them into the Maya scene as
+        # native nurbsCurve / joint / camera / light nodes — duplicating the
+        # controllers that the .rig.mb cache already provides and polluting
+        # the outliner.  We restrict the import to mesh subtrees only.
+        exclude_paths: List[str] = []
+        if USD_AVAILABLE:
+            try:
+                _stage = Usd.Stage.Open(str(usd_path))
+                if _stage:
+                    _exclude_types = {
+                        "NurbsCurves",
+                        "BasisCurves",
+                        "Skeleton",
+                        "SkelAnimation",
+                        "Camera",
+                        "DistantLight",
+                        "RectLight",
+                        "SphereLight",
+                        "DiskLight",
+                        "DomeLight",
+                        "CylinderLight",
+                        "GeometryLight",
+                    }
+                    for _prim in _stage.Traverse():
+                        if _prim.GetTypeName() in _exclude_types:
+                            exclude_paths.append(str(_prim.GetPath()))
+            except Exception as scan_err:
+                self.logger.debug(f"[RR] excludePrimPath scan failed: {scan_err}")
+
+        if exclude_paths:
+            self.logger.info(
+                f"[RR] Excluding {len(exclude_paths)} non-mesh prim(s) from "
+                f"native import (NurbsCurves/Skeleton/Camera/Light)."
+            )
+
+        # ── Native USD geometry import (no shading networks created) ─────────
+        # shadingMode=("none","default") tells mayaUSDImport NOT to build any
+        # Maya shading network — the existing PxrDisneyBsdf SGs (already in
+        # Hypershade from the .rig.mb cache) are what we will assign next.
+        try:
+            cmds.loadPlugin("mayaUsdPlugin", quiet=True)
+        except Exception:
+            pass
+
+        # ── Snapshot scene state for ALL geometry types so post-import sweep
+        # can identify and delete any non-mesh nodes that slipped past
+        # excludePrimPath (defense in depth).
+        curves_before: set = set(cmds.ls(type="nurbsCurve", long=True) or [])
+        joints_before: set = set(cmds.ls(type="joint", long=True) or [])
+        cams_before: set = set(cmds.ls(type="camera", long=True) or [])
+        lights_before: set = set(cmds.ls(type="light", long=True) or [])
+
+        try:
+            import_kwargs: Dict[str, Any] = dict(
+                file=usd_path_fwd,
+                primPath="/",
+                shadingMode=[("none", "default")],
+                readAnimData=False,
+                useAsAnimationCache=False,
+                importInstances=False,
+            )
+            if exclude_paths:
+                import_kwargs["excludePrimPath"] = ",".join(exclude_paths)
+            try:
+                imported_roots = cmds.mayaUSDImport(**import_kwargs)
+            except (TypeError, RuntimeError) as flag_err:
+                # MayaUSD 0.35.0 (Maya 2026) does NOT expose excludePrimPath
+                # on the mayaUSDImport command (verified on user's install:
+                # "Invalid flag 'excludePrimPath'").  Retry without that flag
+                # and rely on the post-import sweep below to delete
+                # NurbsCurves / joints / cameras / lights.
+                if "excludePrimPath" in str(flag_err) and exclude_paths:
+                    self.logger.info(
+                        "[RR] mayaUSDImport does not support excludePrimPath in "
+                        "this MayaUSD build; importing full stage and relying "
+                        "on post-import non-mesh sweep instead."
+                    )
+                    import_kwargs.pop("excludePrimPath", None)
+                    imported_roots = cmds.mayaUSDImport(**import_kwargs)
+                else:
+                    raise
+        except Exception as imp_err:
+            self.logger.warning(
+                f"[RR] mayaUSDImport failed: {imp_err}. "
+                f"Per-mesh native render path is unavailable."
+            )
+            return 0
+
+        # ── Sweep: delete any non-mesh DAG nodes that slipped through ────────
+        def _delete_new(node_type: str, before: set) -> int:
+            after = set(cmds.ls(type=node_type, long=True) or [])
+            new_nodes = sorted(after - before)
+            removed = 0
+            for n in new_nodes:
+                try:
+                    parents = cmds.listRelatives(n, parent=True, fullPath=True) or []
+                    target = parents[0] if parents else n
+                    if cmds.objExists(target):
+                        cmds.delete(target)
+                        removed += 1
+                except Exception:
+                    pass
+            return removed
+
+        swept_curves = _delete_new("nurbsCurve", curves_before)
+        swept_joints = _delete_new("joint", joints_before)
+        swept_cams = _delete_new("camera", cams_before)
+        swept_lights = _delete_new("light", lights_before)
+        if swept_curves or swept_joints or swept_cams or swept_lights:
+            self.logger.info(
+                f"[RR] Post-import sweep removed: "
+                f"{swept_curves} curve(s), {swept_joints} joint(s), "
+                f"{swept_cams} camera(s), {swept_lights} light(s)."
+            )
+
+        # ── Find new mesh shapes and build a USD-prim-path → Maya-shape map ──
+        meshes_after: set = set(cmds.ls(type="mesh", long=True) or [])
+        new_mesh_shapes = sorted(meshes_after - meshes_before)
+        if not new_mesh_shapes:
+            self.logger.warning(
+                "[RR] mayaUSDImport returned no new meshes. " f"Imported roots: {imported_roots}"
+            )
+            return 0
+
+        self.logger.info(
+            f"[RR] mayaUSDImport created {len(new_mesh_shapes)} native Maya mesh "
+            f"shape(s) from USD geometry (no shading networks generated)."
+        )
+
+        # Build a quick "tail of DAG path → shape" lookup so we can match USD
+        # prim paths (e.g., "/Veteran/Geom/body_geo") to Maya shapes regardless
+        # of namespace prefix.  We compare on the joined non-namespaced suffix.
+        def _strip_ns(name: str) -> str:
+            # "ns:body_geo" → "body_geo"
+            return name.rsplit(":", 1)[-1]
+
+        def _maya_path_tail(long_path: str) -> str:
+            # "|RR_ns:Veteran|RR_ns:Geom|RR_ns:body_geo|RR_ns:body_geoShape"
+            #   → "Veteran/Geom/body_geo"
+            parts = [p for p in long_path.split("|") if p]
+            if not parts:
+                return ""
+            # drop the final "Shape" segment so we compare transform-level paths
+            transform_parts = parts[:-1] if len(parts) > 1 else parts
+            return "/".join(_strip_ns(p) for p in transform_parts)
+
+        tail_to_shape: Dict[str, str] = {}
+        for shape in new_mesh_shapes:
+            tail = _maya_path_tail(shape)
+            if tail:
+                # Last writer wins; in practice tails are unique within an import
+                tail_to_shape[tail] = shape
+
+        # ── Assign existing Maya SGs to native meshes per USD bindings ───────
+        # Strategy: try `cmds.sets(forceElement)` first; that is the canonical
+        # API but silently emits "None of the items can be added to the set"
+        # warnings without raising when the shape is intermediate or already
+        # in another shading-engine set with restrictions.  We therefore READ
+        # BACK the connection on `<shape>.instObjGroups[0]` to confirm; on
+        # failure we retry with `cmds.hyperShade(assign=)` against the parent
+        # transform (which Maya routes through the non-intermediate shape) and
+        # verify again.  Only shapes whose surface SG is verifiably the target
+        # SG count toward the `assigned` total.
+        assigned = 0
+        unmatched_usd: List[str] = []
+        unmatched_mat: List[str] = []
+        verify_failures: List[str] = []
+
+        def _shape_sg(shape_path: str) -> Optional[str]:
+            try:
+                conns = (
+                    cmds.listConnections(
+                        f"{shape_path}.instObjGroups[0]",
+                        source=False,
+                        destination=True,
+                        type="shadingEngine",
+                    )
+                    or []
+                )
+                return conns[0] if conns else None
+            except Exception:
+                return None
+
+        for usd_mesh_path, usd_mat_path in mesh_bindings.items():
+            sg_name = mat_path_to_sg.get(usd_mat_path)
+            if not sg_name or not cmds.objExists(sg_name):
+                unmatched_mat.append(f"{usd_mesh_path} → {usd_mat_path}")
+                continue
+
+            usd_tail = usd_mesh_path.lstrip("/")
+            shape = tail_to_shape.get(usd_tail)
+            if shape is None:
+                leaf = usd_tail.rsplit("/", 1)[-1]
+                candidates = [
+                    s for t, s in tail_to_shape.items() if t.endswith("/" + leaf) or t == leaf
+                ]
+                if len(candidates) == 1:
+                    shape = candidates[0]
+            if shape is None:
+                unmatched_usd.append(usd_mesh_path)
+                continue
+
+            # Skip intermediate object shapes — Maya never renders or assigns
+            # shaders to them; we want the deformed/visible shape sibling.
+            try:
+                if cmds.getAttr(f"{shape}.intermediateObject"):
+                    parents = cmds.listRelatives(shape, parent=True, fullPath=True) or []
+                    if parents:
+                        sibs = (
+                            cmds.listRelatives(
+                                parents[0], shapes=True, fullPath=True, noIntermediate=True
+                            )
+                            or []
+                        )
+                        sibs = [s for s in sibs if cmds.objectType(s) == "mesh"]
+                        if sibs:
+                            shape = sibs[0]
+            except Exception:
+                pass
+
+            transform_parents = cmds.listRelatives(shape, parent=True, fullPath=True) or []
+            transform = transform_parents[0] if transform_parents else None
+
+            # Attempt 1: cmds.sets forceElement
+            try:
+                cmds.sets(shape, edit=True, forceElement=sg_name)
+            except Exception:
+                pass
+
+            if _shape_sg(shape) == sg_name:
+                assigned += 1
+                continue
+
+            # Attempt 2: hyperShade(assign=) on the transform
+            if transform:
+                try:
+                    prev_sel = cmds.ls(selection=True, long=True) or []
+                    cmds.select(transform, replace=True)
+                    cmds.hyperShade(assign=sg_name)
+                    if prev_sel:
+                        cmds.select(prev_sel, replace=True)
+                    else:
+                        cmds.select(clear=True)
+                except Exception:
+                    pass
+
+            if _shape_sg(shape) == sg_name:
+                assigned += 1
+                continue
+
+            verify_failures.append(f"{shape} → {sg_name}")
+
+        self.logger.info(
+            f"[RR] Verified SG bindings: {assigned}/{len(mesh_bindings)} native "
+            f"meshes confirmed connected to their original RfM PxrDisneyBsdf SG "
+            f"(via instObjGroups[0]→shadingEngine read-back)."
+        )
+        if verify_failures:
+            self.logger.warning(
+                f"[RR] {len(verify_failures)} native mesh(es) did not bind to their "
+                f"target SG even after hyperShade fallback. First 5: "
+                f"{verify_failures[:5]}"
+            )
+        if unmatched_usd:
+            self.logger.warning(
+                f"[RR] {len(unmatched_usd)} USD mesh prim(s) had no matching native "
+                f"Maya shape after import. First 5: {unmatched_usd[:5]}"
+            )
+        if unmatched_mat:
+            self.logger.warning(
+                f"[RR] {len(unmatched_mat)} USD mesh binding(s) had no SG in the "
+                f"shader cache. First 5: {unmatched_mat[:5]}"
+            )
+
+        return assigned
 
     def _ensure_hypershade_shader_bindings(self, mat_path_to_sg: Dict[str, str]) -> None:
         """Ensure each mapped SG has a direct Pxr source on surfaceShader.
@@ -4074,6 +4586,7 @@ class ImportMixin:
         self,
         usd_path: Path,
         mat_path_to_sg: dict,
+        mesh_bindings: Optional[dict] = None,
     ) -> None:
         """Overwrite the PxrPreviewSurface placeholders in materials.usda with
         real RIS shader networks read directly from the Maya DG.
@@ -4360,15 +4873,15 @@ class ImportMixin:
                 except Exception:
                     pass
 
-                # ── Remove stale export-phase shader children ─────────────────
-                # Replace existing children so we don't get duplicate specs.
-                # Remove both old rfm2-named and current USD-named variants.
-                for _child in (
-                    "PxrPreviewSurface",
-                    "UsdPreviewSurface",
-                    "PxrTexture_diffuse",
-                    "UsdUVTexture_diffuse",
-                ):
+                # ── Remove stale legacy shader children from older sessions ─────
+                # Do NOT remove "UsdPreviewSurface" or "UsdUVTexture_diffuse" —
+                # those were authored by the export phase with valid texture paths
+                # relative to the USD stage.  We override them in-place below,
+                # which keeps the working UsdUVTexture connections intact and avoids
+                # the rfm2 "Failed verification: ' image '" errors that occur when
+                # new UsdUVTexture nodes are created from cmds.getAttr(PxrTexture.filename)
+                # (absolute Maya project paths that rfm2 cannot resolve from the USD stage).
+                for _child in ("PxrPreviewSurface", "PxrTexture_diffuse"):
                     _stale = mat_stage.GetPrimAtPath(mat_prim_path.AppendChild(_child))
                     if _stale and _stale.IsValid():
                         mat_stage.RemovePrim(mat_prim_path.AppendChild(_child))
@@ -4377,29 +4890,21 @@ class ImportMixin:
                 mat_override = mat_stage.OverridePrim(mat_prim_path)
                 mat_override.SetTypeName("Material")
 
-                # ── Define the RIS surface shader ─────────────────────────────
-                shader_leaf = maya_shader.split(":")[-1]
-                shader_usd_path = mat_prim_path.AppendChild(shader_leaf)
-                # Remove any stale spec (e.g. from a previous import run)
+                # ── Override the export-phase UsdPreviewSurface shader in-place ─
+                # Author over the SAME child path the export phase wrote so the
+                # composed stage has exactly 30 unique UsdPreviewSurface prims
+                # (not 60: base USDC 30 + import-phase new-name 30).
+                # rfm2 27.2 HdPrman: UsdPreviewSurfaceParameters.oso is the only
+                # valid surface bxdf .oso; PxrSurface / PxrDisneyBsdf / PxrPreviewSurface
+                # are .dll RIS shaders with no .oso → "Invalid info:id X node" → grey.
+                shader_usd_path = mat_prim_path.AppendChild("UsdPreviewSurface")
                 _sx = mat_stage.GetPrimAtPath(shader_usd_path)
-                if _sx and _sx.IsValid():
-                    mat_stage.RemovePrim(shader_usd_path)
-                shader_prim = mat_stage.DefinePrim(shader_usd_path, "Shader")
+                shader_prim = (
+                    _sx
+                    if (_sx and _sx.IsValid())
+                    else mat_stage.DefinePrim(shader_usd_path, "Shader")
+                )
                 usd_shader = UsdShade.Shader(shader_prim)
-                # rfm2 27.2 HdPrman's Hydra USD renderer ships ONE compiled
-                # surface bxdf: UsdPreviewSurfaceParameters.oso, which rfm2
-                # exposes as info:id "PxrPreviewSurface".  PxrSurface and
-                # PxrDisneyBsdf are .dll RIS shaders; HdPrman's Riley conversion
-                # scene index rejects them with "Invalid info:id X node" warnings
-                # and falls back to the default grey RIS shader.  Map everything
-                # to "PxrPreviewSurface" — the only valid surface bxdf for
-                # rfm2 27.2 HdPrman USD rendering.
-                # rfm2 27.2 HdPrman Hydra USD renderer ships exactly ONE compiled
-                # surface bxdf: UsdPreviewSurfaceParameters.oso  →  info:id = "UsdPreviewSurface".
-                # (strip the "Parameters.oso" suffix to get the registered shader ID).
-                # PxrSurface, PxrDisneyBsdf, and PxrPreviewSurface are .dll RIS shaders
-                # with no .oso counterpart in the USD shader path; HdPrman's Riley
-                # conversion scene index rejects them with "Invalid info:id X node".
                 usd_shader.CreateIdAttr("UsdPreviewSurface")
 
                 # Per-source-type read-attr → UsdPreviewSurface write-attr tables.
@@ -4432,35 +4937,10 @@ class ImportMixin:
                     "PxrBlack": {},
                 }.get(shader_type, {})
 
-                # Texture-connection dest_attr (Maya shader attr) →
-                # UsdPreviewSurface write-attr.  Also encodes the UsdUVTexture
-                # output channel needed (suffix after ":"):
-                #   "roughness:R" → UsdUVTexture.outputs:r  (Float, sourceColorSpace=raw)
-                #   "diffuseColor:RGB" → UsdUVTexture.outputs:rgb  (Color3f, sRGB)
-                #   "normal:N" → UsdUVTexture.outputs:rgb  (Color3f, raw, with bias/scale)
-                _TEX_MAP: dict = {
-                    "PxrDisneyBsdf": {
-                        "baseColor": "diffuseColor:RGB",
-                        "roughness": "roughness:R",
-                        "metallic": "metallic:R",
-                        "bumpNormal": "normal:N",
-                        "emitColor": "emissiveColor:RGB",
-                        "presence": "opacity:R",
-                    },
-                    "PxrSurface": {
-                        "diffuseColor": "diffuseColor:RGB",
-                        "bumpNormal": "normal:N",
-                        "specularRoughness": "roughness:R",
-                        "glowColor": "emissiveColor:RGB",
-                        "presence": "opacity:R",
-                    },
-                    "PxrBlack": {},
-                }.get(shader_type, {})
-
                 # ── Copy scalar float inputs ──────────────────────────────────
                 for src_attr, dst_attr in _FLOAT_MAP.items():
                     if src_attr in upstream_tex:
-                        continue  # will be wired via texture connection below
+                        continue  # texture already wired by export-phase UsdUVTexture node
                     try:
                         val = cmds.getAttr(f"{maya_shader}.{src_attr}")
                         if val is not None:
@@ -4501,98 +4981,52 @@ class ImportMixin:
                     usd_shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(1.0)
                     usd_shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
 
-                # ── Wire upstream texture/normalmap nodes ─────────────────────
-                # Maya PxrTexture/PxrNormalMap nodes are rfm2 RIS nodes not
-                # recognised by HdPrman's USD shader registry.  Translate to
-                # UsdUVTexture (matches UsdUVTexture.oso in rfm2 27.2 usd3 path)
-                # using the standard USD attribute names: inputs:file (not
-                # inputs:filename) and inputs:sourceColorSpace (not inputs:linearize).
-                for dest_attr, (tex_node, _tex_type) in upstream_tex.items():
-                    # Look up the UsdPreviewSurface destination + channel suffix.
-                    tex_spec = _TEX_MAP.get(dest_attr)
-                    if tex_spec is None:
-                        continue  # no UsdPreviewSurface equivalent — skip
-
-                    usd_dest_attr, channel = tex_spec.split(":", 1)
-
-                    tex_leaf = tex_node.split(":")[-1]
-                    tex_usd_path = mat_prim_path.AppendChild(tex_leaf)
-                    _tx = mat_stage.GetPrimAtPath(tex_usd_path)
-                    if _tx and _tx.IsValid():
-                        mat_stage.RemovePrim(tex_usd_path)
-
-                    tex_prim = mat_stage.DefinePrim(tex_usd_path, "Shader")
-                    usd_tex = UsdShade.Shader(tex_prim)
-                    # UsdUVTexture is the only texture shader with a compiled .oso
-                    # in rfm2 27.2's usd3/resources/shaders/ path.  PxrTexture and
-                    # PxrNormalMap are RIS-only and invalid in HdPrman USD mode.
-                    usd_tex.CreateIdAttr("UsdUVTexture")
-
-                    # inputs:file (Asset) — UsdUVTexture uses "file" not "filename"
-                    # Try both Maya attribute names since PxrTexture uses "filename"
-                    # and PxrNormalMap also uses "filename"
-                    try:
-                        fname = cmds.getAttr(f"{tex_node}.filename")
-                        if fname:
-                            usd_tex.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(
-                                Sdf.AssetPath(str(fname))
-                            )
-                    except Exception:
-                        pass
-
-                    # inputs:sourceColorSpace: "sRGB" for colour textures (RGB channel),
-                    # "raw" for linear data (greyscale channels R, and normal maps N).
-                    if channel == "RGB":
-                        usd_tex.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set(
-                            "sRGB"
-                        )
-                    else:  # "R" (float greyscale) or "N" (normal map) — both linear
-                        usd_tex.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set(
-                            "raw"
-                        )
-
-                    # Normal maps need bias/scale to unpack [0,1] → [-1,1] tangent vectors.
-                    if channel == "N":
-                        usd_tex.CreateInput("bias", Sdf.ValueTypeNames.Float4).Set(
-                            Gf.Vec4f(-1.0, -1.0, -1.0, 0.0)
-                        )
-                        usd_tex.CreateInput("scale", Sdf.ValueTypeNames.Float4).Set(
-                            Gf.Vec4f(2.0, 2.0, 2.0, 2.0)
-                        )
-
-                    # UsdUVTexture output names: "rgb" (Color3f), "r" (Float).
-                    # Normal maps connect via outputs:rgb → UsdPreviewSurface.inputs:normal.
-                    if channel == "N":
-                        out_name = "rgb"  # Color3f → Normal3f implicit cast
-                        out_vtype = Sdf.ValueTypeNames.Color3f
-                        in_vtype = Sdf.ValueTypeNames.Normal3f
-                    elif channel == "R":
-                        out_name = "r"  # Float greyscale
-                        out_vtype = Sdf.ValueTypeNames.Float
-                        in_vtype = Sdf.ValueTypeNames.Float
-                    else:  # RGB
-                        out_name = "rgb"
-                        out_vtype = Sdf.ValueTypeNames.Color3f
-                        in_vtype = Sdf.ValueTypeNames.Color3f
-
-                    tex_out = usd_tex.CreateOutput(out_name, out_vtype)
-                    usd_shader.CreateInput(usd_dest_attr, in_vtype).ConnectToSource(tex_out)
+                # ── Texture connections: preserved from export phase ──────────
+                # The export phase already authored UsdUVTexture_diffuse nodes with
+                # paths resolved relative to the USD stage.  Creating new UsdUVTexture
+                # nodes here from cmds.getAttr(PxrTexture.filename) produces absolute
+                # Maya project paths that rfm2 27.2 cannot verify, causing
+                # "Failed verification: ' image '" errors and breaking the render.
+                # The UsdUVTexture_diffuse child prim is intentionally preserved.
 
                 # ── Wire surface outputs ──────────────────────────────────────
-                surf_out = usd_shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
+                # "surface" is the ONLY registered output in the UsdPreviewSurface
+                # OSO schema.  Using "out" (a non-standard name) causes rfm2 27.2
+                # HdPrman to silently reject the shader connection → grey render.
+                surf_out = usd_shader.CreateOutput("surface", Sdf.ValueTypeNames.Token)
                 mat_usd = UsdShade.Material(mat_override)
-                # outputs:ri:surface — used by rfm2 HdPrman IPR when it resolves
-                # the "ri" render context explicitly.
+                # Wire both render contexts: rfm2 HdPrman queries "ri" first then
+                # falls back to generic.  Both must connect to the same prim.
                 mat_usd.CreateSurfaceOutput("ri").ConnectToSource(surf_out)
-                # outputs:surface (generic override) — rfm2's usd_proc calls
-                # ComputeSurfaceSource() WITHOUT a render context, so it reads
-                # outputs:surface. Without this override it falls through to the
-                # original USDC's UsdPreviewSurface which is not a valid RIS
-                # shader → renders grey. VP2 Hydra will fall back to
-                # primvars:displayColor (written for all 21 meshes during export).
                 mat_usd.CreateSurfaceOutput().ConnectToSource(surf_out)
 
                 disney_written += 1
+
+            # ── FIX 7: Write material:binding to materials.usda (file layer) ──
+            # Phase A writes material:binding only to the in-memory session layer.
+            # rfm2 27.2 HdPrman opens a fresh Usd.Stage from the root.usda FILE
+            # PATH (no session layer), so Phase A's session-layer bindings are
+            # invisible to the renderer.  Writing bindings into materials.usda
+            # (a persistent sublayer of root.usda) guarantees rfm2 finds
+            # material:binding even when constructing a sessionless stage.
+            _bindings_written = 0
+            if mesh_bindings:
+                for _mesh_path_str, _mat_path_str in mesh_bindings.items():
+                    if _mat_path_str not in mat_path_to_sg:
+                        continue  # skip unmatched materials (no USD network)
+                    try:
+                        _mesh_prim_b = mat_stage.GetPrimAtPath(Sdf.Path(_mesh_path_str))
+                        if not (_mesh_prim_b and _mesh_prim_b.IsValid()):
+                            _mesh_prim_b = mat_stage.OverridePrim(Sdf.Path(_mesh_path_str))
+                        _mat_prim_b = mat_stage.GetPrimAtPath(Sdf.Path(_mat_path_str))
+                        if not (_mat_prim_b and _mat_prim_b.IsValid()):
+                            _mat_prim_b = mat_stage.OverridePrim(Sdf.Path(_mat_path_str))
+                        _usd_mat_b = UsdShade.Material(_mat_prim_b)
+                        _ba = UsdShade.MaterialBindingAPI.Apply(_mesh_prim_b)
+                        _ba.Bind(_usd_mat_b)
+                        _bindings_written += 1
+                    except Exception as _be:
+                        self.logger.debug(f"[RFM] FIX7 mesh binding write: {_be}")
 
             mat_stage.Save()
 
@@ -4602,7 +5036,9 @@ class ImportMixin:
                 f"(PxrDisneyBsdf/PxrSurface/PxrBlack → UsdPreviewSurface + UsdUVTexture; "
                 f"UsdPreviewSurfaceParameters.oso is the ONLY valid bxdf .oso in rfm2 27.2 "
                 f"HdPrman usd3 shader path; outputs:surface + outputs:ri:surface wired). "
-                f"{fallback_kept} materials retained export-phase UsdPreviewSurface."
+                f"{fallback_kept} materials retained export-phase UsdPreviewSurface. "
+                f"FIX7: {_bindings_written} mesh material:binding overrides written to "
+                f"materials.usda file layer (rfm2 HdPrman reads file layer, not session layer)."
             )
 
             # Reload so the live MayaUSD stage picks up the new layer content
@@ -4612,6 +5048,29 @@ class ImportMixin:
                 self.logger.debug("[RFM] materials.usda layer reloaded in live stage")
             except Exception as _rel_err:
                 self.logger.debug(f"[RFM] materials.usda layer reload: {_rel_err}")
+
+            # ── Post-reload diagnostic: confirm composed material state ─────────
+            # Logs what rfm2 HdPrman will see for the first matched material
+            # prim in materials.usda after save + reload.
+            try:
+                _diag_keys = list(mat_path_to_sg.keys())[:1]
+                if _diag_keys:
+                    _diag_stage = Usd.Stage.Open(mat_layer)
+                    _dsp = Sdf.Path(_diag_keys[0])
+                    _diag_mat_prim = _diag_stage.GetPrimAtPath(_dsp)
+                    if _diag_mat_prim and _diag_mat_prim.IsValid():
+                        _ri_attr = _diag_mat_prim.GetAttribute("outputs:ri:surface")
+                        _ri_conns = _ri_attr.GetConnections() if _ri_attr else []
+                        _surf_attr = _diag_mat_prim.GetAttribute("outputs:surface")
+                        _surf_conns = _surf_attr.GetConnections() if _surf_attr else []
+                        self.logger.info(
+                            f"[RFM][DIAG] materials.usda sample {_diag_keys[0]!r}: "
+                            f"outputs:ri:surface={_ri_conns}, "
+                            f"outputs:surface={_surf_conns}"
+                        )
+                    _diag_stage = None
+            except Exception as _diag_err:
+                self.logger.debug(f"[RFM][DIAG] post-reload: {_diag_err}")
 
         except Exception as e:
             self.logger.warning(f"[RFM] Disney materials.usda rewrite failed: {e}")
@@ -4812,12 +5271,16 @@ class ImportMixin:
                     except Exception:
                         pass
 
-                # ── Wire outputs:ri:surface via the proper render-context API ─
-                # UsdShadeMaterial.CreateSurfaceOutput('ri') creates the
-                # outputs:ri:surface attribute with correct USD schema metadata.
-                pxr_surf_out = pxr_surf.CreateOutput("out", Sdf.ValueTypeNames.Token)
-                ri_surface_out = UsdShade.Material(mat_override).CreateSurfaceOutput("ri")
-                ri_surface_out.ConnectToSource(pxr_surf_out)
+                # ── Wire outputs:surface + outputs:ri:surface ─────────────────
+                # UsdPreviewSurface's registered schema output is "surface" — NOT
+                # "out".  rfm2 27.2 HdPrman validates the output port name against
+                # the compiled OSO schema; "out" is silently rejected → grey render.
+                # Wire BOTH render contexts so rfm2 finds the shader regardless of
+                # whether it queries "ri" context or falls back to generic.
+                pxr_surf_out = pxr_surf.CreateOutput("surface", Sdf.ValueTypeNames.Token)
+                mat_usd_export = UsdShade.Material(mat_override)
+                mat_usd_export.CreateSurfaceOutput("ri").ConnectToSource(pxr_surf_out)
+                mat_usd_export.CreateSurfaceOutput().ConnectToSource(pxr_surf_out)
 
                 rfm_count += 1
 
@@ -4836,6 +5299,4 @@ class ImportMixin:
 
         except Exception as e:
             self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
-            self.logger.debug(traceback.format_exc())
-            self.logger.debug(traceback.format_exc())
             self.logger.debug(traceback.format_exc())

@@ -21,42 +21,42 @@ Features:
 - Undo support for imports
 """
 
+import logging
 from pathlib import Path
 from typing import Optional
-import logging
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
-    QLabel,
-    QPushButton,
-    QLineEdit,
-    QCheckBox,
-    QRadioButton,
-    QProgressBar,
-    QTextEdit,
-    QFileDialog,
-    QSpinBox,
-    QButtonGroup,
-    QWidget,
-    QMessageBox,
-    QTabWidget,
-    QComboBox,
-)
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QSpinBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Import our services
 from ...core.interfaces.usd_export_service import USDExportOptions
-from ...services.usd import USDExportServiceImpl, MayaSceneParserImpl, USDRigConverterImpl
-from ...services.usd.usd_material_converter_impl import USDMaterialConverterImpl
+from ...services.usd import MayaSceneParserImpl, USDExportServiceImpl, USDRigConverterImpl
 from ...services.usd.maya_rig_exporter import MayaRigExporter
-from ...services.usd.usdz_packager import UsdzPackager
+from ...services.usd.usd_material_converter_impl import USDMaterialConverterImpl
 
 # Clean Architecture Pipeline
-from ...services.usd.usd_pipeline import UsdPipeline, ExportOptions
+from ...services.usd.usd_pipeline import ExportOptions, UsdPipeline
+from ...services.usd.usdz_packager import UsdzPackager
 
 logger = logging.getLogger(__name__)
 
@@ -645,7 +645,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
         self._export_btn = QPushButton("Convert to USD")
         self._export_btn.setDefault(True)
         self._export_btn.clicked.connect(self._on_export)
-        self._export_btn.setStyleSheet("""
+        self._export_btn.setStyleSheet(
+            """
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
@@ -659,13 +660,15 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 background-color: #cccccc;
                 color: #666666;
             }
-        """)
+        """
+        )
         layout.addWidget(self._export_btn)
 
         # Import button (for import tab)
         self._import_btn = QPushButton("Import from USD")
         self._import_btn.clicked.connect(self._perform_import)
-        self._import_btn.setStyleSheet("""
+        self._import_btn.setStyleSheet(
+            """
             QPushButton {
                 background-color: #2196F3;
                 color: white;
@@ -679,7 +682,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 background-color: #cccccc;
                 color: #666666;
             }
-        """)
+        """
+        )
         layout.addWidget(self._import_btn)
 
         # Cancel button
@@ -1383,6 +1387,17 @@ class USDPipelineDialog(QDialog):  # type: ignore
         layout.addWidget(self._lookdev_workflow_radio)
 
         # Option 2: USD Animation (Experimental - Keep USD Native)
+        # ─────────────────────────────────────────────────────────────────
+        # FROZEN (2026-04-23): Hidden from the UI until MayaUSD ships
+        # flow-viewport mayaHydra and RfM 27.x exposes a translator for
+        # mayaUsdProxyShape.  In Maya 2026.3 / MayaUSD 0.35.0 / RfM 27.2
+        # the proxy renders grey under RfM (no per-mesh shading path).
+        # The widget itself stays in place so existing references to
+        # `self._usd_animation_radio` (visibility logic, settings I/O)
+        # keep working — we just `setVisible(False)` so users can't pick
+        # a path that produces broken renders.  Re-enable by removing the
+        # `setVisible(False)` call below once the vendor stack catches up.
+        # ─────────────────────────────────────────────────────────────────
         self._usd_animation_radio = QRadioButton(
             "[ANIMATION] USD Animation - Experimental [WARNING]"
         )
@@ -1401,6 +1416,7 @@ class USDPipelineDialog(QDialog):  # type: ignore
         )
         self._import_workflow_group.addButton(self._usd_animation_radio, 1)
         layout.addWidget(self._usd_animation_radio)
+        self._usd_animation_radio.setVisible(False)  # FROZEN — see comment above
 
         # Option 3: Hybrid Animation (Recommended - Convert USD to Maya)
         self._hybrid_workflow_radio = QRadioButton("[HYBRID] Hybrid Animation - Recommended [OK]")
@@ -1477,7 +1493,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
     def _create_usd_animation_layers_section(self) -> QGroupBox:
         """Create USD Animation Layers info section for the Import tab."""
         group = QGroupBox("[ANIMATION] USD Layered Stage (Disney Workflow)")
-        group.setStyleSheet("""
+        group.setStyleSheet(
+            """
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #FF9800;
@@ -1491,7 +1508,8 @@ class USDPipelineDialog(QDialog):  # type: ignore
                 padding: 0 5px;
                 color: #FF9800;
             }
-        """)
+        """
+        )
         layout = QVBoxLayout(group)
 
         # Info label
