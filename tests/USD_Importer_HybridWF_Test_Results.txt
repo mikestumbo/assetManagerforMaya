@@ -1,0 +1,711 @@
+[OK] Pixar USD Python API available
+[OK] USD Service initialized - Disney's Universal Scene Description support active
+// src.services.usd.usd_rig_converter_impl : USD Rig Converter initialized
+// Warning: src.services.usd.external_usd_bridge_impl : [WARNING] USD command-line tools not detected
+// src.services.usd.usd_import_service_impl : USD Import Service initialized with 2 methods: mayaUSD, Pure Python
+// src.services.usd.usd_pipeline_export : USD Pipeline initialized
+// src.services.usd.usd_pipeline_export :   Maya: True
+// src.services.usd.usd_pipeline_export :   USD Python: True
+// src.services.usd.usd_pipeline_export :   mayaUSD: True
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline initialized
+// src.ui.dialogs.usd_pipeline_dialog : USD pipeline services initialized
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry restored: 700x1751
+// src.ui.dialogs.usd_pipeline_dialog : USD Pipeline Dialog initialized
+// Warning: standalone_services : Directory not found: D:\Maya\projects\MyProject
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Loading recent assets...
+[RECENT] Found 0 recent assets
+[RECENT] Recent tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[RECENT] Populated recent assets tab with 0 items
+[FAVORITE] Loading favorite assets...
+[FAVORITE] Found 0 favorite assets
+[FAVORITE] Favorites tab widget: DragEnabledAssetList
+[REFRESH] Populating asset list with 0 assets
+[OK] Populated asset list with 0 unique assets
+[FAVORITE] Populated favorites tab with 0 items
+// src.services.usd.usd_pipeline_export : [EXTRACT] Extracting USDZ to persistent dir: D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig_usd
+// src.services.usd.usd_pipeline_export : [FILE] Extracted USD: Veteran_Rig.usdc
+// src.services.usd.usd_pipeline_export : [EXTRACT] 34 texture file(s) extracted
+// src.services.usd.usd_pipeline_export : [RIG] Found sibling rig file: Veteran_Rig.rig.mb
+// src.services.usd.usd_pipeline_export : [IMPORT] Hybrid check: hybrid_mode=True, rig_mb_path=D:\Maya\projects\Athens_Sequence\assets\Character Models\Veteran\Veteran_Rig.rig.mb, exists=True
+// src.services.usd.usd_pipeline_export : [OK] HYBRID MODE ACTIVATED — routing to HybridWorkflow
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] ══════════════════════════════════════════════
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] HYBRID WORKFLOW  —  Maya 2026.3 + RfM 27.2
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID]   USD  : Veteran_Rig.usdc
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID]   RIG  : Veteran_Rig.rig.mb
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] ══════════════════════════════════════════════
+# Importing 'D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Rig_usd/Veteran_Rig.usdc'
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 1: mayaUSDImport created 29 mesh shape(s) (excluded 18 intermediate).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 1 complete: 29 mesh shape(s) from USD.
+requires -nodeType "ngst2SkinLayerData" -dataType "ngst2SkinLayerDataStorage" "ngSkinTools2" "2.4.0";
+requires "stereoCamera" "10.0";
+updateRenderOverride;
+requires -nodeType "rmanVolumeAggregateSet" "rfm_volume_aggregate_set.py" "1.0";
+requires -nodeType "PxrCopyAOVSampleFilter" -nodeType "d_openexr" -nodeType "PxrPathTracer" -nodeType "rmanBakingGlobals" -nodeType "rmanDisplay" -nodeType "rmanDisplayChannel" -nodeType "rmanGlobals" "RenderMan_for_Maya.py" "27.2 @ 2396366";
+requires "stereoCamera" "10.0";
+evalDeferred "shaderBallRendererMenuUpdate";
+import arnold
+import mtoa
+import mtoa.cmds.registerArnoldRenderer;mtoa.cmds.registerArnoldRenderer.registerArnoldRenderer()
+updateRenderOverride;
+import mtoa.viewport;mtoa.viewport.add_controls()
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9051228: You must either select the affected nodes or specify them on the command line.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144792: ':rmanGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144793: ':PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144794: ':rmanBakingGlobals.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144795: ':bake_PxrPathTracer.message' is already connected to ':defaultRenderingList1.rendering'.
+// Warning: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9144797: ':rmanDefaultDisplay.message' is already connected to ':defaultRenderingList1.rendering'.
+# Warning: Error reading file. : D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma
+# Read 2 files in  7.2 seconds.
+// Error: mirror: could not initialize vertex mapping
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: The PxrTexture 'PxrTexture6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095715: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: The PxrTexture 'PxrTexture5' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095738: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: The PxrNormalMap 'PxrNormalMap24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095768: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: The PxrTexture 'PxrTexture4' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095789: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: The PxrTexture 'PxrTexture1' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: The PxrTexture 'PxrTexture2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095880: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: The PxrTexture 'PxrTexture3' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9095903: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: The PxrTexture 'PxrTexture15' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096000: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: The PxrNormalMap 'PxrNormalMap25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096030: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: The PxrTexture 'PxrTexture12' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096051: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: The PxrTexture 'PxrTexture14' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096074: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: The PxrTexture 'PxrTexture13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096097: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: The PxrTexture 'PxrTexture11' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096138: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: The PxrTexture 'PxrTexture49' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096208: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: The PxrNormalMap 'PxrNormalMap26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096238: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: The PxrTexture 'PxrTexture46' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096275: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: The PxrTexture 'PxrTexture48' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096298: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: The PxrTexture 'PxrTexture45' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096350: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: The PxrTexture 'PxrTexture47' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: The PxrTexture 'PxrTexture20' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096440: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: The PxrNormalMap 'PxrNormalMap27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: The PxrTexture 'PxrTexture17' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096539: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: The PxrTexture 'PxrTexture18' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096562: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: The PxrTexture 'PxrTexture19' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096585: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: The PxrTexture 'PxrTexture16' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096608: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: The PxrTexture 'PxrTexture21' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096675: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: The PxrNormalMap 'PxrNormalMap28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096737: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: The PxrTexture 'PxrTexture24' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096774: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: The PxrTexture 'PxrTexture22' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096797: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: The PxrTexture 'PxrTexture23' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096820: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: The PxrTexture 'PxrTexture25' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: The PxrTexture 'PxrTexture26' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096910: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: The PxrNormalMap 'PxrNormalMap29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: The PxrTexture 'PxrTexture27' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9096993: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: The PxrTexture 'PxrTexture29' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097032: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: The PxrTexture 'PxrTexture28' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097055: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: The PxrTexture 'PxrTexture34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097125: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: The PxrNormalMap 'PxrNormalMap13' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: The PxrTexture 'PxrTexture32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097176: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: The PxrTexture 'PxrTexture31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097215: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: The PxrTexture 'PxrTexture30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097267: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: The PxrTexture 'PxrTexture33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097290: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: The PxrTexture 'PxrTexture37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097360: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: The PxrTexture 'PxrTexture38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097383: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: The PxrNormalMap 'PxrNormalMap30' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097413: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: The PxrTexture 'PxrTexture39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097434: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: The PxrTexture 'PxrTexture35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097502: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: The PxrTexture 'PxrTexture36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097525: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: The PxrTexture 'PxrTexture40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097592: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: The PxrTexture 'PxrTexture44' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097647: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: The PxrNormalMap 'PxrNormalMap2' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097677: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: The PxrTexture 'PxrTexture42' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097698: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: The PxrTexture 'PxrTexture43' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097721: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: The PxrTexture 'PxrTexture41' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097760: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: The PxrTexture 'PxrTexture52' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097841: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: The PxrTexture 'PxrTexture54' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097864: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: The PxrNormalMap 'PxrNormalMap31' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: The PxrTexture 'PxrTexture53' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097933: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: The PxrTexture 'PxrTexture51' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097972: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: The PxrTexture 'PxrTexture50' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9097995: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: The PxrNormalMap 'PxrNormalMap32' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098072: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: The PxrTexture 'PxrTexture58' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098093: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: The PxrTexture 'PxrTexture59' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098127: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: The PxrTexture 'PxrTexture56' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098166: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: The PxrTexture 'PxrTexture57' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098189: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: The PxrTexture 'PxrTexture55' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098230: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: The PxrTexture 'PxrTexture63' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098311: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: The PxrTexture 'PxrTexture64' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098334: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: The PxrTexture 'PxrTexture61' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098373: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: The PxrTexture 'PxrTexture62' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098396: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: The PxrTexture 'PxrTexture60' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098437: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: The PxrNormalMap 'PxrNormalMap33' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098467: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: The PxrTexture 'PxrTexture65' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098532: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: The PxrTexture 'PxrTexture68' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098587: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: The PxrTexture 'PxrTexture69' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098610: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: The PxrTexture 'PxrTexture67' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098649: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: The PxrTexture 'PxrTexture66' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098672: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: The PxrNormalMap 'PxrNormalMap34' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098702: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: The PxrTexture 'PxrTexture74' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098781: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: The PxrTexture 'PxrTexture72' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098804: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: The PxrTexture 'PxrTexture71' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098843: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: The PxrNormalMap 'PxrNormalMap6' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098873: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: The PxrTexture 'PxrTexture73' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098894: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: The PxrTexture 'PxrTexture70' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9098935: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: The PxrTexture 'PxrTexture75' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099002: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: The PxrTexture 'PxrTexture78' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099057: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: The PxrTexture 'PxrTexture77' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099080: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: The PxrTexture 'PxrTexture79' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099103: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: The PxrNormalMap 'PxrNormalMap35' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099133: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: The PxrTexture 'PxrTexture76' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099170: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: The PxrNormalMap 'PxrNormalMap36' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099247: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: The PxrTexture 'PxrTexture85' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099297: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: The PxrTexture 'PxrTexture89' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099336: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: The PxrTexture 'PxrTexture87' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099359: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: The PxrTexture 'PxrTexture86' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099382: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: The PxrTexture 'PxrTexture88' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9099405: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: The PxrTexture 'PxrTexture91' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143109: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: The PxrTexture 'PxrTexture92' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143132: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: The PxrTexture 'PxrTexture93' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143155: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: The PxrNormalMap 'PxrNormalMap37' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143185: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: The PxrTexture 'PxrTexture94' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143246: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: The PxrTexture 'PxrTexture95' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143269: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: The PxrNormalMap 'PxrNormalMap38' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143299: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: The PxrTexture 'PxrTexture96' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143320: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: The PxrTexture 'PxrTexture97' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143351: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: The PxrTexture 'PxrTexture98' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143374: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: The PxrNormalMap 'PxrNormalMap39' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143404: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: The PxrTexture 'PxrTexture99' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143425: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: The PxrTexture 'PxrTexture100' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143485: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: The PxrTexture 'PxrTexture101' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143508: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: The PxrNormalMap 'PxrNormalMap40' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143538: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: The PxrTexture 'PxrTexture102' has no '.atlasStyle' attribute.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143559: setAttr: No object matches name: .atlasStyle
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143743: ':rmanBakingGlobals.displays[0]' already has an incoming connection from ':rmanDefaultBakeDisplay.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143838: ':rmanDefaultDisplay.displayType' already has an incoming connection from ':d_openexr.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143839: ':rmanDefaultDisplay.displayChannels[0]' already has an incoming connection from ':Ci.message'.
+// Error: file: D:/Maya/projects/Athens_Sequence/assets/Character Models/Veteran/Veteran_Model_Final.ma line 9143840: ':rmanDefaultDisplay.displayChannels[1]' already has an incoming connection from ':a.message'.
+maya.cmds.ActivateViewport20()
+import mtoa.viewport;mtoa.viewport.destroy_viewport()
+# Successfully unloaded Arnold RenderView viewport
+arnoldRenderView -m destroy;
+# Successfully unloaded Arnold RenderView
+import mtoa.cmds.unregisterArnoldRenderer;mtoa.cmds.unregisterArnoldRenderer.unregisterArnoldRenderer()
+# Successfully unloaded renderer 'arnold'
+# Successfully unloaded Arnold attribute extensions
+# Successfully unloaded arnoldRender command
+# Successfully unloaded arnoldIpr command
+# Successfully unloaded arnoldBakeGeo command
+# Successfully unloaded arnoldRenderToTexture command
+# Successfully unloaded arnoldExportAss command
+# Successfully unloaded arnoldImportAss command
+# Successfully unloaded arnoldPlugins command
+# Successfully unloaded arnoldListAttributes command
+# Successfully unloaded arnoldTemperatureToColor command
+# Successfully unloaded arnoldFlushCache command
+# Successfully unloaded arnoldRenderView command
+# Successfully unloaded arnoldUpdateTx command
+# Successfully unloaded arnoldScene command
+# Successfully unloaded arnoldWriteUsd command
+# Successfully unloaded arnoldLicense command
+# Successfully unloaded arnoldViewport command
+# Successfully unloaded arnoldExportToMaterialX command
+# Successfully unloaded arnoldExportOperators command
+# Successfully unloaded arnoldExportImagers command
+# Successfully unloaded arnoldExportAlembic command
+updateRenderOverride;
+evalDeferred "shaderBallRendererMenuUpdate";
+# Successfully unloaded Arnold material view renderer
+# Successfully unloaded Arnold swatch renderer
+# Successfully unloaded tx texture file
+# Successfully unloaded Arnold ass file exporter
+# Successfully unloaded Arnold ass file importer
+# Successfully unloaded Arnold-USD file exporter
+# Deleting all arnoldBifrostShape nodes
+# Deleting all aiIncludeGraph nodes
+# Deleting all aiCollection nodes
+# Deleting all aiSetTransform nodes
+# Deleting all aiSwitchOperator nodes
+# Deleting all aiDisable nodes
+# Deleting all aiSetParameter nodes
+# Deleting all aiMerge nodes
+# Deleting all aiMaterialx nodes
+# Deleting all aiImagerInference nodes
+# Deleting all aiImagerWhiteBalance nodes
+# Deleting all aiImagerTonemap nodes
+# Deleting all aiImagerOverlay nodes
+# Deleting all aiImagerExposure nodes
+# Deleting all aiImagerDenoiserOidn nodes
+# Deleting all aiImagerDenoiserOptix nodes
+# Deleting all aiImagerDenoiserNoice nodes
+# Deleting all aiImagerColorCurves nodes
+# Deleting all aiImagerColorCorrect nodes
+# Deleting all cryptomatte nodes
+# Deleting all aiVolumeSampleRgb nodes
+# Deleting all aiVolumeSampleFloat nodes
+# Deleting all aiImagerLightMixer nodes
+# Deleting all aiVolumeCollector nodes
+# Deleting all aiVectorToRgb nodes
+# Deleting all aiVectorMap nodes
+# Deleting all aiUvProjection nodes
+# Deleting all aiUvTransform nodes
+# Deleting all aiUserDataString nodes
+# Deleting all aiUserDataInt nodes
+# Deleting all aiUserDataFloat nodes
+# Deleting all aiTwoSided nodes
+# Deleting all aiTriplanar nodes
+# Deleting all aiTrigo nodes
+# Deleting all aiTraceSet nodes
+# Deleting all aiThinFilm nodes
+# Deleting all aiSubtract nodes
+# Deleting all aiUserDataColor nodes
+# Deleting all aiStateVector nodes
+# Deleting all aiSwitch nodes
+# Deleting all aiStateInt nodes
+# Deleting all aiStateFloat nodes
+# Deleting all aiSqrt nodes
+# Deleting all aiSpaceTransform nodes
+# Deleting all aiSkin nodes
+# Deleting all aiShuffle nodes
+# Deleting all aiShadowMatte nodes
+# Deleting all aiRgbToVector nodes
+# Deleting all aiColorToFloat nodes
+# Deleting all aiRgbaToFloat nodes
+# Deleting all aiRange nodes
+# Deleting all aiRandom nodes
+# Deleting all aiImagerLensEffects nodes
+# Deleting all aiRampRgb nodes
+# Deleting all aiRampFloat nodes
+# Deleting all aiReciprocal nodes
+# Deleting all aiPow nodes
+# Deleting all aiNormalMap nodes
+# Deleting all aiNegate nodes
+# Deleting all aiMultiply nodes
+# Deleting all aiModulo nodes
+# Deleting all aiMin nodes
+# Deleting all aiMax nodes
+# Deleting all aiMatrixMultiplyVector nodes
+# Deleting all aiMatrixInterpolate nodes
+# Deleting all aiLog nodes
+# Deleting all aiLength nodes
+# Deleting all aiLayerShader nodes
+# Deleting all aiLayerRgba nodes
+# Deleting all aiStringReplace nodes
+# Deleting all aiLayerFloat nodes
+# Deleting all aiIsFinite nodes
+# Deleting all aiFraction nodes
+# Deleting all aiFloatToMatrix nodes
+# Deleting all aiCurvature nodes
+# Deleting all aiComposite nodes
+# Deleting all aiComplexIor nodes
+# Deleting all aiCompare nodes
+# Deleting all aiColorJitter nodes
+# Deleting all aiClamp nodes
+# Deleting all aiCameraProjection nodes
+# Deleting all aiCache nodes
+# Deleting all aiComplement nodes
+# Deleting all aiBlackbody nodes
+# Deleting all aiDot nodes
+# Deleting all aiSign nodes
+# Deleting all aiAtan nodes
+# Deleting all aiWriteVector nodes
+# Deleting all aiWriteRgba nodes
+# Deleting all aiWriteColor nodes
+# Deleting all aiWriteInt nodes
+# Deleting all aiReadRGBA nodes
+# Deleting all aiReadRGB nodes
+# Deleting all aiCheckerboard nodes
+# Deleting all aiMatrixTransform nodes
+# Deleting all aiNormalize nodes
+# Deleting all aiReadFloat nodes
+# Deleting all aiAdd nodes
+# Deleting all aiStandardVolume nodes
+# Deleting all aiFog nodes
+# Deleting all aiAtmosphereVolume nodes
+# Deleting all aiPhysicalSky nodes
+# Deleting all aiPassthrough nodes
+# Deleting all aiSky nodes
+# Deleting all aiReadInt nodes
+# Deleting all aiMixShader nodes
+# Deleting all aiOslShader nodes
+# Deleting all aiColorCorrect nodes
+# Deleting all aiBump3d nodes
+# Deleting all aiCarPaint nodes
+# Deleting all aiBump2d nodes
+# Deleting all aiStandardHair nodes
+# Deleting all aiExp nodes
+# Deleting all aiHair nodes
+# Deleting all aiFloatToInt nodes
+# Deleting all aiOpenPBRSurface nodes
+# Deleting all aiWriteFloat nodes
+# Deleting all aiMatte nodes
+# Deleting all aiStandardSurface nodes
+# Deleting all aiColorConvert nodes
+# Deleting all aiCross nodes
+# Deleting all aiStandard nodes
+# Deleting all aiLambert nodes
+# Deleting all aiFacingRatio nodes
+# Deleting all aiFloatToRgba nodes
+# Deleting all aiLightDecay nodes
+# Deleting all aiFlakes nodes
+# Deleting all aiGobo nodes
+# Deleting all aiToon nodes
+# Deleting all aiFlat nodes
+# Deleting all aiDistance nodes
+# Deleting all aiAbs nodes
+# Deleting all aiRoundCorners nodes
+# Deleting all aiAmbientOcclusion nodes
+# Deleting all aiBarndoor nodes
+# Deleting all aiClipGeo nodes
+# Deleting all aiDivide nodes
+# Deleting all aiMotionVector nodes
+# Deleting all aiCellNoise nodes
+# Deleting all aiNoise nodes
+# Deleting all aiWireframe nodes
+# Deleting all aiImage nodes
+# Deleting all aiUtility nodes
+# Deleting all aiRaySwitch nodes
+# Deleting all aiMaterialXShader nodes
+# Deleting all aiLookSwitch nodes
+# Deleting all aiAxfShader nodes
+# Deleting all aiUserDataBool nodes
+# Deleting all aiUserDataVector nodes
+# Deleting all aiUserDataVec2 nodes
+# Deleting all aiLightBlocker nodes
+# Deleting all aiMeshLight nodes
+# Deleting all aiPhotometricLight nodes
+# Deleting all aiLightPortal nodes
+# Deleting all aiAreaLight nodes
+# Deleting all aiCurveCollector nodes
+# Deleting all aiSkyDomeLight nodes
+# Deleting all aiAOVFilter nodes
+# Deleting all aiAOVDriver nodes
+# Deleting all aiAOV nodes
+# Deleting all aiOptions nodes
+# Deleting all SphereLocator nodes
+# Deleting all aiVolume nodes
+# Deleting all aiStandIn nodes
+# Successfully unloaded Deleting Arnold nodes in scene
+# Successfully unloaded Arnold nodes
+# MtoA Unloaded
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 2: evicted side-effect renderer plugin 'mtoa'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 2: restored currentRenderer to 'renderman'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 2 complete: 9309 node(s) from .rig.mb (namespace: 'Veteran_Rig', 85 mesh shape(s), 642 curve shape(s)).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'FitEyeSphereShape' → SG 'Veteran_Rig1:asBlackSG' (from 2 candidate(s): Veteran_Rig1:asBlackSG, Veteran_Rig1:asWhiteSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'EyeLidInnerAreaMeshExtrudeShape' → SG 'Veteran_Rig1:asRedSG' (from 1 candidate(s): Veteran_Rig1:asRedSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'EyeLidInnerAreaMeshShape' → SG 'Veteran_Rig1:asRedSG' (from 1 candidate(s): Veteran_Rig1:asRedSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'ForeHeadAreaMeshExtrudeShape' → SG 'Veteran_Rig1:asGreenSG' (from 1 candidate(s): Veteran_Rig1:asGreenSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'ForeHeadAreaMeshShape' → SG 'Veteran_Rig1:asGreenSG' (from 1 candidate(s): Veteran_Rig1:asGreenSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LipInnerAreaMeshExtrudeShape' → SG 'Veteran_Rig1:asRedSG' (from 1 candidate(s): Veteran_Rig1:asRedSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LipInnerAreaMeshShape' → SG 'Veteran_Rig1:asRedSG' (from 1 candidate(s): Veteran_Rig1:asRedSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'BtmLids_Up_Shape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'CurlShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'DisgustShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Eyes_Close_Shape2' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'FullFrownShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'GrinShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LfBrow_Dwn_Shape2' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'polySurfaceShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'MidFrownShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Open_Close_copy1Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Open_CloseShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'polySurfaceShape2' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'SmileShape1' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'SquintShape2' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'StuckOutShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Body_GeoShapeDeformed' → SG 'PxrDisneyBsdf1SG' (from 1 candidate(s): PxrDisneyBsdf1SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Chain_GeoShapeDeformed' → SG 'PxrDisneyBsdf17SG' (from 1 candidate(s): PxrDisneyBsdf17SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Jacket_GeoShapeDeformed' → SG 'PxrDisneyBsdf11SG' (from 1 candidate(s): PxrDisneyBsdf11SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Button_01_GeoShapeDeformed' → SG 'PxrDisneyBsdf16SG' (from 1 candidate(s): PxrDisneyBsdf16SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Button_02_GeoShapeDeformed' → SG 'PxrDisneyBsdf15SG' (from 1 candidate(s): PxrDisneyBsdf15SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Button_03_GeoShapeDeformed' → SG 'PxrDisneyBsdf14SG' (from 1 candidate(s): PxrDisneyBsdf14SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Button_04_GeoShapeDeformed' → SG 'PxrDisneyBsdf13SG' (from 1 candidate(s): PxrDisneyBsdf13SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_InrEye_GeoShapeDeformed' → SG 'Pupils_MatSG' (from 3 candidate(s): Pupils_MatSG, Iris_MatSG, Sclera_MatSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_OutrEye_GeoShapeDeformed' → SG 'Cornea_Mat_SG' (from 1 candidate(s): Cornea_Mat_SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Zipper_GeoShapeDeformed' → SG 'PxrDisneyBsdf12SG' (from 1 candidate(s): PxrDisneyBsdf12SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LwrTeeth_GeoShapeDeformed' → SG 'PxrDisneyBsdf2SG' (from 1 candidate(s): PxrDisneyBsdf2SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Button_01_GeoShapeDeformed' → SG 'PxrDisneyBsdf10SG' (from 1 candidate(s): PxrDisneyBsdf10SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Button_02_GeoShapeDeformed' → SG 'PxrDisneyBsdf9SG' (from 1 candidate(s): PxrDisneyBsdf9SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Button_03_GeoShapeDeformed' → SG 'PxrDisneyBsdf8SG' (from 1 candidate(s): PxrDisneyBsdf8SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Button_04_GeoShapeDeformed' → SG 'PxrDisneyBsdf7SG' (from 1 candidate(s): PxrDisneyBsdf7SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_InrEye_GeoShapeDeformed' → SG 'Pupils_MatSG' (from 3 candidate(s): Pupils_MatSG, Iris_MatSG, Sclera_MatSG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_OutrEye_GeoShapeDeformed' → SG 'Cornea_Mat_SG' (from 1 candidate(s): Cornea_Mat_SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Zipper_GeoShapeDeformed' → SG 'PxrDisneyBsdf6SG' (from 1 candidate(s): PxrDisneyBsdf6SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Tags_GeoShapeDeformed' → SG 'PxrDisneyBsdf5SG' (from 1 candidate(s): PxrDisneyBsdf5SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Tongue_GeoShapeDeformed' → SG 'PxrDisneyBsdf18SG' (from 1 candidate(s): PxrDisneyBsdf18SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'UprTeeth_GeoShapeDeformed' → SG 'PxrDisneyBsdf3SG' (from 1 candidate(s): PxrDisneyBsdf3SG)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Beard_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Hair_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Eyebrow_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'L_Eyelash_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Manbun_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Eyebrow_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'R_Eyelash_xgenShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'BtmLids_Dwn_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'BtmLids_Up_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'CurlShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'DisgustShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Eyes_Close_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'FullFrownShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'GrinShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LfBrow_Dwn_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LfBrow_Up_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'LwrMouth_Open_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'MidBrowRaiseShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'MidFrownShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Open_Close_copy1Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'Open_CloseShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'RtBrow_Dwn_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'RtBrow_Up_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'SmileShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'SquintShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'StuckOutShape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'TopLids_Dwn_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'TopLids_Up_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: 'UprMouth_Open_Shape' → SG 'initialShadingGroup' (from 1 candidate(s): initialShadingGroup)
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3: found 68 mesh→SG pair(s) from 85 rig shape(s).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 3 complete: 68 mesh → SG mappings found.
+# Warning: Turning on inheritTransform for 'model_Body_Geo_usdExport1'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Body_Geo_usdExport1Shape' → 'PxrDisneyBsdf1SG' ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Body_Geo_usdExportShape' → 'PxrDisneyBsdf1SG' ✓
+# Warning: Turning on inheritTransform for 'model_Chain_Geo'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Chain_GeoShape' → 'PxrDisneyBsdf17SG' ✓
+# Warning: Turning on inheritTransform for 'model_Jacket_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Jacket_Geo_usdExportShape' → 'PxrDisneyBsdf11SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_Button_01_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_Button_01_Geo_usdExportShape' → 'PxrDisneyBsdf16SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_Button_02_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_Button_02_Geo_usdExportShape' → 'PxrDisneyBsdf15SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_Button_03_Geo'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_Button_03_GeoShape' → 'PxrDisneyBsdf14SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_Button_04_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_Button_04_Geo_usdExportShape' → 'PxrDisneyBsdf13SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_InrEye_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_InrEye_Geo_usdExportShape' → 'Pupils_MatSG' ✓
+# Warning: Turning on inheritTransform for 'model_L_OutrEye_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_OutrEye_Geo_usdExportShape' → 'Cornea_Mat_SG' ✓
+# Warning: Turning on inheritTransform for 'model_L_Zipper_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_L_Zipper_Geo_usdExportShape' → 'PxrDisneyBsdf12SG' ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_LwrTeeth_GeoShape' → 'PxrDisneyBsdf2SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_Button_01_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_Button_01_Geo_usdExportShape' → 'PxrDisneyBsdf10SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_Button_02_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_Button_02_Geo_usdExportShape' → 'PxrDisneyBsdf9SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_Button_03_Geo'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_Button_03_GeoShape' → 'PxrDisneyBsdf8SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_Button_04_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_Button_04_Geo_usdExportShape' → 'PxrDisneyBsdf7SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_InrEye_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_InrEye_Geo_usdExportShape' → 'Pupils_MatSG' ✓
+# Warning: Turning on inheritTransform for 'model_R_OutrEye_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_OutrEye_Geo_usdExportShape' → 'Cornea_Mat_SG' ✓
+# Warning: Turning on inheritTransform for 'model_R_Zipper_Geo_usdExport'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_R_Zipper_Geo_usdExportShape' → 'PxrDisneyBsdf6SG' ✓
+# Warning: Turning on inheritTransform for 'model_Tags_Geo'.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Tags_GeoShape' → 'PxrDisneyBsdf5SG' ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_Tongue_GeoShape' → 'PxrDisneyBsdf18SG' ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 'model_UprTeeth_GeoShape' → 'PxrDisneyBsdf3SG' ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4: 7 corrective helper(s) mapped to annotation SGs — skipped assignment (Phase 8 will hide their USD transforms).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4 complete: 22/22 mesh(es) bound to RfM PxrDisneyBsdf SG.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4.5: zeroed local TRS on 29 USD mesh parent transform(s) (696 attrs total) — forces worldMatrix == identity for deterministic transformGeometry passthrough.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4.5: restored inheritsTransform=0 on 29 USD mesh parent(s).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 4.5: locked all transform attrs on 29 USD mesh parent(s) (prevents anything downstream from re-enabling inheritsTransform or perturbing the local TRS).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 5 complete: 85 .rig.mb mesh transform(s) hidden.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 5.5: attached dummy PxrSurface to 8 ngSkinTools annotation SG(s) (silences RfM 'missing RenderMan material' warnings).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 6: 428 NURBS controller transform(s) collected from 642 curve shape(s).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 6 complete: 428 NURBS controller(s) available.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 7 sweep removed: 124 joint(s).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8 v5: worldMesh deformation sharing — 29 pair(s) to process.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'FitEyeSphereShape' → rig 'FitEyeSphereShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'EyeLidInnerAreaMeshExtrudeShape' → rig 'EyeLidInnerAreaMeshExtrudeShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'EyeLidInnerAreaMeshShape' → rig 'EyeLidInnerAreaMeshShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'ForeHeadAreaMeshExtrudeShape' → rig 'ForeHeadAreaMeshExtrudeShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'ForeHeadAreaMeshShape' → rig 'ForeHeadAreaMeshShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'LipInnerAreaMeshExtrudeShape' → rig 'LipInnerAreaMeshExtrudeShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'LipInnerAreaMeshShape' → rig 'LipInnerAreaMeshShape' has no skinCluster (corrective helper) — USD transform hidden, skipped.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Body_Geo_usdExportShape' ← 'Veteran_Rig1:Body_GeoShapeDeformed'.worldMesh (vtx=49382) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Chain_GeoShape' ← 'Veteran_Rig1:Chain_GeoShapeDeformed'.worldMesh (vtx=5454) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Jacket_Geo_usdExportShape' ← 'Veteran_Rig1:Jacket_GeoShapeDeformed'.worldMesh (vtx=9594) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_Button_01_Geo_usdExportShape' ← 'Veteran_Rig1:L_Button_01_GeoShapeDeformed'.worldMesh (vtx=122) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_Button_02_Geo_usdExportShape' ← 'Veteran_Rig1:L_Button_02_GeoShapeDeformed'.worldMesh (vtx=122) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_Button_03_GeoShape' ← 'Veteran_Rig1:L_Button_03_GeoShapeDeformed'.worldMesh (vtx=154) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_Button_04_Geo_usdExportShape' ← 'Veteran_Rig1:L_Button_04_GeoShapeDeformed'.worldMesh (vtx=80) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_InrEye_Geo_usdExportShape' ← 'Veteran_Rig1:L_InrEye_GeoShapeDeformed'.worldMesh (vtx=2202) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_OutrEye_Geo_usdExportShape' ← 'Veteran_Rig1:L_OutrEye_GeoShapeDeformed'.worldMesh (vtx=1562) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_L_Zipper_Geo_usdExportShape' ← 'Veteran_Rig1:L_Zipper_GeoShapeDeformed'.worldMesh (vtx=8340) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_LwrTeeth_GeoShape' ← 'Veteran_Rig1:LwrTeeth_GeoShapeDeformed'.worldMesh (vtx=24168) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_Button_01_Geo_usdExportShape' ← 'Veteran_Rig1:R_Button_01_GeoShapeDeformed'.worldMesh (vtx=122) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_Button_02_Geo_usdExportShape' ← 'Veteran_Rig1:R_Button_02_GeoShapeDeformed'.worldMesh (vtx=122) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_Button_03_GeoShape' ← 'Veteran_Rig1:R_Button_03_GeoShapeDeformed'.worldMesh (vtx=154) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_Button_04_Geo_usdExportShape' ← 'Veteran_Rig1:R_Button_04_GeoShapeDeformed'.worldMesh (vtx=80) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_InrEye_Geo_usdExportShape' ← 'Veteran_Rig1:R_InrEye_GeoShapeDeformed'.worldMesh (vtx=2202) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_OutrEye_Geo_usdExportShape' ← 'Veteran_Rig1:R_OutrEye_GeoShapeDeformed'.worldMesh (vtx=1562) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_R_Zipper_Geo_usdExportShape' ← 'Veteran_Rig1:R_Zipper_GeoShapeDeformed'.worldMesh (vtx=7424) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Tags_GeoShape' ← 'Veteran_Rig1:Tags_GeoShapeDeformed'.worldMesh (vtx=10448) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Tongue_GeoShape' ← 'Veteran_Rig1:Tongue_GeoShapeDeformed'.worldMesh (vtx=6717) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_UprTeeth_GeoShape' ← 'Veteran_Rig1:UprTeeth_GeoShapeDeformed'.worldMesh (vtx=25104) ✓
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8: 'model_Body_Geo_usdExport1Shape' is a duplicate USD shape for rig 'Veteran_Rig1:Body_GeoShapeDeformed' — already wired, duplicate transform hidden.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] Phase 8 complete: 21 connected (shared rig output), 8 skipped (static geo), 0 failed.
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] ══════════════════════════════════════════════
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] COMPLETE  —  29 mesh(es), 22 SG(s) bound, 428 controller(s).
+// src.services.usd.workflows.base_workflow.HybridWorkflow : [HYBRID] ══════════════════════════════════════════════
+updateRendererUI;
+# Error: AttributeError: file C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\arnoldmenu.py line 146: module 'maya.cmds' has no attribute 'arnoldPlugins'
+[MtoA] Error parsing AETemplate file aiAreaLightTemplate
+Traceback (most recent call last):
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\utils.py", line 60, in loadAETemplates
+    mod = importer.find_module(modname).load_module(modname)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 605, in _check_name_wrapper
+  File "<frozen importlib._bootstrap_external>", line 1120, in load_module
+  File "<frozen importlib._bootstrap_external>", line 945, in load_module
+  File "<frozen importlib._bootstrap>", line 290, in _load_module_shim
+  File "<frozen importlib._bootstrap>", line 721, in _load
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\aiAreaLightTemplate.py", line 138, in <module>
+    templates.registerTranslatorUI(QuadAreaLightTemplate, "aiAreaLight", "quad")
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\templates.py", line 904, in registerTranslatorUI
+    translators = getTranslators(mayaNodeType)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\templates.py", line 37, in getTranslators
+    return [x[0] for x in core.listTranslators(nodeType)]
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\core.py", line 123, in listTranslators
+    data = cmds.arnoldPlugins(listTranslators=nodeType) or []
+           ^^^^^^^^^^^^^^^^^^
+AttributeError: module 'maya.cmds' has no attribute 'arnoldPlugins'
+
+[MtoA] Error parsing AETemplate file aiImagerLightMixerTemplate
+Traceback (most recent call last):
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\utils.py", line 60, in loadAETemplates
+    mod = importer.find_module(modname).load_module(modname)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 605, in _check_name_wrapper
+  File "<frozen importlib._bootstrap_external>", line 1120, in load_module
+  File "<frozen importlib._bootstrap_external>", line 945, in load_module
+  File "<frozen importlib._bootstrap>", line 290, in _load_module_shim
+  File "<frozen importlib._bootstrap>", line 721, in _load
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\ui\ae\aiImagerLightMixerTemplate.py", line 450, in <module>
+    callbacks.addNodeAddedCallback(setLightMixerDefaults, "aiImagerLightMixer", applyToExisting=False)
+  File "C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\callbacks.py", line 112, in addNodeAddedCallback
+    manageCallback(om.MDGMessage.addNodeAddedCallback(cb, nodeType))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: (kInvalidParameter): Invalid parameter
+
+# [rfm]     INFO:  (MainThread)  scene_updater update_lama_nodes: Updating Lama nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_disney_nodes: Updating PxrDisney nodes
+# [rfm]     INFO:  (MainThread)  scene_updater update_udim_texture_nodes: Updating udim texture nodes
+# Error: AttributeError: file C:\Program Files\Autodesk\Arnold\Maya2026\scripts\mtoa\viewport.py line 236: module 'maya.cmds' has no attribute 'arnoldViewport'
+# [rfm]     INFO:  (MainThread)  txmanager_maya parse_new_maya_scene: New scene: resetting texture manager.
+// src.ui.dialogs.usd_pipeline_dialog : [OK] USD Pipeline geometry saved: 700x1751
+[OK] Window state saved: 1389x795
+[OK] Asset Manager singleton reference cleared

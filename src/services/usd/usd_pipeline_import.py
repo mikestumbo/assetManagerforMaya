@@ -169,19 +169,23 @@ class ImportMixin:
                 return result
 
             # ========== HYBRID WORKFLOW (RECOMMENDED) ==========
+            # Routes to the self-contained HybridWorkflow class which uses
+            # the correct load order (USD first, .rig.mb with namespace second)
+            # to avoid skinCluster-lock failures on SG assignment.
             rig_exists = rig_mb_path.exists() if rig_mb_path else False
             self.logger.info(
                 f"[IMPORT] Hybrid check: hybrid_mode={options.hybrid_mode}, "
                 f"rig_mb_path={rig_mb_path}, exists={rig_exists}"
             )
-            if options.hybrid_mode and rig_mb_path and rig_mb_path.exists():
-                self.logger.info("[OK] HYBRID MODE ACTIVATED")
-                self._report_progress(
-                    "[HYBRID] Hybrid Mode: Converting USD to Maya + controllers", 20
+            if options.hybrid_mode:
+                self.logger.info("[OK] HYBRID MODE ACTIVATED — routing to HybridWorkflow")
+                from .workflows.hybrid_workflow import (
+                    HybridWorkflow,  # local import avoids circular
                 )
-                success = self._import_hybrid(actual_usd_path, rig_mb_path, options, result)
-                result.success = success
-                self._report_progress("Hybrid import complete", 100)
+
+                wf = HybridWorkflow()
+                wf.set_progress_callback(self._report_progress)
+                result.success = wf.run(actual_usd_path, rig_mb_path, options, result)
                 return result
 
             # ========== STANDARD WORKFLOWS ==========
@@ -5298,5 +5302,9 @@ class ImportMixin:
                 )
 
         except Exception as e:
+            self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
+            self.logger.debug(traceback.format_exc())
+            self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
+            self.logger.debug(traceback.format_exc())
             self.logger.warning(f"[RFM] RfM materials sublayer population failed: {e}")
             self.logger.debug(traceback.format_exc())
